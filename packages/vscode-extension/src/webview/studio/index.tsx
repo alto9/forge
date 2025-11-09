@@ -1,6 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { NomnomlRenderer } from './components/NomnomlRenderer';
+import { MarkdownEditor } from './components/MarkdownEditor';
 
 // Acquire VSCode API once at module level
 const vscode = typeof acquireVsCodeApi !== 'undefined' ? acquireVsCodeApi() : undefined;
@@ -1699,14 +1700,13 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
         <>
           <div className="content-section">
             <h3 className="section-title">Instructions</h3>
-            <textarea
-              className="form-textarea"
-              value={parsedContext.instructions}
-              onChange={(e) => updateParsedContext({ ...parsedContext, instructions: e.target.value })}
-              readOnly={isReadOnly}
-              placeholder="Enter markdown instructions providing context and guidance..."
-              style={{ minHeight: 200, fontFamily: 'monospace' }}
-            />
+            <div style={{ height: 200 }}>
+              <MarkdownEditor
+                content={parsedContext.instructions}
+                onChange={(markdown) => updateParsedContext({ ...parsedContext, instructions: markdown })}
+                readOnly={isReadOnly}
+              />
+            </div>
             <div style={{ fontSize: 11, opacity: 0.7, marginTop: 8 }}>
               Markdown content that appears outside gherkin code blocks
             </div>
@@ -1731,121 +1731,125 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
           />
         </>
       ) : category === 'specs' && isReadOnly ? (
-        <div className="content-section">
-          <h3 className="section-title">Content</h3>
-          {extractNomnomlBlocks(content).map((section, idx) => (
-            <div key={idx} style={{ marginBottom: 24 }}>
-              {section.type === 'nomnoml' ? (
-                <NomnomlRenderer source={section.content} />
-              ) : (
-                <pre style={{
-                  whiteSpace: 'pre-wrap',
-                  wordWrap: 'break-word',
-                  fontFamily: 'var(--vscode-editor-font-family)',
-                  fontSize: 'var(--vscode-editor-font-size)',
-                  lineHeight: 1.6,
-                  color: 'var(--vscode-editor-foreground)',
-                  background: 'var(--vscode-editor-background)',
-                  padding: '12px',
-                  border: '1px solid var(--vscode-panel-border)',
-                  borderRadius: '4px',
-                  margin: 0
-                }}>
-                  {section.content}
-                </pre>
-              )}
-            </div>
-          ))}
-        </div>
-      ) : category === 'specs' && !isReadOnly ? (
-        <div className="content-section">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <h3 className="section-title" style={{ margin: 0 }}>Content</h3>
-            <div style={{ 
-              display: 'inline-flex', 
-              background: 'var(--vscode-button-secondaryBackground)',
-              border: '1px solid var(--vscode-button-border)',
-              borderRadius: 4,
-              overflow: 'hidden'
-            }}>
-              <button
-                onClick={() => setDiagramViewMode('source')}
-                style={{
-                  padding: '6px 12px',
-                  border: 'none',
-                  background: diagramViewMode === 'source' ? 'var(--vscode-button-background)' : 'transparent',
-                  color: diagramViewMode === 'source' ? 'var(--vscode-button-foreground)' : 'var(--vscode-button-secondaryForeground)',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: diagramViewMode === 'source' ? 600 : 400,
-                  transition: 'all 0.2s'
-                }}
-              >
-                Source
-              </button>
-              <button
-                onClick={() => setDiagramViewMode('rendered')}
-                style={{
-                  padding: '6px 12px',
-                  border: 'none',
-                  background: diagramViewMode === 'rendered' ? 'var(--vscode-button-background)' : 'transparent',
-                  color: diagramViewMode === 'rendered' ? 'var(--vscode-button-foreground)' : 'var(--vscode-button-secondaryForeground)',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: diagramViewMode === 'rendered' ? 600 : 400,
-                  transition: 'all 0.2s'
-                }}
-              >
-                Render
-              </button>
-            </div>
-          </div>
-          {diagramViewMode === 'source' ? (
-            <textarea
-              className="form-textarea"
-              value={content}
-              onChange={(e) => updateContent(e.target.value)}
-              readOnly={isReadOnly}
-              style={{ minHeight: 400 }}
-            />
-          ) : (
-            <>
-              {extractNomnomlBlocks(content).map((section, idx) => (
+        <>
+          {/* Diagrams Section - Rendered at Top */}
+          {extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').length > 0 && (
+            <div className="content-section">
+              <h3 className="section-title">Diagrams</h3>
+              {extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').map((section, idx) => (
                 <div key={idx} style={{ marginBottom: 24 }}>
-                  {section.type === 'nomnoml' ? (
-                    <NomnomlRenderer source={section.content} />
-                  ) : (
-                    <pre style={{
-                      whiteSpace: 'pre-wrap',
-                      wordWrap: 'break-word',
-                      fontFamily: 'var(--vscode-editor-font-family)',
-                      fontSize: 'var(--vscode-editor-font-size)',
-                      lineHeight: 1.6,
-                      color: 'var(--vscode-editor-foreground)',
-                      background: 'var(--vscode-editor-background)',
-                      padding: '12px',
-                      border: '1px solid var(--vscode-panel-border)',
-                      borderRadius: '4px',
-                      margin: 0
-                    }}>
-                      {section.content}
-                    </pre>
-                  )}
+                  <NomnomlRenderer source={section.content} />
                 </div>
               ))}
-            </>
+            </div>
           )}
-        </div>
+          
+          {/* Markdown Content Section - Rendered below diagrams */}
+          <div className="content-section">
+            <h3 className="section-title">Content</h3>
+            <div style={{ height: 400 }}>
+              <MarkdownEditor
+                content={extractNomnomlBlocks(content).filter(s => s.type === 'text').map(s => s.content).join('\n\n')}
+                onChange={() => {}} 
+                readOnly={true}
+              />
+            </div>
+          </div>
+        </>
+      ) : category === 'specs' && !isReadOnly ? (
+        <>
+          {/* Diagrams Section - Editable at Top */}
+          {extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').length > 0 && (
+            <div className="content-section">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                <h3 className="section-title" style={{ margin: 0 }}>Diagrams</h3>
+                <div style={{ 
+                  display: 'inline-flex', 
+                  background: 'var(--vscode-button-secondaryBackground)',
+                  border: '1px solid var(--vscode-button-border)',
+                  borderRadius: 4,
+                  overflow: 'hidden'
+                }}>
+                  <button
+                    onClick={() => setDiagramViewMode('source')}
+                    style={{
+                      padding: '6px 12px',
+                      border: 'none',
+                      background: diagramViewMode === 'source' ? 'var(--vscode-button-background)' : 'transparent',
+                      color: diagramViewMode === 'source' ? 'var(--vscode-button-foreground)' : 'var(--vscode-button-secondaryForeground)',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontWeight: diagramViewMode === 'source' ? 600 : 400,
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Source
+                  </button>
+                  <button
+                    onClick={() => setDiagramViewMode('rendered')}
+                    style={{
+                      padding: '6px 12px',
+                      border: 'none',
+                      background: diagramViewMode === 'rendered' ? 'var(--vscode-button-background)' : 'transparent',
+                      color: diagramViewMode === 'rendered' ? 'var(--vscode-button-foreground)' : 'var(--vscode-button-secondaryForeground)',
+                      cursor: 'pointer',
+                      fontSize: 12,
+                      fontWeight: diagramViewMode === 'rendered' ? 600 : 400,
+                      transition: 'all 0.2s'
+                    }}
+                  >
+                    Render
+                  </button>
+                </div>
+              </div>
+              {diagramViewMode === 'source' ? (
+                <textarea
+                  className="form-textarea"
+                  value={extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').map(s => '```nomnoml\n' + s.content + '\n```').join('\n\n')}
+                  onChange={(e) => {
+                    const textBlocks = extractNomnomlBlocks(content).filter(s => s.type === 'text');
+                    updateContent(e.target.value + '\n\n' + textBlocks.map(s => s.content).join('\n\n'));
+                  }}
+                  style={{ minHeight: 300 }}
+                />
+              ) : (
+                <>
+                  {extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').map((section, idx) => (
+                    <div key={idx} style={{ marginBottom: 24 }}>
+                      <NomnomlRenderer source={section.content} />
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+          
+          {/* Markdown Content Section - WYSIWYG Editor below diagrams */}
+          <div className="content-section">
+            <h3 className="section-title">Content</h3>
+            <div style={{ height: 400 }}>
+              <MarkdownEditor
+                content={extractNomnomlBlocks(content).filter(s => s.type === 'text').map(s => s.content).join('\n\n')}
+                onChange={(markdown) => {
+                  const diagramBlocks = extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml');
+                  const diagramsContent = diagramBlocks.map(s => '```nomnoml\n' + s.content + '\n```').join('\n\n');
+                  updateContent(diagramsContent + (diagramsContent ? '\n\n' : '') + markdown);
+                }}
+                readOnly={false}
+              />
+            </div>
+          </div>
+        </>
       ) : (
         <div className="content-section">
           <h3 className="section-title">Content</h3>
-          <textarea
-            className="form-textarea"
-            value={content}
-            onChange={(e) => updateContent(e.target.value)}
-            readOnly={isReadOnly}
-            style={{ minHeight: 400 }}
-          />
+          <div style={{ height: 400 }}>
+            <MarkdownEditor
+              content={content}
+              onChange={(markdown) => updateContent(markdown)}
+              readOnly={isReadOnly}
+            />
+          </div>
         </div>
       )}
 

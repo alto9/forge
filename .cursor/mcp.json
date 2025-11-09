@@ -1,27 +1,10 @@
 {
   "mcpServers": {
-      "awslabs.aws-documentation-mcp-server": {
-        "command": "/home/danderson/.local/bin/uvx",
-        "args": ["awslabs.aws-documentation-mcp-server@latest"],
-        "env": {
-          "FASTMCP_LOG_LEVEL": "ERROR",
-          "AWS_DOCUMENTATION_PARTITION": "aws"
-        },
-        "disabled": false,
-        "autoApprove": []
-      },
-      "awslabs.cdk-mcp-server": {
-      "command": "/home/danderson/.local/bin/uvx",
-      "args": ["awslabs.cdk-mcp-server@latest"],
-      "env": {
-        "FASTMCP_LOG_LEVEL": "ERROR"
-      },
-      "disabled": false,
-      "autoApprove": []
-    },
     "forge-mcp": {
       "command": "node",
-      "args": ["packages/mcp-server/dist/index.js"],
+      "args": [
+        "packages/mcp-server/dist/index.js"
+      ],
       "disabled": false,
       "autoApprove": []
     }
