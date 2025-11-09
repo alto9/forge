@@ -4,6 +4,7 @@ import { BuildStoryCommand } from './commands/BuildStoryCommand';
 import { ForgeStudioPanel } from './panels/ForgeStudioPanel';
 import { WelcomePanel } from './panels/WelcomePanel';
 import { ProjectPicker } from './utils/ProjectPicker';
+import { checkProjectReadiness } from './utils/projectReadiness';
 
 let outputChannel: vscode.OutputChannel;
 
@@ -58,55 +59,5 @@ export function deactivate() {}
 
 export function getOutputChannel(): vscode.OutputChannel {
     return outputChannel;
-}
-
-/**
- * Check if a project has the required Forge folder structure and command files
- */
-async function checkProjectReadiness(projectUri: vscode.Uri): Promise<boolean> {
-    const requiredFolders = [
-        'ai',
-        'ai/actors',
-        'ai/contexts',
-        'ai/features',
-        'ai/sessions',
-        'ai/specs'
-    ];
-    
-    // Check folders
-    for (const folder of requiredFolders) {
-        const folderUri = vscode.Uri.joinPath(projectUri, folder);
-        try {
-            await vscode.workspace.fs.stat(folderUri);
-            // Folder exists, continue checking
-        } catch {
-            // Folder does not exist
-            return false;
-        }
-    }
-    
-    // Check command files
-    const { getManagedCommandPaths } = await import('./templates/cursorCommands');
-    const { validateCommandFileHash } = await import('./utils/commandValidation');
-    
-    const commandPaths = getManagedCommandPaths();
-    for (const commandPath of commandPaths) {
-        const commandUri = vscode.Uri.joinPath(projectUri, commandPath);
-        try {
-            const fileContent = await vscode.workspace.fs.readFile(commandUri);
-            const contentString = Buffer.from(fileContent).toString('utf8');
-            const isValid = validateCommandFileHash(contentString, commandPath);
-            if (!isValid) {
-                // File exists but is invalid
-                return false;
-            }
-        } catch {
-            // File doesn't exist
-            return false;
-        }
-    }
-    
-    // All folders and command files are valid
-    return true;
 }
 

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { ForgeStudioPanel } from './ForgeStudioPanel';
 import { getManagedCommandPaths } from '../templates/cursorCommands';
 import { validateCommandFileHash, generateCommandFile } from '../utils/commandValidation';
+import { checkProjectReadiness } from '../utils/projectReadiness';
 
 interface FolderStatus {
     path: string;        // Relative path (e.g., "ai/actors")
@@ -123,37 +124,8 @@ export class WelcomePanel {
     }
 
     private async _checkProjectReadiness(): Promise<boolean> {
-        // Check folders
-        for (const folder of REQUIRED_FOLDERS) {
-            const folderUri = vscode.Uri.joinPath(this._projectUri, folder.path);
-            try {
-                await vscode.workspace.fs.stat(folderUri);
-                // Folder exists, continue checking
-            } catch {
-                // Folder does not exist
-                return false;
-            }
-        }
-        
-        // Check command files
-        for (const command of REQUIRED_COMMANDS) {
-            const commandUri = vscode.Uri.joinPath(this._projectUri, command.path);
-            try {
-                const fileContent = await vscode.workspace.fs.readFile(commandUri);
-                const contentString = Buffer.from(fileContent).toString('utf8');
-                const isValid = validateCommandFileHash(contentString, command.path);
-                if (!isValid) {
-                    // File exists but is invalid
-                    return false;
-                }
-            } catch {
-                // File doesn't exist
-                return false;
-            }
-        }
-        
-        // All folders and commands are valid
-        return true;
+        // Use the centralized readiness check for consistency across all components
+        return await checkProjectReadiness(this._projectUri);
     }
 
     private async _getFolderStatus(): Promise<FolderStatus[]> {

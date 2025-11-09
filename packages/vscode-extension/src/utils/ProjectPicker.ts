@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import { checkProjectReadiness } from './projectReadiness';
 
 interface FolderQuickPickItem extends vscode.QuickPickItem {
     uri: vscode.Uri;
@@ -26,7 +27,7 @@ export class ProjectPicker {
         // Multi-root workspace: show picker with ALL folders and readiness indicators
         const items = await Promise.all(
             folders.map(async (folder): Promise<FolderQuickPickItem> => {
-                const isReady = await this.checkProjectReadiness(folder.uri);
+                const isReady = await checkProjectReadiness(folder.uri);
                 return {
                     label: folder.name,
                     description: isReady ? '$(check) Forge Ready' : '$(warning) Not Ready',
@@ -43,35 +44,6 @@ export class ProjectPicker {
         });
 
         return pick?.uri;
-    }
-
-    /**
-     * Check if a project has the required Forge folder structure
-     */
-    private static async checkProjectReadiness(projectUri: vscode.Uri): Promise<boolean> {
-        const requiredFolders = [
-            'ai',
-            'ai/actors',
-            'ai/contexts',
-            'ai/features',
-            'ai/models',
-            'ai/sessions',
-            'ai/specs'
-        ];
-
-        for (const folder of requiredFolders) {
-            const folderUri = vscode.Uri.joinPath(projectUri, folder);
-            try {
-                await vscode.workspace.fs.stat(folderUri);
-                // Folder exists, continue checking
-            } catch {
-                // Folder does not exist
-                return false;
-            }
-        }
-
-        // All folders exist
-        return true;
     }
 }
 

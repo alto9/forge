@@ -57,7 +57,6 @@ Feature: Welcome Screen Display
       | ai/actors | Actor definitions and personas |
       | ai/contexts | Context guidance files |
       | ai/features | Feature definitions with Gherkin |
-      | ai/models | Data model definitions |
       | ai/sessions | Design session tracking |
       | ai/specs | Technical specifications |
     And I should see the following Cursor commands in the checklist:
@@ -82,7 +81,6 @@ Feature: Project Readiness Detection
       | ai/actors |
       | ai/contexts |
       | ai/features |
-      | ai/models |
       | ai/sessions |
       | ai/specs |
     And a project has all required Cursor commands:
@@ -148,6 +146,27 @@ Feature: Project Readiness Detection
     And compare against the expected template hash
     And report which files are valid or invalid
     And update project readiness status accordingly
+
+  Scenario: Consistent readiness checking across all components
+    Given I have a project with all required folders
+    And the project has valid Cursor command files
+    When ProjectPicker checks readiness for the multi-root picker
+    And extension.ts checks readiness after project selection
+    And WelcomePanel checks readiness when rendering
+    Then all three checks MUST return the same result
+    And all three checks MUST use the same readiness criteria
+    And all three checks MUST check for the same folders (excluding legacy ai/models)
+    And all three checks MUST check for the same Cursor commands
+    And the status shown in the picker MUST match the actual routing decision
+
+  Scenario: Prevent status display inconsistency in multi-root workspace
+    Given I have multiple workspace folders
+    And one folder shows "Not Ready" in the project picker
+    When I select that folder
+    Then if the welcome screen appears, the folder was correctly marked "Not Ready"
+    And if Studio opens directly, the folder status was INCORRECT
+    And this scenario should NEVER happen
+    And the picker status MUST accurately predict the routing decision
 ```
 
 ## Feature: Project Initialization
@@ -169,7 +188,6 @@ Feature: Project Initialization
       | ai/actors |
       | ai/contexts |
       | ai/features |
-      | ai/models |
       | ai/sessions |
       | ai/specs |
     And I should see a list of all Cursor commands that will be created:
@@ -201,7 +219,7 @@ Feature: Project Initialization
 
   Scenario: Initialize partially ready project
     Given a project has ai/ and ai/features
-    But is missing ai/actors, ai/contexts, ai/models, ai/sessions, ai/specs
+    But is missing ai/actors, ai/contexts, ai/sessions, ai/specs
     And is missing Cursor commands
     When I initialize the project
     Then only the missing folders should be created

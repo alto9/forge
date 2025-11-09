@@ -202,6 +202,8 @@ Feature: Open Forge Studio
     And I should see which projects are Forge-ready
     And I should see which projects are not yet initialized
     And I should be able to select any project
+    And the Forge-ready status shown must be accurate
+    And the status check must use the same criteria as the actual readiness check
 
   Scenario: Select Forge-ready project from multi-root workspace
     Given I have multiple workspace folders open
@@ -217,4 +219,15 @@ Feature: Open Forge Studio
     Then the welcome screen should appear
     And I should see the project path
     And I should see initialization options
+
+  Scenario: Consistent readiness checking across all entry points
+    Given I have multiple workspace folders open
+    When I execute "Forge: Open Forge Studio"
+    Then the readiness status shown in the project picker
+    And the readiness check performed after selection
+    And the readiness check in the welcome screen
+    Should all use the SAME readiness criteria
+    And should all check for the SAME required folders
+    And should all check for the SAME required Cursor commands
+    And the status displayed must accurately reflect whether the project will open Studio or Welcome screen
 ```

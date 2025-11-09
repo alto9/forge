@@ -115,10 +115,11 @@ ai/
 ai/actors
 ai/contexts
 ai/features
-ai/models
 ai/sessions
 ai/specs
 ```
+
+**Note**: The `ai/models` folder is LEGACY and should NOT be checked. Some legacy implementations (like ProjectPicker) still check for this folder, causing inconsistent readiness status where projects show "Not Ready" when they actually are ready.
 
 ### Required Cursor Commands
 
@@ -129,6 +130,28 @@ In addition to folders, a project is "Forge-ready" when ALL of the following Cur
 .cursor/commands/forge-build.md
 ```
 
+### Centralized Readiness Checking
+
+**CRITICAL**: All code that checks project readiness MUST use a single, centralized implementation to ensure consistency.
+
+**Problem**: Multiple implementations with different criteria lead to:
+- Inaccurate status display in project picker
+- Projects showing "Not Ready" but opening Studio anyway
+- User confusion about actual project state
+
+**Solution**: Create a shared utility module that all components import:
+- `ProjectPicker` - uses shared check when displaying status
+- `extension.ts` command handler - uses shared check when routing
+- `WelcomePanel` - uses shared check when initializing
+
+**Shared Location**: `packages/vscode-extension/src/utils/projectReadiness.ts`
+
+**Implementation Requirements**:
+1. Single source of truth for required folders list
+2. Single source of truth for required commands list
+3. Single readiness check function used everywhere
+4. Consistent criteria across all entry points
+
 **Content Validation**:
 - Each Cursor command file must include a hash comment in the format: `<!-- forge-hash: SHA256_HASH -->`
 - The extension computes the hash of the file content (excluding the hash comment itself)
@@ -137,20 +160,32 @@ In addition to folders, a project is "Forge-ready" when ALL of the following Cur
 
 ### Detection Algorithm
 
+**Canonical Implementation Location**: `packages/vscode-extension/src/utils/projectReadiness.ts`
+
 ```typescript
-async function checkProjectReadiness(projectUri: Uri): Promise<boolean> {
-  const requiredFolders = [
-    'ai',
-    'ai/actors',
-    'ai/contexts',
-    'ai/features',
-    'ai/models',
-    'ai/sessions',
-    'ai/specs'
-  ];
-  
+// packages/vscode-extension/src/utils/projectReadiness.ts
+
+export const REQUIRED_FOLDERS = [
+  'ai',
+  'ai/actors',
+  'ai/contexts',
+  'ai/features',
+  'ai/sessions',
+  'ai/specs'
+];
+
+export const REQUIRED_COMMANDS = [
+  '.cursor/commands/forge-design.md',
+  '.cursor/commands/forge-build.md'
+];
+
+/**
+ * THE authoritative check for project readiness.
+ * All components MUST use this function.
+ */
+export async function checkProjectReadiness(projectUri: Uri): Promise<boolean> {
   // Check folders
-  for (const folder of requiredFolders) {
+  for (const folder of REQUIRED_FOLDERS) {
     const folderUri = Uri.joinPath(projectUri, folder);
     try {
       await workspace.fs.stat(folderUri);
@@ -162,12 +197,7 @@ async function checkProjectReadiness(projectUri: Uri): Promise<boolean> {
   }
   
   // Check Cursor commands
-  const requiredCommands = [
-    '.cursor/commands/forge-design.md',
-    '.cursor/commands/forge-build.md'
-  ];
-  
-  for (const commandPath of requiredCommands) {
+  for (const commandPath of REQUIRED_COMMANDS) {
     const commandUri = Uri.joinPath(projectUri, commandPath);
     try {
       const fileContent = await workspace.fs.readFile(commandUri);
@@ -188,6 +218,25 @@ async function checkProjectReadiness(projectUri: Uri): Promise<boolean> {
   // All folders and commands exist with valid content
   return true;
 }
+```
+
+**Usage in Other Components**:
+
+```typescript
+// ProjectPicker.ts
+import { checkProjectReadiness } from './projectReadiness';
+
+const isReady = await checkProjectReadiness(folder.uri);
+
+// extension.ts
+import { checkProjectReadiness } from './utils/projectReadiness';
+
+const isReady = await checkProjectReadiness(project);
+
+// WelcomePanel.ts
+import { checkProjectReadiness } from '../utils/projectReadiness';
+
+const isReady = await checkProjectReadiness(this._projectUri);
 ```
 
 ### Folder and Command Status Checking
