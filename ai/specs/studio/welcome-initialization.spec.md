@@ -3,6 +3,7 @@ spec_id: welcome-initialization
 name: Welcome Screen and Project Initialization Specification
 description: Technical specification for the welcome screen that checks project readiness and initializes folder structure
 feature_id: [welcome-screen]
+diagram_id: [welcome-component-structure, welcome-initialization-workflow]
 context_id: [theme, vsce]
 ---
 
@@ -14,27 +15,9 @@ The Welcome Screen is a webview panel that appears when a user opens Forge on a 
 
 ## Architecture
 
-### Component Structure
-
-```nomnoml
-#direction: down
-#padding: 10
-
-[extension.ts] forge.openStudio command -> [ProjectPicker]
-[ProjectPicker] returns projectUri -> [<choice>Check Readiness]
-[<choice>Check Readiness] Not Ready -> [WelcomePanel]
-[<choice>Check Readiness] Ready -> [ForgeStudioPanel]
-[WelcomePanel] initialize -> [Create Folders]
-[Create Folders] success -> [ForgeStudioPanel]
-[WelcomePanel] manual open -> [ForgeStudioPanel]
-
-[WelcomePanel] -> [Welcome Webview UI]
-[Welcome Webview UI] postMessage <-> [WelcomePanel]
-
-[WelcomePanel] -> [File System]
-[File System] check folders -> [<choice>Check Readiness]
-[File System] create folders -> [Create Folders]
-```
+See diagrams:
+- [welcome-component-structure](../diagrams/studio/welcome-component-structure.diagram.md) - Component architecture
+- [welcome-initialization-workflow](../diagrams/studio/welcome-initialization-workflow.diagram.md) - Initialization sequence
 
 ### Components
 
@@ -444,30 +427,7 @@ The implementation will be consistent with your documented design and existing c
 
 ## Initialization Process
 
-### Workflow
-
-```nomnoml
-#direction: down
-#padding: 10
-#.sequence: fill=#fff visual=sender
-
-[User] -> [Webview|Click "Initialize Forge Project"]
-[Webview] -> [Webview|Show confirmation dialog]
-[Webview] -> [Webview|Display folders to be created]
-[User] -> [Webview|Click "Confirm"]
-[Webview] -> [WelcomePanel|initializeProject message]
-[WelcomePanel] -> [WelcomePanel|Get list of missing folders]
-
-[WelcomePanel] -> [<frame>For each missing folder]
-[<frame>For each missing folder] -> [FileSystem|createDirectory(folderUri)]
-[FileSystem] -> [WelcomePanel|success/error]
-[WelcomePanel] -> [Webview|progress update]
-
-[WelcomePanel] -> [WelcomePanel|Verify all folders created]
-[WelcomePanel] -> [Webview|initialization complete]
-[WelcomePanel] -> [ForgeStudio|Open Studio]
-[ForgeStudio] -> [User|Dashboard loads]
-```
+See [welcome-initialization-workflow](../diagrams/studio/welcome-initialization-workflow.diagram.md) diagram for the complete workflow sequence.
 
 ### Implementation
 

@@ -3,6 +3,7 @@ spec_id: navigation-menu-implementation
 name: Navigation Menu Implementation
 description: Technical specification for the reorganized Forge Studio navigation menu with foundational and design sections
 feature_id: [navigation-menu]
+diagram_id: [navigation-menu-structure, navigation-session-state]
 context_id: [theme, vsce]
 ---
 
@@ -14,50 +15,9 @@ The Forge Studio navigation menu is organized into two distinct sections to clea
 
 ## Architecture
 
-### Menu Structure
-
-```nomnoml
-#direction: down
-#padding: 10
-
-[Navigation Sidebar]
-[Navigation Sidebar] Contains -> [Dashboard Link]
-[Navigation Sidebar] Contains -> [Foundational Section]
-[Navigation Sidebar] Contains -> [Design Section]
-
-[Foundational Section] Header -> ["FOUNDATIONAL" Text]
-[Foundational Section] Contains -> [Actors Link]
-[Foundational Section] Contains -> [Contexts Link]
-[Foundational Section] Contains -> [Sessions Link]
-
-[Design Section] Header -> ["DESIGN" Text]
-[Design Section] Contains -> [Features Link]
-[Design Section] Contains -> [Specs Link]
-
-[Actors Link] State -> [Always Enabled]
-[Contexts Link] State -> [Always Enabled]
-[Sessions Link] State -> [Always Enabled]
-[Features Link] State -> [Session Dependent]
-[Specs Link] State -> [Session Dependent]
-```
-
-### Session State Management
-
-```nomnoml
-#direction: right
-#padding: 10
-
-[App State] activeSession -> [null | ActiveSession]
-
-[<choice>Check Session State]
-[App State] -> [<choice>Check Session State]
-
-[<choice>Check Session State] No Session -> [Features/Specs Disabled]
-[<choice>Check Session State] Active Session -> [All Items Enabled]
-
-[Features/Specs Disabled] Visual -> [Lock Icon|Reduced Opacity|Tooltip]
-[All Items Enabled] Visual -> [Full Opacity|No Lock Icon|Active State]
-```
+See diagrams:
+- [navigation-menu-structure](../diagrams/studio/navigation-menu-structure.diagram.md) - Menu organization
+- [navigation-session-state](../diagrams/studio/navigation-session-state.diagram.md) - Session state management
 
 ## Component Structure
 

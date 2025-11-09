@@ -153,9 +153,10 @@ export class ForgeStudioPanel {
             return;
         }
 
+        const projectName = path.basename(projectUri.fsPath);
         const panel = vscode.window.createWebviewPanel(
             'forgeStudio',
-            'Forge Studio',
+            `Forge Studio - ${projectName}`,
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -202,6 +203,7 @@ export class ForgeStudioPanel {
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'studio', 'main.js'));
+        const projectName = path.basename(this._projectUri.fsPath);
         const nonce = getNonce();
         return `<!DOCTYPE html>
 <html lang="en">
@@ -209,7 +211,7 @@ export class ForgeStudioPanel {
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} blob: data:; script-src 'nonce-${nonce}'; style-src 'unsafe-inline' ${webview.cspSource}; font-src ${webview.cspSource};" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Forge Studio</title>
+  <title>Forge Studio - ${projectName}</title>
   <style>
     /* Base styles */
     html, body, #root { height: 100%; margin: 0; padding: 0; }
@@ -441,16 +443,17 @@ export class ForgeStudioPanel {
 </html>`;
     }
 
-    private async _getCounts(): Promise<{ sessions: number; features: number; specs: number; actors: number; contexts: number; stories: number; tasks: number; }>
+    private async _getCounts(): Promise<{ sessions: number; features: number; diagrams: number; specs: number; actors: number; contexts: number; stories: number; tasks: number; }>
     {
         const sessions = await this._countRecursive(['ai', 'sessions'], (name) => name.endsWith('.session.md'));
         const features = await this._countRecursive(['ai', 'features'], (name) => name.endsWith('.feature.md'));
+        const diagrams = await this._countRecursive(['ai', 'diagrams'], (name) => name.endsWith('.diagram.md'));
         const specs = await this._countRecursive(['ai', 'specs'], (name) => name.endsWith('.spec.md'));
         const actors = await this._countRecursive(['ai', 'actors'], (name) => name.endsWith('.actor.md'));
         const contexts = await this._countRecursive(['ai', 'contexts'], (name) => name.endsWith('.context.md'));
         const stories = await this._countRecursive(['ai', 'tickets'], (name) => name.endsWith('.story.md'));
         const tasks = await this._countRecursive(['ai', 'tickets'], (name) => name.endsWith('.task.md'));
-        return { sessions, features, specs, actors, contexts, stories, tasks };
+        return { sessions, features, diagrams, specs, actors, contexts, stories, tasks };
     }
 
     private async _countRecursive(pathSegs: string[], predicate: (name: string) => boolean): Promise<number> {
@@ -675,7 +678,7 @@ ${problemStatement}
 
         const pattern = new vscode.RelativePattern(
             path.join(this._projectUri.fsPath, 'ai'),
-            '**/*.{feature.md,spec.md}'
+            '**/*.{feature.md,diagram.md,spec.md}'
         );
 
         this._fileWatcher = vscode.workspace.createFileSystemWatcher(pattern);
@@ -1301,10 +1304,21 @@ ${problemStatement}
                     feature_id: id,
                     spec_id: []
                 };
+            case 'diagrams':
+                return {
+                    diagram_id: id,
+                    name: '',
+                    description: '',
+                    diagram_type: 'flow',
+                    feature_id: [],
+                    spec_id: [],
+                    actor_id: []
+                };
             case 'specs':
                 return {
                     spec_id: id,
                     feature_id: [],
+                    diagram_id: [],
                     context_id: []
                 };
             case 'contexts':
@@ -1344,12 +1358,8 @@ Scenario: (Describe a scenario)
 
 (Additional context or considerations)
 `;
-            case 'specs':
-                return `## Overview
-
-(Describe the technical implementation)
-
-## Architecture
+            case 'diagrams':
+                return `# ${title}
 
 \`\`\`nomnoml
 #direction: down
@@ -1358,9 +1368,30 @@ Scenario: (Describe a scenario)
 [Component A] -> [Component B]
 \`\`\`
 
-## Implementation Details
+## Notes
 
-(Detailed technical specifications)
+(Optional: Brief description of diagram notation or key elements)
+`;
+            case 'specs':
+                return `## Overview
+
+(Describe what technical contracts this spec defines)
+
+## API Contracts
+
+(Define endpoints, methods, parameters, responses)
+
+## Data Structures
+
+(Define interfaces, types, schemas - link to models for details)
+
+## Validation Rules
+
+(Define constraints, business rules, data validation)
+
+## Integration Points
+
+(Define how this integrates with external systems)
 
 ## Notes
 
@@ -1417,6 +1448,7 @@ Scenario: When to use this context
     private _getCategoryExtension(category: string): string {
         const extensions: { [key: string]: string } = {
             'features': '.feature.md',
+            'diagrams': '.diagram.md',
             'specs': '.spec.md',
             'actors': '.actor.md',
             'contexts': '.context.md'

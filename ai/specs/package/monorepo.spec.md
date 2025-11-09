@@ -3,6 +3,7 @@ spec_id: monorepo
 name: Monorepo Package Management
 description: Technical implementation for managing multiple packages in the Forge monorepo
 feature_id: [forge-monorepo]
+diagram_id: [monorepo-structure]
 context_id: [node]
 ---
 
@@ -10,21 +11,7 @@ context_id: [node]
 
 ## Architecture
 
-```nomnoml
-#direction: down
-#padding: 10
-
-[Root Package] -> [VSCode Extension]
-[Root Package] -> [MCP Server]
-
-[VSCode Extension] -> [Extension Source]
-[VSCode Extension] -> [Webview Components]
-[VSCode Extension] -> [Build Artifacts]
-
-[MCP Server] -> [MCP Tools]
-[MCP Server] -> [Server Implementation]
-[MCP Server] -> [Dist Package]
-```
+See [monorepo-structure](../diagrams/package/monorepo-structure.diagram.md) diagram for package organization.
 
 ## Implementation Details
 

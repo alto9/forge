@@ -3,6 +3,7 @@ spec_id: webpack
 name: Webpack Build Configuration
 description: Technical implementation for webpack build process in VSCode extension
 feature_id: [vscode-extension]
+diagram_id: [webpack-build-flow]
 context_id: [node, vsce]
 ---
 
@@ -10,19 +11,7 @@ context_id: [node, vsce]
 
 ## Architecture
 
-```nomnoml
-#direction: down
-#padding: 10
-
-[TypeScript Source] -> [Webpack Loader]
-[Webpack Loader] -> [TypeScript Compiler]
-[TypeScript Compiler] -> [JavaScript Bundle]
-[JavaScript Bundle] -> [Extension Entry Point]
-
-[Webview Source] -> [esbuild]
-[esbuild] -> [React Bundle]
-[React Bundle] -> [Webview Assets]
-```
+See [webpack-build-flow](../diagrams/build/webpack-build-flow.diagram.md) diagram for build process.
 
 ## Implementation Details
 

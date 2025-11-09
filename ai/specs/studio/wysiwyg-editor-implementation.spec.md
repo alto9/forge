@@ -3,6 +3,7 @@ spec_id: wysiwyg-editor-implementation
 name: WYSIWYG Markdown Editor Implementation
 description: Technical specification for implementing a WYSIWYG markdown editor using TipTap
 feature_id: [wysiwyg-markdown-editor]
+diagram_id: [wysiwyg-component-structure, wysiwyg-state-management]
 context_id: [wysiwyg-markdown-editor-guidance, theme]
 ---
 
@@ -57,53 +58,9 @@ npm install @tiptap/react @tiptap/starter-kit @tiptap/extension-link @tiptap/ext
 
 ## Architecture
 
-### Component Structure
-
-```nomnoml
-#direction: down
-#padding: 10
-
-[FileEditor Component] -> [MarkdownEditor Component]
-[MarkdownEditor Component] -> [TipTapEditor (WYSIWYG)]
-[MarkdownEditor Component] -> [SourceEditor (Raw Markdown)]
-[MarkdownEditor Component] contains -> [ToolbarComponent]
-[MarkdownEditor Component] contains -> [ViewToggle]
-
-[TipTapEditor (WYSIWYG)] -> [TipTap Extensions|
-  StarterKit
-  Link
-  Image
-  Table
-  CodeBlock
-  Blockquote]
-
-[TipTapEditor (WYSIWYG)] markdown <-> [MarkdownConverter]
-[SourceEditor (Raw Markdown)] markdown <-> [MarkdownConverter]
-[MarkdownConverter] -> [FileSystem]
-
-[GherkinEditor Component] gherkin -> [FileEditor Component]
-[TipTapEditor (WYSIWYG)] content -> [FileEditor Component]
-```
-
-### State Management
-
-```nomnoml
-#direction: down
-#padding: 10
-
-[FileEditor State|
-  content: string
-  mode: 'wysiwyg' | 'source'
-  readOnly: boolean]
-
-[FileEditor State] -> [TipTapEditor]
-[FileEditor State] -> [SourceEditor]
-[FileEditor State] -> [AutoSave Hook]
-
-[AutoSave Hook] debounce 500ms -> [Save to Extension]
-[Save to Extension] -> [FileSystem]
-[FileSystem] update -> [Session Tracking]
-```
+See diagrams:
+- [wysiwyg-component-structure](../diagrams/studio/wysiwyg-component-structure.diagram.md) - Component hierarchy and TipTap integration
+- [wysiwyg-state-management](../diagrams/studio/wysiwyg-state-management.diagram.md) - State flow and auto-save
 
 ## Implementation Details
 

@@ -3,6 +3,7 @@ spec_id: forge-studio-implementation
 name: Forge Studio Implementation Specification
 description: Technical specification for the Forge Studio VSCode webview application
 feature_id: [forge-studio, studio-sessions]
+diagram_id: [forge-studio-flow, forge-studio-components]
 context_id: [theme, vsce]
 ---
 
@@ -14,47 +15,9 @@ Forge Studio is a React-based webview application embedded in VSCode that provid
 
 ## Architecture
 
-### High-Level Flow
-
-```nomnoml
-#direction: down
-#padding: 10
-
-[User: Forge Open Studio] Command -> [extension.ts]
-[extension.ts] -> [ProjectPicker.pickProject]
-[ProjectPicker.pickProject] -> [<choice>Check Project Readiness]
-[<choice>Check Project Readiness] Not Ready -> [WelcomePanel]
-[<choice>Check Project Readiness] Ready -> [ForgeStudioPanel]
-[WelcomePanel] Initialize -> [Create Folders]
-[Create Folders] Success -> [ForgeStudioPanel]
-[WelcomePanel] Manual Open -> [ForgeStudioPanel]
-[ForgeStudioPanel] -> [Dashboard/Sessions/Files]
-```
-
-### Components
-
-```nomnoml
-#direction: down
-#padding: 10
-
-[VSCode Extension Host] WebviewPanel -> [ForgeStudioPanel.ts]
-[VSCode Extension Host] WebviewPanel -> [WelcomePanel.ts]
-
-[ForgeStudioPanel.ts] HTML + React -> [Webview UI - index.tsx]
-[WelcomePanel.ts] HTML + React -> [Welcome UI - welcome/index.tsx]
-
-[Webview UI - index.tsx] postMessage <-> [ForgeStudioPanel.ts]
-[Welcome UI - welcome/index.tsx] postMessage <-> [WelcomePanel.ts]
-
-[ForgeStudioPanel.ts] File System -> [ai/ directory]
-[WelcomePanel.ts] File System -> [ai/ directory]
-
-[ForgeStudioPanel.ts] -> [FileParser|File I/O]
-[ForgeStudioPanel.ts] -> [PromptGenerator|Prompt Generation]
-
-[Webview UI - index.tsx] Components -> [Dashboard, Sessions, BrowserPage, SessionPanel]
-[Welcome UI - welcome/index.tsx] Components -> [StatusIndicator, FolderChecklist, ActionButtons]
-```
+See diagrams:
+- [forge-studio-flow](../diagrams/studio/forge-studio-flow.diagram.md) - High-level command flow
+- [forge-studio-components](../diagrams/studio/forge-studio-components.diagram.md) - Component architecture
 
 ### Extension Host (ForgeStudioPanel.ts)
 

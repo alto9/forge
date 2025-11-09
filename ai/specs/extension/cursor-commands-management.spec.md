@@ -3,6 +3,7 @@ spec_id: cursor-commands-management
 name: Cursor Commands Management and Distribution
 description: Technical specification for managing, validating, and distributing Cursor command files as part of Forge initialization
 feature_id: [welcome-screen]
+diagram_id: [cursor-commands-flow]
 context_id: [vsce]
 ---
 
@@ -19,25 +20,7 @@ Forge distributes Cursor command files (`.cursor/commands/*.md`) as part of proj
 
 ## Architecture
 
-```nomnoml
-#direction: down
-#padding: 10
-#fontSize: 12
-
-[Extension Activation] -> [Load Command Templates]
-[Load Command Templates] -> [Templates Stored in Memory|<success>]
-
-[Check Project Readiness] -> [Read Command Files]
-[Read Command Files] -> [Validate Hash]
-[Validate Hash] -> [<choice>Hash Valid?]
-[<choice>Hash Valid?] Yes -> [File is Valid|<success>]
-[<choice>Hash Valid?] No -> [File is Invalid/Outdated|<error>]
-
-[Initialize Project] -> [Generate Commands]
-[Generate Commands] -> [Compute Hash]
-[Compute Hash] -> [Embed Hash Comment]
-[Embed Hash Comment] -> [Write File to Project]
-```
+See [cursor-commands-flow](../diagrams/extension/cursor-commands-flow.diagram.md) diagram for command management flow.
 
 ## Command Files
 

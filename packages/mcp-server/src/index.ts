@@ -48,13 +48,13 @@ class ForgeMCPServer {
           },
           {
             name: 'get_forge_schema',
-            description: 'Get the schema specification for a Forge file type (session, feature, spec, model, actor, story, task, or context)',
+            description: 'Get the schema specification for a Forge file type (session, feature, spec, model, actor, story, task, context, or diagram)',
             inputSchema: {
               type: 'object',
               properties: {
                 schema_type: {
                   type: 'string',
-                  enum: ['session', 'feature', 'spec', 'model', 'actor', 'story', 'task', 'context'],
+                  enum: ['session', 'feature', 'spec', 'model', 'actor', 'story', 'task', 'context', 'diagram'],
                   description: 'The type of schema to retrieve',
                 },
               },
@@ -267,7 +267,8 @@ your-project/
 └── ai/
     ├── sessions/     # Design session tracking (nestable)
     ├── features/     # Feature definitions with Gherkin (nestable, index.md at each level)
-    ├── specs/        # Technical specifications with Nomnoml (nestable)
+    ├── diagrams/     # Visual architecture with Nomnoml diagrams (nestable)
+    ├── specs/        # Technical specifications and contracts (nestable)
     ├── models/       # Data model definitions (nestable)
     ├── actors/       # Actor definitions and profiles (nestable)
     ├── contexts/     # Context references and guidance (nestable)
@@ -285,7 +286,8 @@ your-project/
 ### Phase 2: Design Changes
 During an active session:
 - Edit Features: Define or modify feature behavior using Gherkin
-- Edit Specs: Create or update technical specifications with Nomnoml diagrams
+- Edit Diagrams: Create visual representations of architecture and flows
+- Edit Specs: Define technical contracts, interfaces, and validation rules
 - Edit Models: Define data structures and their properties
 - Edit Actors: Define actors and their roles in the system
 - Edit Contexts: Add guidance for specific technical areas
@@ -296,7 +298,7 @@ When design is complete:
 1. User runs "Distill Session" command
 2. System generates a comprehensive prompt that:
    - Calls \`get_forge_about\` to understand the workflow
-   - Analyzes all changed features/specs/models
+   - Analyzes all changed features/diagrams/specs/models
    - Follows context linkages to gather necessary information
    - Creates Stories (code changes) and Tasks (non-code work)
    - Places them in \`ai/tickets/<session-id>/\`
@@ -430,6 +432,7 @@ The session document should describe:
 feature_id: kebab-case-id  # Must match filename without .feature.md
 spec_id: [spec-id-1, spec-id-2]  # Array of related spec IDs
 model_id: [model-id-1]  # Array of related model IDs
+tags: []  # Optional array of tags for categorization
 ---
 
 ## Content Structure
@@ -494,43 +497,75 @@ Rule: Email addresses must be unique
 ## File Format
 - **Filename**: <spec-id>.spec.md
 - **Location**: ai/specs/ (nestable)
-- **Format**: Frontmatter + Markdown + Nomnoml Diagrams
+- **Format**: Frontmatter + Markdown
 
 ## Frontmatter Fields
 ---
 spec_id: kebab-case-id  # Must match filename without .spec.md
 feature_id: [feature-id-1, feature-id-2]  # Array of related feature IDs
 model_id: [model-id-1, model-id-2]  # Array of related model IDs
+diagram_id: [diagram-id-1, diagram-id-2]  # Optional: related diagrams
 context_id: [context-id-1, context-id-2]  # Optional: related contexts
 ---
 
 ## Content Structure
-Specification documents should include:
+Specification documents define WHAT must be built through technical contracts, interfaces, and rules. Specs should focus on:
 
 1. **Overview** - High-level description of what's being specified
-2. **Requirements** - Detailed functional and non-functional requirements
-3. **Architecture** - Technical architecture with Nomnoml diagrams
-4. **Implementation Notes** - Key technical considerations
-5. **Dependencies** - External dependencies and integrations
+2. **API Contracts** - Endpoints, methods, parameters, responses
+3. **Data Structures** - Interfaces, types, schemas (reference models for details)
+4. **Validation Rules** - Constraints, business rules, data validation
+5. **Integration Points** - External dependencies and how they connect
+6. **Error Handling** - Expected error cases and responses
 
-### Nomnoml Diagrams
-Use Nomnoml for visual representations:
+## What Specs Should Contain
+- API endpoint definitions (methods, paths, parameters, responses)
+- TypeScript interfaces and type definitions
+- Validation rules and constraints
+- Integration contracts with external systems
+- Error handling specifications
+- Business rules and logic constraints
 
-\`\`\`nomnoml
-#direction: down
-#padding: 10
+## What Specs Should NOT Contain
+- **Diagrams**: Use separate diagram files (*.diagram.md) and link via diagram_id
+- **Implementation code**: Use context files (*.context.md) for code examples and patterns
+- **Step-by-step guides**: Use context files for implementation guidance
 
-[User] -> [API|POST /login]
-[API] -> [Database|Query user]
-[Database] -> [API|User data]
-[API] -> [User|JWT token]
+## Example Content
+\`\`\`markdown
+## Login API Contract
+
+### Endpoint
+POST /api/auth/login
+
+### Request Schema
+\`\`\`typescript
+interface LoginRequest {
+  email: string;
+  password: string;
+}
+\`\`\`
+
+### Response Schema
+\`\`\`typescript
+interface LoginResponse {
+  token: string;
+  user: UserProfile;
+}
+\`\`\`
+
+### Validation Rules
+- Email must be valid email format
+- Password must be at least 8 characters
+- Rate limit: 5 attempts per 15 minutes per IP
 \`\`\`
 
 ## Linkages
-- References one or more **feature_id** values
+- References one or more **feature_id** values for user-facing behavior
 - References **model_id** values for data structures used
-- May reference **context_id** values for additional guidance
-- Stories will reference this spec_id`,
+- References **diagram_id** values for visual architecture (create separate diagram files)
+- May reference **context_id** values for implementation guidance
+- Stories will reference this spec_id for implementation`,
 
       model: `# Model File Schema
 
@@ -604,6 +639,7 @@ interface User {
 ---
 actor_id: kebab-case-id  # Must match filename without .actor.md
 type: user  # user, system, external
+tags: []  # Optional array of tags for categorization
 ---
 
 ## Content Structure
@@ -792,55 +828,37 @@ Configuration changes in external systems
 
 ## File Format
 - **Filename**: <context-id>.context.md
-- **Location**: ai/contexts/ (nestable)
-- **Format**: Frontmatter + Markdown Instructions + Gherkin Scenarios
+- **Location**: ai/contexts/ (nestable, folder structure defines categories)
+- **Format**: Frontmatter + Gherkin Scenarios
 
 ## Frontmatter Fields
 ---
 context_id: kebab-case-id  # Must match filename without .context.md
-category: technical  # technical, business, process, tool
 name: Optional Name  # Optional human-readable name
 description: Optional Description  # Optional brief description
+tags: []  # Optional array of tags for categorization
 ---
 
 ## Content Structure
-Context files provide guidance on when and how to use specific information or tools. The content consists of:
+Context files provide guidance on when and how to use specific information or tools using Gherkin scenarios.
 
-1. **Instructions Section** (Markdown)
-   - Free-form markdown content providing context and guidance
-   - Appears before or outside gherkin code blocks
-   - Can include headings, lists, links, and other markdown formatting
-
-2. **Gherkin Section** (Code blocks)
-   - Full Gherkin support with Background, Rules, and Scenarios
-   - Use \`\`\`gherkin code blocks for structured guidance
+Use \`\`\`gherkin code blocks for structured guidance scenarios.
 
 ### Example Structure
 
 \`\`\`markdown
-# Context Title
-
-## Instructions
-
-Free-form markdown content providing context and guidance.
-Can include any markdown formatting.
-
-## Gherkin Scenarios
-
 \`\`\`gherkin
-Background:
-  Given shared context for all scenarios
+Scenario: When to use this context
+  Given a specific technical situation
+  When implementing a feature
+  Then follow these guidelines
+  And reference appropriate documentation
 
-Rule: Rule Title
-  Scenario: Example scenario
-    Given a precondition
-    When an action occurs
-    Then an expectation is met
-
-Scenario: Standalone scenario
-  Given a precondition
-  When an action occurs
-  Then an expectation is met
+Scenario: How to implement
+  Given you need to implement this pattern
+  When writing code
+  Then use these best practices
+  And ensure proper error handling
 \`\`\`
 \`\`\`
 
@@ -851,16 +869,71 @@ Context files prevent information overload by providing just-in-time guidance:
 - Where to find additional information
 - Research strategies for unknown technologies
 
-## Gherkin Support
-Context files support full Gherkin syntax:
-- **Background**: Shared context steps for all scenarios
-- **Rules**: Business rules containing Example scenarios
-- **Scenarios**: Standalone scenarios defining guidance
+## Organization
+- Use nested folders to organize contexts by category
+- Folder structure replaces the deprecated category field
+- Example: ai/contexts/foundation/, ai/contexts/vscode/
 
 ## Linkages
 - Referenced by **spec_id** and **story_id** values
 - May reference documentation in ai/docs/
 - May reference MCP tools or external resources`,
+
+      diagram: `# Diagram File Schema
+
+## File Format
+- **Filename**: <diagram-id>.diagram.md
+- **Location**: ai/diagrams/ (nestable)
+- **Format**: Frontmatter + Single Nomnoml Diagram
+
+## Frontmatter Fields
+---
+diagram_id: kebab-case-id  # Must match filename without .diagram.md
+name: Human Readable Name
+description: Brief description of what this diagram shows
+diagram_type: flow  # flow, infrastructure, component, state, sequence
+feature_id: []  # Optional: related features
+spec_id: []  # Optional: related specs
+actor_id: []  # Optional: actors shown in diagram
+---
+
+## Content Structure
+Diagram files contain a SINGLE nomnoml diagram that visualizes system architecture, flows, or relationships.
+
+### Single Nomnoml Diagram
+Each diagram file should contain exactly ONE nomnoml diagram block:
+
+\`\`\`nomnoml
+#direction: down
+#padding: 10
+
+[User] -> [API Gateway]
+[API Gateway] -> [Lambda Function]
+[Lambda Function] -> [DynamoDB]
+\`\`\`
+
+### Optional: Brief Notes
+You may include 2-3 sentences of legend or key notes after the diagram to clarify notation.
+
+## Purpose
+Diagrams provide visual representations for:
+- **Infrastructure**: AWS resources, databases, services, deployment topology
+- **Component Relationships**: React component hierarchy, service dependencies
+- **Data Flow**: How data moves through the system, request/response cycles
+- **Actor Interactions**: Who talks to what, system boundaries
+- **State Machines**: Session lifecycles, workflow states
+
+## What Diagrams Are NOT
+- Do NOT include implementation code or pseudocode
+- Do NOT include detailed technical specifications
+- Do NOT include multiple diagrams in one file
+- Keep it visual and high-level
+
+## Linkages
+- Referenced by **spec_id** for technical specifications
+- May reference **feature_id** to show feature architecture
+- May reference **actor_id** to show which actors are involved
+- Stories may reference **diagram_id** for visual context`,
     };
 
     const schema = schemas[schemaType];

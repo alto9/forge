@@ -43,8 +43,8 @@ interface FileContent {
 
 function App() {
   const [state, setState] = React.useState<any>({ projectPath: '' });
-  const [counts, setCounts] = React.useState<{ sessions: number; features: number; specs: number; actors: number; contexts: number; stories: number; tasks: number } | null>(null);
-  const [route, setRoute] = React.useState<{ page: 'dashboard' | 'features' | 'specs' | 'actors' | 'contexts' | 'sessions'; params?: any }>({ page: 'dashboard' });
+  const [counts, setCounts] = React.useState<{ sessions: number; features: number; diagrams: number; specs: number; actors: number; contexts: number; stories: number; tasks: number } | null>(null);
+  const [route, setRoute] = React.useState<{ page: 'dashboard' | 'features' | 'diagrams' | 'specs' | 'actors' | 'contexts' | 'sessions'; params?: any }>({ page: 'dashboard' });
   const [activeSession, setActiveSession] = React.useState<ActiveSession | null>(null);
   const [sessions, setSessions] = React.useState<Session[]>([]);
   const [showNewSessionForm, setShowNewSessionForm] = React.useState(false);
@@ -123,6 +123,10 @@ function App() {
 
         {route.page === 'features' && (
           <BrowserPage category="features" title="Features" activeSession={activeSession} />
+        )}
+
+        {route.page === 'diagrams' && (
+          <BrowserPage category="diagrams" title="Diagrams" activeSession={activeSession} />
         )}
 
         {route.page === 'specs' && (
@@ -247,6 +251,7 @@ function BrowserPage({ category, title, activeSession }: { category: string; tit
             category={category}
             title={title}
             activeSession={activeSession}
+            hasFolders={folderTree.length > 0}
           />
         )}
         {selectedFolder && !selectedFile && (
@@ -276,10 +281,11 @@ function BrowserPage({ category, title, activeSession }: { category: string; tit
   );
 }
 
-function CategoryEmptyState({ category, title, activeSession }: {
+function CategoryEmptyState({ category, title, activeSession, hasFolders }: {
   category: string;
   title: string;
   activeSession: ActiveSession | null;
+  hasFolders: boolean;
 }) {
   const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1, -1);
   const isFoundational = category === 'actors' || category === 'contexts';
@@ -299,6 +305,21 @@ function CategoryEmptyState({ category, title, activeSession }: {
       category
     });
   };
+
+  // If folders exist, show a different message
+  if (hasFolders) {
+    return (
+      <div className="p-16">
+        <div className="empty-state">
+          <div className="empty-state-icon">📂</div>
+          <div style={{ marginBottom: 16 }}>Select a folder from the tree</div>
+          <div style={{ fontSize: 13, opacity: 0.8 }}>
+            Click on a folder in the tree view to view its contents.
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!activeSession && !isFoundational) {
     return (
@@ -363,6 +384,8 @@ function FolderTreeView({ folders, selectedFolder, onFolderClick, category, acti
   };
 
   const handleContextMenu = (e: React.MouseEvent, folderPath: string) => {
+    // Allow folder creation in foundational categories (actors, contexts) even without a session
+    // For design categories (features, specs), require an active session
     if (!activeSession && !isFoundational) return;
     
     e.preventDefault();
@@ -371,6 +394,20 @@ function FolderTreeView({ folders, selectedFolder, onFolderClick, category, acti
     vscode?.postMessage({ 
       type: 'promptCreateFolder', 
       folderPath,
+      category
+    });
+  };
+
+  const handleToolbarContextMenu = (e: React.MouseEvent) => {
+    // Allow root-level folder creation in foundational categories even without a session
+    if (!activeSession && !isFoundational) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    vscode?.postMessage({ 
+      type: 'promptCreateFolder', 
+      folderPath: '', // Empty path means root level
       category
     });
   };
@@ -410,15 +447,31 @@ function FolderTreeView({ folders, selectedFolder, onFolderClick, category, acti
 
   return (
     <div className="tree-view">
-      <div className="toolbar">
-        <span className="font-medium">{category}</span>
+      <div 
+        className="toolbar" 
+        onContextMenu={handleToolbarContextMenu}
+        style={{ cursor: (activeSession || isFoundational) ? 'context-menu' : 'default' }}
+        title={(activeSession || isFoundational) ? 'Right-click to create a folder' : ''}
+      >
+        <span className="font-medium">{category.charAt(0).toUpperCase() + category.slice(1)}</span>
       </div>
-      {folders.length === 0 && (
-        <div style={{ padding: 16, textAlign: 'center', opacity: 0.7, fontSize: 12 }}>
-          No folders yet
-        </div>
-      )}
-      {folders.map(folder => renderFolder(folder))}
+      <div onContextMenu={handleToolbarContextMenu}>
+        {folders.length === 0 && (
+          <div 
+            style={{ 
+              padding: 16, 
+              textAlign: 'center', 
+              opacity: 0.7, 
+              fontSize: 12,
+              cursor: (activeSession || isFoundational) ? 'context-menu' : 'default'
+            }}
+            title={(activeSession || isFoundational) ? 'Right-click to create a folder' : ''}
+          >
+            No folders yet
+          </div>
+        )}
+        {folders.map(folder => renderFolder(folder))}
+      </div>
     </div>
   );
 }
@@ -671,18 +724,12 @@ function serializeFeatureContent(parsed: ParsedFeatureContent): string {
 }
 
 interface ParsedContextContent {
-  instructions: string; // Markdown content outside gherkin blocks
-  background: GherkinStep[];
-  rules: GherkinRule[];
   scenarios: GherkinScenario[];
 }
 
-// Parse Context content (instructions + gherkin)
+// Parse Context content (only scenarios)
 function parseContextContent(content: string): ParsedContextContent {
   const result: ParsedContextContent = {
-    instructions: '',
-    background: [],
-    rules: [],
     scenarios: []
   };
 
@@ -695,95 +742,50 @@ function parseContextContent(content: string): ParsedContextContent {
     blocks.push(match[1]);
   }
 
-  // Extract instructions (everything outside gherkin blocks)
-  const withoutGherkin = content.replace(/```gherkin\s*\n[\s\S]*?```/g, '').trim();
-  result.instructions = withoutGherkin;
-
-  // Parse each gherkin block
+  // Parse each gherkin block for scenarios only
   for (const block of blocks) {
     const lines = block.split(/\r?\n/).map(l => l.trim()).filter(l => l);
     let i = 0;
     let currentScenario: GherkinScenario | null = null;
-    let currentRule: GherkinRule | null = null;
-    let inBackground = false;
 
     while (i < lines.length) {
       const line = lines[i];
 
+      // Skip Feature lines
       if (line.startsWith('Feature:')) {
         i++;
         continue;
       }
 
-      if (line.startsWith('Background:')) {
-        inBackground = true;
-        i++;
-        continue;
-      }
-
-      if (line.startsWith('Rule:')) {
-        if (currentScenario && !currentRule) {
-          result.scenarios.push(currentScenario);
-          currentScenario = null;
-        }
-        if (currentRule) {
-          result.rules.push(currentRule);
-        }
-        currentRule = {
-          title: line.substring(5).trim(),
-          examples: []
-        };
-        inBackground = false;
-        i++;
-        continue;
-      }
-
-      if (line.startsWith('Scenario:') || line.startsWith('Example:')) {
+      // Parse Scenario
+      if (line.startsWith('Scenario:')) {
         if (currentScenario) {
-          if (currentRule) {
-            currentRule.examples.push(currentScenario);
-          } else {
-            result.scenarios.push(currentScenario);
-          }
+          result.scenarios.push(currentScenario);
         }
-        const prefix = line.startsWith('Scenario:') ? 'Scenario:' : 'Example:';
         currentScenario = {
-          title: line.substring(prefix.length).trim(),
+          title: line.substring('Scenario:'.length).trim(),
           steps: []
         };
-        inBackground = false;
         i++;
         continue;
       }
 
       // Parse steps
       const stepMatch = /^(Given|When|Then|And|But)\s+(.*)$/i.exec(line);
-      if (stepMatch) {
+      if (stepMatch && currentScenario) {
         const step: GherkinStep = {
           keyword: stepMatch[1].charAt(0).toUpperCase() + stepMatch[1].slice(1).toLowerCase() as any,
           text: stepMatch[2]
         };
-
-        if (inBackground) {
-          result.background.push(step);
-        } else if (currentScenario) {
-          currentScenario.steps.push(step);
-        }
+        currentScenario.steps.push(step);
       }
 
       i++;
     }
 
-    // Finalize
+    // Finalize last scenario
     if (currentScenario) {
-      if (currentRule) {
-        currentRule.examples.push(currentScenario);
-      } else {
-        result.scenarios.push(currentScenario);
-      }
-    }
-    if (currentRule) {
-      result.rules.push(currentRule);
+      result.scenarios.push(currentScenario);
     }
   }
 
@@ -792,39 +794,9 @@ function parseContextContent(content: string): ParsedContextContent {
 
 // Serialize Context content back to markdown
 function serializeContextContent(parsed: ParsedContextContent): string {
-  const parts: string[] = [];
-
-  // Add instructions section if present
-  if (parsed.instructions.trim()) {
-    parts.push(parsed.instructions.trim());
-  }
-
-  // Build gherkin blocks
   const gherkinBlocks: string[] = [];
 
-  // Background
-  if (parsed.background.length > 0) {
-    let block = 'Background:\n';
-    for (const step of parsed.background) {
-      block += `  ${step.keyword} ${step.text}\n`;
-    }
-    gherkinBlocks.push('```gherkin\n' + block.trim() + '\n```');
-  }
-
-  // Rules
-  for (const rule of parsed.rules) {
-    let block = `Rule: ${rule.title}\n`;
-    for (const example of rule.examples) {
-      block += `  Example: ${example.title}\n`;
-      for (const step of example.steps) {
-        block += `    ${step.keyword} ${step.text}\n`;
-      }
-      block += '\n';
-    }
-    gherkinBlocks.push('```gherkin\n' + block.trim() + '\n```');
-  }
-
-  // Scenarios
+  // Scenarios only
   for (const scenario of parsed.scenarios) {
     let block = `Scenario: ${scenario.title}\n`;
     for (const step of scenario.steps) {
@@ -833,15 +805,104 @@ function serializeContextContent(parsed: ParsedContextContent): string {
     gherkinBlocks.push('```gherkin\n' + block.trim() + '\n```');
   }
 
-  // Combine instructions and gherkin blocks
-  if (gherkinBlocks.length > 0) {
-    if (parts.length > 0) {
-      parts.push(''); // Add spacing between instructions and gherkin
-    }
-    parts.push(...gherkinBlocks);
-  }
+  return gherkinBlocks.join('\n\n');
+}
 
-  return parts.join('\n\n');
+// TagInput Component
+function TagInput({ tags, onChange, readOnly }: { 
+  tags: string[]; 
+  onChange: (tags: string[]) => void;
+  readOnly: boolean;
+}) {
+  const [inputValue, setInputValue] = React.useState('');
+
+  const handleAddTag = () => {
+    if (!inputValue.trim()) return;
+    
+    // Support comma-separated input
+    const newTags = inputValue
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag && !tags.includes(tag));
+    
+    if (newTags.length > 0) {
+      onChange([...tags, ...newTags]);
+      setInputValue('');
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleAddTag();
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    onChange(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  return (
+    <div>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+        {tags.map((tag, index) => (
+          <div
+            key={index}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '4px 8px',
+              background: 'var(--vscode-badge-background)',
+              color: 'var(--vscode-badge-foreground)',
+              borderRadius: 3,
+              fontSize: 12,
+              fontWeight: 500
+            }}
+          >
+            <span>{tag}</span>
+            {!readOnly && (
+              <button
+                onClick={() => handleRemoveTag(tag)}
+                style={{
+                  border: 'none',
+                  background: 'none',
+                  color: 'inherit',
+                  cursor: 'pointer',
+                  padding: 0,
+                  fontSize: 14,
+                  lineHeight: 1,
+                  opacity: 0.8
+                }}
+                title="Remove tag"
+              >
+                ×
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+      {!readOnly && (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            className="form-input"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Add tags (comma-separated)"
+            style={{ flex: 1, fontSize: 12 }}
+          />
+          <button
+            className="btn btn-primary"
+            onClick={handleAddTag}
+            style={{ fontSize: 12, padding: '6px 12px' }}
+          >
+            Add
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // GherkinStepRow Component
@@ -1546,6 +1607,7 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
   const [parsedContext, setParsedContext] = React.useState<ParsedContextContent | null>(null);
   const [isDirty, setIsDirty] = React.useState(false);
   const [diagramViewMode, setDiagramViewMode] = React.useState<'source' | 'rendered'>('source');
+  const [propertiesCollapsed, setPropertiesCollapsed] = React.useState(false);
   const isFoundational = category === 'actors' || category === 'contexts';
   const isReadOnly = !activeSession && !isFoundational;
 
@@ -1637,34 +1699,66 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
       )}
 
       <div className="content-section">
-        <h3 className="section-title">Metadata</h3>
-        {category === 'features' && (
-          <FeatureFrontmatter 
-            frontmatter={frontmatter} 
-            onChange={updateFrontmatter}
-            readOnly={isReadOnly}
-          />
-        )}
-        {category === 'specs' && (
-          <SpecFrontmatter 
-            frontmatter={frontmatter} 
-            onChange={updateFrontmatter}
-            readOnly={isReadOnly}
-          />
-        )}
-        {category === 'actors' && (
-          <ActorFrontmatter 
-            frontmatter={frontmatter} 
-            onChange={updateFrontmatter}
-            readOnly={isReadOnly}
-          />
-        )}
-        {category === 'contexts' && (
-          <ContextFrontmatter 
-            frontmatter={frontmatter} 
-            onChange={updateFrontmatter}
-            readOnly={isReadOnly}
-          />
+        <h3 
+          className="section-title" 
+          style={{ 
+            cursor: 'pointer', 
+            userSelect: 'none',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}
+          onClick={() => setPropertiesCollapsed(!propertiesCollapsed)}
+        >
+          <span>
+            {category === 'features' && 'Feature Properties'}
+            {category === 'diagrams' && 'Diagram Properties'}
+            {category === 'specs' && 'Spec Properties'}
+            {category === 'actors' && 'Actor Properties'}
+            {category === 'contexts' && 'Context Properties'}
+          </span>
+          <span style={{ fontSize: 12, opacity: 0.7 }}>
+            {propertiesCollapsed ? '▸' : '▾'}
+          </span>
+        </h3>
+        {!propertiesCollapsed && (
+          <>
+            {category === 'features' && (
+              <FeatureFrontmatter 
+                frontmatter={frontmatter} 
+                onChange={updateFrontmatter}
+                readOnly={isReadOnly}
+              />
+            )}
+            {category === 'diagrams' && (
+              <DiagramFrontmatter 
+                frontmatter={frontmatter} 
+                onChange={updateFrontmatter}
+                readOnly={isReadOnly}
+              />
+            )}
+            {category === 'specs' && (
+              <SpecFrontmatter 
+                frontmatter={frontmatter} 
+                onChange={updateFrontmatter}
+                readOnly={isReadOnly}
+              />
+            )}
+            {category === 'actors' && (
+              <ActorFrontmatter 
+                frontmatter={frontmatter} 
+                onChange={updateFrontmatter}
+                readOnly={isReadOnly}
+              />
+            )}
+            {category === 'contexts' && (
+              <ContextFrontmatter 
+                frontmatter={frontmatter} 
+                onChange={updateFrontmatter}
+                readOnly={isReadOnly}
+              />
+            )}
+          </>
         )}
       </div>
 
@@ -1690,111 +1784,67 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
         </>
       ) : category === 'contexts' && parsedContext ? (
         <>
-          <div className="content-section">
-            <h3 className="section-title">Instructions</h3>
-            <div style={{ height: 200 }}>
-              <MarkdownEditor
-                content={parsedContext.instructions}
-                onChange={(markdown) => updateParsedContext({ ...parsedContext, instructions: markdown })}
-                readOnly={isReadOnly}
-              />
-            </div>
-            <div style={{ fontSize: 11, opacity: 0.7, marginTop: 8 }}>
-              Markdown content that appears outside gherkin code blocks
-            </div>
-          </div>
-
-          <BackgroundSection
-            steps={parsedContext.background}
-            readOnly={isReadOnly}
-            onChange={(steps) => updateParsedContext({ ...parsedContext, background: steps })}
-          />
-          
-          <RulesSection
-            rules={parsedContext.rules}
-            readOnly={isReadOnly}
-            onChange={(rules) => updateParsedContext({ ...parsedContext, rules })}
-          />
-          
           <ScenariosSection
             scenarios={parsedContext.scenarios}
             readOnly={isReadOnly}
             onChange={(scenarios) => updateParsedContext({ ...parsedContext, scenarios })}
           />
         </>
-      ) : category === 'specs' && isReadOnly ? (
+      ) : category === 'diagrams' ? (
         <>
-          {/* Diagrams Section - Rendered at Top */}
-          {extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').length > 0 && (
-            <div className="content-section">
-              <h3 className="section-title">Diagrams</h3>
-              {extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').map((section, idx) => (
-                <div key={idx} style={{ marginBottom: 24 }}>
-                  <NomnomlRenderer source={section.content} />
-                </div>
-              ))}
-            </div>
-          )}
-          
-          {/* Markdown Content Section - Rendered below diagrams */}
-          <div className="content-section">
-            <h3 className="section-title">Content</h3>
-            <div style={{ height: 400 }}>
-              <MarkdownEditor
-                content={extractNomnomlBlocks(content).filter(s => s.type === 'text').map(s => s.content).join('\n\n')}
-                onChange={() => {}} 
-                readOnly={true}
-              />
-            </div>
-          </div>
-        </>
-      ) : category === 'specs' && !isReadOnly ? (
-        <>
-          {/* Diagrams Section - Editable at Top */}
+          {/* Diagram Rendering Section */}
           {extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').length > 0 && (
             <div className="content-section">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <h3 className="section-title" style={{ margin: 0 }}>Diagrams</h3>
-                <div style={{ 
-                  display: 'inline-flex', 
-                  background: 'var(--vscode-button-secondaryBackground)',
-                  border: '1px solid var(--vscode-button-border)',
-                  borderRadius: 4,
-                  overflow: 'hidden'
-                }}>
-                  <button
-                    onClick={() => setDiagramViewMode('source')}
-                    style={{
-                      padding: '6px 12px',
-                      border: 'none',
-                      background: diagramViewMode === 'source' ? 'var(--vscode-button-background)' : 'transparent',
-                      color: diagramViewMode === 'source' ? 'var(--vscode-button-foreground)' : 'var(--vscode-button-secondaryForeground)',
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      fontWeight: diagramViewMode === 'source' ? 600 : 400,
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    Source
-                  </button>
-                  <button
-                    onClick={() => setDiagramViewMode('rendered')}
-                    style={{
-                      padding: '6px 12px',
-                      border: 'none',
-                      background: diagramViewMode === 'rendered' ? 'var(--vscode-button-background)' : 'transparent',
-                      color: diagramViewMode === 'rendered' ? 'var(--vscode-button-foreground)' : 'var(--vscode-button-secondaryForeground)',
-                      cursor: 'pointer',
-                      fontSize: 12,
-                      fontWeight: diagramViewMode === 'rendered' ? 600 : 400,
-                      transition: 'all 0.2s'
-                    }}
-                  >
-                    Render
-                  </button>
-                </div>
+                <h3 className="section-title" style={{ margin: 0 }}>Diagram</h3>
+                {!isReadOnly && (
+                  <div style={{ 
+                    display: 'inline-flex', 
+                    background: 'var(--vscode-button-secondaryBackground)',
+                    border: '1px solid var(--vscode-button-border)',
+                    borderRadius: 4,
+                    overflow: 'hidden'
+                  }}>
+                    <button
+                      onClick={() => setDiagramViewMode('source')}
+                      style={{
+                        padding: '6px 12px',
+                        border: 'none',
+                        background: diagramViewMode === 'source' ? 'var(--vscode-button-background)' : 'transparent',
+                        color: diagramViewMode === 'source' ? 'var(--vscode-button-foreground)' : 'var(--vscode-button-secondaryForeground)',
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        fontWeight: diagramViewMode === 'source' ? 600 : 400,
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      Source
+                    </button>
+                    <button
+                      onClick={() => setDiagramViewMode('rendered')}
+                      style={{
+                        padding: '6px 12px',
+                        border: 'none',
+                        background: diagramViewMode === 'rendered' ? 'var(--vscode-button-background)' : 'transparent',
+                        color: diagramViewMode === 'rendered' ? 'var(--vscode-button-foreground)' : 'var(--vscode-button-secondaryForeground)',
+                        cursor: 'pointer',
+                        fontSize: 12,
+                        fontWeight: diagramViewMode === 'rendered' ? 600 : 400,
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      Render
+                    </button>
+                  </div>
+                )}
               </div>
-              {diagramViewMode === 'source' ? (
+              {isReadOnly || diagramViewMode === 'rendered' ? (
+                extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').map((section, idx) => (
+                  <div key={idx} style={{ marginBottom: 24 }}>
+                    <NomnomlRenderer source={section.content} />
+                  </div>
+                ))
+              ) : (
                 <textarea
                   className="form-textarea"
                   value={extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').map(s => '```nomnoml\n' + s.content + '\n```').join('\n\n')}
@@ -1802,36 +1852,38 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
                     const textBlocks = extractNomnomlBlocks(content).filter(s => s.type === 'text');
                     updateContent(e.target.value + '\n\n' + textBlocks.map(s => s.content).join('\n\n'));
                   }}
-                  style={{ minHeight: 300 }}
+                  style={{ minHeight: 300, fontFamily: 'monospace' }}
                 />
-              ) : (
-                <>
-                  {extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').map((section, idx) => (
-                    <div key={idx} style={{ marginBottom: 24 }}>
-                      <NomnomlRenderer source={section.content} />
-                    </div>
-                  ))}
-                </>
               )}
             </div>
           )}
           
-          {/* Markdown Content Section - WYSIWYG Editor below diagrams */}
+          {/* Optional Notes Section */}
           <div className="content-section">
-            <h3 className="section-title">Content</h3>
-            <div style={{ height: 400 }}>
+            <h3 className="section-title">Notes</h3>
+            <div style={{ height: 200 }}>
               <MarkdownEditor
                 content={extractNomnomlBlocks(content).filter(s => s.type === 'text').map(s => s.content).join('\n\n')}
-                onChange={(markdown) => {
-                  const diagramBlocks = extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml');
-                  const diagramsContent = diagramBlocks.map(s => '```nomnoml\n' + s.content + '\n```').join('\n\n');
-                  updateContent(diagramsContent + (diagramsContent ? '\n\n' : '') + markdown);
-                }}
-                readOnly={false}
+                onChange={(newContent) => {
+                  const diagramBlocks = extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').map(s => '```nomnoml\n' + s.content + '\n```');
+                  updateContent(diagramBlocks.join('\n\n') + '\n\n' + newContent);
+                }} 
+                readOnly={isReadOnly}
               />
             </div>
           </div>
         </>
+      ) : category === 'specs' ? (
+        <div className="content-section">
+          <h3 className="section-title">Specification Content</h3>
+          <div style={{ height: 400 }}>
+            <MarkdownEditor
+              content={content}
+              onChange={(markdown) => updateContent(markdown)}
+              readOnly={isReadOnly}
+            />
+          </div>
+        </div>
       ) : (
         <div className="content-section">
           <h3 className="section-title">Content</h3>
@@ -1901,6 +1953,95 @@ function FeatureFrontmatter({ frontmatter, onChange, readOnly }: {
           readOnly={readOnly}
         />
       </div>
+      <div className="form-group">
+        <label className="form-label">Tags</label>
+        <TagInput
+          tags={Array.isArray(frontmatter.tags) ? frontmatter.tags : []}
+          onChange={(tags) => onChange('tags', tags)}
+          readOnly={readOnly}
+        />
+      </div>
+    </>
+  );
+}
+
+function DiagramFrontmatter({ frontmatter, onChange, readOnly }: { 
+  frontmatter: any; 
+  onChange: (key: string, value: any) => void;
+  readOnly: boolean;
+}) {
+  return (
+    <>
+      <div className="form-group">
+        <label className="form-label">Diagram ID</label>
+        <input 
+          className="form-input"
+          value={frontmatter.diagram_id || ''}
+          onChange={(e) => onChange('diagram_id', e.target.value)}
+          readOnly={readOnly}
+        />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Name</label>
+        <input 
+          className="form-input"
+          value={frontmatter.name || ''}
+          onChange={(e) => onChange('name', e.target.value)}
+          readOnly={readOnly}
+        />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Description</label>
+        <textarea 
+          className="form-textarea"
+          value={frontmatter.description || ''}
+          onChange={(e) => onChange('description', e.target.value)}
+          readOnly={readOnly}
+          rows={2}
+        />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Diagram Type</label>
+        <select 
+          className="form-input"
+          value={frontmatter.diagram_type || 'flow'}
+          onChange={(e) => onChange('diagram_type', e.target.value)}
+          disabled={readOnly}
+        >
+          <option value="flow">Flow</option>
+          <option value="infrastructure">Infrastructure</option>
+          <option value="component">Component</option>
+          <option value="state">State</option>
+          <option value="sequence">Sequence</option>
+        </select>
+      </div>
+      <div className="form-group">
+        <label className="form-label">Feature IDs (comma-separated)</label>
+        <input 
+          className="form-input"
+          value={Array.isArray(frontmatter.feature_id) ? frontmatter.feature_id.join(', ') : frontmatter.feature_id || ''}
+          onChange={(e) => onChange('feature_id', e.target.value.split(',').map((s: string) => s.trim()))}
+          readOnly={readOnly}
+        />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Spec IDs (comma-separated)</label>
+        <input 
+          className="form-input"
+          value={Array.isArray(frontmatter.spec_id) ? frontmatter.spec_id.join(', ') : frontmatter.spec_id || ''}
+          onChange={(e) => onChange('spec_id', e.target.value.split(',').map((s: string) => s.trim()))}
+          readOnly={readOnly}
+        />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Actor IDs (comma-separated)</label>
+        <input 
+          className="form-input"
+          value={Array.isArray(frontmatter.actor_id) ? frontmatter.actor_id.join(', ') : frontmatter.actor_id || ''}
+          onChange={(e) => onChange('actor_id', e.target.value.split(',').map((s: string) => s.trim()))}
+          readOnly={readOnly}
+        />
+      </div>
     </>
   );
 }
@@ -1927,6 +2068,15 @@ function SpecFrontmatter({ frontmatter, onChange, readOnly }: {
           className="form-input"
           value={Array.isArray(frontmatter.feature_id) ? frontmatter.feature_id.join(', ') : frontmatter.feature_id || ''}
           onChange={(e) => onChange('feature_id', e.target.value.split(',').map((s: string) => s.trim()))}
+          readOnly={readOnly}
+        />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Diagram IDs (comma-separated)</label>
+        <input 
+          className="form-input"
+          value={Array.isArray(frontmatter.diagram_id) ? frontmatter.diagram_id.join(', ') : frontmatter.diagram_id || ''}
+          onChange={(e) => onChange('diagram_id', e.target.value.split(',').map((s: string) => s.trim()))}
           readOnly={readOnly}
         />
       </div>
@@ -1969,15 +2119,6 @@ function ContextFrontmatter({ frontmatter, onChange, readOnly }: {
         />
       </div>
       <div className="form-group">
-        <label className="form-label">Category</label>
-        <input 
-          className="form-input"
-          value={frontmatter.category || ''}
-          onChange={(e) => onChange('category', e.target.value)}
-          readOnly={readOnly}
-        />
-      </div>
-      <div className="form-group">
         <label className="form-label">Name (optional)</label>
         <input 
           className="form-input"
@@ -1996,6 +2137,14 @@ function ContextFrontmatter({ frontmatter, onChange, readOnly }: {
           readOnly={readOnly}
           placeholder="Optional brief description"
           style={{ minHeight: 60 }}
+        />
+      </div>
+      <div className="form-group">
+        <label className="form-label">Tags</label>
+        <TagInput
+          tags={Array.isArray(frontmatter.tags) ? frontmatter.tags : []}
+          onChange={(tags) => onChange('tags', tags)}
+          readOnly={readOnly}
         />
       </div>
       <div className="form-group">
@@ -2045,6 +2194,14 @@ function ActorFrontmatter({ frontmatter, onChange, readOnly }: {
           <option value="system">System</option>
           <option value="external">External</option>
         </select>
+      </div>
+      <div className="form-group">
+        <label className="form-label">Tags</label>
+        <TagInput
+          tags={Array.isArray(frontmatter.tags) ? frontmatter.tags : []}
+          onChange={(tags) => onChange('tags', tags)}
+          readOnly={readOnly}
+        />
       </div>
     </>
   );

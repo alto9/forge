@@ -73,6 +73,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const designItems: NavItemConfig[] = [
     { id: 'features', label: 'Features', requiresSession: true },
+    { id: 'diagrams', label: 'Diagrams', requiresSession: true },
     { id: 'specs', label: 'Specifications', requiresSession: true },
   ];
 
@@ -137,6 +138,7 @@ function getTooltip(
     'Contexts': 'Provide technical guidance and context - Always editable',
     'Sessions': 'Manage design sessions - Create and manage at any time',
     'Features': 'Define user-facing functionality',
+    'Diagrams': 'Visual architecture diagrams',
     'Specifications': 'Define technical specifications',
   };
 
