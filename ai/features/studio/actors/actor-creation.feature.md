@@ -13,9 +13,8 @@ context_id:
   - vsce
 ---
 ```gherkin
-Scenario: Create actor with active session
-  Given I have an active design session
-  And I am in the Actors section
+Scenario: Create actor at any time
+  Given I am in the Actors section
   When I want to create a new actor
   Then I should be able to click "New Actor" button
   And I should be prompted for actor name
@@ -24,27 +23,40 @@ Scenario: Create actor with active session
   And I should be able to save the actor
   And the actor should be created with proper template
   And I should be taken to edit the new actor
-  Given this is a test
+  And no active session is required
 ```
 
 ```gherkin
 Scenario: Create actor without active session
   Given I do not have an active session
-  When I try to create a new actor
-  Then I should see that creation is disabled
-  And I should see a message to start a session first
-  And I should be able to start a session from this prompt
+  And I am in the Actors section
+  When I create a new actor
+  Then the actor should be created successfully
+  And the actor file should be saved on disk
+  And the actor should NOT be tracked in any session
+  And actors are foundational and do not require sessions
+```
+
+```gherkin
+Scenario: Create actor with active session
+  Given I have an active design session
+  And I am in the Actors section
+  When I create a new actor
+  Then the actor should be created successfully
+  And the actor file should be saved on disk
+  And the actor should NOT be tracked in the session's changed_files
+  And actors are foundational and not session-tracked
 ```
 
 ```gherkin
 Scenario: Create actor in specific folder
-  Given I have an active session
-  And I have selected a subfolder in the actors list
+  Given I have selected a subfolder in the actors list
   When I want to create a new actor
   Then I should be able to click "New Actor" button
   And the new actor should be created in the selected folder
   And I should be prompted for actor details
   And the actor should be saved in the correct location
+  And no active session is required
 ```
 
 ```gherkin

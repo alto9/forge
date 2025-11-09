@@ -17,9 +17,8 @@ Feature: Create New Context
   I want to create new contexts for my system
   So that I can provide technical guidance for specific areas
 
-  Scenario: Create context with active session
-    Given I have an active design session
-    And I am in the Contexts section
+  Scenario: Create context at any time
+    Given I am in the Contexts section
     When I want to create a new context
     Then I should be able to click "New Context" button
     And I should be prompted for context name
@@ -28,22 +27,34 @@ Feature: Create New Context
     And I should be able to save the context
     And the context should be created with proper template
     And I should be taken to edit the new context
+    And no active session is required
 
   Scenario: Create context without active session
     Given I do not have an active session
-    When I try to create a new context
-    Then I should see that creation is disabled
-    And I should see a message to start a session first
-    And I should be able to start a session from this prompt
+    And I am in the Contexts section
+    When I create a new context
+    Then the context should be created successfully
+    And the context file should be saved on disk
+    And the context should NOT be tracked in any session
+    And contexts are foundational and do not require sessions
+
+  Scenario: Create context with active session
+    Given I have an active design session
+    And I am in the Contexts section
+    When I create a new context
+    Then the context should be created successfully
+    And the context file should be saved on disk
+    And the context should NOT be tracked in the session's changed_files
+    And contexts are foundational and not session-tracked
 
   Scenario: Create context in specific folder
-    Given I have an active session
-    And I have selected a subfolder in the contexts list
+    Given I have selected a subfolder in the contexts list
     When I want to create a new context
     Then I should be able to click "New Context" button
     And the new context should be created in the selected folder
     And I should be prompted for context details
     And the context should be saved in the correct location
+    And no active session is required
 ```
 
 ## Feature: Context Creation Form

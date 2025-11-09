@@ -19,7 +19,7 @@ VSCode extension that provides commands for session-driven design and implementa
   - Create features, specs, actors, and contexts
   - Create and navigate nested folder structures
   - Edit files with proper frontmatter and content templates
-  - Session-aware workflows (requires active session for editing)
+  - Session-aware workflows (Features and Specs require active session; Actors and Contexts are always editable)
 - Distill sessions into Stories and Tasks
 - Build stories with complete context
 - Right-click context menu integration
@@ -130,10 +130,16 @@ Then use the Command Palette (`Cmd/Ctrl+Shift+P`) to access Forge commands:
 - **Sessions Page** - Create, view, and manage all design sessions
 - **Category Pages** - Browse and edit Features, Specs, Actors, and Contexts
 - **Folder Navigation** - Tree view with expand/collapse, nested folder support
-- **File Creation** - Create new files with proper templates and frontmatter (requires active session)
-- **File Editing** - Edit frontmatter metadata and content (requires active session)
+- **Foundational Files** (Actors, Contexts, Sessions):
+  - Always editable - no active session required
+  - Define system vocabulary and guidance before design work
+  - Not tracked in session changed_files
+- **Design Files** (Features, Specs):
+  - Always browsable - view existing features and specs at any time
+  - Require active session for creation and editing (read-only without session)
+  - Tracked in session changed_files during design work
+  - Session-locked for design discipline
 - **Gherkin Editor** - Structured visual editor for feature files with Background, Rules, and Scenarios
-- **Read-Only Mode** - View files without active session, edit when session is active
 
 **UI Features:**
 - Three-panel layout (navigation sidebar, main content, session panel)
@@ -175,6 +181,8 @@ changed_files: [
   "ai/features/user/login.feature.md",
   "ai/specs/api/auth-endpoint.spec.md"
 ]
+# Note: Only Features and Specs are tracked in changed_files
+# Actors and Contexts are foundational and not session-tracked
 ---
 
 # User Authentication Session
@@ -255,12 +263,25 @@ Add email validation to User model
 
 ## 🔄 The Forge Workflow
 
-1. **Start a Session** - Begin a design session with a clear problem statement
-2. **Design Changes** - Edit features, specs, and contexts during the active session
-3. **Distill to Stories & Tasks** - Convert the session into minimal implementation stories (< 30 min each) and external tasks
-4. **Build Stories** - Implement each story with complete context from linked features and specs
+1. **Define Foundational Elements** (No session required)
+   - Create Actors to define system personas and roles
+   - Create Contexts to provide technical guidance and standards
+   - Build your project vocabulary and foundational knowledge
+   - Browse existing Features and Specs for reference
 
-The session-driven approach ensures changes are tracked systematically, and distillation creates focused, actionable stories with all necessary context.
+2. **Start a Design Session** - Begin a design session with a clear problem statement
+
+3. **Design Changes** (Session required for editing)
+   - Create and edit Features to define user-facing functionality
+   - Create and edit Specs to define technical implementation
+   - Link Features and Specs to relevant Contexts and Actors
+   - Continue editing Actors and Contexts as needed
+
+4. **Distill to Stories & Tasks** - Convert the session into minimal implementation stories (< 30 min each) and external tasks
+
+5. **Build Stories** - Implement each story with complete context from linked features, specs, contexts, and actors
+
+The session-driven approach ensures design changes are tracked systematically, while allowing foundational vocabulary to be defined and browsing to happen freely. Features and Specs are always visible for reference but require an active session for editing.
 
 ## 💡 Why Forge?
 
@@ -314,14 +335,17 @@ npm run dev -w @forge/mcp-server
 
 ## 🎯 Best Practices
 
-1. **Start with Sessions** - Begin each design phase with a clear problem statement
-2. **Use Forge Studio** - Visual interface makes creating and organizing files easier
-3. **Organize with Folders** - Group related features and specs in nested folders
-4. **Link Everything** - Use IDs to create relationships between files (features ↔ specs ↔ contexts)
-5. **Keep Stories Small** - Target < 30 minutes per story for better focus and completion
-6. **Review Before Distilling** - Ensure your design (features/specs) is complete before generating stories
-7. **Define Actors** - Document who interacts with your system for better feature clarity
-8. **Use Contexts** - Create context files to guide technical implementation decisions
+1. **Define Foundational Elements First** - Create Actors and Contexts before starting design sessions
+   - Actors document who interacts with your system
+   - Contexts provide technical guidance and standards
+   - These are always editable and don't require sessions
+2. **Start Sessions for Design Work** - Begin each design phase with a clear problem statement
+3. **Use Forge Studio** - Visual interface makes creating and organizing files easier
+4. **Organize with Folders** - Group related features and specs in nested folders
+5. **Link Everything** - Use IDs to create relationships between files (features ↔ specs ↔ contexts ↔ actors)
+6. **Keep Stories Small** - Target < 30 minutes per story for better focus and completion
+7. **Review Before Distilling** - Ensure your design (features/specs) is complete before generating stories
+8. **Iterate on Foundational Elements** - Update Actors and Contexts as your understanding evolves (no session needed)
 
 ## 🔮 Future Plans
 

@@ -96,23 +96,40 @@ Feature: File Management in Studio
   I want to create and manage Forge files through Studio
   So that I can organize my context engineering work
 
-  Scenario: Session-aware file creation
+  Scenario: Session-aware file creation for Features and Specs
     Given I have an active design session
-    When I want to create a new Forge file
-    Then I should be able to create files in any category
+    When I want to create a new Feature or Spec file
+    Then I should be able to create the file
     And I should be prompted for a title
     And the file should be created with kebab-case naming
     And the file should have proper frontmatter template
     And the file should have category-appropriate content template
     And the file change should be tracked in the session
 
-  Scenario: Prevent editing without session
+  Scenario: Create Actors and Contexts without session
     Given I do not have an active session
-    When I try to create or edit Forge files
-    Then I should see a read-only indicator
+    When I want to create a new Actor or Context file
+    Then I should be able to create the file
+    And I should be prompted for a title
+    And the file should be created with kebab-case naming
+    And the file should have proper frontmatter template
+    And the file should have category-appropriate content template
+    And the file change should NOT be tracked in any session
+    
+  Scenario: Prevent Feature and Spec editing without session
+    Given I do not have an active session
+    When I try to create or edit Features or Specs
+    Then I should see a read-only indicator for Features and Specs
     And I should see a message to start a session first
-    And file creation buttons should not be available
-    And file editing should be disabled
+    And Feature and Spec creation buttons should not be available
+    And Feature and Spec editing should be disabled
+    
+  Scenario: Actors and Contexts always editable
+    Given I do not have an active session
+    When I view Actors or Contexts
+    Then I should be able to create, edit, and save Actors at any time
+    And I should be able to create, edit, and save Contexts at any time
+    And these files are foundational and do not require sessions
 
   Scenario: Navigate folder structure
     Given I have a nested folder structure

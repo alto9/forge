@@ -2,6 +2,7 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { NomnomlRenderer } from './components/NomnomlRenderer';
 import { MarkdownEditor } from './components/MarkdownEditor';
+import { Sidebar } from './components/Sidebar';
 
 // Acquire VSCode API once at module level
 const vscode = typeof acquireVsCodeApi !== 'undefined' ? acquireVsCodeApi() : undefined;
@@ -91,24 +92,11 @@ function App() {
 
   return (
     <div className="container">
-      <div className="sidebar">
-        <div style={{ padding: 12, fontWeight: 600, borderBottom: '1px solid var(--vscode-panel-border)' }}>
-          Forge Studio
-          {activeSession && (
-            <div style={{ fontSize: 10, marginTop: 4, color: 'var(--vscode-charts-green)', fontWeight: 'normal' }}>
-              ● Session Active
-            </div>
-          )}
-        </div>
-        <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-          <li style={{ padding: '8px 12px', cursor: 'pointer', background: route.page === 'dashboard' ? 'var(--vscode-list-activeSelectionBackground)' : 'transparent' }} onClick={() => setRoute({ page: 'dashboard' })}>Dashboard</li>
-          <li style={{ padding: '8px 12px', cursor: 'pointer', background: route.page === 'sessions' ? 'var(--vscode-list-activeSelectionBackground)' : 'transparent' }} onClick={() => setRoute({ page: 'sessions' })}>Sessions</li>
-          <li style={{ padding: '8px 12px', cursor: 'pointer', background: route.page === 'actors' ? 'var(--vscode-list-activeSelectionBackground)' : 'transparent' }} onClick={() => setRoute({ page: 'actors' })}>Actors</li>
-          <li style={{ padding: '8px 12px', cursor: 'pointer', background: route.page === 'features' ? 'var(--vscode-list-activeSelectionBackground)' : 'transparent' }} onClick={() => setRoute({ page: 'features' })}>Features</li>
-          <li style={{ padding: '8px 12px', cursor: 'pointer', background: route.page === 'specs' ? 'var(--vscode-list-activeSelectionBackground)' : 'transparent' }} onClick={() => setRoute({ page: 'specs' })}>Specifications</li>
-          <li style={{ padding: '8px 12px', cursor: 'pointer', background: route.page === 'contexts' ? 'var(--vscode-list-activeSelectionBackground)' : 'transparent' }} onClick={() => setRoute({ page: 'contexts' })}>Contexts</li>
-        </ul>
-      </div>
+      <Sidebar
+        currentPage={route.page}
+        activeSession={activeSession}
+        onNavigate={(page) => setRoute({ page: page as any })}
+      />
       <div style={{ flex: 1, overflow: 'auto' }} className="main-content">
         <div style={{ padding: 16, marginBottom: 8, opacity: 0.8, fontSize: 12, borderBottom: '1px solid var(--vscode-panel-border)' }}>Project: {state.projectPath}</div>
         
@@ -294,6 +282,7 @@ function CategoryEmptyState({ category, title, activeSession }: {
   activeSession: ActiveSession | null;
 }) {
   const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1, -1);
+  const isFoundational = category === 'actors' || category === 'contexts';
 
   const handleCreateFile = () => {
     vscode?.postMessage({
@@ -311,7 +300,7 @@ function CategoryEmptyState({ category, title, activeSession }: {
     });
   };
 
-  if (!activeSession) {
+  if (!activeSession && !isFoundational) {
     return (
       <div className="p-16">
         <div className="empty-state">
@@ -360,6 +349,7 @@ function FolderTreeView({ folders, selectedFolder, onFolderClick, category, acti
   activeSession: ActiveSession | null;
 }) {
   const [expanded, setExpanded] = React.useState<Set<string>>(new Set());
+  const isFoundational = category === 'actors' || category === 'contexts';
 
   const toggleExpand = (path: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -373,7 +363,7 @@ function FolderTreeView({ folders, selectedFolder, onFolderClick, category, acti
   };
 
   const handleContextMenu = (e: React.MouseEvent, folderPath: string) => {
-    if (!activeSession) return;
+    if (!activeSession && !isFoundational) return;
     
     e.preventDefault();
     e.stopPropagation();
@@ -441,6 +431,7 @@ function FolderProfile({ files, onFileClick, folderPath, category, activeSession
   activeSession: ActiveSession | null;
 }) {
   const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1, -1);
+  const isFoundational = category === 'actors' || category === 'contexts';
   
   const handleCreateFile = () => {
     vscode?.postMessage({
@@ -469,7 +460,7 @@ function FolderProfile({ files, onFileClick, folderPath, category, activeSession
           <h3 className="section-title" style={{ margin: 0, border: 'none', padding: 0 }}>Folder Contents</h3>
           <div className="text-xs opacity-70">{relativeFolderPath}</div>
         </div>
-        {activeSession && (
+        {(activeSession || isFoundational) && (
           <button 
             className="btn btn-primary"
             style={{ fontSize: 12, padding: '6px 12px' }}
@@ -1555,7 +1546,8 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
   const [parsedContext, setParsedContext] = React.useState<ParsedContextContent | null>(null);
   const [isDirty, setIsDirty] = React.useState(false);
   const [diagramViewMode, setDiagramViewMode] = React.useState<'source' | 'rendered'>('source');
-  const isReadOnly = !activeSession;
+  const isFoundational = category === 'actors' || category === 'contexts';
+  const isReadOnly = !activeSession && !isFoundational;
 
   React.useEffect(() => {
     setFrontmatter(fileContent.frontmatter || {});

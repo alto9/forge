@@ -249,19 +249,33 @@ The session panel is a persistent right-side panel that:
 ### File Change Tracking
 
 When a session is active:
-1. File watcher monitors: `ai/**/*.{feature.md,spec.md,model.md,context.md,actor.md}`
-2. On file create/change, add relative path to `session.changedFiles[]`
-3. Exclude `*.session.md` files from tracking
-4. Update session file on disk
-5. Notify webview to update UI
+1. File watcher monitors: `ai/**/*.{feature.md,spec.md}`
+2. Only Features and Specs are tracked in sessions
+3. On Feature or Spec file create/change, add relative path to `session.changedFiles[]`
+4. Actors and Contexts are NOT tracked (they are foundational, not session-specific)
+5. Exclude `*.session.md` files from tracking
+6. Update session file on disk
+7. Notify webview to update UI
+
+**Rationale**: Actors and Contexts are foundational definitions that developers create before starting design work. They provide the vocabulary and guidance for design sessions but are not part of the design changes themselves.
 
 ## File Management
 
 ### Session-Aware Operations
 
-All file creation and editing operations require an active session:
-- Without active session: UI shows read-only mode
-- With active session: Full CRUD operations enabled
+File creation and editing operations have different requirements based on file type:
+
+**Always Editable (No Session Required):**
+- Actors: Can be created, edited, and saved at any time
+- Contexts: Can be created, edited, and saved at any time
+- Sessions: Can be viewed, created, and managed at any time
+- These are considered foundational files that developers define before starting design sessions
+
+**Session-Locked (Active Session Required):**
+- Features: Require active session for creation and editing
+- Specs: Require active session for creation and editing
+- Without active session: UI shows read-only mode for Features and Specs
+- With active session: Full CRUD operations enabled for Features and Specs
 
 ### File Creation Flow
 

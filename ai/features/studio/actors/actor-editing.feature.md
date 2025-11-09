@@ -17,9 +17,8 @@ Feature: Edit Actor Information
   I want to edit existing actors
   So that I can keep actor information up to date
 
-  Scenario: Edit actor with active session
-    Given I have an active design session
-    And I am viewing an actor
+  Scenario: Edit actor at any time
+    Given I am viewing an actor
     When I want to edit the actor
     Then I should be able to click "Edit" button
     And I should be able to modify the actor ID
@@ -31,10 +30,19 @@ Feature: Edit Actor Information
 
   Scenario: Edit actor without active session
     Given I do not have an active session
-    When I try to edit an actor
-    Then I should see that editing is disabled
-    And I should see a message that an active session is required
-    And I should be able to start a session from this prompt
+    And I am viewing an actor
+    When I edit and save the actor
+    Then the changes should be saved successfully
+    And the actor file should be updated on disk
+    And I should not be prompted to start a session
+    
+  Scenario: Edit actor with active session
+    Given I have an active design session
+    And I am viewing an actor
+    When I edit and save the actor
+    Then the changes should be saved successfully
+    And the actor file should NOT be tracked in the session's changed_files
+    And actors are considered foundational and not session-tracked
 
   Scenario: Cancel editing
     Given I am editing an actor

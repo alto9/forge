@@ -17,9 +17,8 @@ Feature: Edit Context Information
   I want to edit existing contexts
   So that I can keep context information up to date
 
-  Scenario: Edit context with active session
-    Given I have an active design session
-    And I am viewing a context
+  Scenario: Edit context at any time
+    Given I am viewing a context
     When I want to edit the context
     Then I should be able to click "Edit" button
     And I should be able to modify the context ID
@@ -32,10 +31,19 @@ Feature: Edit Context Information
 
   Scenario: Edit context without active session
     Given I do not have an active session
-    When I try to edit a context
-    Then I should see that editing is disabled
-    And I should see a message that an active session is required
-    And I should be able to start a session from this prompt
+    And I am viewing a context
+    When I edit and save the context
+    Then the changes should be saved successfully
+    And the context file should be updated on disk
+    And I should not be prompted to start a session
+    
+  Scenario: Edit context with active session
+    Given I have an active design session
+    And I am viewing a context
+    When I edit and save the context
+    Then the changes should be saved successfully
+    And the context file should NOT be tracked in the session's changed_files
+    And contexts are considered foundational and not session-tracked
 
   Scenario: Cancel editing
     Given I am editing a context

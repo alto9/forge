@@ -675,7 +675,7 @@ ${problemStatement}
 
         const pattern = new vscode.RelativePattern(
             path.join(this._projectUri.fsPath, 'ai'),
-            '**/*.{feature.md,spec.md,model.md,context.md}'
+            '**/*.{feature.md,spec.md}'
         );
 
         this._fileWatcher = vscode.workspace.createFileSystemWatcher(pattern);
@@ -736,6 +736,21 @@ ${problemStatement}
                filePath.endsWith('.context.md') ||
                filePath.endsWith('.story.md') ||
                filePath.endsWith('.task.md');
+    }
+
+    /**
+     * Check if a file or category is a foundational type (Actor or Context)
+     * that doesn't require an active session to create/edit
+     */
+    private _isFoundationalFile(filePathOrCategory: string): boolean {
+        return filePathOrCategory.includes('/actors/') || 
+               filePathOrCategory.includes('\\actors\\') ||
+               filePathOrCategory.includes('/contexts/') || 
+               filePathOrCategory.includes('\\contexts\\') ||
+               filePathOrCategory.endsWith('.actor.md') ||
+               filePathOrCategory.endsWith('.context.md') ||
+               filePathOrCategory === 'actors' ||
+               filePathOrCategory === 'contexts';
     }
 
     private async _onStructureChanged() {
@@ -1106,8 +1121,9 @@ ${problemStatement}
     }
 
     private async _saveFileContent(filePath: string, frontmatter: any, content: string): Promise<void> {
-        // Check if session is active
-        if (!this._activeSession) {
+        // Check if session is active (not required for foundational files like actors and contexts)
+        const isFoundational = this._isFoundationalFile(filePath);
+        if (!this._activeSession && !isFoundational) {
             vscode.window.showErrorMessage('Cannot save file: No active design session. Start a session first.');
             return;
         }
@@ -1133,8 +1149,9 @@ ${problemStatement}
     }
 
     private async _promptCreateFolder(folderPath: string, category: string): Promise<void> {
-        // Check if session is active
-        if (!this._activeSession) {
+        // Check if session is active (not required for foundational categories like actors and contexts)
+        const isFoundational = this._isFoundationalFile(category);
+        if (!this._activeSession && !isFoundational) {
             vscode.window.showErrorMessage('Cannot create folder: No active design session. Start a session first.');
             return;
         }
@@ -1161,8 +1178,9 @@ ${problemStatement}
     }
 
     private async _promptCreateFile(folderPath: string, category: string): Promise<void> {
-        // Check if session is active
-        if (!this._activeSession) {
+        // Check if session is active (not required for foundational categories like actors and contexts)
+        const isFoundational = this._isFoundationalFile(category);
+        if (!this._activeSession && !isFoundational) {
             vscode.window.showErrorMessage('Cannot create file: No active design session. Start a session first.');
             return;
         }
@@ -1188,8 +1206,9 @@ ${problemStatement}
     }
 
     private async _createFolder(folderPath: string): Promise<void> {
-        // Check if session is active
-        if (!this._activeSession) {
+        // Check if session is active (not required for foundational folders like actors and contexts)
+        const isFoundational = this._isFoundationalFile(folderPath);
+        if (!this._activeSession && !isFoundational) {
             vscode.window.showErrorMessage('Cannot create folder: No active design session. Start a session first.');
             return;
         }
@@ -1214,8 +1233,9 @@ ${problemStatement}
     }
 
     private async _createFile(folderPath: string, category: string, title: string): Promise<void> {
-        // Check if session is active
-        if (!this._activeSession) {
+        // Check if session is active (not required for foundational categories like actors and contexts)
+        const isFoundational = this._isFoundationalFile(category);
+        if (!this._activeSession && !isFoundational) {
             vscode.window.showErrorMessage('Cannot create file: No active design session. Start a session first.');
             return;
         }
@@ -1398,6 +1418,7 @@ Scenario: When to use this context
         const extensions: { [key: string]: string } = {
             'features': '.feature.md',
             'specs': '.spec.md',
+            'actors': '.actor.md',
             'contexts': '.context.md'
         };
         return extensions[category] || '.md';

@@ -10,15 +10,15 @@ VSCode extension that helps engineers use proper context engineering to build an
 - **Forge: Open Forge Studio** - Full-featured React-based UI for managing Forge files
   - **Dashboard**: View session status and object counts
   - **Sessions**: Create and manage design sessions
-  - **Features**: Create features with Gherkin scenarios
-  - **Specs**: Create technical specifications with Nomnoml diagrams
-  - **Models**: Define data models with properties and relationships
-  - **Actors**: Document system actors and their responsibilities
-  - **Contexts**: Create context guidance for technical decisions
+  - **Features**: Browse all features; create/edit requires active session
+  - **Specs**: Browse all specs; create/edit requires active session
+  - **Models**: Browse all models; create/edit requires active session
+  - **Actors**: Document system actors and their responsibilities (always editable)
+  - **Contexts**: Create context guidance for technical decisions (always editable)
   - **Folder Management**: Create nested folders, navigate hierarchies
   - **File Creation**: Create new files with proper templates
   - **Context Menus**: Right-click folders to create subfolders
-  - **Session-Aware**: Editing requires active design session
+  - **Session-Aware**: Features/Specs/Models are read-only without session; Actors and Contexts are always editable
 - **Context Menu Integration** - Right-click on files and folders for quick access
 - **Output Panel** - Clean, formatted prompts ready to copy and paste
 
@@ -62,22 +62,32 @@ code --install-extension forge-0.1.0.vsix
 
 **Studio Workflows:**
 
-- **Creating Objects**: 
-  1. Navigate to the category tab (e.g., Features)
-  2. If empty, click "+ New Feature" or "+ New Folder" buttons
-  3. If folder exists, select it, then click "+ New [Type]" button
-  4. Enter a title (auto-kebab-cased for filename)
-  5. File created with proper frontmatter template
+- **Browsing and Reference** (No session required):
+  1. Navigate to any category tab to browse existing files
+  2. View Features, Specs, Models for reference
+  3. Files are read-only without an active session
+
+- **Creating Foundational Elements** (No session required):
+  1. Navigate to Actors or Contexts tab
+  2. Create and edit at any time
+  3. Define system vocabulary and guidance before design work
+
+- **Creating Design Files** (Requires active session):
+  1. Start a session from Dashboard or Sessions page
+  2. Navigate to Features or Specs tab
+  3. Create and edit during active session
+  4. Changes are automatically tracked in session's changed_files
 
 - **Organizing with Folders**:
-  1. Right-click any folder in the tree
+  1. Right-click any folder in the tree (when session active for Features/Specs)
   2. Enter subfolder name (auto-kebab-cased)
   3. Navigate by clicking folders in the contents view
 
 - **Editing Files**:
-  1. Click a file in the contents view
-  2. Edit frontmatter fields and content
-  3. Click "Save Changes" (requires active session)
+  1. Click a file in the contents view to open it
+  2. Features/Specs/Models: Visible but read-only without session, editable with active session
+  3. Actors/Contexts: Always editable
+  4. Edit frontmatter fields and content, then click "Save Changes"
 
 ### Distill Session into Stories and Tasks
 
