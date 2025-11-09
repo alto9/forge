@@ -138,6 +138,84 @@ You must provide a story file (*.story.md) when running this command.
 The implementation will be consistent with your documented design and existing codebase patterns.
 ```
 
+### forge-sync.md
+
+**Purpose**: Synchronizes Forge AI documentation with the actual codebase. Used after initial Forge installation on existing projects or when documentation is out of date.
+
+**Location**: `.cursor/commands/forge-sync.md`
+
+**Responsibilities**:
+- Calls `get_forge_about` MCP tool to understand Forge workflow and documentation structure
+- Performs deep analysis of the entire codebase
+- Reads all existing AI documentation
+- Identifies gaps, inconsistencies, and outdated information
+- Creates or updates AI files to match actual implementation
+- Does NOT modify implementation code
+- Can run with or without an active session
+- Respects session requirements (Actors/Contexts always editable; Features/Diagrams/Specs may require session)
+
+**Template Content**:
+
+```markdown
+# Forge Sync
+
+This command synchronizes your Forge AI documentation with your actual codebase. Use this when:
+- You've just installed Forge on an existing project with no documentation
+- Your codebase has changed and the AI documentation is out of date
+- You've manually modified code without updating the design documentation
+
+## Prerequisites
+
+None. This command can be run at any time, with or without an active design session.
+
+## What This Command Does
+
+1. **Calls MCP Tools**: Uses `get_forge_about` to understand the Forge workflow and documentation structure
+2. **Deep codebase analysis**: Systematically analyzes your entire codebase
+3. **Reads existing AI documentation**: Reviews all existing AI files
+4. **Identifies gaps and inconsistencies**: Finds missing or outdated documentation
+5. **Creates or updates AI files**: Systematically updates documentation to reflect reality
+6. **Generates a sync report**: Provides summary of changes made
+
+## Sync Strategy
+
+### Phase 1: Discovery
+- Scan the entire codebase to understand structure, components, APIs, models
+
+### Phase 2: Analysis
+- Compare discovered code with existing AI documentation
+- Identify gaps and inconsistencies
+
+### Phase 3: Actors & Contexts (Always Editable)
+- Create/update Actors and Contexts first (no session required)
+
+### Phase 4: Design Documentation (May Require Session)
+- Create/update Features, Diagrams, Specs, Models
+- If no active session, provide recommendations only
+
+### Phase 5: Linkages & Validation
+- Ensure all cross-references are correct
+- Validate frontmatter and naming conventions
+
+## Important Constraints
+
+- **Read the code, don't modify it**: ONLY updates AI documentation
+- **Be thorough**: Actually read and analyze the code
+- **Maintain accuracy**: Documentation must reflect actual implementation
+- **Preserve existing docs**: Update rather than replace when possible
+- **Respect Forge patterns**: Use correct file types and formats
+- **Session awareness**: Respect session requirements for different file types
+
+## Usage
+
+1. Run this command from the project root
+2. The AI will systematically analyze your codebase
+3. The AI will create or update AI files to match reality
+4. Review the sync report and recommendations
+
+This command ensures your Forge documentation stays in sync with your actual implementation.
+```
+
 ## Template Storage
 
 ### File Organization
@@ -241,7 +319,8 @@ The implementation will be consistent with your documented design and existing c
  */
 export const COMMAND_TEMPLATES: Record<string, string> = {
   '.cursor/commands/forge-design.md': FORGE_DESIGN_TEMPLATE,
-  '.cursor/commands/forge-build.md': FORGE_BUILD_TEMPLATE
+  '.cursor/commands/forge-build.md': FORGE_BUILD_TEMPLATE,
+  '.cursor/commands/forge-sync.md': FORGE_SYNC_TEMPLATE
 };
 
 /**

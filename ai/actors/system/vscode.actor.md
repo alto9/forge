@@ -40,10 +40,9 @@ VSCode is the extension host environment that runs the Forge extension. It provi
 ## Interfaces
 
 ### Command Palette
-- `Foundry: Start Design Session`
-- `Foundry: Distill Session into Stories and Tasks`
-- `Foundry: Build Story Implementation`
 - `Forge: Open Forge Studio`
+- `Forge: Distill Session`
+- `Forge: Build Story`
 
 ### Context Menus
 - Right-click on `sessions` folder → Start Design Session

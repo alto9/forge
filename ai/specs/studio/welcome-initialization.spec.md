@@ -111,6 +111,7 @@ In addition to folders, a project is "Forge-ready" when ALL of the following Cur
 ```
 .cursor/commands/forge-design.md
 .cursor/commands/forge-build.md
+.cursor/commands/forge-sync.md
 ```
 
 ### Centralized Readiness Checking
@@ -159,7 +160,8 @@ export const REQUIRED_FOLDERS = [
 
 export const REQUIRED_COMMANDS = [
   '.cursor/commands/forge-design.md',
-  '.cursor/commands/forge-build.md'
+  '.cursor/commands/forge-build.md',
+  '.cursor/commands/forge-sync.md'
 ];
 
 /**
