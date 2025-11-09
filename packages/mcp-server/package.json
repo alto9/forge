@@ -1,0 +1,45 @@
+{
+  "name": "@forge/mcp-server",
+  "version": "0.1.0",
+  "description": "Forge MCP Server - Provides Forge context engineering capabilities via Model Context Protocol",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "forge-mcp": "./dist/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alto9/cursor-context-engineering",
+    "directory": "packages/mcp-server"
+  },
+  "bugs": {
+    "url": "https://github.com/alto9/cursor-context-engineering/issues"
+  },
+  "homepage": "https://github.com/alto9/cursor-context-engineering#readme",
+  "scripts": {
+    "build": "tsc && chmod +x dist/index.js",
+    "compile": "tsc",
+    "watch": "tsc --watch",
+    "dev": "tsx watch src/index.ts",
+    "lint": "eslint src --ext ts",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "gray-matter": "^4.0.3",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=22.14.0"
+  }
+}
+

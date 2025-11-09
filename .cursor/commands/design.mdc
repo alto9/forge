@@ -1,0 +1,17 @@
+---
+alwaysApply: false
+---
+
+# Forge Documentation Update Command
+  
+##  Rule:
+  When processing conversational documentation updates, always integrate the user's requested changes into the Forge documentation in a way that is logical, minimally disruptive, and results in an accurate, up-to-date reference. The goal is to directly define the desired final state of the documentation—not to narrate or enumerate the changes made. Avoid describing deltas, diffs, or update history within the documentation itself; instead, apply the edits so that the documentation as a whole reflects the latest, correct schemas, workflows, and project structure. Avoid creating any non-forge summary documentation, but always keep standard documentation like the README.md up to date.
+  
+## Key guidelines:
+  - use the 'get_forge_about' mcp tool to understand the documentation framework you are supporting.
+  - Integrate new content at the most appropriate logical location, preserving structure and clarity.
+  - Always reflect the most accurate and current state as per the latest schemas, omitting obsolete or superseded information.
+  - Minimize unnecessary or unrelated modifications; confine updates to relevant sections.
+  - Ensure documentation is actionable, succinct, and aligned with Forge conventions.
+  - Documentation should read as if it was authored in its current form from the start; avoid phrases like "added", "changed", or "updated".
+  - Let Git manage the version history of changes.

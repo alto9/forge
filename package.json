@@ -1,0 +1,37 @@
+{
+  "name": "forge-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Forge - Context Engineering for Agentic Development",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alto9/cursor-context-engineering"
+  },
+  "bugs": {
+    "url": "https://github.com/alto9/cursor-context-engineering/issues"
+  },
+  "homepage": "https://github.com/alto9/cursor-context-engineering#readme",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces",
+    "compile": "npm run compile --workspaces",
+    "watch": "npm run watch --workspaces --if-present",
+    "lint": "npm run lint --workspaces",
+    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules packages/*/node_modules",
+    "vscode:package": "cd packages/vscode-extension && npm run package && npx --yes @vscode/vsce package --no-dependencies -o forge-0.1.0.vsix"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^5.1.0",
+    "eslint": "^8.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=22.14.0",
+    "npm": ">=10.0.0"
+  }
+}

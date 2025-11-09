@@ -1,0 +1,98 @@
+{
+  "name": "forge",
+  "displayName": "Forge - Context Engineering for Agentic Development",
+  "description": "VSCode extension that helps engineers use proper context engineering to build and maintain software using Agentic development practices",
+  "version": "0.1.0",
+  "publisher": "alto9",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/alto9/cursor-context-engineering",
+    "directory": "packages/vscode-extension"
+  },
+  "bugs": {
+    "url": "https://github.com/alto9/cursor-context-engineering/issues"
+  },
+  "homepage": "https://github.com/alto9/cursor-context-engineering#readme",
+  "engines": {
+    "vscode": "^1.80.0",
+    "node": ">=22.14.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "forge.distillSession",
+        "title": "Forge: Distill Session into Stories and Tasks"
+      },
+      {
+        "command": "forge.buildStory",
+        "title": "Forge: Build Story Implementation"
+      },
+      {
+        "command": "forge.openStudio",
+        "title": "Forge: Open Forge Studio"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceExtname == .md && resourcePath =~ /.*\\.session\\.md$/",
+          "command": "forge.distillSession",
+          "group": "forge@1"
+        },
+        {
+          "when": "resourceExtname == .md && resourcePath =~ /.*\\.story\\.md$/",
+          "command": "forge.buildStory",
+          "group": "forge@1"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "webpack && npm run build:webview",
+    "build": "webpack && npm run build:webview",
+    "watch": "concurrently \"webpack --watch\" \"npm run dev:webview\"",
+    "package": "webpack --mode production --devtool hidden-source-map && npm run build:webview",
+    "build:webview": "esbuild src/webview/studio/index.tsx --bundle --outfile=media/studio/main.js --format=iife --platform=browser --minify --external:fs --external:path && esbuild src/webview/welcome/index.tsx --bundle --outfile=media/welcome/main.js --format=iife --platform=browser --minify",
+    "dev:webview": "concurrently \"esbuild src/webview/studio/index.tsx --bundle --outfile=media/studio/main.js --format=iife --platform=browser --watch --external:fs --external:path\" \"esbuild src/webview/welcome/index.tsx --bundle --outfile=media/welcome/main.js --format=iife --platform=browser --watch\"",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src --ext ts,tsx",
+    "test": "vitest run",
+    "clean": "rm -rf dist out *.vsix"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/node": "^22.14.0",
+    "@types/react": "^18.2.73",
+    "@types/react-dom": "^18.2.18",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/ui": "^2.0.5",
+    "concurrently": "^8.2.2",
+    "esbuild": "^0.24.0",
+    "eslint": "^8.0.0",
+    "happy-dom": "^12.10.3",
+    "ts-loader": "^9.5.4",
+    "typescript": "^5.0.0",
+    "vitest": "^2.0.5",
+    "webpack": "^5.102.0",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "nomnoml": "^1.7.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "yaml": "^2.6.0"
+  }
+}
