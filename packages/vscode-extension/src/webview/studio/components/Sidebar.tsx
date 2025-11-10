@@ -58,7 +58,7 @@ const NavSection: React.FC<NavSectionProps> = ({
 };
 
 /**
- * Sidebar component with FOUNDATIONAL and DESIGN sections
+ * Sidebar component with INFORM and DESIGN sections
  */
 export const Sidebar: React.FC<SidebarProps> = ({
   currentPage,
@@ -101,9 +101,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <span style={styles.navLabel}>Dashboard</span>
       </div>
 
-      {/* Foundational Section */}
+      {/* Inform Section */}
       <NavSection
-        title="FOUNDATIONAL"
+        title="INFORM"
         items={foundationalItems}
         currentPage={currentPage}
         activeSession={activeSession}

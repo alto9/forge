@@ -23,8 +23,3 @@ actor_id: []
 [esbuild] -> [React Bundle]
 [React Bundle] -> [Webview Assets]
 ```
-
-## Notes
-
-This diagram shows the two separate build processes: Webpack for the extension code and esbuild for the React webview components.
-

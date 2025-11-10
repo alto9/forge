@@ -32,8 +32,3 @@ actor_id: []
 [Webview UI - index.tsx] Components -> [Dashboard, Sessions, BrowserPage, SessionPanel]
 [Welcome UI - welcome/index.tsx] Components -> [StatusIndicator, FolderChecklist, ActionButtons]
 ```
-
-## Notes
-
-This diagram illustrates the architecture showing how extension host components (TypeScript) communicate with webview UI components (React) through the VSCode webview messaging API.
-

@@ -34,6 +34,7 @@ const REQUIRED_FOLDERS: Omit<FolderStatus, 'exists'>[] = [
 const REQUIRED_COMMANDS: Omit<CommandStatus, 'exists' | 'valid'>[] = [
     { path: '.cursor/commands/forge-design.md', description: 'Cursor command for design session workflow', type: 'command' },
     { path: '.cursor/commands/forge-build.md', description: 'Cursor command for building from tickets', type: 'command' },
+    { path: '.cursor/commands/forge-scribe.md', description: 'Cursor command for distilling sessions into stories', type: 'command' },
     { path: '.cursor/commands/forge-sync.md', description: 'Cursor command for syncing AI docs with codebase', type: 'command' }
 ];
 

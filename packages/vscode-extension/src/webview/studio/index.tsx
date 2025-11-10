@@ -3,6 +3,8 @@ import { createRoot } from 'react-dom/client';
 import { NomnomlRenderer } from './components/NomnomlRenderer';
 import { MarkdownEditor } from './components/MarkdownEditor';
 import { Sidebar } from './components/Sidebar';
+import { FileCard } from './components/FileCard';
+import { useSessionIndicators } from './hooks/useSessionIndicators';
 
 // Acquire VSCode API once at module level
 const vscode = typeof acquireVsCodeApi !== 'undefined' ? acquireVsCodeApi() : undefined;
@@ -81,8 +83,14 @@ function App() {
       }
       if (msg?.type === 'sessionUpdated') {
         if (msg.data?.success) {
-          // Session saved successfully - could show a brief indicator
+          // Session saved successfully - reload active session and sessions list
+          vscode?.postMessage({ type: 'getActiveSession' });
+          vscode?.postMessage({ type: 'listSessions' });
         }
+      }
+      if (msg?.type === 'structureChanged') {
+        // Structure changed - reload sessions list
+        vscode?.postMessage({ type: 'listSessions' });
       }
     }
     window.addEventListener('message', onMessage);
@@ -114,9 +122,6 @@ function App() {
               showNewSessionForm={showNewSessionForm}
               onShowNewSessionForm={() => setShowNewSessionForm(true)}
               onHideNewSessionForm={() => setShowNewSessionForm(false)}
-              onDistillSession={(sessionId) => {
-                vscode?.postMessage({ type: 'distillSession', sessionId });
-              }}
             />
           </div>
         )}
@@ -485,6 +490,7 @@ function FolderProfile({ files, onFileClick, folderPath, category, activeSession
 }) {
   const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1, -1);
   const isFoundational = category === 'actors' || category === 'contexts';
+  const { isModified, getChangeType } = useSessionIndicators(activeSession);
   
   const handleCreateFile = () => {
     vscode?.postMessage({
@@ -530,21 +536,26 @@ function FolderProfile({ files, onFileClick, folderPath, category, activeSession
         </div>
       )}
       
-      {files.map(item => (
-        <div 
-          key={item.path} 
-          className="file-list-item"
-          onClick={() => onFileClick(item.path)}
-        >
-          <div className="file-name">
-            {item.type === 'folder' ? '📁 ' : '📄 '}
-            {item.type === 'file' && item.objectId ? item.objectId : item.name}
-          </div>
-          <div className="file-meta">
-            {item.type === 'folder' ? 'Folder' : `Modified: ${new Date(item.modified).toLocaleDateString()}`}
-          </div>
-        </div>
-      ))}
+      {files.map(item => {
+        // Get relative path for session tracking
+        const relativePath = getRelativePath(item.path);
+        const fileIsModified = isModified(relativePath);
+        const changeType = getChangeType(relativePath);
+        
+        return (
+          <FileCard
+            key={item.path}
+            name={item.name}
+            path={item.path}
+            type={item.type}
+            objectId={item.objectId}
+            modified={item.modified ? new Date(item.modified).getTime() : undefined}
+            isModified={fileIsModified}
+            changeType={changeType}
+            onClick={() => onFileClick(item.path)}
+          />
+        );
+      })}
     </div>
   );
 }
@@ -1857,21 +1868,6 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
               )}
             </div>
           )}
-          
-          {/* Optional Notes Section */}
-          <div className="content-section">
-            <h3 className="section-title">Notes</h3>
-            <div style={{ height: 200 }}>
-              <MarkdownEditor
-                content={extractNomnomlBlocks(content).filter(s => s.type === 'text').map(s => s.content).join('\n\n')}
-                onChange={(newContent) => {
-                  const diagramBlocks = extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').map(s => '```nomnoml\n' + s.content + '\n```');
-                  updateContent(diagramBlocks.join('\n\n') + '\n\n' + newContent);
-                }} 
-                readOnly={isReadOnly}
-              />
-            </div>
-          </div>
         </>
       ) : category === 'specs' ? (
         <div className="content-section">
@@ -2256,7 +2252,7 @@ function DashboardPage({ counts, activeSession }: { counts: any; activeSession: 
   );
 }
 
-function SessionsPage({ sessions, activeSession, showNewSessionForm, onShowNewSessionForm, onHideNewSessionForm, onDistillSession }: any) {
+function SessionsPage({ sessions, activeSession, showNewSessionForm, onShowNewSessionForm, onHideNewSessionForm }: any) {
   const [currentPage, setCurrentPage] = React.useState(1);
   const [sortBy, setSortBy] = React.useState('newest');
   const [selectedSession, setSelectedSession] = React.useState<Session | null>(null);
@@ -2358,7 +2354,6 @@ function SessionsPage({ sessions, activeSession, showNewSessionForm, onShowNewSe
       <SessionDetail
         session={selectedSession}
         onClose={handleCloseDetail}
-        onDistillSession={onDistillSession}
       />
     );
   }
@@ -2450,13 +2445,12 @@ function SessionsPage({ sessions, activeSession, showNewSessionForm, onShowNewSe
 
 function SessionDetail({
   session,
-  onClose,
-  onDistillSession
+  onClose
 }: {
   session: Session;
   onClose: () => void;
-  onDistillSession: (sessionId: string) => void;
 }) {
+  const [sessionData, setSessionData] = React.useState<Session>(session);
   const [sessionContent, setSessionContent] = React.useState<{
     goals: string;
     approach: string;
@@ -2464,13 +2458,20 @@ function SessionDetail({
     notes: string;
   } | null>(null);
 
-  // Load full session file content
-  React.useEffect(() => {
-    const sessionPath = `ai/sessions/${session.sessionId}.session.md`;
+  // Function to load session file content
+  const loadSessionContent = React.useCallback(() => {
+    const sessionPath = `ai/sessions/${session.sessionId}/${session.sessionId}.session.md`;
     vscode?.postMessage({ type: 'getFileContent', filePath: sessionPath });
+  }, [session.sessionId]);
+
+  // Load full session file content and listen for updates
+  React.useEffect(() => {
+    loadSessionContent();
 
     const handleMessage = (event: MessageEvent) => {
       const msg = event.data;
+      
+      // Handle file content response
       if (msg?.type === 'fileContent' && msg.data?.path?.includes(session.sessionId)) {
         const content = msg.data.content || '';
         
@@ -2486,29 +2487,42 @@ function SessionDetail({
           keyDecisions: decisionsMatch ? decisionsMatch[1].trim() : '',
           notes: notesMatch ? notesMatch[1].trim() : ''
         });
+        
+        // Update session data with latest frontmatter
+        setSessionData({
+          ...sessionData,
+          frontmatter: msg.data.frontmatter
+        });
+      }
+      
+      // Handle structure changes - reload session data
+      if (msg?.type === 'structureChanged') {
+        loadSessionContent();
       }
     };
 
     window.addEventListener('message', handleMessage);
     return () => window.removeEventListener('message', handleMessage);
-  }, [session.sessionId]);
+  }, [session.sessionId, loadSessionContent]);
 
-  const status = session.frontmatter?.status || 'unknown';
-  const problemStatement = session.frontmatter?.problem_statement || 'No description';
-  const startTime = session.frontmatter?.start_time;
-  const endTime = session.frontmatter?.end_time;
-  const changedFiles = session.frontmatter?.changed_files || [];
-  const commandFile = session.frontmatter?.command_file;
+  const status = sessionData.frontmatter?.status || 'unknown';
+  const problemStatement = sessionData.frontmatter?.problem_statement || 'No description';
+  const startTime = sessionData.frontmatter?.start_time;
+  const endTime = sessionData.frontmatter?.end_time;
+  const changedFiles = sessionData.frontmatter?.changed_files || [];
+  const commandFile = sessionData.frontmatter?.command_file;
 
   // Status badge color
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
+      case 'design':
         return { bg: 'var(--vscode-charts-green)', fg: 'var(--vscode-editor-background)' };
-      case 'completed':
+      case 'scribe':
         return { bg: 'var(--vscode-charts-blue)', fg: 'var(--vscode-editor-background)' };
-      case 'awaiting_implementation':
+      case 'development':
         return { bg: 'var(--vscode-charts-orange)', fg: 'var(--vscode-editor-background)' };
+      case 'completed':
+        return { bg: 'var(--vscode-charts-purple)', fg: 'var(--vscode-editor-background)' };
       default:
         return { bg: 'var(--vscode-badge-background)', fg: 'var(--vscode-badge-foreground)' };
     }
@@ -2528,7 +2542,7 @@ function SessionDetail({
           ← Back to Sessions
         </button>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 12 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignments: 'start', marginBottom: 12 }}>
           <div>
             <h2 style={{ margin: 0, marginBottom: 8 }}>{session.sessionId}</h2>
             <div style={{
@@ -2544,16 +2558,154 @@ function SessionDetail({
               {status}
             </div>
           </div>
-          {status === 'completed' && !commandFile && (
-            <button 
-              className="btn btn-primary"
-              onClick={() => onDistillSession(session.sessionId)}
-            >
-              Create Stories Command
-            </button>
-          )}
+          <div style={{ display: 'flex', gap: 8 }}>
+            {/* Development status: Show "Mark Complete" button */}
+            {status === 'development' && (
+              <button 
+                className="btn btn-primary"
+                onClick={() => {
+                  vscode?.postMessage({
+                    type: 'markComplete',
+                    sessionId: session.sessionId
+                  });
+                }}
+              >
+                Mark Complete
+              </button>
+            )}
+            
+            {/* Completed status: No action buttons */}
+            {status === 'completed' && (
+              <div style={{
+                padding: '8px 12px',
+                fontSize: 12,
+                color: 'var(--vscode-charts-green)',
+                fontWeight: 600
+              }}>
+                ✓ Session Complete
+              </div>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Status-based instructions */}
+      {status === 'design' && (
+        <div className="card" style={{ 
+          marginBottom: 16,
+          background: 'var(--vscode-editor-inactiveSelectionBackground)',
+          borderLeft: '3px solid var(--vscode-charts-green)'
+        }}>
+          <h3 className="section-title">AI Assisted Design</h3>
+          <div style={{ fontSize: 13, lineHeight: 1.6, marginBottom: 12 }}>
+            Use the forge-design command to update AI documentation during this session:
+          </div>
+          <div style={{
+            padding: '10px 14px',
+            background: 'var(--vscode-editor-background)',
+            borderRadius: 4,
+            fontSize: 13,
+            fontFamily: 'monospace',
+            fontWeight: 600,
+            marginBottom: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8
+          }}>
+            <span style={{ color: 'var(--vscode-charts-green)' }}>›</span>
+            <span style={{ color: 'var(--vscode-textLink-foreground)' }}>/forge-design</span>
+          </div>
+          <div style={{ fontSize: 12, opacity: 0.85, lineHeight: 1.5 }}>
+            Open the agent chat and run this command to update features, specs, diagrams, models, and contexts. All changes will be automatically tracked. When you're finished designing, click "End Session" in the Active Session panel to transition to 'scribe' status.
+          </div>
+        </div>
+      )}
+
+      {status === 'scribe' && (
+        <div className="card" style={{ 
+          marginBottom: 16,
+          background: 'var(--vscode-editor-inactiveSelectionBackground)',
+          borderLeft: '3px solid var(--vscode-charts-blue)'
+        }}>
+          <h3 className="section-title">Next Step: Run Scribe Command</h3>
+          <div style={{ fontSize: 13, lineHeight: 1.6, marginBottom: 12 }}>
+            Run the forge-scribe command to analyze this session and generate Stories and Tasks:
+          </div>
+          <div style={{
+            padding: '10px 14px',
+            background: 'var(--vscode-editor-background)',
+            borderRadius: 4,
+            fontSize: 13,
+            fontFamily: 'monospace',
+            fontWeight: 600,
+            marginBottom: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8
+          }}>
+            <span style={{ color: 'var(--vscode-charts-blue)' }}>›</span>
+            <span style={{ color: 'var(--vscode-textLink-foreground)' }}>/forge-scribe {session.sessionId}</span>
+          </div>
+          <div style={{ fontSize: 12, opacity: 0.85, lineHeight: 1.5 }}>
+            Open the agent chat and run this command. The agent will analyze the changed files, create implementation stories and tasks, then ask if you want to transition the session to 'development' status.
+          </div>
+        </div>
+      )}
+
+      {status === 'development' && (
+        <div className="card" style={{ 
+          marginBottom: 16,
+          background: 'var(--vscode-editor-inactiveSelectionBackground)',
+          borderLeft: '3px solid var(--vscode-charts-orange)'
+        }}>
+          <h3 className="section-title">Next Step: Build Stories</h3>
+          <div style={{ fontSize: 13, lineHeight: 1.6, marginBottom: 12 }}>
+            Implement stories using the forge-build command:
+          </div>
+          <div style={{
+            padding: '10px 14px',
+            background: 'var(--vscode-editor-background)',
+            borderRadius: 4,
+            fontSize: 13,
+            fontFamily: 'monospace',
+            fontWeight: 600,
+            marginBottom: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8
+          }}>
+            <span style={{ color: 'var(--vscode-charts-orange)' }}>›</span>
+            <span style={{ color: 'var(--vscode-textLink-foreground)' }}>/forge-build @filename</span>
+          </div>
+          <div style={{ fontSize: 12, opacity: 0.85, lineHeight: 1.5 }}>
+            Select a story file from <code style={{ 
+              padding: '2px 6px', 
+              background: 'var(--vscode-editor-background)', 
+              borderRadius: 3,
+              fontSize: 11
+            }}>ai/sessions/{session.sessionId}/tickets/</code> and run <code style={{ 
+              padding: '2px 6px', 
+              background: 'var(--vscode-editor-background)', 
+              borderRadius: 3,
+              fontSize: 11
+            }}>/forge-build</code> with the file to implement it. The agent will verify the session is in 'development' status and automatically mark the session as 'completed' when the last story is built.
+          </div>
+        </div>
+      )}
+
+      {status === 'design' && (
+        <div className="card" style={{ 
+          marginBottom: 16,
+          background: 'var(--vscode-editor-inactiveSelectionBackground)',
+          borderLeft: '3px solid var(--vscode-charts-green)'
+        }}>
+          <h3 className="section-title">Active Design Session</h3>
+          <div style={{ fontSize: 13, lineHeight: 1.6 }}>
+            Modify features, specs, diagrams, and models. All changes are being tracked automatically. When you're done with your design work, click "End Design Session" to transition to 'scribe' status.
+          </div>
+        </div>
+      )}
+
 
       {/* Problem Statement */}
       <div className="card" style={{ marginBottom: 16 }}>
@@ -2577,14 +2729,6 @@ function SessionDetail({
           )}
           <div style={{ fontWeight: 600 }}>Changed Files:</div>
           <div>{changedFiles.length} file{changedFiles.length !== 1 ? 's' : ''}</div>
-          {commandFile && (
-            <>
-              <div style={{ fontWeight: 600 }}>Command File:</div>
-              <div style={{ fontFamily: 'monospace', fontSize: 11, color: 'var(--vscode-textLink-foreground)' }}>
-                {commandFile}
-              </div>
-            </>
-          )}
         </div>
       </div>
 
@@ -2840,19 +2984,24 @@ function SessionCard({
   // Get status badge color
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active':
+      case 'design':
         return {
           background: 'var(--vscode-charts-green)',
           color: 'var(--vscode-editor-background)'
         };
-      case 'completed':
+      case 'scribe':
         return {
           background: 'var(--vscode-charts-blue)',
           color: 'var(--vscode-editor-background)'
         };
-      case 'awaiting_implementation':
+      case 'development':
         return {
           background: 'var(--vscode-charts-orange)',
+          color: 'var(--vscode-editor-background)'
+        };
+      case 'completed':
+        return {
+          background: 'var(--vscode-charts-purple)',
           color: 'var(--vscode-editor-background)'
         };
       default:
@@ -3230,7 +3379,7 @@ function SessionPanel({ session, minimized, onToggleMinimize }: {
   React.useEffect(() => {
     const loadSessionContent = async () => {
       // Request the full session file content via getFileContent
-      const sessionPath = `ai/sessions/${session.sessionId}.session.md`;
+      const sessionPath = `ai/sessions/${session.sessionId}/${session.sessionId}.session.md`;
       vscode?.postMessage({ type: 'getFileContent', filePath: sessionPath });
     };
     
@@ -3290,7 +3439,7 @@ ${notes}
     const frontmatter = {
       session_id: session.sessionId,
       start_time: session.startTime,
-      status: 'active',
+      status: 'design',
       problem_statement: problemStatement,
       changed_files: session.changedFiles
     };

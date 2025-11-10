@@ -40,13 +40,17 @@ When you use Forge in a project, it manages files in a nestable folder structure
 ```
 your-project/
 └── ai/
-    ├── sessions/      # Design session tracking (*.session.md)
-    ├── features/      # Feature definitions with Gherkin (*.feature.md, nestable, index.md)
-    ├── specs/         # Technical specifications with Nomnoml (*.spec.md, nestable)
-    ├── actors/        # Actor/persona definitions (*.actor.md, nestable)
-    ├── contexts/      # Context references and guidance (*.context.md, nestable)
-    ├── tickets/       # Implementation Stories and Tasks (*.story.md, *.task.md, by session)
-    └── docs/          # Supporting documentation
+    ├── sessions/           # Design session tracking (*.session.md)
+    │   ├── <session-id>/
+    │   │   └── tickets/    # Stories and Tasks for this session
+    │   │       ├── *.story.md
+    │   │       └── *.task.md
+    │   └── *.session.md
+    ├── features/           # Feature definitions with Gherkin (*.feature.md, nestable, index.md)
+    ├── specs/              # Technical specifications with Nomnoml (*.spec.md, nestable)
+    ├── actors/             # Actor/persona definitions (*.actor.md, nestable)
+    ├── contexts/           # Context references and guidance (*.context.md, nestable)
+    └── docs/               # Supporting documentation
 ```
 
 ## 🚀 Getting Started
@@ -71,7 +75,7 @@ When you first use Forge in a project, it will create:
 1. **AI folder structure** - Organized folders for sessions, features, specs, actors, and contexts
 2. **Cursor command files** - Pre-configured commands that guide AI agents through Forge workflows
 
-**Note**: The `ai/tickets/` folder is not created during initialization. It's automatically created when you distill a session, with each session getting its own subdirectory (e.g., `ai/tickets/session-id/`) containing the generated stories and tasks.
+**Note**: Ticket folders are not created during initialization. When you distill a session, a tickets subdirectory is automatically created within that session's folder (e.g., `ai/sessions/<session-id>/tickets/`) containing the generated stories and tasks. This keeps all session-related files organized together.
 
 #### Cursor Commands
 
@@ -175,14 +179,23 @@ Add to your MCP settings file:
 session_id: user-authentication-session
 start_time: 2025-10-25T10:00:00Z
 end_time: null
-status: active
+status: design  # design, scribe, development, completed
 problem_statement: "Add user authentication with email verification"
 changed_files: [
-  "ai/features/user/login.feature.md",
-  "ai/specs/api/auth-endpoint.spec.md"
+  {
+    path: "ai/features/user/login.feature.md",
+    change_type: "added",
+    scenarios_added: ["Successful login", "Failed login with invalid password"]
+  },
+  {
+    path: "ai/specs/api/auth-endpoint.spec.md",
+    change_type: "modified",
+    sections_modified: ["Login API Contract", "Validation Rules"]
+  }
 ]
 # Note: Only Features and Specs are tracked in changed_files
 # Actors and Contexts are foundational and not session-tracked
+# Tickets are created in ai/sessions/<session-id>/tickets/
 ---
 
 # User Authentication Session
@@ -277,7 +290,7 @@ Add email validation to User model
    - Link Features and Specs to relevant Contexts and Actors
    - Continue editing Actors and Contexts as needed
 
-4. **Distill to Stories & Tasks** - Convert the session into minimal implementation stories (< 30 min each) and external tasks
+4. **Distill to Stories & Tasks** - Convert the session into minimal implementation stories (< 30 min each) and external tasks, organized in `ai/sessions/<session-id>/tickets/`
 
 5. **Build Stories** - Implement each story with complete context from linked features, specs, contexts, and actors
 

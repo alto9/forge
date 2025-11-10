@@ -35,8 +35,3 @@ actor_id: []
 [GherkinEditor Component] gherkin -> [FileEditor Component]
 [TipTapEditor (WYSIWYG)] content -> [FileEditor Component]
 ```
-
-## Notes
-
-This diagram shows how the WYSIWYG markdown editor component integrates with TipTap extensions and provides both visual and source editing modes with markdown conversion.
-

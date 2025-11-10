@@ -29,8 +29,3 @@ actor_id: []
 [File System] check folders -> [<choice>Check Readiness]
 [File System] create folders -> [Create Folders]
 ```
-
-## Notes
-
-This diagram shows the flow from command execution through project readiness checking to either the welcome panel (for uninitialized projects) or directly to the studio panel (for ready projects).
-

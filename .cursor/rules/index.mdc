@@ -176,9 +176,12 @@ The @forge/mcp-server provides:
 ### get_forge_about
 Returns comprehensive overview of Forge workflow including:
 - Session-driven approach
+- **THE LINKAGE SYSTEM** - Critical foundation for systematic context gathering
 - When to create Stories vs Tasks
 - Minimal story size guidance
 - File structure and linkages
+- 6-phase context gathering process
+- Context Building Checklist
 
 ### get_forge_schema
 Returns schema for: session, feature, spec, actor, story, task, context

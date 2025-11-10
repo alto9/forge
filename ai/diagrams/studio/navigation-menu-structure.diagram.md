@@ -1,7 +1,7 @@
 ---
 diagram_id: navigation-menu-structure
 name: Navigation Menu Structure
-description: Shows the organization of the Forge Studio navigation sidebar with foundational and design sections
+description: Shows the organization of the Forge Studio navigation sidebar with inform and design sections
 diagram_type: component
 feature_id: [navigation-menu]
 spec_id: [navigation-menu-implementation]
@@ -16,13 +16,13 @@ actor_id: []
 
 [Navigation Sidebar]
 [Navigation Sidebar] Contains -> [Dashboard Link]
-[Navigation Sidebar] Contains -> [Foundational Section]
+[Navigation Sidebar] Contains -> [Inform Section]
 [Navigation Sidebar] Contains -> [Design Section]
 
-[Foundational Section] Header -> ["FOUNDATIONAL" Text]
-[Foundational Section] Contains -> [Actors Link]
-[Foundational Section] Contains -> [Contexts Link]
-[Foundational Section] Contains -> [Sessions Link]
+[Inform Section] Header -> ["INFORM" Text]
+[Inform Section] Contains -> [Actors Link]
+[Inform Section] Contains -> [Contexts Link]
+[Inform Section] Contains -> [Sessions Link]
 
 [Design Section] Header -> ["DESIGN" Text]
 [Design Section] Contains -> [Features Link]
@@ -36,8 +36,3 @@ actor_id: []
 [Diagrams Link] State -> [Session Dependent]
 [Specs Link] State -> [Session Dependent]
 ```
-
-## Notes
-
-This diagram shows how the navigation menu is structured with two main sections: Foundational (always accessible) and Design (requires active session).
-

@@ -75,8 +75,12 @@ export class ForgeStudioPanel {
                     await this._stopSessionWithConfirmation();
                     break;
                 }
-                case 'distillSession': {
-                    await this._distillSession(message.sessionId);
+                case 'endSession': {
+                    await this._endSession(message.sessionId);
+                    break;
+                }
+                case 'markComplete': {
+                    await this._markSessionComplete(message.sessionId);
                     break;
                 }
                 case 'switchProject': {
@@ -541,8 +545,8 @@ export class ForgeStudioPanel {
                 const content = await FileParser.readFile(file.fsPath);
                 const parsed = FileParser.parseFrontmatter(content);
                 
-                // Check if this session is active
-                if (parsed.frontmatter.status === 'active') {
+                // Check if this session is in design status (active design session)
+                if (parsed.frontmatter.status === 'design') {
                     const sessionId = parsed.frontmatter.session_id || path.basename(file.fsPath, '.session.md');
                     
                     // Load this as the active session
@@ -556,7 +560,7 @@ export class ForgeStudioPanel {
                     // Start file watcher for this session
                     this._startFileWatcher();
                     
-                    // Only take the first active session found
+                    // Only take the first design session found
                     // If multiple exist, we take the first one (could log a warning)
                     return;
                 }
@@ -607,6 +611,14 @@ export class ForgeStudioPanel {
             // Directory already exists
         }
 
+        // Create session folder (nested structure)
+        const sessionFolder = vscode.Uri.joinPath(sessionsDir, sessionId);
+        try {
+            await vscode.workspace.fs.createDirectory(sessionFolder);
+        } catch {
+            // Directory already exists
+        }
+
         // Try to get current git commit for precise diff tracking
         let startCommit: string | null = null;
         const isGitRepo = await GitUtils.isGitRepository(this._projectUri.fsPath);
@@ -614,13 +626,13 @@ export class ForgeStudioPanel {
             startCommit = await GitUtils.getCurrentCommit(this._projectUri.fsPath);
         }
 
-        // Create session file
-        const sessionFile = vscode.Uri.joinPath(sessionsDir, `${sessionId}.session.md`);
+        // Create session file inside session folder
+        const sessionFile = vscode.Uri.joinPath(sessionFolder, `${sessionId}.session.md`);
         const frontmatter: any = {
             session_id: sessionId,
             start_time: startTime,
             end_time: null,
-            status: 'active',
+            status: 'design',
             problem_statement: problemStatement,
             changed_files: []
         };
@@ -808,7 +820,8 @@ ${problemStatement}
         const sessionFile = vscode.Uri.joinPath(
             this._projectUri, 
             'ai', 
-            'sessions', 
+            'sessions',
+            this._activeSession.sessionId,
             `${this._activeSession.sessionId}.session.md`
         );
 
@@ -834,6 +847,7 @@ ${problemStatement}
             this._projectUri,
             'ai',
             'sessions',
+            this._activeSession.sessionId,
             `${this._activeSession.sessionId}.session.md`
         );
 
@@ -845,7 +859,7 @@ ${problemStatement}
                 session_id: this._activeSession.sessionId,
                 start_time: this._activeSession.startTime,
                 changed_files: this._activeSession.changedFiles,
-                status: 'active'
+                status: 'design'
             };
 
             const text = FileParser.stringifyFrontmatter(updatedFrontmatter, content);
@@ -903,7 +917,8 @@ ${problemStatement}
         const sessionFile = vscode.Uri.joinPath(
             this._projectUri, 
             'ai', 
-            'sessions', 
+            'sessions',
+            sessionId,
             `${sessionId}.session.md`
         );
 
@@ -912,7 +927,7 @@ ${problemStatement}
             const parsed = FileParser.parseFrontmatter(content);
             
             parsed.frontmatter.end_time = endTime;
-            parsed.frontmatter.status = 'completed';
+            parsed.frontmatter.status = 'scribe';
             parsed.frontmatter.changed_files = this._activeSession.changedFiles;
             
             const text = FileParser.stringifyFrontmatter(parsed.frontmatter, parsed.content);
@@ -930,60 +945,186 @@ ${problemStatement}
             // Notify webview
             this._panel.webview.postMessage({ type: 'sessionStopped' });
 
-            vscode.window.showInformationMessage(`Design session "${sessionId}" completed!`);
+            vscode.window.showInformationMessage(`Design session "${sessionId}" ended. Status changed to 'scribe'. You can now run @forge-scribe to distill stories.`);
         } catch (error) {
-            vscode.window.showErrorMessage(`Failed to stop session: ${error}`);
+            vscode.window.showErrorMessage(`Failed to end session: ${error}`);
         }
     }
 
-    private async _distillSession(sessionId: string) {
+    private async _endSession(sessionId: string): Promise<void> {
         const sessionFile = vscode.Uri.joinPath(
             this._projectUri,
             'ai',
             'sessions',
+            sessionId,
             `${sessionId}.session.md`
         );
 
         try {
-            // Generate the distill prompt
-            const prompt = await PromptGenerator.generateDistillSessionPrompt(sessionFile);
+            // Load session content
+            const content = await FileParser.readFile(sessionFile.fsPath);
+            const parsed = FileParser.parseFrontmatter(content);
 
-            // Write the prompt to a Cursor command file
-            const commandFilePath = await CommandFileWriter.writeCommandFile(
-                this._projectUri.fsPath,
-                sessionId,
-                prompt
+            // Validate current status is 'design'
+            if (parsed.frontmatter.status !== 'design') {
+                vscode.window.showErrorMessage(
+                    `Cannot end session. Current status is '${parsed.frontmatter.status}'. Session must be in 'design' status.`
+                );
+                return;
+            }
+
+            // Confirm with user
+            const confirm = await vscode.window.showWarningMessage(
+                `End design session "${sessionId}"? This will transition the session to 'scribe' status.`,
+                { modal: true },
+                'End Session'
             );
 
-            // Update the session file with command_file path and status
-            const sessionContent = await FileParser.readFile(sessionFile.fsPath);
-            const sessionData = FileParser.parseFrontmatter(sessionContent);
-            
-            sessionData.frontmatter.command_file = commandFilePath;
-            sessionData.frontmatter.status = 'awaiting_implementation';
-            
-            const updatedContent = FileParser.stringifyFrontmatter(
-                sessionData.frontmatter, 
-                sessionData.content
-            );
-            await vscode.workspace.fs.writeFile(sessionFile, Buffer.from(updatedContent, 'utf-8'));
+            if (confirm !== 'End Session') {
+                return;
+            }
 
-            // Notify the webview that the session has been updated
+            // Update session status to 'scribe' and set end_time
+            parsed.frontmatter.status = 'scribe';
+            parsed.frontmatter.end_time = new Date().toISOString();
+
+            const text = FileParser.stringifyFrontmatter(parsed.frontmatter, parsed.content);
+            await vscode.workspace.fs.writeFile(sessionFile, Buffer.from(text, 'utf-8'));
+
+            // Clear active session if this was the active one
+            if (this._activeSession?.sessionId === sessionId) {
+                this._activeSession = null;
+                if (this._fileWatcher) {
+                    this._fileWatcher.dispose();
+                    this._fileWatcher = undefined;
+                }
+            }
+
+            // Notify webview
             this._panel.webview.postMessage({ 
-                type: 'sessionDistilled',
+                type: 'sessionStatusChanged',
                 sessionId,
-                commandFilePath 
+                oldStatus: 'design',
+                newStatus: 'scribe'
             });
 
-            // Refresh the sessions list
+            // Refresh sessions list
             const sessions = await this._listSessions();
             this._panel.webview.postMessage({ type: 'sessions', data: sessions });
 
             vscode.window.showInformationMessage(
-                `Stories command created at ${commandFilePath}. You can now execute it in Cursor.`
+                `Session "${sessionId}" ended. Status changed to 'scribe'. You can now run forge-scribe to distill stories.`
             );
         } catch (error) {
-            vscode.window.showErrorMessage(`Failed to create stories command: ${error}`);
+            vscode.window.showErrorMessage(`Failed to end session: ${error}`);
+        }
+    }
+
+    private async _markSessionComplete(sessionId: string): Promise<void> {
+        const sessionFile = vscode.Uri.joinPath(
+            this._projectUri,
+            'ai',
+            'sessions',
+            sessionId,
+            `${sessionId}.session.md`
+        );
+
+        try {
+            // Load session content
+            const content = await FileParser.readFile(sessionFile.fsPath);
+            const parsed = FileParser.parseFrontmatter(content);
+
+            // Validate current status is 'development'
+            if (parsed.frontmatter.status !== 'development') {
+                vscode.window.showErrorMessage(
+                    `Cannot mark session as complete. Current status is '${parsed.frontmatter.status}'. Session must be in 'development' status.`
+                );
+                return;
+            }
+
+            // Validate all tickets are completed
+            const ticketsPath = path.join(
+                this._projectUri.fsPath,
+                'ai',
+                'sessions',
+                sessionId,
+                'tickets'
+            );
+
+            let hasIncompleteTickets = false;
+            const incompleteTickets: string[] = [];
+
+            try {
+                const ticketPattern = new vscode.RelativePattern(ticketsPath, '**/*.{story,task}.md');
+                const ticketUris = await vscode.workspace.findFiles(ticketPattern);
+
+                if (ticketUris.length === 0) {
+                    vscode.window.showErrorMessage('No ticket files found in session. Run forge-scribe first.');
+                    return;
+                }
+
+                for (const uri of ticketUris) {
+                    try {
+                        const ticketContent = await FileParser.readFile(uri.fsPath);
+                        const ticketData = FileParser.parseFrontmatter(ticketContent);
+
+                        if (ticketData.frontmatter.status !== 'completed') {
+                            hasIncompleteTickets = true;
+                            const filename = path.basename(uri.fsPath);
+                            incompleteTickets.push(`${filename} (status: ${ticketData.frontmatter.status || 'unknown'})`);
+                        }
+                    } catch (error) {
+                        const filename = path.basename(uri.fsPath);
+                        incompleteTickets.push(`${filename} (error reading file)`);
+                        hasIncompleteTickets = true;
+                    }
+                }
+            } catch (error) {
+                vscode.window.showErrorMessage('No tickets folder found. Run forge-scribe first to create tickets.');
+                return;
+            }
+
+            if (hasIncompleteTickets) {
+                const incompleteList = incompleteTickets.map(t => `  • ${t}`).join('\n');
+                vscode.window.showErrorMessage(
+                    `Cannot mark session as complete. The following tickets are not completed:\n\n${incompleteList}\n\nPlease complete all tickets before marking the session as complete.`,
+                    { modal: true }
+                );
+                return;
+            }
+
+            // Confirm with user
+            const confirm = await vscode.window.showInformationMessage(
+                `Mark session "${sessionId}" as complete? All tickets have been validated as complete.`,
+                { modal: true },
+                'Mark Complete'
+            );
+
+            if (confirm !== 'Mark Complete') {
+                return;
+            }
+
+            // Update session status to 'completed'
+            parsed.frontmatter.status = 'completed';
+
+            const text = FileParser.stringifyFrontmatter(parsed.frontmatter, parsed.content);
+            await vscode.workspace.fs.writeFile(sessionFile, Buffer.from(text, 'utf-8'));
+
+            // Notify webview
+            this._panel.webview.postMessage({ 
+                type: 'sessionStatusChanged',
+                sessionId,
+                oldStatus: 'development',
+                newStatus: 'completed'
+            });
+
+            // Refresh sessions list
+            const sessions = await this._listSessions();
+            this._panel.webview.postMessage({ type: 'sessions', data: sessions });
+
+            vscode.window.showInformationMessage(`Session "${sessionId}" marked as complete! 🎉`);
+        } catch (error) {
+            vscode.window.showErrorMessage(`Failed to mark session as complete: ${error}`);
         }
     }
 

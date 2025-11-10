@@ -27,8 +27,3 @@ actor_id: []
 [Save to Extension] -> [FileSystem]
 [FileSystem] update -> [Session Tracking]
 ```
-
-## Notes
-
-This diagram illustrates how editor state flows between the WYSIWYG and source views, and how changes are automatically saved with debouncing to prevent excessive file writes.
-

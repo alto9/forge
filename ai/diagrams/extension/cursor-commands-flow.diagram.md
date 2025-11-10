@@ -29,8 +29,3 @@ actor_id: []
 [Compute Hash] -> [Embed Hash Comment]
 [Embed Hash Comment] -> [Write File to Project]
 ```
-
-## Notes
-
-This diagram illustrates how Cursor command files are managed with hash validation to ensure they stay in sync with the extension's templates.
-

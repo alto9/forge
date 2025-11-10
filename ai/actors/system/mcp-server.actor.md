@@ -28,10 +28,13 @@ The MCP Server is a Node.js application that implements the Model Context Protoc
 ### get_forge_about
 Returns comprehensive overview of Forge workflow including:
 - Session-driven approach philosophy
+- **THE LINKAGE SYSTEM** - The foundation of Forge's power for systematic context gathering
 - File structure (sessions, features, diagrams, specs, models, actors, contexts, tickets)
 - Complete workflow (Phase 1-4: Start Session, Design, Distill, Build)
 - Stories vs Tasks guidance
 - Distillation principles (minimal story size, proper linkages)
+- 6-phase systematic context gathering process using linkages
+- Context Building Checklist for complete context discovery
 - Best practices
 
 ### get_forge_schema

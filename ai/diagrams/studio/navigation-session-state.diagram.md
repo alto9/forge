@@ -25,8 +25,3 @@ actor_id: []
 [Features/Diagrams/Specs Disabled] Visual -> [Lock Icon|Reduced Opacity|Tooltip]
 [All Items Enabled] Visual -> [Full Opacity|No Lock Icon|Active State]
 ```
-
-## Notes
-
-This state diagram illustrates how the application checks for an active session and enables/disables navigation items accordingly. Design items (Features, Diagrams, Specs) require an active session.
-

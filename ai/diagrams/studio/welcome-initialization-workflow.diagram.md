@@ -32,8 +32,3 @@ actor_id: []
 [WelcomePanel] -> [ForgeStudio|Open Studio]
 [ForgeStudio] -> [User|Dashboard loads]
 ```
-
-## Notes
-
-This sequence diagram illustrates the step-by-step process when a user initializes a Forge project through the welcome screen, including confirmation, folder creation, and transition to the studio.
-

@@ -1,7 +1,7 @@
 ---
 spec_id: navigation-menu-implementation
 name: Navigation Menu Implementation
-description: Technical specification for the reorganized Forge Studio navigation menu with foundational and design sections
+description: Technical specification for the reorganized Forge Studio navigation menu with inform and design sections
 feature_id: [navigation-menu]
 diagram_id: [navigation-menu-structure, navigation-session-state]
 context_id: [theme, vsce]
@@ -11,7 +11,7 @@ context_id: [theme, vsce]
 
 ## Overview
 
-The Forge Studio navigation menu is organized into two distinct sections to clearly communicate which items require active design sessions and which are always accessible. This separation helps developers understand that Actors and Contexts are foundational items they define before starting design work, while Features and Specs are created within design sessions.
+The Forge Studio navigation menu is organized into two distinct sections to clearly communicate which items require active design sessions and which are always accessible. This separation helps developers understand that Actors and Contexts inform their design work and are always accessible, while Features and Specs are created within design sessions.
 
 ## Architecture
 
@@ -46,7 +46,7 @@ interface SidebarProps {
   />
   
   <NavSection 
-    title="FOUNDATIONAL"
+    title="INFORM"
     items={[
       { view: 'actors', label: 'Actors', icon: 'person', alwaysEnabled: true },
       { view: 'contexts', label: 'Contexts', icon: 'book', alwaysEnabled: true },

@@ -24,8 +24,3 @@ actor_id: []
 [WelcomePanel] Manual Open -> [ForgeStudioPanel]
 [ForgeStudioPanel] -> [Dashboard/Sessions/Files]
 ```
-
-## Notes
-
-This diagram shows how the Forge Studio command execution flows through project readiness checking, potentially showing a welcome screen for uninitialized projects, and eventually opening the main Studio panel.
-

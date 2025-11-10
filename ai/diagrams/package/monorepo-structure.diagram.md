@@ -25,8 +25,3 @@ actor_id: []
 [MCP Server] -> [Server Implementation]
 [MCP Server] -> [Dist Package]
 ```
-
-## Notes
-
-This diagram shows the structure of the Forge monorepo with two main packages: the VSCode extension and the MCP server.
-
