@@ -16,7 +16,7 @@ You must have an active design session before making changes to AI documentation
 1. **Calls MCP Tools**: Uses \`get_forge_about\` to understand the Forge workflow and session-driven approach
 2. **Checks for active session**: Ensures you're working within a structured design workflow
 3. **Reads AI documentation**: Understands existing design patterns and structure
-4. **Guides documentation updates**: Helps create or modify features, diagrams, specs, models, actors, and contexts
+4. **Guides documentation updates**: Helps create or modify features, diagrams, specs, actors, and contexts
 5. **Tracks all changes**: Ensures changed files are tracked in the active session's \`changed_files\` array
 
 ## File Type Guidance
@@ -43,11 +43,6 @@ When working in design sessions, use the correct file type for each purpose:
 - **Does NOT contain**: Diagrams (use diagram files instead), implementation code (use context files)
 - **Example**: "Login API endpoint accepts email/password, returns JWT token"
 
-### Models (*.model.md)
-- **Purpose**: Define data structures and their properties
-- **Format**: Markdown tables with property definitions
-- **Contains**: Properties, relationships, validation rules, constraints
-
 ### Actors (*.actor.md)
 - **Purpose**: Define who/what interacts with the system
 - **Format**: Markdown descriptions
@@ -60,11 +55,24 @@ When working in design sessions, use the correct file type for each purpose:
 - **Contains**: When to use patterns, code examples, best practices
 - **Note**: Always editable (no session required)
 
+## Intelligent Linkage and Grouping
+
+When working with Forge documentation, it's essential to understand and respect the existing organizational structure:
+
+- **Analyze folder structure**: Before creating new files, examine the existing \`ai/\` subfolder structure to understand how elements are logically grouped
+- **Follow existing patterns**: Contribute to existing grouping patterns rather than creating new arbitrary structures
+- **Respect nesting**: Folder nesting reflects logical relationships - preserve and extend these relationships when adding new files
+- **Utilize linkages effectively**: Use all element linkages (feature_id, spec_id, context_id) to build complete context, but avoid over-verbosity
+- **Group logically**: Place related files together in nested folders that reflect their relationships and dependencies
+- **Maintain consistency**: When adding new documentation, follow the same organizational patterns already established in the project
+
+Understanding the existing structure helps maintain coherence and makes the documentation easier to navigate and understand.
+
 ## Important Constraints
 
 - **This is a Forge design session**: You are working within a structured design workflow
 - **Only modify AI documentation files**: Work exclusively within the \`ai/\` folder
-- **Do NOT modify implementation code**: This command is for updating features, diagrams, specs, models, actors, and contexts only
+- **Do NOT modify implementation code**: This command is for updating features, diagrams, specs, actors, and contexts only
 - **Track all changes**: Ensure changed files are tracked in the active session's \`changed_files\` array
 - **Use proper formats**: Features use Gherkin in code blocks, Diagrams use single nomnoml diagrams, Specs use markdown only
 - **Call MCP tools**: Always start by calling \`get_forge_about\` to understand the current Forge workflow
@@ -112,6 +120,8 @@ You must provide a story file (*.story.md) when running this command.
 - **Match existing patterns**: Follow the codebase's existing architecture and conventions
 - **Write tests**: Include unit tests as specified in the story
 - **Stay focused**: If the story is too large, break it into smaller stories
+- **Run tests**: After implementing changes, always run the test suite to verify the implementation works correctly
+- **Mark story as completed**: Update the story file's status field to 'completed' when all work is done and tests pass
 
 ## Usage
 
@@ -322,8 +332,8 @@ The command will:
    - This provides just-in-time technical guidance for each technology involved
 
 ### Phase 5: Architectural Understanding
-1. **Read all Mermaid diagrams**
-   - Examine every Mermaid diagram in modified specs
+1. **Read all nomnoml diagrams**
+   - Examine every nomnoml diagram in modified specs
    - Understand:
      - System architecture
      - Component relationships
@@ -354,7 +364,7 @@ Before creating tickets, verify:
 - [ ] All feature/spec \`context_id\` references read
 - [ ] All \`spec_id\` linkages followed
 - [ ] All object types extracted and queried via \`get_forge_context\`
-- [ ] All Mermaid diagrams analyzed
+- [ ] All nomnoml diagrams analyzed
 - [ ] Complete architectural understanding achieved
 - [ ] Context map synthesized
 
@@ -387,10 +397,26 @@ Each story must include:
 - Clear objective
 - Acceptance criteria
 - File paths involved
-- Links to feature_id, spec_id, model_id
+- Links to feature_id, spec_id
 - Link to session_id
 
-### 3. Proper File Structure
+### 3. Sequential Numbering
+All stories and tasks must use sequential numbering in their filenames to indicate implementation order:
+
+- **Format**: Use three-digit numbers with leading zeros (001-, 002-, 003-, etc.)
+- **Sequential dependencies**: Tickets that must be done in order get sequential numbers
+- **Parallel work**: Tickets that can be done synchronously (no dependencies) share the same number
+- **Example**: 
+  - \`001-implement-user-login.story.md\` (must be done first)
+  - \`002-add-jwt-validation.story.md\` (depends on 001)
+  - \`003-setup-auth0-integration.task.md\` (can be done in parallel with next two)
+  - \`003-add-error-handling.story.md\` (can be done in parallel with previous)
+  - \`003-update-documentation.task.md\` (can be done in parallel with previous two)
+  - \`004-add-logging.story.md\` (depends on 003 tickets being complete)
+
+This numbering system helps track implementation order and identifies opportunities for parallel work.
+
+### 4. Proper File Structure
 All tickets go in: \`ai/sessions/<session-id>/tickets/\`
 
 Example structure:
@@ -399,18 +425,18 @@ ai/sessions/
   └── session-123/
       ├── session-123.session.md
       └── tickets/
-          ├── implement-user-login.story.md
-          ├── setup-auth0-integration.task.md
-          ├── add-jwt-validation.story.md
+          ├── 001-implement-user-login.story.md
+          ├── 002-setup-auth0-integration.task.md
+          ├── 003-add-jwt-validation.story.md
           └── ...
 \`\`\`
 
-### 4. Follow Schemas
+### 5. Follow Schemas
 All files must adhere to:
 - Story schema (call \`get_forge_schema story\`)
 - Task schema (call \`get_forge_schema task\`)
 
-### 5. Link Everything
+### 6. Link Everything
 Every story/task MUST include:
 \`\`\`yaml
 session_id: '<session-id>'
