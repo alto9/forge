@@ -4,16 +4,26 @@ import { NomnomlRenderer } from './components/NomnomlRenderer';
 import { MarkdownEditor } from './components/MarkdownEditor';
 import { Sidebar } from './components/Sidebar';
 import { FileCard } from './components/FileCard';
+import { ChangedFileEntry } from './components/ChangedFileEntry';
 import { useSessionIndicators } from './hooks/useSessionIndicators';
+import { useSessionPermissions } from './hooks/useSessionPermissions';
 
 // Acquire VSCode API once at module level
 const vscode = typeof acquireVsCodeApi !== 'undefined' ? acquireVsCodeApi() : undefined;
+
+interface FeatureChangeEntry {
+  path: string;
+  change_type: 'added' | 'modified';
+  scenarios_added?: string[];
+  scenarios_modified?: string[];
+  scenarios_removed?: string[];
+}
 
 interface ActiveSession {
   sessionId: string;
   problemStatement: string;
   startTime: string;
-  changedFiles: string[];
+  changedFiles: FeatureChangeEntry[] | string[]; // Support both formats for backwards compatibility
 }
 
 interface Session {
@@ -293,9 +303,13 @@ function CategoryEmptyState({ category, title, activeSession, hasFolders }: {
   hasFolders: boolean;
 }) {
   const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1, -1);
-  const isFoundational = category === 'actors' || category === 'contexts';
+  const isFoundational = category === 'actors' || category === 'contexts' || category === 'specs' || category === 'diagrams';
+  const { isEditable, getLockMessage } = useSessionPermissions();
+  const canEdit = isEditable(category, activeSession);
+  const lockMessage = getLockMessage(category);
 
   const handleCreateFile = () => {
+    if (!canEdit) return;
     vscode?.postMessage({
       type: 'promptCreateFile',
       folderPath: '', // Backend will use base category path
@@ -304,6 +318,7 @@ function CategoryEmptyState({ category, title, activeSession, hasFolders }: {
   };
 
   const handleCreateFolder = () => {
+    if (!canEdit && !isFoundational) return;
     vscode?.postMessage({
       type: 'promptCreateFolder',
       folderPath: '', // Backend will use base category path
@@ -326,7 +341,36 @@ function CategoryEmptyState({ category, title, activeSession, hasFolders }: {
     );
   }
 
-  if (!activeSession && !isFoundational) {
+  // For features without session, show message and disabled button
+  if (category === 'features' && !activeSession) {
+    return (
+      <div className="p-16">
+        <div className="empty-state">
+          <div className="empty-state-icon">📁</div>
+          <div style={{ marginBottom: 8 }}>No {title.toLowerCase()} yet</div>
+          <div className="alert alert-info" style={{ marginTop: 16, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>🔒</span>
+            <span>{lockMessage || 'Features require an active design session. Start a session to create or modify features.'}</span>
+          </div>
+          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 24 }}>
+            <button 
+              className="btn btn-primary"
+              onClick={handleCreateFile}
+              disabled={true}
+              style={{ opacity: 0.5, cursor: 'not-allowed' }}
+              title={lockMessage || 'Features require an active design session. Start a session to create or modify features.'}
+            >
+              <span style={{ marginRight: 6 }}>🔒</span>
+              + New {categoryLabel}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // For other categories without session (shouldn't happen for foundational, but handle gracefully)
+  if (!activeSession && !isFoundational && category !== 'features') {
     return (
       <div className="p-16">
         <div className="empty-state">
@@ -375,7 +419,7 @@ function FolderTreeView({ folders, selectedFolder, onFolderClick, category, acti
   activeSession: ActiveSession | null;
 }) {
   const [expanded, setExpanded] = React.useState<Set<string>>(new Set());
-  const isFoundational = category === 'actors' || category === 'contexts';
+  const isFoundational = category === 'actors' || category === 'contexts' || category === 'specs' || category === 'diagrams';
 
   const toggleExpand = (path: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -491,8 +535,12 @@ function FolderProfile({ files, onFileClick, folderPath, category, activeSession
   const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1, -1);
   const isFoundational = category === 'actors' || category === 'contexts';
   const { isModified, getChangeType } = useSessionIndicators(activeSession);
+  const { isEditable, getLockMessage } = useSessionPermissions();
+  const canEdit = isEditable(category, activeSession);
+  const lockMessage = getLockMessage(category);
   
   const handleCreateFile = () => {
+    if (!canEdit) return;
     vscode?.postMessage({
       type: 'promptCreateFile',
       folderPath,
@@ -519,12 +567,20 @@ function FolderProfile({ files, onFileClick, folderPath, category, activeSession
           <h3 className="section-title" style={{ margin: 0, border: 'none', padding: 0 }}>Folder Contents</h3>
           <div className="text-xs opacity-70">{relativeFolderPath}</div>
         </div>
-        {(activeSession || isFoundational) && (
+        {(activeSession || isFoundational || category === 'features') && (
           <button 
             className="btn btn-primary"
-            style={{ fontSize: 12, padding: '6px 12px' }}
+            style={{ 
+              fontSize: 12, 
+              padding: '6px 12px',
+              opacity: canEdit ? 1 : 0.5,
+              cursor: canEdit ? 'pointer' : 'not-allowed'
+            }}
             onClick={handleCreateFile}
+            disabled={!canEdit}
+            title={!canEdit ? (lockMessage || 'Features require an active design session. Start a session to create or modify features.') : undefined}
           >
+            {!canEdit && <span style={{ marginRight: 4 }}>🔒</span>}
             + New {categoryLabel}
           </button>
         )}
@@ -1382,17 +1438,101 @@ function RulesSection({
   );
 }
 
+// Scenario Indicator Component with Tooltip
+function ScenarioIndicator({ changeType }: { changeType: 'added' | 'modified' | 'removed' }) {
+  const [showTooltip, setShowTooltip] = React.useState(false);
+  
+  const tooltipText = {
+    added: 'Added in current session',
+    modified: 'Modified in current session',
+    removed: 'Removed in current session'
+  }[changeType];
+
+  // Get color using VSCode theme variables with fallbacks
+  const indicatorColor = changeType === 'added' 
+    ? 'var(--vscode-charts-green, #10B981)'
+    : changeType === 'modified'
+    ? 'var(--vscode-charts-yellow, #F59E0B)'
+    : 'var(--vscode-charts-red, #EF4444)';
+
+  return (
+    <span
+      style={{
+        position: 'relative',
+        display: 'inline-block',
+        marginRight: 8
+      }}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
+    >
+      <span
+        style={{
+          display: 'inline-block',
+          width: 8,
+          height: 8,
+          borderRadius: '50%',
+          backgroundColor: indicatorColor,
+          verticalAlign: 'middle'
+        }}
+      />
+      {showTooltip && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            marginBottom: 4,
+            padding: '4px 8px',
+            backgroundColor: 'var(--vscode-editorWidget-background, #252526)',
+            color: 'var(--vscode-editorWidget-foreground, #cccccc)',
+            fontSize: 11,
+            borderRadius: 3,
+            whiteSpace: 'nowrap',
+            zIndex: 1000,
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.3)',
+            pointerEvents: 'none'
+          }}
+        >
+          {tooltipText}
+        </div>
+      )}
+    </span>
+  );
+}
+
 // ScenariosSection Component
 function ScenariosSection({ 
   scenarios, 
   readOnly, 
-  onChange 
+  onChange,
+  scenarioChanges
 }: {
   scenarios: GherkinScenario[];
   readOnly: boolean;
   onChange: (scenarios: GherkinScenario[]) => void;
+  scenarioChanges?: { added: string[]; modified: string[]; removed: string[] } | null;
 }) {
   const [expandedScenarios, setExpandedScenarios] = React.useState<Set<number>>(new Set([0]));
+
+  // Helper function to determine change type for a scenario
+  const getScenarioChangeType = (scenarioTitle: string): 'added' | 'modified' | 'removed' | null => {
+    if (!scenarioChanges) {
+      return null;
+    }
+    
+    if (scenarioChanges.added.includes(scenarioTitle)) {
+      return 'added';
+    }
+    if (scenarioChanges.modified.includes(scenarioTitle)) {
+      return 'modified';
+    }
+    if (scenarioChanges.removed.includes(scenarioTitle)) {
+      return 'removed';
+    }
+    
+    return null;
+  };
 
   const toggleScenario = (index: number) => {
     const newExpanded = new Set(expandedScenarios);
@@ -1494,6 +1634,10 @@ function ScenariosSection({
             <span style={{ marginRight: 8 }}>
               {expandedScenarios.has(scenarioIndex) ? '▼' : '▶'}
             </span>
+            {scenarioChanges && (() => {
+              const changeType = getScenarioChangeType(scenario.title);
+              return changeType ? <ScenarioIndicator changeType={changeType} /> : null;
+            })()}
             {readOnly ? (
               <span style={{ flex: 1, fontWeight: 600 }}>Scenario: {scenario.title}</span>
             ) : (
@@ -1619,8 +1763,39 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
   const [isDirty, setIsDirty] = React.useState(false);
   const [diagramViewMode, setDiagramViewMode] = React.useState<'source' | 'rendered'>('source');
   const [propertiesCollapsed, setPropertiesCollapsed] = React.useState(false);
-  const isFoundational = category === 'actors' || category === 'contexts';
-  const isReadOnly = !activeSession && !isFoundational;
+  const isFoundational = category === 'actors' || category === 'contexts' || category === 'specs' || category === 'diagrams';
+  const { isEditable, getLockMessage } = useSessionPermissions();
+  const isReadOnly = !isEditable(category, activeSession);
+  const lockMessage = getLockMessage(category);
+  const { getScenarioChanges } = useSessionIndicators(activeSession);
+
+  // Convert file path to ai/ relative path
+  const getRelativePath = React.useCallback((filePath: string): string => {
+    const normalized = filePath.replace(/\\/g, '/');
+    
+    // If path starts with ai/, return as is (but remove ai/ prefix)
+    if (normalized.startsWith('ai/')) {
+      return normalized.substring(4);
+    }
+    
+    // If path contains /ai/, extract from there
+    const aiIndex = normalized.indexOf('/ai/');
+    if (aiIndex !== -1) {
+      return normalized.substring(aiIndex + 5); // +5 to skip '/ai/'
+    }
+    
+    // Otherwise assume it's already relative to ai/
+    return normalized;
+  }, []);
+
+  // Get scenario changes for this feature file
+  const scenarioChanges = React.useMemo(() => {
+    if (category !== 'features') {
+      return null;
+    }
+    const relativePath = getRelativePath(fileContent.path);
+    return getScenarioChanges(relativePath);
+  }, [category, fileContent.path, getRelativePath, getScenarioChanges]);
 
   React.useEffect(() => {
     setFrontmatter(fileContent.frontmatter || {});
@@ -1704,8 +1879,13 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
       </div>
 
       {isReadOnly && (
-        <div className="alert alert-info mt-16">
-          Read-only mode. Start a design session to edit files.
+        <div className="alert alert-info mt-16" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>🔒</span>
+          <span>
+            {category === 'features' 
+              ? (lockMessage || 'Features require an active design session. Start a session to create or modify features.')
+              : 'Read-only mode. Start a design session to edit files.'}
+          </span>
         </div>
       )}
 
@@ -1791,6 +1971,7 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
             scenarios={parsedFeature.scenarios}
             readOnly={isReadOnly}
             onChange={(scenarios) => updateParsedFeature({ ...parsedFeature, scenarios })}
+            scenarioChanges={scenarioChanges}
           />
         </>
       ) : category === 'contexts' && parsedContext ? (
@@ -2215,7 +2396,7 @@ function DashboardPage({ counts, activeSession }: { counts: any; activeSession: 
             Started: {new Date(activeSession.startTime).toLocaleString()}
           </div>
           <div style={{ fontSize: 11, opacity: 0.7 }}>
-            Changed Files: {activeSession.changedFiles.length}
+            Changed Features: {activeSession.changedFiles.length}
           </div>
           <button 
             className="btn btn-secondary"
@@ -2391,7 +2572,7 @@ function SessionsPage({ sessions, activeSession, showNewSessionForm, onShowNewSe
                 Started: {new Date(activeSession.startTime).toLocaleString()}
               </div>
               <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4 }}>
-                Changed Files: {activeSession.changedFiles.length}
+                Changed Features: {activeSession.changedFiles.length}
               </div>
             </div>
             <div style={{ display: 'flex', gap: 8 }}>
@@ -2509,7 +2690,9 @@ function SessionDetail({
   const problemStatement = sessionData.frontmatter?.problem_statement || 'No description';
   const startTime = sessionData.frontmatter?.start_time;
   const endTime = sessionData.frontmatter?.end_time;
-  const changedFiles = sessionData.frontmatter?.changed_files || [];
+  const changedFilesRaw = sessionData.frontmatter?.changed_files || [];
+  // Normalize to array format (handle both old string[] and new FeatureChangeEntry[] formats)
+  const changedFiles = Array.isArray(changedFilesRaw) ? changedFilesRaw : [];
   const commandFile = sessionData.frontmatter?.command_file;
 
   // Status badge color
@@ -2727,8 +2910,8 @@ function SessionDetail({
               <div>{new Date(endTime).toLocaleString()}</div>
             </>
           )}
-          <div style={{ fontWeight: 600 }}>Changed Files:</div>
-          <div>{changedFiles.length} file{changedFiles.length !== 1 ? 's' : ''}</div>
+          <div style={{ fontWeight: 600 }}>Changed Features:</div>
+          <div>{changedFiles.length} feature{changedFiles.length !== 1 ? 's' : ''}</div>
         </div>
       </div>
 
@@ -2772,7 +2955,7 @@ function SessionDetail({
         </div>
       )}
 
-      {/* Changed Files */}
+      {/* Changed Features */}
       {changedFiles.length > 0 && (
         <ChangedFilesSection files={changedFiles} />
       )}
@@ -2780,17 +2963,39 @@ function SessionDetail({
   );
 }
 
-function ChangedFilesSection({ files }: { files: string[] }) {
+function ChangedFilesSection({ files }: { files: any[] }) {
+  // Normalize files to FeatureChangeEntry format (handle both old string[] and new FeatureChangeEntry[] formats)
+  const normalizedFiles = React.useMemo(() => {
+    return files.map((file: any): FeatureChangeEntry => {
+      if (typeof file === 'string') {
+        // Old format: just a path string
+        return {
+          path: file,
+          change_type: 'modified'
+        };
+      } else if (file && typeof file === 'object' && file.path) {
+        // New format: FeatureChangeEntry object
+        return file as FeatureChangeEntry;
+      } else {
+        // Fallback
+        return {
+          path: String(file),
+          change_type: 'modified'
+        };
+      }
+    });
+  }, [files]);
+
   // Group files by type
   const groupedFiles = React.useMemo(() => {
     const groups: {
-      features: string[];
-      specs: string[];
-      actors: string[];
-      contexts: string[];
-      sessions: string[];
-      tickets: string[];
-      other: string[];
+      features: FeatureChangeEntry[];
+      specs: FeatureChangeEntry[];
+      actors: FeatureChangeEntry[];
+      contexts: FeatureChangeEntry[];
+      sessions: FeatureChangeEntry[];
+      tickets: FeatureChangeEntry[];
+      other: FeatureChangeEntry[];
     } = {
       features: [],
       specs: [],
@@ -2801,8 +3006,8 @@ function ChangedFilesSection({ files }: { files: string[] }) {
       other: []
     };
 
-    files.forEach(file => {
-      const normalizedPath = file.replace(/\\/g, '/');
+    normalizedFiles.forEach(file => {
+      const normalizedPath = file.path.replace(/\\/g, '/');
       
       if (normalizedPath.includes('/features/')) {
         groups.features.push(file);
@@ -2834,7 +3039,7 @@ function ChangedFilesSection({ files }: { files: string[] }) {
     icon 
   }: { 
     title: string; 
-    files: string[]; 
+    files: FeatureChangeEntry[]; 
     icon: string;
   }) => {
     if (files.length === 0) return null;
@@ -2862,7 +3067,37 @@ function ChangedFilesSection({ files }: { files: string[] }) {
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {files.map((file, index) => (
-            <FileItem key={index} filePath={file} onClick={() => handleFileClick(file)} />
+            <div key={index}>
+              <FileItem filePath={file.path} onClick={() => handleFileClick(file.path)} />
+              {/* Display scenario details if available */}
+              {(file.scenarios_added?.length || file.scenarios_modified?.length || file.scenarios_removed?.length) && (
+                <div style={{ 
+                  marginLeft: 20, 
+                  marginTop: 4, 
+                  fontSize: 11, 
+                  opacity: 0.8,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 2
+                }}>
+                  {file.scenarios_added && file.scenarios_added.length > 0 && (
+                    <div style={{ color: 'var(--vscode-textLink-foreground)' }}>
+                      + Added: {file.scenarios_added.join(', ')}
+                    </div>
+                  )}
+                  {file.scenarios_modified && file.scenarios_modified.length > 0 && (
+                    <div style={{ color: 'var(--vscode-charts-orange)' }}>
+                      ~ Modified: {file.scenarios_modified.join(', ')}
+                    </div>
+                  )}
+                  {file.scenarios_removed && file.scenarios_removed.length > 0 && (
+                    <div style={{ color: 'var(--vscode-errorForeground)' }}>
+                      - Removed: {file.scenarios_removed.join(', ')}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           ))}
         </div>
       </div>
@@ -2871,7 +3106,7 @@ function ChangedFilesSection({ files }: { files: string[] }) {
 
   return (
     <div className="card" style={{ marginBottom: 16 }}>
-      <h3 className="section-title">Changed Files ({files.length})</h3>
+      <h3 className="section-title">Changed Features ({files.length})</h3>
       
       <FileGroup title="Features" files={groupedFiles.features} icon="✨" />
       <FileGroup title="Specifications" files={groupedFiles.specs} icon="📐" />
@@ -3374,6 +3609,7 @@ function SessionPanel({ session, minimized, onToggleMinimize }: {
   const [keyDecisions, setKeyDecisions] = React.useState('');
   const [notes, setNotes] = React.useState('');
   const [isLoaded, setIsLoaded] = React.useState(false);
+  const [expandedFiles, setExpandedFiles] = React.useState<Set<string>>(new Set());
 
   // Load session file content on mount
   React.useEffect(() => {
@@ -3465,6 +3701,56 @@ ${notes}
     // Send message to extension to show native confirmation dialog
     vscode?.postMessage({ type: 'stopSession' });
   };
+
+  // Normalize changedFiles to FeatureChangeEntry format (handle backwards compatibility)
+  const normalizedChangedFiles = React.useMemo(() => {
+    return session.changedFiles.map((file: any): FeatureChangeEntry => {
+      if (typeof file === 'string') {
+        // Old format: just a path string
+        return {
+          path: file,
+          change_type: 'modified'
+        };
+      } else if (file && typeof file === 'object' && file.path) {
+        // New format: FeatureChangeEntry object
+        return file as FeatureChangeEntry;
+      } else {
+        // Fallback
+        return {
+          path: String(file),
+          change_type: 'modified'
+        };
+      }
+    });
+  }, [session.changedFiles]);
+
+  // Calculate total scenario count across all files
+  const totalScenarioCount = React.useMemo(() => {
+    return normalizedChangedFiles.reduce((total, entry) => {
+      return total +
+        (entry.scenarios_added?.length || 0) +
+        (entry.scenarios_modified?.length || 0) +
+        (entry.scenarios_removed?.length || 0);
+    }, 0);
+  }, [normalizedChangedFiles]);
+
+  // Toggle expanded state for a file
+  const toggleFileExpand = React.useCallback((filePath: string) => {
+    setExpandedFiles(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(filePath)) {
+        newSet.delete(filePath);
+      } else {
+        newSet.add(filePath);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Handle file click
+  const handleFileClick = React.useCallback((filePath: string) => {
+    vscode?.postMessage({ type: 'openFile', filePath });
+  }, []);
 
   if (minimized) {
     return (
@@ -3625,25 +3911,31 @@ ${notes}
 
         <div className="form-group" style={{ marginBottom: 12 }}>
           <label className="form-label" style={{ fontSize: 11, marginBottom: 4 }}>
-            Changed Files ({session.changedFiles.length})
+            Changed Features ({session.changedFiles.length}
+            {totalScenarioCount > 0 && `, ${totalScenarioCount} ${totalScenarioCount === 1 ? 'scenario' : 'scenarios'}`})
           </label>
           <div style={{
-            maxHeight: 120,
+            maxHeight: 200,
             overflow: 'auto',
             fontSize: 10,
-            opacity: 0.7,
             background: 'var(--vscode-input-background)',
             borderRadius: 3,
             padding: 6
           }}>
-            {session.changedFiles.length === 0 ? (
-              <div style={{ fontStyle: 'italic' }}>No files changed yet</div>
+            {normalizedChangedFiles.length === 0 ? (
+              <div style={{ fontStyle: 'italic', opacity: 0.7 }}>No features changed yet</div>
             ) : (
-              <ul style={{ margin: 0, paddingLeft: 20 }}>
-                {session.changedFiles.map((file, i) => (
-                  <li key={i} style={{ marginBottom: 2 }}>{file}</li>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                {normalizedChangedFiles.map((entry, i: number) => (
+                  <ChangedFileEntry
+                    key={i}
+                    entry={entry}
+                    onFileClick={handleFileClick}
+                    isExpanded={expandedFiles.has(entry.path)}
+                    onToggleExpand={() => toggleFileExpand(entry.path)}
+                  />
                 ))}
-              </ul>
+              </div>
             )}
           </div>
         </div>

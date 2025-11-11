@@ -3,7 +3,7 @@ story_id: update-changed-files-ui
 session_id: features-are-king
 feature_id: [studio-sessions, scenario-level-tracking]
 spec_id: [session-change-tracking]
-status: pending
+status: completed
 priority: medium
 estimated_minutes: 20
 ---

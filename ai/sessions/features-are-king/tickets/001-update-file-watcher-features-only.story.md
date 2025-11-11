@@ -3,7 +3,7 @@ story_id: update-file-watcher-features-only
 session_id: features-are-king
 feature_id: [scenario-level-tracking, studio-sessions]
 spec_id: [session-change-tracking]
-status: pending
+status: completed
 priority: high
 estimated_minutes: 15
 ---

@@ -3,7 +3,7 @@ story_id: add-session-format-migration
 session_id: features-are-king
 feature_id: [studio-sessions]
 spec_id: [session-change-tracking]
-status: pending
+status: completed
 priority: medium
 estimated_minutes: 20
 ---

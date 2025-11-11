@@ -3,7 +3,7 @@ story_id: update-session-panel-labels
 session_id: features-are-king
 feature_id: [studio-sessions]
 spec_id: []
-status: pending
+status: completed
 priority: low
 estimated_minutes: 5
 ---

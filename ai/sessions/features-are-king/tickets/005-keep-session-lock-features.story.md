@@ -3,7 +3,7 @@ story_id: keep-session-lock-features
 session_id: features-are-king
 feature_id: [studio-sessions]
 spec_id: [forge-studio-implementation]
-status: pending
+status: completed
 priority: high
 estimated_minutes: 10
 ---
@@ -16,7 +16,7 @@ Ensure that features continue to require an active design session for creation a
 
 ## Context
 
-While specs/diagrams/models/actors/contexts are being unlocked to allow editing without sessions, features must remain session-locked because they represent directive code changes that need to be tracked.
+While specs/diagrams/actors/contexts are being unlocked to allow editing without sessions, features must remain session-locked because they represent directive code changes that need to be tracked.
 
 This story verifies and reinforces the session requirement for features, and updates any messaging to clarify this distinction.
 
@@ -48,7 +48,7 @@ This story verifies and reinforces the session requirement for features, and upd
 - [ ] Lock icon or similar indicator shows features are locked
 - [ ] Tooltip explains why features are locked
 - [ ] Features become editable when session is started
-- [ ] Specs/diagrams/models/actors/contexts are NOT affected (remain unlocked)
+- [ ] Specs/diagrams/actors/contexts are NOT affected (remain unlocked)
 
 ## Dependencies
 

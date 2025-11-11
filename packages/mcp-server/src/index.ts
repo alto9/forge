@@ -820,7 +820,7 @@ start_time: 2025-10-25T10:00:00Z  # ISO 8601 timestamp
 end_time: 2025-10-25T12:30:00Z  # ISO 8601 timestamp (null if in design)
 status: design  # design, scribe, development, completed
 problem_statement: "Brief description of what we're solving"
-changed_files: []  # Array of change entries with scenario-level tracking
+changed_files: []  # Array of FeatureChangeEntry objects with scenario-level tracking (only feature files are tracked)
 ---
 
 ## Session Status Workflow

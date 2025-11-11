@@ -1,12 +1,12 @@
 import React from 'react';
 
 interface SessionRequiredViewProps {
-  itemType: 'Features' | 'Specs';
+  itemType: 'Features';
   onStartSession: () => void;
 }
 
 /**
- * SessionRequiredView displays when users navigate to Features or Specs
+ * SessionRequiredView displays when users navigate to Features
  * without an active session, explaining why a session is required and
  * providing a prominent call-to-action to start a new session.
  */

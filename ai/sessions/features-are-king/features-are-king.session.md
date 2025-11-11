@@ -1,14 +1,31 @@
 ---
 session_id: features-are-king
 start_time: '2025-11-11T14:10:47.267Z'
-status: development
+status: completed
 problem_statement: We need to refine and clarify the Design Session workflow.
 changed_files:
-  - ai/features/studio/sessions/session-management.feature.md
-  - ai/features/studio/sessions/scenario-level-tracking.feature.md
-  - ai/specs/studio/session-change-tracking.spec.md
-  - ai/features/studio/sessions/session-visual-indicators.feature.md
+  - path: ai/features/studio/sessions/session-management.feature.md
+    change_type: modified
+    scenarios_added: []
+    scenarios_modified: []
+    scenarios_removed: []
+  - path: ai/features/studio/sessions/scenario-level-tracking.feature.md
+    change_type: modified
+    scenarios_added: []
+    scenarios_modified: []
+    scenarios_removed: []
+  - path: ai/specs/studio/session-change-tracking.spec.md
+    change_type: modified
+    scenarios_added: []
+    scenarios_modified: []
+    scenarios_removed: []
+  - path: ai/features/studio/sessions/session-visual-indicators.feature.md
+    change_type: modified
+    scenarios_added: []
+    scenarios_modified: []
+    scenarios_removed: []
 end_time: '2025-11-11T14:33:37.108Z'
+_migrated: true
 ---
 ## Problem Statement
 

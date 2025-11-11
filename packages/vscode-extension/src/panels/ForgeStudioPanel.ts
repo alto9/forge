@@ -4,12 +4,14 @@ import { FileParser } from '../utils/FileParser';
 import { PromptGenerator } from '../utils/PromptGenerator';
 import { GitUtils } from '../utils/GitUtils';
 import { CommandFileWriter } from '../utils/CommandFileWriter';
+import { GherkinParser } from '../utils/GherkinParser';
+import { FeatureChangeEntry } from '../types/FeatureChangeEntry';
 
 interface ActiveSession {
     sessionId: string;
     problemStatement: string;
     startTime: string;
-    changedFiles: string[];
+    changedFiles: FeatureChangeEntry[];
 }
 
 export class ForgeStudioPanel {
@@ -22,6 +24,7 @@ export class ForgeStudioPanel {
     private _activeSession: ActiveSession | null = null;
     private _fileWatcher: vscode.FileSystemWatcher | undefined;
     private _structureWatcher: vscode.FileSystemWatcher | undefined;
+    private _fileBaselines: Map<string, string> = new Map();
 
     private constructor(panel: vscode.WebviewPanel, extensionUri: vscode.Uri, projectUri: vscode.Uri, output: vscode.OutputChannel) {
         this._panel = panel;
@@ -511,10 +514,16 @@ export class ForgeStudioPanel {
                 const parsed = FileParser.parseFrontmatter(content);
                 const sessionId = parsed.frontmatter.session_id || path.basename(file.fsPath, '.session.md');
                 
+                // Migrate changed_files from old format if needed
+                const migrationResult = this._migrateChangedFiles(parsed.frontmatter.changed_files);
+                
                 sessions.push({
                     sessionId,
                     filePath: file.fsPath,
-                    frontmatter: parsed.frontmatter
+                    frontmatter: {
+                        ...parsed.frontmatter,
+                        changed_files: migrationResult.entries
+                    }
                 });
             }
         } catch (error) {
@@ -549,12 +558,30 @@ export class ForgeStudioPanel {
                 if (parsed.frontmatter.status === 'design') {
                     const sessionId = parsed.frontmatter.session_id || path.basename(file.fsPath, '.session.md');
                     
+                    // Migrate changed_files from old format if needed
+                    const migrationResult = this._migrateChangedFiles(parsed.frontmatter.changed_files);
+                    
+                    // If migration occurred, optionally save the migrated session back to disk
+                    if (migrationResult.wasMigrated) {
+                        try {
+                            const updatedFrontmatter = {
+                                ...parsed.frontmatter,
+                                changed_files: migrationResult.entries,
+                                _migrated: true
+                            };
+                            const text = FileParser.stringifyFrontmatter(updatedFrontmatter, parsed.content);
+                            await vscode.workspace.fs.writeFile(file, Buffer.from(text, 'utf-8'));
+                        } catch (error) {
+                            console.error('Failed to save migrated session:', error);
+                        }
+                    }
+                    
                     // Load this as the active session
                     this._activeSession = {
                         sessionId,
                         problemStatement: parsed.frontmatter.problem_statement || '',
                         startTime: parsed.frontmatter.start_time || new Date().toISOString(),
-                        changedFiles: Array.isArray(parsed.frontmatter.changed_files) ? parsed.frontmatter.changed_files : []
+                        changedFiles: migrationResult.entries
                     };
                     
                     // Start file watcher for this session
@@ -634,7 +661,11 @@ export class ForgeStudioPanel {
             end_time: null,
             status: 'design',
             problem_statement: problemStatement,
-            changed_files: []
+            // changed_files tracks only feature file changes with scenario-level detail.
+            // Each entry is a FeatureChangeEntry with path, change_type, and optional
+            // scenario arrays (scenarios_added, scenarios_modified, scenarios_removed).
+            // Specs, diagrams, actors, and contexts are NOT tracked in sessions.
+            changed_files: [] as FeatureChangeEntry[]
         };
 
         // Add start_commit if git is available
@@ -683,6 +714,10 @@ ${problemStatement}
         vscode.window.showInformationMessage(`Design session "${sessionId}" started!`);
     }
 
+    /**
+     * Start file watcher to track feature file changes during active design sessions.
+     * Only feature files (*.feature.md) are tracked - specs, diagrams, models, actors, and contexts are not tracked.
+     */
     private _startFileWatcher() {
         if (this._fileWatcher) {
             this._fileWatcher.dispose();
@@ -690,15 +725,41 @@ ${problemStatement}
 
         const pattern = new vscode.RelativePattern(
             path.join(this._projectUri.fsPath, 'ai'),
-            '**/*.{feature.md,diagram.md,spec.md}'
+            '**/*.feature.md'
         );
 
         this._fileWatcher = vscode.workspace.createFileSystemWatcher(pattern);
 
         this._fileWatcher.onDidChange(uri => this._onFileChanged(uri));
-        this._fileWatcher.onDidCreate(uri => this._onFileChanged(uri));
+        this._fileWatcher.onDidCreate(uri => this._onFileCreated(uri));
 
         this._disposables.push(this._fileWatcher);
+        
+        // Initialize baselines for existing feature files
+        this._initializeFileBaselines().catch(err => {
+            console.error('Failed to initialize file baselines:', err);
+        });
+    }
+    
+    /**
+     * Initialize file baselines for existing feature files
+     */
+    private async _initializeFileBaselines(): Promise<void> {
+        const featuresDir = vscode.Uri.joinPath(this._projectUri, 'ai', 'features');
+        try {
+            const files = await this._listFilesRecursive(featuresDir, '.feature.md');
+            for (const file of files) {
+                try {
+                    const content = await FileParser.readFile(file.fsPath);
+                    const relativePath = path.relative(this._projectUri.fsPath, file.fsPath);
+                    this._fileBaselines.set(relativePath, content);
+                } catch {
+                    // File might not exist or be readable, skip
+                }
+            }
+        } catch {
+            // Features directory doesn't exist yet
+        }
     }
 
     private _startStructureWatcher() {
@@ -754,7 +815,7 @@ ${problemStatement}
     }
 
     /**
-     * Check if a file or category is a foundational type (Actor or Context)
+     * Check if a file or category is a foundational type (Actor, Context, Spec, or Diagram)
      * that doesn't require an active session to create/edit
      */
     private _isFoundationalFile(filePathOrCategory: string): boolean {
@@ -762,10 +823,18 @@ ${problemStatement}
                filePathOrCategory.includes('\\actors\\') ||
                filePathOrCategory.includes('/contexts/') || 
                filePathOrCategory.includes('\\contexts\\') ||
+               filePathOrCategory.includes('/specs/') || 
+               filePathOrCategory.includes('\\specs\\') ||
+               filePathOrCategory.includes('/diagrams/') || 
+               filePathOrCategory.includes('\\diagrams\\') ||
                filePathOrCategory.endsWith('.actor.md') ||
                filePathOrCategory.endsWith('.context.md') ||
+               filePathOrCategory.endsWith('.spec.md') ||
+               filePathOrCategory.endsWith('.diagram.md') ||
                filePathOrCategory === 'actors' ||
-               filePathOrCategory === 'contexts';
+               filePathOrCategory === 'contexts' ||
+               filePathOrCategory === 'specs' ||
+               filePathOrCategory === 'diagrams';
     }
 
     private async _onStructureChanged() {
@@ -787,7 +856,7 @@ ${problemStatement}
 
     private _refreshTimeout: NodeJS.Timeout | undefined;
 
-    private _onFileChanged(uri: vscode.Uri) {
+    private async _onFileCreated(uri: vscode.Uri) {
         if (!this._activeSession) {
             return;
         }
@@ -799,17 +868,191 @@ ${problemStatement}
             return;
         }
         
-        if (!this._activeSession.changedFiles.includes(relativePath)) {
-            this._activeSession.changedFiles.push(relativePath);
+        // Only track feature files
+        if (!relativePath.endsWith('.feature.md')) {
+            return;
+        }
+        
+        try {
+            // Read the new file content
+            const newContent = await FileParser.readFile(uri.fsPath);
+            this._fileBaselines.set(relativePath, newContent);
+            
+            // Extract Gherkin from code blocks
+            const gherkinBlocks = GherkinParser.extractFromCodeBlocks(newContent);
+            const allGherkin = gherkinBlocks.join('\n\n');
+            
+            // Extract scenario names
+            const scenarios = GherkinParser.extractScenarios(allGherkin);
+            
+            // Create change entry for new file
+            const changeEntry: FeatureChangeEntry = {
+                path: relativePath,
+                change_type: 'added',
+                scenarios_added: scenarios.length > 0 ? scenarios : undefined
+            };
+            
+            // Check if file already tracked
+            const existingIndex = this._activeSession.changedFiles.findIndex(
+                entry => entry.path === relativePath
+            );
+            
+            if (existingIndex >= 0) {
+                // Merge with existing entry
+                this._activeSession.changedFiles[existingIndex] = this._mergeChangeEntries(
+                    this._activeSession.changedFiles[existingIndex],
+                    changeEntry
+                );
+            } else {
+                // Add new entry
+                this._activeSession.changedFiles.push(changeEntry);
+            }
             
             // Update the session file
-            this._updateSessionFile().catch(err => {
-                console.error('Failed to update session file:', err);
-            });
+            await this._updateSessionFile();
 
             // Notify webview
             this._panel.webview.postMessage({ type: 'activeSession', data: this._activeSession });
+        } catch (error) {
+            console.error('Failed to track file creation:', error);
         }
+    }
+
+    private async _onFileChanged(uri: vscode.Uri) {
+        if (!this._activeSession) {
+            return;
+        }
+
+        const relativePath = path.relative(this._projectUri.fsPath, uri.fsPath);
+        
+        // Exclude session files from tracking
+        if (relativePath.includes('.session.md')) {
+            return;
+        }
+        
+        // Only track feature files
+        if (!relativePath.endsWith('.feature.md')) {
+            return;
+        }
+        
+        try {
+            // Read the new file content
+            const newContent = await FileParser.readFile(uri.fsPath);
+            const oldContent = this._fileBaselines.get(relativePath) || '';
+            
+            // Update baseline
+            this._fileBaselines.set(relativePath, newContent);
+            
+            // Extract Gherkin from code blocks for both old and new content
+            const oldGherkinBlocks = GherkinParser.extractFromCodeBlocks(oldContent);
+            const newGherkinBlocks = GherkinParser.extractFromCodeBlocks(newContent);
+            const oldGherkin = oldGherkinBlocks.join('\n\n');
+            const newGherkin = newGherkinBlocks.join('\n\n');
+            
+            // Detect scenario changes
+            const scenarioChanges = GherkinParser.detectScenarioChanges(oldGherkin, newGherkin);
+            
+            // Determine change type
+            const isNewFile = oldContent === '';
+            const changeType: 'added' | 'modified' = isNewFile ? 'added' : 'modified';
+            
+            // Create change entry
+            const changeEntry: FeatureChangeEntry = {
+                path: relativePath,
+                change_type: changeType,
+                scenarios_added: scenarioChanges.added.length > 0 ? scenarioChanges.added : undefined,
+                scenarios_modified: scenarioChanges.modified.length > 0 ? scenarioChanges.modified : undefined,
+                scenarios_removed: scenarioChanges.removed.length > 0 ? scenarioChanges.removed : undefined
+            };
+            
+            // Check if file already tracked
+            const existingIndex = this._activeSession.changedFiles.findIndex(
+                entry => entry.path === relativePath
+            );
+            
+            if (existingIndex >= 0) {
+                // Merge with existing entry
+                this._activeSession.changedFiles[existingIndex] = this._mergeChangeEntries(
+                    this._activeSession.changedFiles[existingIndex],
+                    changeEntry
+                );
+            } else {
+                // Add new entry
+                this._activeSession.changedFiles.push(changeEntry);
+            }
+            
+            // Update the session file
+            await this._updateSessionFile();
+
+            // Notify webview
+            this._panel.webview.postMessage({ type: 'activeSession', data: this._activeSession });
+        } catch (error) {
+            console.error('Failed to track file change:', error);
+        }
+    }
+    
+    /**
+     * Merge two change entries, combining scenario arrays without duplicates
+     */
+    private _mergeChangeEntries(existing: FeatureChangeEntry, newEntry: FeatureChangeEntry): FeatureChangeEntry {
+        // Union arrays without duplicates
+        const mergeArrays = (arr1?: string[], arr2?: string[]): string[] | undefined => {
+            const combined = [...(arr1 || []), ...(arr2 || [])];
+            const unique = Array.from(new Set(combined));
+            return unique.length > 0 ? unique : undefined;
+        };
+        
+        // Determine final change type (if either is 'added', result is 'added', otherwise 'modified')
+        const changeType: 'added' | 'modified' = 
+            existing.change_type === 'added' || newEntry.change_type === 'added' ? 'added' : 'modified';
+        
+        return {
+            path: existing.path,
+            change_type: changeType,
+            scenarios_added: mergeArrays(existing.scenarios_added, newEntry.scenarios_added),
+            scenarios_modified: mergeArrays(existing.scenarios_modified, newEntry.scenarios_modified),
+            scenarios_removed: mergeArrays(existing.scenarios_removed, newEntry.scenarios_removed)
+        };
+    }
+    
+    /**
+     * Convert old format (string[]) to new format (FeatureChangeEntry[])
+     * Initializes scenario arrays as empty arrays for migrated entries
+     * @returns Object with migrated entries and flag indicating if migration occurred
+     */
+    private _migrateChangedFiles(changedFiles: any): { entries: FeatureChangeEntry[]; wasMigrated: boolean } {
+        if (!Array.isArray(changedFiles)) {
+            return { entries: [], wasMigrated: false };
+        }
+        
+        // If it's already the new format, return as-is (but ensure scenario arrays exist)
+        if (changedFiles.length > 0 && typeof changedFiles[0] === 'object' && changedFiles[0].path) {
+            const normalized = (changedFiles as FeatureChangeEntry[]).map((entry: FeatureChangeEntry) => ({
+                path: entry.path,
+                change_type: entry.change_type,
+                scenarios_added: entry.scenarios_added || [],
+                scenarios_modified: entry.scenarios_modified || [],
+                scenarios_removed: entry.scenarios_removed || []
+            }));
+            return { entries: normalized, wasMigrated: false };
+        }
+        
+        // Convert old format (string[]) to new format
+        const migrated = changedFiles
+            .filter((item: any) => typeof item === 'string')
+            .map((path: string): FeatureChangeEntry => ({
+                path,
+                change_type: 'modified',
+                scenarios_added: [],
+                scenarios_modified: [],
+                scenarios_removed: []
+            }));
+        
+        if (migrated.length > 0) {
+            console.log('Migrated session from old format');
+        }
+        
+        return { entries: migrated, wasMigrated: migrated.length > 0 };
     }
 
     private async _updateSessionFile() {
@@ -1253,9 +1496,34 @@ ${problemStatement}
             
             const content = await FileParser.readFile(absolutePath);
             const parsed = FileParser.parseFrontmatter(content);
+            
+            // If this is a session file, migrate changed_files from old format if needed
+            let frontmatter = parsed.frontmatter;
+            if (filePath.endsWith('.session.md') && frontmatter.changed_files) {
+                const migrationResult = this._migrateChangedFiles(frontmatter.changed_files);
+                frontmatter = {
+                    ...frontmatter,
+                    changed_files: migrationResult.entries
+                };
+                
+                // If migration occurred, optionally save the migrated session back to disk
+                if (migrationResult.wasMigrated) {
+                    try {
+                        const updatedFrontmatter = {
+                            ...frontmatter,
+                            _migrated: true
+                        };
+                        const text = FileParser.stringifyFrontmatter(updatedFrontmatter, parsed.content);
+                        await vscode.workspace.fs.writeFile(vscode.Uri.file(absolutePath), Buffer.from(text, 'utf-8'));
+                    } catch (error) {
+                        console.error('Failed to save migrated session:', error);
+                    }
+                }
+            }
+            
             return {
                 path: filePath,
-                frontmatter: parsed.frontmatter,
+                frontmatter: frontmatter,
                 content: parsed.content
             };
         } catch (error) {

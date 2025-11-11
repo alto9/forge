@@ -3,7 +3,7 @@ story_id: add-scenario-level-indicators
 session_id: features-are-king
 feature_id: [session-visual-indicators]
 spec_id: [session-ui-indicators]
-status: pending
+status: completed
 priority: medium
 estimated_minutes: 25
 ---

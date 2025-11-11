@@ -3,7 +3,7 @@ story_id: update-session-format-scenario-tracking
 session_id: features-are-king
 feature_id: [scenario-level-tracking]
 spec_id: [session-change-tracking]
-status: pending
+status: completed
 priority: high
 estimated_minutes: 20
 ---

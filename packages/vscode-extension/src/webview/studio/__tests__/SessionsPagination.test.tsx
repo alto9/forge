@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest';
 
 // Mock session data for testing
+interface FeatureChangeEntry {
+  path: string;
+  change_type: 'added' | 'modified';
+  scenarios_added?: string[];
+  scenarios_modified?: string[];
+  scenarios_removed?: string[];
+}
+
 interface SessionMock {
   sessionId: string;
   frontmatter: {
@@ -8,7 +16,7 @@ interface SessionMock {
     start_time: string;
     status: string;
     problem_statement: string;
-    changed_files: string[];
+    changed_files: FeatureChangeEntry[] | string[]; // Support both formats
   };
   filePath: string;
 }
@@ -27,7 +35,7 @@ function generateMockSessions(count: number): SessionMock[] {
         start_time: date.toISOString(),
         status: statuses[i % statuses.length],
         problem_statement: `Problem statement ${i}`,
-        changed_files: [`file${i}.md`]
+        changed_files: [{ path: `file${i}.md`, change_type: 'modified' }]
       },
       filePath: `/path/to/session-${i}.session.md`
     });
