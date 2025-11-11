@@ -29,22 +29,13 @@ Scenario: Highlight modified features in Features list
   And unmodified features should have no special indicator
   And this helps me quickly identify what changed
 
-Scenario: Highlight modified specs in Specs list
+Scenario: No indicators for specs or diagrams
   Given I have an active design session
-  And I have modified some specs during the session
-  When I view the Specs list in Forge Studio
-  Then modified specs should have a colored border
-  And the border should match the indicator used for features
-  And unmodified specs should have no special indicator
-  And I can quickly see which specs are part of the current session
-
-Scenario: Highlight modified diagrams in Diagrams list
-  Given I have an active design session
-  And I have modified some diagrams during the session
-  When I view the Diagrams section in Forge Studio
-  Then modified diagrams should have a colored border
-  And the border should match the session indicator color
-  And unmodified diagrams should have no special indicator
+  And I have modified specs or diagrams during the session
+  When I view the Specs or Diagrams lists in Forge Studio
+  Then there should be NO visual indicators on specs or diagrams
+  And specs and diagrams are always editable regardless of session status
+  And only features show session indicators
 
 Scenario: Highlight scenarios within feature detail view
   Given I have an active design session
@@ -56,28 +47,20 @@ Scenario: Highlight scenarios within feature detail view
   And unchanged scenarios should have no indicator
   And this provides granular visibility into what changed
 
-Scenario: Highlight sections within spec detail view
-  Given I have an active design session
-  And I am viewing a modified spec's detail page
-  When I see the spec content
-  Then modified sections should have a visual indicator
-  And the indicator should be a subtle highlight or border
-  And unchanged sections should have no indicator
-  And this helps me review exactly what was changed in the spec
-
 Scenario: Indicator badge on session panel
   Given I have an active design session
   When I view the session panel
-  Then I should see a "Modified" badge count
-  And the badge should show the total number of changed files
+  Then I should see a "Modified Features" badge count
+  And the badge should show the total number of changed feature files
   And the badge should use the session indicator color
   And clicking the badge should expand the Changed Files section
+  And only features are counted (not specs/diagrams/models)
 
-Scenario: Show new files with distinct indicator
+Scenario: Show new feature files with distinct indicator
   Given I have an active design session
-  And I have created new features or specs
-  When I view the Features or Specs list
-  Then newly created files should have a "New" badge
+  And I have created new features
+  When I view the Features list
+  Then newly created feature files should have a "New" badge
   And the badge should be visually distinct from modified indicators
   And the badge should be green to indicate addition
   And this distinguishes new work from modifications
@@ -86,16 +69,17 @@ Scenario: Remove indicators when session ends
   Given I have an active design session with visual indicators
   When I end the design session and transition to "scribe" status
   Then all visual indicators should remain visible in the session context
-  But the indicators should not appear in the main Features/Specs lists
+  But the indicators should not appear in the main Features list
   And this keeps the main UI clean while preserving session context
 
 Scenario: Session review mode shows all indicators
   Given I have a session with status "scribe"
   When I view the session detail page
-  Then I should see all modified files with indicators
+  Then I should see all modified feature files with indicators
   And I should see scenario-level changes highlighted
   And this serves as a review interface before running forge-scribe
   And I can verify all changes are correct before distillation
+  And only features are shown (specs/diagrams are not tracked)
 
 Scenario: Indicator color scheme
   Given I am viewing Forge Studio with an active session

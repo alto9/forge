@@ -33,16 +33,21 @@ All folders except 'docs' are nestable, and nesting is preferred to maximize con
 ### Sessions (ai/sessions/)
 - Session files (*.session.md) track design sessions
 - Contains: session_id, start_time, end_time, status, problem_statement, changed_files[]
-- Tracks all file changes made during the session
+- Tracks ONLY feature changes at scenario-level during the session
+- Specs/Diagrams/Models/Actors/Contexts are NOT tracked (always editable)
 
 ### Features (ai/features/)
 - Feature files (*.feature.md) define user-facing functionality
+- **DIRECTIVE**: Features drive code changes and are tracked in sessions
 - Uses Gherkin format in code blocks (```gherkin)
 - Every features folder should have an index.md with Background and Rules
 - Contains: feature_id, spec_id[]
+- Tracked at scenario-level during design sessions
 
 ### Specs (ai/specs/)
 - Spec files (*.spec.md) define technical implementation
+- **INFORMATIVE**: Specs provide HOW features should be implemented
+- NOT tracked in sessions, always editable
 - Includes Mermaid diagrams for architecture
 - Contains: spec_id, feature_id[], context_id[]
 
@@ -70,23 +75,25 @@ All folders except 'docs' are nestable, and nesting is preferred to maximize con
 1. User runs "Foundry: Start Design Session" command
 2. System prompts for problem statement
 3. Creates session file in ai/sessions/ with status: active
-4. Session begins tracking changed files
+4. Session begins tracking ONLY feature changes (at scenario-level)
 
 ### Phase 2: Design Changes
 During an active session, user edits:
-- Features (define/modify behavior with Gherkin)
-- Specs (technical implementation with Mermaid)
-- Actors (define system personas and roles)
-- Contexts (guidance for specific technologies)
+- **Features** (define/modify behavior with Gherkin) - **TRACKED** at scenario-level
+- **Specs** (technical implementation with Mermaid) - **NOT TRACKED**, always editable
+- **Diagrams** (visual architecture) - **NOT TRACKED**, always editable
+- **Models** (data structures) - **NOT TRACKED**, always editable
+- **Actors** (define system personas and roles) - **NOT TRACKED**, always editable
+- **Contexts** (guidance for specific technologies) - **NOT TRACKED**, always editable
 
-All changes are tracked in the session's changed_files array.
+Only feature changes are tracked in the session's changed_files array.
 
 ### Phase 3: Distill Session
 1. User runs "Foundry: Distill Session into Stories and Tasks"
 2. System generates prompt that:
    - Calls get_Foundry_about MCP tool
-   - Analyzes all changed files
-   - Follows context linkages
+   - Analyzes changed feature files (scenario-level)
+   - Follows linkages to discover related specs, diagrams, and contexts
    - Creates Stories (code) and Tasks (non-code)
    - Places them in ai/tickets/<session-id>/
 
