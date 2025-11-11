@@ -8,5 +8,5 @@ export NVM_DIR="$HOME/.nvm"
 nvm use v22.14.0 >/dev/null 2>&1
 
 # Run the MCP server
-exec node /home/danderson/code/alto9/opensource/cursor-context-engineering/packages/mcp-server/dist/index.js
+exec node /home/danderson/code/alto9/opensource/forge/packages/mcp-server/dist/index.js
 
