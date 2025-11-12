@@ -1072,7 +1072,8 @@ ${problemStatement}
             const content = await FileParser.readFile(sessionFile.fsPath);
             const parsed = FileParser.parseFrontmatter(content);
             
-            parsed.frontmatter.changed_files = this._activeSession.changedFiles;
+            // Ensure changed_files is always an array
+            parsed.frontmatter.changed_files = this._activeSession.changedFiles || [];
             
             const text = FileParser.stringifyFrontmatter(parsed.frontmatter, parsed.content);
             await vscode.workspace.fs.writeFile(sessionFile, Buffer.from(text, 'utf-8'));
@@ -1101,7 +1102,7 @@ ${problemStatement}
                 // Preserve system-managed fields from active session
                 session_id: this._activeSession.sessionId,
                 start_time: this._activeSession.startTime,
-                changed_files: this._activeSession.changedFiles,
+                changed_files: this._activeSession.changedFiles || [],
                 status: 'design'
             };
 
@@ -1171,7 +1172,8 @@ ${problemStatement}
             
             parsed.frontmatter.end_time = endTime;
             parsed.frontmatter.status = 'scribe';
-            parsed.frontmatter.changed_files = this._activeSession.changedFiles;
+            // Ensure changed_files is always an array
+            parsed.frontmatter.changed_files = this._activeSession.changedFiles || [];
             
             const text = FileParser.stringifyFrontmatter(parsed.frontmatter, parsed.content);
             await vscode.workspace.fs.writeFile(sessionFile, Buffer.from(text, 'utf-8'));
