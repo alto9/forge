@@ -26,10 +26,35 @@ export class FileParser {
     }
 
     /**
+     * Remove undefined values from an object recursively
+     */
+    private static removeUndefined(obj: any): any {
+        if (obj === null || obj === undefined) {
+            return undefined;
+        }
+        if (Array.isArray(obj)) {
+            return obj.map(item => this.removeUndefined(item)).filter(item => item !== undefined);
+        }
+        if (typeof obj === 'object') {
+            const cleaned: any = {};
+            for (const [key, value] of Object.entries(obj)) {
+                const cleanedValue = this.removeUndefined(value);
+                if (cleanedValue !== undefined) {
+                    cleaned[key] = cleanedValue;
+                }
+            }
+            return cleaned;
+        }
+        return obj;
+    }
+
+    /**
      * Stringify frontmatter and content to markdown
      */
     static stringifyFrontmatter(frontmatter: any, content: string): string {
-        return matter.stringify(content, frontmatter);
+        // Clean undefined values before stringifying to avoid YAML errors
+        const cleanedFrontmatter = this.removeUndefined(frontmatter);
+        return matter.stringify(content, cleanedFrontmatter);
     }
 
     /**

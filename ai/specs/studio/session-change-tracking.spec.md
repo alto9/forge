@@ -7,13 +7,13 @@ context_id: []
 # Spec: Session Change Tracking
 
 ## Overview
-Defines how Forge tracks file changes during design sessions. Currently implements simple file path tracking. Scenario-level granular tracking is planned for future enhancement.
+Defines how Forge tracks file changes during design sessions using scenario-level tracking for features only.
 
-## Current Implementation
+## Implementation
 
 ### Changed Files Format
 
-The `changed_files` array in session files is currently a **simple array of file path strings**:
+The `changed_files` array in session files tracks **feature changes only** with scenario-level detail:
 
 ```typescript
 interface SessionFrontmatter {
@@ -22,7 +22,7 @@ interface SessionFrontmatter {
   end_time?: string;
   status: 'design' | 'scribe' | 'development' | 'completed';
   problem_statement: string;
-  changed_files: string[];  // Simple array of relative file paths
+  changed_files: FeatureChangeEntry[];  // Only features, with scenario detail
 }
 ```
 
@@ -30,28 +30,31 @@ interface SessionFrontmatter {
 
 ```yaml
 ---
-session_id: navigation-fixes
-start_time: '2025-11-10T03:40:24.249Z'
+session_id: user-authentication-improvements
+start_time: '2025-11-11T10:00:00.000Z'
 status: design
-problem_statement: navigation fixes
+problem_statement: Add two-factor authentication and improve login error handling
 changed_files:
-  - ai/diagrams/studio/navigation-menu-structure.diagram.md
-  - ai/specs/studio/navigation-menu-implementation.spec.md
+  - path: ai/features/auth/user-login.feature.md
+    change_type: modified
+    scenarios_added:
+      - "User logs in with two-factor authentication"
+    scenarios_modified:
+      - "User logs in with email and password"
 ---
 ```
 
 ### File Tracking
 
-The Studio tracks which files were modified during a design session by adding their relative paths to the `changed_files` array. This provides:
-- A list of all design files modified during the session
-- Input for the forge-scribe command to analyze changes
-- Visual indicators in the Studio UI
+The Studio tracks **only feature file changes** during a design session:
+- Features are tracked with scenario-level detail
+- Specs, Diagrams, Models, Actors, and Contexts are NOT tracked
+- Changed features are input for forge-scribe command
+- Visual indicators shown for changed features in Studio UI
 
-## Future Enhancement: Scenario-Level Tracking
+## Tracking Structure
 
-The following enhanced tracking format is planned but **not yet implemented**:
-
-### Feature File Entry (Planned)
+### Feature File Entry
 
 ```typescript
 interface FeatureChangeEntry {
@@ -63,38 +66,9 @@ interface FeatureChangeEntry {
 }
 ```
 
-### Spec File Entry (Planned)
+**Note**: Only features are tracked in sessions. Specs, Diagrams, Models, Actors, and Contexts are always editable and NOT tracked.
 
-```typescript
-interface SpecChangeEntry {
-  path: string;
-  change_type: 'added' | 'modified';
-  sections_modified?: string[];      // Section headers that were modified
-  description?: string;              // Brief description of changes
-}
-```
-
-### Diagram File Entry (Planned)
-
-```typescript
-interface DiagramChangeEntry {
-  path: string;
-  change_type: 'added' | 'modified';
-  description: string;               // Description from diagram frontmatter
-}
-```
-
-### Model File Entry (Planned)
-
-```typescript
-interface ModelChangeEntry {
-  path: string;
-  change_type: 'added' | 'modified';
-  description?: string;
-}
-```
-
-### Scenario Extraction from Features (Planned Implementation)
+### Scenario Extraction from Features
 
 #### Parsing Gherkin Scenarios
 
@@ -171,63 +145,7 @@ function buildScenarioMap(content: string): Record<string, string> {
 }
 ```
 
-### Section Extraction from Specs (Planned Implementation)
-
-#### Parsing Markdown Sections
-
-```typescript
-function extractSections(specContent: string): string[] {
-  const sectionPattern = /^##\s+(.+)$/gm;
-  const sections: string[] = [];
-  
-  let match;
-  while ((match = sectionPattern.exec(specContent)) !== null) {
-    sections.push(match[1].trim());
-  }
-  
-  return sections;
-}
-```
-
-### Detecting Section Changes
-
-```typescript
-function detectSectionChanges(
-  oldContent: string,
-  newContent: string
-): string[] {
-  const oldSections = buildSectionMap(oldContent);
-  const newSections = buildSectionMap(newContent);
-  
-  const modified: string[] = [];
-  
-  // Check for added or modified sections
-  for (const [name, content] of Object.entries(newSections)) {
-    if (!oldSections[name] || oldSections[name] !== content) {
-      modified.push(name);
-    }
-  }
-  
-  return modified;
-}
-
-function buildSectionMap(content: string): Record<string, string> {
-  const map: Record<string, string> = {};
-  const sections = content.split(/^##\s+/gm);
-  
-  for (let i = 1; i < sections.length; i++) {
-    const section = sections[i];
-    const lines = section.split('\n');
-    const name = lines[0].trim();
-    const content = lines.slice(1).join('\n').trim();
-    map[name] = content;
-  }
-  
-  return map;
-}
-```
-
-### File Watching and Change Detection (Planned Implementation)
+### File Watching and Change Detection
 
 #### FileSystemWatcher Setup
 
@@ -239,23 +157,18 @@ class SessionFileTracker {
   private fileBaseline: Map<string, string> = new Map();
   
   async startTracking(workspaceRoot: string) {
-    // Watch all design files
-    const patterns = [
-      '**/ai/features/**/*.feature.md',
-      '**/ai/specs/**/*.spec.md',
-      '**/ai/diagrams/**/*.diagram.md',
-      '**/ai/models/**/*.model.md'
-    ];
+    // Watch ONLY feature files
+    const pattern = '**/ai/features/**/*.feature.md';
     
-    for (const pattern of patterns) {
-      const watcher = vscode.workspace.createFileSystemWatcher(
-        new vscode.RelativePattern(workspaceRoot, pattern)
-      );
-      
-      watcher.onDidCreate(uri => this.handleFileCreate(uri));
-      watcher.onDidChange(uri => this.handleFileChange(uri));
-      watcher.onDidDelete(uri => this.handleFileDelete(uri));
-    }
+    const watcher = vscode.workspace.createFileSystemWatcher(
+      new vscode.RelativePattern(workspaceRoot, pattern)
+    );
+    
+    watcher.onDidCreate(uri => this.handleFileCreate(uri));
+    watcher.onDidChange(uri => this.handleFileChange(uri));
+    watcher.onDidDelete(uri => this.handleFileDelete(uri));
+    
+    this.watcher = watcher;
   }
   
   private async handleFileCreate(uri: vscode.Uri) {
@@ -291,7 +204,7 @@ class SessionFileTracker {
       change_type: changeType
     };
     
-    // Determine file type and extract details
+    // Extract scenario changes from feature file
     if (filePath.endsWith('.feature.md')) {
       const changes = detectScenarioChanges(oldContent, newContent);
       if (changes.added.length > 0) {
@@ -303,15 +216,6 @@ class SessionFileTracker {
       if (changes.removed.length > 0) {
         changeEntry.scenarios_removed = changes.removed;
       }
-    } else if (filePath.endsWith('.spec.md')) {
-      const sections = detectSectionChanges(oldContent, newContent);
-      if (sections.length > 0) {
-        changeEntry.sections_modified = sections;
-      }
-    } else if (filePath.endsWith('.diagram.md')) {
-      // Extract description from frontmatter
-      const { data } = matter(newContent);
-      changeEntry.description = data.title || 'Diagram updated';
     }
     
     await this.updateSessionFile(changeEntry);
@@ -388,7 +292,7 @@ class SessionFileTracker {
 }
 ```
 
-### Example Session with Scenario Tracking (Planned Format)
+### Example Session with Scenario Tracking
 
 ```yaml
 ---
@@ -405,33 +309,26 @@ changed_files:
       - "User receives SMS code for 2FA"
     scenarios_modified:
       - "User logs in with email and password"
-  - path: ai/specs/auth/authentication-api.spec.md
-    change_type: modified
-    sections_modified:
-      - "Login Endpoint"
-      - "Two-Factor Authentication"
-      - "Error Responses"
-  - path: ai/diagrams/auth/2fa-flow.diagram.md
+  - path: ai/features/auth/password-reset.feature.md
     change_type: added
-    description: "Two-factor authentication flow diagram"
+    scenarios_added:
+      - "User requests password reset"
+      - "User resets password with valid token"
 ---
 ```
 
-Note: This is the planned enhanced format. The current implementation uses a simple string array as shown in the "Current Implementation" section above.
+Note: Only features are tracked in sessions. Specs, Diagrams, Models, Actors, and Contexts are discovered via linkages during distillation.
 
-## Current Constraints
+## Constraints
 
-1. **File-Level Tracking**: Currently tracks files as simple paths in an array
-2. **No Duplicates**: File paths should not be duplicated in the array
-3. **Only Track Design Files**: Only track files in ai/features, ai/specs, ai/diagrams, ai/models
-4. **Relative Paths**: All paths are relative to workspace root
-
-## Future Constraints (For Scenario-Level Tracking)
-
-1. **Automatic Tracking**: Changes must be tracked automatically without user intervention
-2. **Real-Time Updates**: Session file must update within 1 second of a file save
+1. **Feature-Only Tracking**: Only track files in `ai/features/**/*.feature.md`
+2. **Scenario-Level Detail**: Track added/modified/removed scenarios within features
 3. **No Duplicates**: Scenario names should not be duplicated in the same array
-4. **Preserve Order**: Maintain order of changed_files entries (chronological)
-5. **Merge Intelligently**: When a file is modified multiple times, merge the changes
-6. **Ignore Session-Level Changes**: Do not track changes to the session file itself
+4. **Automatic Tracking**: Changes must be tracked automatically without user intervention
+5. **Real-Time Updates**: Session file must update within 1 second of a file save
+6. **Preserve Order**: Maintain order of changed_files entries (chronological)
+7. **Merge Intelligently**: When a file is modified multiple times, merge the changes
+8. **Relative Paths**: All paths are relative to workspace root
+9. **Ignore Session Changes**: Do not track changes to the session file itself
+10. **No Spec/Diagram Tracking**: Specs, Diagrams, Models, Actors, and Contexts are NOT tracked
 

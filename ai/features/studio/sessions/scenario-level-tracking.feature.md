@@ -2,12 +2,9 @@
 feature_id: scenario-level-tracking
 spec_id:
   - session-change-tracking
-status: planned
 ---
 
 # Feature: Scenario-Level Change Tracking
-
-**STATUS: FUTURE ENHANCEMENT** - This feature is planned but not yet implemented. The current implementation tracks files as simple paths. See `session-change-tracking.spec.md` for current implementation details.
 
 ## Background
 
@@ -15,16 +12,15 @@ status: planned
 Background:
   Given Forge tracks file changes during design sessions
   And features contain multiple Gherkin scenarios
-  And specs contain multiple technical sections
   And users need granular visibility into what changed
   And scenario-level tracking provides better context for story creation
-  But this granular tracking is not yet implemented
+  And only features are tracked in sessions (not specs, diagrams, or models)
 ```
 
-## Planned Scenarios (Future Implementation)
+## Scenarios
 
 ```gherkin
-Scenario: Track scenario additions in features (PLANNED)
+Scenario: Track scenario additions in features
   Given I have an active design session
   And I open a feature file
   When I add a new Gherkin scenario to the feature
@@ -66,27 +62,6 @@ Scenario: Track new feature file creation
   And every scenario in the new file should be listed
   And the file should be tracked from the moment it's created
 
-Scenario: Track spec section changes
-  Given I have an active design session
-  And I am editing a spec file
-  When I add or modify a section in the spec
-  Then the session's changed_files should record:
-    | path | The spec file path |
-    | change_type | modified |
-    | sections_modified | List of modified section headers |
-  And section headers should be extracted from markdown ## headers
-  And this provides context about which parts of the spec changed
-
-Scenario: Track diagram changes
-  Given I have an active design session
-  And I am editing a diagram file
-  When I modify the nomnoml diagram
-  Then the session's changed_files should record:
-    | path | The diagram file path |
-    | change_type | modified |
-    | description | Brief description of the diagram |
-  And diagrams are tracked at file level (not scenario level)
-
 Scenario: Display scenario-level changes in Changed Files view
   Given I have an active session with tracked changes
   When I view the session panel in Forge Studio
@@ -97,11 +72,8 @@ Scenario: Display scenario-level changes in Changed Files view
     | List of scenarios added (with green indicator) |
     | List of scenarios modified (with yellow indicator) |
     | List of scenarios removed (with red indicator) |
-  And for each spec file, I should see:
-    | File path |
-    | Change type badge |
-    | List of sections modified |
   And this should update in real-time as I make changes
+  And only feature files are shown (specs/diagrams/models are not tracked)
 
 Scenario: Expandable changed file entries
   Given I am viewing the Changed Files section
@@ -121,24 +93,26 @@ Scenario: Scenario tracking in session file format
   Then the changed_files array should have entries like:
 ```yaml
 changed_files:
-  - path: ai/features/user-authentication.feature.md
+  - path: ai/features/user/authentication.feature.md
     change_type: modified
     scenarios_added:
       - "User logs in with two-factor authentication"
     scenarios_modified:
       - "User logs in with email and password"
-  - path: ai/specs/authentication-api.spec.md
-    change_type: modified
-    sections_modified:
-      - "Login Endpoint"
-      - "Token Validation"
+  - path: ai/features/user/profile.feature.md
+    change_type: added
+    scenarios_added:
+      - "User can update profile"
+      - "User can upload avatar"
 ```
   And this format provides complete context for distillation
+  And only features are tracked (no specs, diagrams, or models)
 
 Scenario: Use scenario tracking during distillation
   Given I have a session with scenario-level tracking
   When I run forge-scribe to create stories
-  Then the AI should see exactly which scenarios were changed
+  Then the AI should see exactly which feature scenarios were changed
+  And the AI should follow linkages to discover related specs and diagrams
   And the AI should create stories that reference specific scenarios
   And stories should have clear scope based on scenario changes
   And this prevents creating overly broad or vague stories

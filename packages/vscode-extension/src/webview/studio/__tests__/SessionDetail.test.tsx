@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest';
 
 // Mock session data type
+interface FeatureChangeEntry {
+  path: string;
+  change_type: 'added' | 'modified';
+  scenarios_added?: string[];
+  scenarios_modified?: string[];
+  scenarios_removed?: string[];
+}
+
 interface SessionMock {
   sessionId: string;
   frontmatter: {
@@ -9,7 +17,7 @@ interface SessionMock {
     end_time?: string;
     status: string;
     problem_statement: string;
-    changed_files: string[];
+    changed_files: FeatureChangeEntry[] | string[]; // Support both formats
     command_file?: string;
   };
   filePath: string;
@@ -170,7 +178,10 @@ describe('SessionCard Component Logic', () => {
           start_time: new Date().toISOString(),
           status: 'active',
           problem_statement: 'Test problem',
-          changed_files: ['file1.md', 'file2.md']
+          changed_files: [
+            { path: 'file1.md', change_type: 'modified' },
+            { path: 'file2.md', change_type: 'modified' }
+          ]
         },
         filePath: '/path/to/session.md'
       };
@@ -485,7 +496,10 @@ describe('SessionDetail Display Logic', () => {
           end_time: '2024-01-01T12:00:00Z',
           status: 'completed',
           problem_statement: 'Test problem statement',
-          changed_files: ['file1.md', 'file2.md'],
+          changed_files: [
+            { path: 'file1.md', change_type: 'modified' },
+            { path: 'file2.md', change_type: 'modified' }
+          ],
           command_file: '.cursor/commands/test.md'
         },
         filePath: '/path/to/session.md'
@@ -527,7 +541,9 @@ describe('SessionDetail Display Logic', () => {
           end_time: '2024-01-01T12:00:00Z',
           status: 'completed',
           problem_statement: 'Completed but not distilled',
-          changed_files: ['file1.md']
+          changed_files: [
+            { path: 'file1.md', change_type: 'modified' }
+          ]
         },
         filePath: '/path/to/session.md'
       };

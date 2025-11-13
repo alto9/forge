@@ -104,10 +104,10 @@ Feature: Session Management in Studio
   Scenario: Working without active session
     Given I do not have any active sessions
     When I am on any Forge Studio page
-    Then Features and Specs creation and editing should be disabled
-    And I should see read-only indicators for Features and Specs
-    And I should see messages prompting me to start a session for Features and Specs
-    But Actors and Contexts should remain fully editable
+    Then Feature creation and editing should be disabled
+    And I should see read-only indicators for Features
+    And I should see messages prompting me to start a session for Features
+    But Specs, Diagrams, Models, Actors, and Contexts should remain fully editable
     And Sessions should be viewable and startable
 
   Scenario: Only one active session at a time
@@ -167,26 +167,27 @@ Feature: Automatic File Change Tracking
   I want files I change to be automatically tracked
   So that I don't have to manually maintain the list
 
-  Scenario: Track feature and spec changes only
+  Scenario: Track feature changes only
     Given I have an active design session
-    When I create or modify a Feature or Spec file
+    When I create or modify a Feature file
     Then the file path should be automatically added to changed_files
     And the session file should be updated on disk
     And the session panel should show the updated file count
+    And changes should be tracked at scenario-level
     And session files themselves should not be tracked
     
-  Scenario: Do not track Actor and Context changes
+  Scenario: Do not track Specs, Diagrams, Models, Actors, or Context changes
     Given I have an active design session
-    When I create or modify an Actor or Context file
+    When I create or modify a Spec, Diagram, Model, Actor, or Context file
     Then the file path should NOT be added to changed_files
     And the session file should not be updated
     And the session panel should not show these changes
-    And Actors and Contexts are foundational and not session-tracked
+    And these informative documents are always editable without tracking
 
   Scenario: File watcher lifecycle
     Given I start a new session
-    Then a file watcher should be created for ai/**/*.{feature.md,spec.md}
-    And the watcher should only track Features and Specs
+    Then a file watcher should be created for ai/**/*.feature.md
+    And the watcher should only track Features
     And when I stop the session, the file watcher should be disposed
     And no more changes should be tracked after session ends
 ```

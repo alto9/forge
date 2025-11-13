@@ -24,6 +24,12 @@ export interface ParsedGherkin {
     rules: GherkinRule[];
 }
 
+export interface ScenarioChanges {
+    added: string[];
+    modified: string[];
+    removed: string[];
+}
+
 export class GherkinParser {
     /**
      * Extract Gherkin content from code blocks (```gherkin ... ```)
@@ -196,6 +202,115 @@ export class GherkinParser {
         }
 
         return '```gherkin\n' + lines.join('\n').trim() + '\n```';
+    }
+
+    /**
+     * Extract scenario names from Gherkin content.
+     * Works with raw Gherkin content (not markdown with code blocks).
+     * 
+     * @param content Raw Gherkin content string
+     * @returns Array of scenario names
+     */
+    static extractScenarios(content: string): string[] {
+        const scenarioPattern = /^\s*Scenario:\s*(.+)$/gm;
+        const scenarios: string[] = [];
+        
+        let match;
+        while ((match = scenarioPattern.exec(content)) !== null) {
+            scenarios.push(match[1].trim());
+        }
+        
+        return scenarios;
+    }
+
+    /**
+     * Build a map of scenario name to full scenario content.
+     * Includes all steps (Given/When/Then/And/But) for each scenario.
+     * 
+     * @param content Raw Gherkin content string
+     * @returns Map of scenario name → scenario content (all steps)
+     */
+    static buildScenarioMap(content: string): Record<string, string> {
+        const map: Record<string, string> = {};
+        const lines = content.split(/\r?\n/);
+        
+        let currentScenario: { name: string; content: string[] } | null = null;
+        
+        for (const line of lines) {
+            // Check if this is a Scenario or Example line
+            const scenarioMatch = /^\s*Scenario:\s*(.+)$/i.exec(line);
+            const exampleMatch = /^\s*Example:\s*(.+)$/i.exec(line);
+            
+            if (scenarioMatch || exampleMatch) {
+                // Save previous scenario if exists
+                if (currentScenario) {
+                    map[currentScenario.name] = currentScenario.content.join('\n').trim();
+                }
+                // Start new scenario
+                const scenarioName = scenarioMatch ? scenarioMatch[1].trim() : exampleMatch![1].trim();
+                currentScenario = {
+                    name: scenarioName,
+                    content: []
+                };
+                continue;
+            }
+            
+            // If we're in a scenario, collect its content
+            if (currentScenario) {
+                // Stop collecting if we hit Feature, Background, or Rule headers
+                if (/^\s*(Feature|Background|Rule):/i.test(line)) {
+                    // Save current scenario and stop collecting
+                    map[currentScenario.name] = currentScenario.content.join('\n').trim();
+                    currentScenario = null;
+                    continue;
+                }
+                
+                // Collect all content for the scenario (steps, blank lines, tables, etc.)
+                currentScenario.content.push(line);
+            }
+        }
+        
+        // Save last scenario if exists
+        if (currentScenario) {
+            map[currentScenario.name] = currentScenario.content.join('\n').trim();
+        }
+        
+        return map;
+    }
+
+    /**
+     * Detect scenario-level changes between old and new Gherkin content.
+     * Identifies scenarios that were added, modified, or removed.
+     * 
+     * @param oldContent Old Gherkin content
+     * @param newContent New Gherkin content
+     * @returns Object with arrays of added, modified, and removed scenario names
+     */
+    static detectScenarioChanges(oldContent: string, newContent: string): ScenarioChanges {
+        const oldMap = this.buildScenarioMap(oldContent);
+        const newMap = this.buildScenarioMap(newContent);
+        
+        const added: string[] = [];
+        const modified: string[] = [];
+        const removed: string[] = [];
+        
+        // Find added and modified scenarios
+        for (const [name, content] of Object.entries(newMap)) {
+            if (!oldMap[name]) {
+                added.push(name);
+            } else if (oldMap[name] !== content) {
+                modified.push(name);
+            }
+        }
+        
+        // Find removed scenarios
+        for (const name of Object.keys(oldMap)) {
+            if (!newMap[name]) {
+                removed.push(name);
+            }
+        }
+        
+        return { added, modified, removed };
     }
 }
 

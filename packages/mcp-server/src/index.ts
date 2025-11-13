@@ -48,13 +48,13 @@ class ForgeMCPServer {
           },
           {
             name: 'get_forge_schema',
-            description: 'Get the schema specification for a Forge file type (session, feature, spec, model, actor, story, task, context, or diagram)',
+            description: 'Get the schema specification for a Forge file type (session, feature, spec, diagram, actor, story, task, or context)',
             inputSchema: {
               type: 'object',
               properties: {
                 schema_type: {
                   type: 'string',
-                  enum: ['session', 'feature', 'spec', 'model', 'actor', 'story', 'task', 'context', 'diagram'],
+                  enum: ['session', 'feature', 'spec', 'diagram', 'actor', 'story', 'task', 'context'],
                   description: 'The type of schema to retrieve',
                 },
               },
@@ -257,10 +257,11 @@ Forge is a comprehensive workflow system for structured context engineering in A
 
 ## Core Philosophy
 1. **Accurate Context Without Overload** - Provide exactly what's needed, when it's needed
-2. **Session-Driven Design** - Track all changes made during design sessions with scenario-level granularity
-3. **Minimal Story Size** - Keep implementation stories small, focused, and actionable (< 30 minutes each)
-4. **Status-Driven Workflow** - Sessions progress through explicit phases: design → scribe → development → completed
-5. **Nestable Organization** - Use folder hierarchies to organize related concepts
+2. **Features Are Directive** - Features drive code changes and are tracked in sessions at scenario-level; Specs/Diagrams/Actors/Contexts are informative and editable anytime
+3. **Session-Driven Design** - Track feature changes made during design sessions with scenario-level granularity
+4. **Minimal Story Size** - Keep implementation stories small, focused, and actionable (< 30 minutes each)
+5. **Status-Driven Workflow** - Sessions progress through explicit phases: design → scribe → development → completed
+6. **Nestable Organization** - Use folder hierarchies to organize related concepts
 
 ## File Structure
 \`\`\`
@@ -275,7 +276,6 @@ your-project/
     ├── features/              # Feature definitions with Gherkin (nestable)
     ├── diagrams/              # Visual architecture with Nomnoml (nestable)
     ├── specs/                 # Technical specifications (nestable)
-    ├── models/                # Data model definitions (nestable)
     ├── actors/                # Actor/persona definitions (nestable)
     ├── contexts/              # Context guidance (nestable)
     └── docs/                  # Supporting documentation
@@ -283,47 +283,60 @@ your-project/
 
 ## Design Document Philosophy
 
-### Timeless vs Transitional Documents
+### Directive vs Informative Documents
 
-Forge documents fall into two categories:
+Forge documents are organized by their role in the workflow:
 
-#### TIMELESS DOCUMENTS (Features, Diagrams, Specs, Models)
-These documents **always represent the current desired state** of the system:
+#### DIRECTIVE DOCUMENTS (Features)
+**Features (*.feature.md)** drive code changes and are tracked in sessions:
 
-**Features (*.feature.md)**
 - **Timeless**: Always represent current desired state
 - **Behavior-Driven**: Strictly Gherkin instructions only
-- **No Transitions**: Define what SHOULD exist in code, not what's changing
+- **Tracked in Sessions**: Changes tracked at scenario-level during design sessions
+- **Drive Implementation**: Features dictate WHAT code should do
 - **Organization is CRITICAL**: Feature folder structure should directly inform automated tests
 - **Abstract Logically**: Group features by abstracting large concepts into smaller, focused ones
 - **Git Controls History**: Never document "old" or "transitional" states in the file itself
 
-**Diagrams (*.diagram.md)**
-- **Timeless**: Always represent current desired state
-- **Current State Only**: Show technical implementations or workflows as they should exist NOW
-- **No Transitions**: Never show "old way" vs "new way" - just show the current architecture
-- **Single Purpose**: One diagram per file representing one aspect of the system
-- **Git Controls History**: Change history is in Git, not in the diagram content
+#### INFORMATIVE DOCUMENTS (Specs, Diagrams, Actors, Contexts)
+These documents provide context and guidance but are NOT tracked in sessions:
 
 **Specs (*.spec.md)**
 - **Timeless**: Always represent most up-to-date business logic and technical information
+- **Not Tracked in Sessions**: Always editable, changes not recorded in session files
+- **Inform Implementation**: Provide HOW features should be implemented
+- **Data Structures**: Can define data structures inline using TypeScript interfaces or tables
 - **No Implementation Code**: Only pseudocode for clarity, never real code
 - **No Diagrams**: Specs can LINK to diagram files, but don't embed diagrams
 - **Contracts**: Commonly used to define contracts between two systems
-- **No Transitions**: Document current requirements, not transitional states
 - **Git Controls History**: Change tracking is Git's responsibility
 
-**Models (*.model.md)**
-- **Timeless**: Always represent current data structure definitions
-- **Current State**: Define data models as they should exist in the system
+**Diagrams (*.diagram.md)**
+- **Timeless**: Always represent current desired state
+- **Not Tracked in Sessions**: Always editable, changes not recorded in session files
+- **Visual Architecture**: Show technical implementations or workflows as they should exist NOW
+- **No Transitions**: Never show "old way" vs "new way" - just show the current architecture
+- **Single Purpose**: One diagram per file representing one aspect of the system
+- **Nomnoml Format**: Use nomnoml syntax for clean, maintainable diagrams
+- **Git Controls History**: Change history is in Git, not in the diagram content
+
+**Actors (*.actor.md)**
+- **Always Editable**: Not tracked in sessions, can be modified at any time
+- **Define Personas**: Who interacts with the system and their roles
+
+**Contexts (*.context.md)**
+- **Always Editable**: Not tracked in sessions, can be modified at any time
+- **For Agent Benefit**: Technical guidance when implementing features
+- **Patterns & Practices**: Implementation patterns, best practices, technical constraints
 
 #### TRANSITIONAL DOCUMENTS (Sessions, Stories, Tasks)
 These documents **capture point-in-time state and workflow**:
 
 **Sessions (*.session.md)**
-- **Transitional**: Records what was changed during a specific design session
+- **Transitional**: Records what feature scenarios were changed during a specific design session
 - **Workflow State**: Tracks progress through design → scribe → development → completed
-- **Changed Files**: Contains snapshot of what scenarios/sections were modified
+- **Changed Files**: Contains snapshot of which feature scenarios were added/modified/removed
+- **Features Only**: Only tracks changes to *.feature.md files, not specs/diagrams/actors/contexts
 - **Historical Record**: Preserved as-is to understand what happened during the session
 
 **Stories (*.story.md) and Tasks (*.task.md)**
@@ -332,25 +345,22 @@ These documents **capture point-in-time state and workflow**:
 - **Implementation Context**: May reference specific transitional states or changes
 - **Historical Record**: Once completed, preserved to understand what was implemented
 
-**Key Distinction**: When editing Features, Diagrams, Specs, or Models, update them to reflect the current desired state and remove any outdated information. Git preserves the history. Sessions, Stories, and Tasks capture transitional state and should be preserved as historical records.
-
-### Contexts (*.context.md)
-- **For Agent Benefit**: These are guidance documents specifically for AI agents
-- **Technical Implementation**: Provide technical guidance when implementing features
-- **Patterns & Practices**: Share implementation patterns, best practices, and technical constraints
-- **Consistency**: Help agents make consistent technical decisions across implementations
-- **Just-in-Time**: Referenced when needed during story implementation
+**Key Distinction**: 
+- **Features are DIRECTIVE**: They drive code changes and are tracked in sessions at scenario-level
+- **Specs/Diagrams/Actors/Contexts are INFORMATIVE**: They provide guidance and context but are NOT tracked in sessions
+- When editing Features, update them to reflect current desired state; Git preserves the history
+- Sessions, Stories, and Tasks capture transitional state and should be preserved as historical records
 
 ## Session Status Workflow
 
 Sessions progress through four distinct phases:
 
 ### 1. Design (status: 'design')
-- **Active design session** - Files are being modified
+- **Active design session** - Feature files are being modified
 - Session folder created at \`ai/sessions/<session-id>/\`
 - Session file created at \`ai/sessions/<session-id>/<session-id>.session.md\`
-- Changed files are tracked automatically with scenario-level detail
-- Features, specs, diagrams, models can be edited
+- **Feature changes tracked** automatically with scenario-level detail
+- **Specs/Diagrams/Actors/Contexts** can be edited anytime (not tracked in sessions)
 - Session is "active" for editing in Forge Studio
 - **Transition**: User clicks "End Design Session" → status becomes 'scribe'
 
@@ -381,13 +391,16 @@ Sessions progress through four distinct phases:
 2. Enters problem statement
 3. Session folder created at \`ai/sessions/<session-id>/\`
 4. Session file created at \`ai/sessions/<session-id>/<session-id>.session.md\`
-5. File watchers begin tracking changes to features/specs/diagrams/models
+5. File watchers begin tracking changes to **features only** (\`**/*.feature.md\`)
 6. Session is now "active"
+7. Specs/Diagrams/Actors/Contexts remain editable without tracking
 
 ### Phase 2: Design Changes (status: 'design')
-During active session, user edits TIMELESS design documents to reflect the current desired state:
+During active session, user edits design documents:
 
+#### DIRECTIVE DOCUMENTS (Tracked in Session)
 - **Features** (*.feature.md): Define user-facing behavior with Gherkin scenarios
+  - **DIRECTIVE**: Drive code changes, tracked at scenario-level in session
   - **TIMELESS**: Always represent current desired state, NOT what's changing
   - Strictly behavior-driven Gherkin instructions only
   - Update to show all current features and scenarios; remove outdated ones
@@ -395,41 +408,36 @@ During active session, user edits TIMELESS design documents to reflect the curre
   - Organization is CRITICAL: structure should inform automated tests
   - Group logically by abstracting large concepts into smaller ones
   - **Analyze existing folder structure** before creating new features
-  
-- **Diagrams** (*.diagram.md): Create visual architecture representations (nomnoml)
-  - **TIMELESS**: Always represent current desired state, NOT what's changing
-  - Show technical implementations OR workflows as they should exist NOW
-  - Update existing diagrams; don't show "old way" vs "new way"
-  - NO transitional information (Git handles change history)
-  - One diagram per file for clarity
-  - **Analyze existing folder structure** before creating new diagrams
-  
+  - **Changes tracked**: scenarios_added, scenarios_modified, scenarios_removed
+
+#### INFORMATIVE DOCUMENTS (Not Tracked, Always Editable)
 - **Specs** (*.spec.md): Define technical contracts, APIs, validation rules
-  - **TIMELESS**: Most updated business logic and technical information, NOT what's changing
+  - **INFORMATIVE**: Provide HOW features should be implemented
+  - NOT tracked in sessions, editable anytime
   - NO code (except pseudocode for clarity)
   - NO diagrams (use diagram files instead; specs can LINK to diagrams)
   - Common use-case: contracts between systems
-  - NO transitional information (Git handles change history)
   - **Analyze existing folder structure** before creating new specs
   
-- **Models** (*.model.md): Define data structures and properties
-  - **TIMELESS**: Current data structure definitions, NOT what's changing
-  - **Analyze existing folder structure** before creating new models
+- **Diagrams** (*.diagram.md): Create visual architecture representations (nomnoml)
+  - **INFORMATIVE**: Visualize system architecture and flows
+  - NOT tracked in sessions, editable anytime
+  - Show technical implementations OR workflows as they should exist NOW
+  - One diagram per file for clarity
+  - Use nomnoml syntax for clean, maintainable diagrams
+  - **Analyze existing folder structure** before creating new diagrams
   
 - **Actors** (*.actor.md): Define system actors and personas
-  - Define who interacts with the system
+  - **INFORMATIVE**: Define who interacts with the system
+  - NOT tracked in sessions, editable anytime
   - **Analyze existing folder structure** before creating new actors
   
 - **Contexts** (*.context.md): Add guidance for specific technologies
-  - FOR THE AGENT'S BENEFIT: Technical guidance when implementing features
+  - **INFORMATIVE**: Technical guidance when implementing features
+  - NOT tracked in sessions, editable anytime
   - Provide implementation patterns, best practices, and technical constraints
   - Help agents make consistent technical decisions
   - **Analyze existing folder structure** before creating new contexts
-
-**All changes tracked with granular detail:**
-- Features: scenarios_added, scenarios_modified, scenarios_removed
-- Specs: sections_modified
-- Diagrams/Models: change_type (added/modified)
 
 ### Phase 3: End Design Session (design → scribe)
 1. User clicks "End Design Session" in Forge Studio
@@ -501,26 +509,25 @@ Forge documents are interconnected through explicit ID references:
 \`\`\`
 Features (*.feature.md)
   └─ spec_id[] ──────────┐
-  └─ model_id[] ─────┐   │
+  └─ diagram_id[] ───┐   │
   └─ context_id[] ┐  │   │
                   │  │   │
 Specs (*.spec.md) │  │   │
   ├─ feature_id[] ◄──┘   │
-  ├─ model_id[] ◄────────┘
-  ├─ diagram_id[] ────┐  
-  └─ context_id[] ─┐  │  
-                   │  │  
-Diagrams           │  │
-  ◄────────────────┘  │
-                      │
-Contexts              │
+  ├─ diagram_id[] ◄──────┘
+  └─ context_id[] ─┐  
+                   │  
+Diagrams           │  
+  ◄────────────────┘
+                      
+Contexts              
   ◄───────────────────┘
   
 Stories & Tasks
   ├─ session_id
   ├─ feature_id[]
   ├─ spec_id[]
-  └─ model_id[]
+  └─ diagram_id[]
 \`\`\`
 
 ### Systematic Context Gathering (CRITICAL for forge-scribe)
@@ -534,12 +541,13 @@ When distilling a session, follow this EXACT methodical process:
    - These provide overarching technical guidance
 
 #### Phase 2: Changed Files Analysis
-1. **Read all changed files**
-   - Extract from session's \`changed_files\` array
-   - Identify all \`*.feature.md\` and \`*.spec.md\` files
+1. **Read all changed feature files**
+   - Extract from session's \`changed_files\` array (features only)
+   - Identify all \`*.feature.md\` files with scenario-level changes
    
 2. **Extract context_id linkages**
-   - From each feature/spec frontmatter, find \`context_id\` arrays
+   - From each feature's frontmatter, find \`context_id\` arrays
+   - From referenced specs (via spec_id), extract \`context_id\` arrays
    - Read each referenced context file
    - These provide technology-specific guidance
 
@@ -555,8 +563,9 @@ When distilling a session, follow this EXACT methodical process:
    - Understand complete technical implementation
 
 #### Phase 4: Object Type Context Discovery
-1. **Extract technical object types**
-   - Scan all modified specs for object references: \`<object-type>ObjectName\`
+1. **Extract technical object types from specs**
+   - Read specs linked from changed features (via spec_id)
+   - Scan all linked specs for object references: \`<object-type>ObjectName\`
    - Examples:
      - \`<lambda>ProcessOrder\` → "lambda"
      - \`<dynamodb>UsersTable\` → "dynamodb"
@@ -569,9 +578,9 @@ When distilling a session, follow this EXACT methodical process:
    - Examples: \`get_forge_context("lambda")\`, \`get_forge_context("dynamodb")\`
 
 #### Phase 5: Architectural Understanding
-1. **Read all Mermaid diagrams**
-   - Examine diagrams in modified specs
-   - Check \`diagram_id\` linkages
+1. **Read all diagrams from linked specs**
+   - Check \`diagram_id\` linkages in specs (from Phase 3)
+   - Read all referenced diagram files
    - Understand:
      - System architecture
      - Component relationships
@@ -586,17 +595,18 @@ When distilling a session, follow this EXACT methodical process:
 
 #### Phase 6: Complete Context Synthesis
 1. **Validate coverage**
-   - Every changed file analyzed
+   - Every changed feature analyzed
+   - All linked specs read
    - All context linkages followed
    - All object types queried
-   - All diagrams read
+   - All linked diagrams read
    
 2. **Build comprehensive understanding**
-   - Complete feature behavior (from features)
-   - Technical implementation (from specs)
+   - Complete feature behavior (from changed features)
+   - Technical implementation (from linked specs)
    - Technology guidance (from contexts)
    - Object-specific patterns (from get_forge_context)
-   - Architecture understanding (from diagrams)
+   - Architecture understanding (from linked diagrams)
 
 ### Why the Linkage System is Powerful
 
@@ -608,16 +618,20 @@ When distilling a session, follow this EXACT methodical process:
 
 Before creating tickets from a session, verify:
 - [ ] All global contexts read from \`ai/contexts/\`
-- [ ] All feature/spec \`context_id\` references followed and read
-- [ ] All \`spec_id\` linkages followed bidirectionally
-- [ ] All technical object types (e.g., \`<lambda>X\`) extracted
+- [ ] All changed features read from session's \`changed_files\` array
+- [ ] All feature \`context_id\` references followed and read
+- [ ] All \`spec_id\` linkages followed from changed features
+- [ ] All spec \`context_id\` references followed and read
+- [ ] All technical object types (e.g., \`<lambda>X\`) extracted from linked specs
 - [ ] \`get_forge_context\` called for each unique object type
-- [ ] All Mermaid diagrams analyzed
-- [ ] All \`diagram_id\` references followed
+- [ ] All \`diagram_id\` references followed from linked specs
+- [ ] All linked diagrams analyzed
 - [ ] Complete architectural understanding achieved
 - [ ] Context map synthesized and validated
 
 **Only after completing this checklist should you create tickets.**
+
+**Remember**: Sessions track ONLY features. Specs/Diagrams are discovered via linkages, not from changed_files.
 
 ### Linkage Best Practices
 
@@ -751,25 +765,25 @@ Even when creating new folders, ensure they align with the project's organizatio
 
 ## Best Practices
 
-1. **Analyze Folder Structure First** - Always examine existing folder organization before creating or modifying files; respect established patterns and place files logically
-2. **Timeless vs Transitional** - Features, Diagrams, Specs, and Models are timeless (current desired state); Sessions, Stories, and Tasks are transitional (point-in-time workflow state)
+1. **Features Are Directive** - Features drive code changes and are tracked in sessions at scenario-level; Specs/Diagrams/Actors/Contexts are informative and always editable
+2. **Analyze Folder Structure First** - Always examine existing folder organization before creating or modifying files; respect established patterns and place files logically
 3. **Feature Organization is CRITICAL** - Structure features logically to directly inform automated test organization; abstract large concepts into smaller ones
 4. **Specs Without Code/Diagrams** - Specs contain business logic and contracts, but NO code (except pseudocode) and NO diagrams (link to diagram files instead)
 5. **Contexts for Agents** - Use context files to provide technical guidance that helps agents implement features consistently
 6. **Nested Organization** - Group related features/specs in folders that reflect conceptual hierarchy; don't create files at root level if subfolders exist
 7. **Status Awareness** - Respect session status transitions (design → scribe → development → completed)
 8. **Minimal Stories** - Keep stories small and focused (< 30 minutes each)
-9. **Model-First** - Define data models before specs that use them
+9. **Follow Linkages** - Discover specs/diagrams/contexts through feature linkages (spec_id, diagram_id, context_id), not from session tracking
 10. **Iterative Sessions** - Keep sessions focused on one problem area
 11. **Clear Naming** - Use descriptive kebab-case IDs that align with existing naming patterns
-12. **Git Controls History** - Never document "old" vs "new" in timeless design files; Git handles change tracking for Features, Diagrams, Specs, and Models
+12. **Git Controls History** - Never document "old" vs "new" in design files; Git handles change tracking
 
 ## Output Expectations for forge-scribe
 
 When distilling a session, the AI MUST:
 - Create multiple small stories (< 30 min each) rather than one large story
 - Place ALL tickets in \`ai/sessions/<session-id>/tickets/\`
-- Link each story to session_id, feature_id, spec_id, model_id
+- Link each story to session_id, feature_id, spec_id, diagram_id
 - Include specific file paths and clear objectives
 - Add acceptance criteria to verify completion
 - Order stories logically with dependencies
@@ -777,15 +791,17 @@ When distilling a session, the AI MUST:
 - Update session status to 'development' after creating tickets
 
 **Important Reminders**:
+- **Features Are Directive** - Only features are tracked in sessions at scenario-level
+- **Specs/Diagrams/Actors/Contexts Are Informative** - Always editable, never tracked in sessions
 - **Analyze folder structure first** - Always examine existing organization before creating files
-- **Timeless vs Transitional**: Features, Diagrams, Specs, and Models are TIMELESS (current desired state); Sessions, Stories, and Tasks are TRANSITIONAL (point-in-time workflow state)
 - **Feature organization is CRITICAL** - Structure should inform test organization; place files logically within existing folder hierarchies
+- **Discover via Linkages** - Find specs/diagrams through feature linkages (spec_id, diagram_id), not from session tracking
 - **Specs never contain actual code** (only pseudocode) or diagrams (only links to diagrams)
 - **Contexts provide technical guidance** to agents during implementation
-- **Stories implement the current state** as defined in timeless design documents
-- **Git handles history** for timeless documents; never document "old" vs "new" states
+- **Stories implement the current state** as defined in features and their linked specs
+- **Git handles history** for all design documents; never document "old" vs "new" states
 
-This workflow ensures implementation has complete, accurate context without information overload, with clear status transitions guiding the entire process.`;
+This workflow ensures implementation has complete, accurate context without information overload, with features driving work and specs/diagrams providing necessary guidance.`;
   }
 
   private getForgeSchema(schemaType: string): string {
@@ -804,14 +820,15 @@ start_time: 2025-10-25T10:00:00Z  # ISO 8601 timestamp
 end_time: 2025-10-25T12:30:00Z  # ISO 8601 timestamp (null if in design)
 status: design  # design, scribe, development, completed
 problem_statement: "Brief description of what we're solving"
-changed_files: []  # Array of change entries with scenario-level tracking
+changed_files: []  # Array of FeatureChangeEntry objects with scenario-level tracking (only feature files are tracked)
 ---
 
 ## Session Status Workflow
 Sessions progress through distinct phases:
 
-1. **design** - Active design session, files are being modified
-   - Changed files are tracked automatically
+1. **design** - Active design session, feature files are being modified
+   - **Only feature changes** are tracked automatically at scenario-level
+   - Specs/Diagrams/Actors/Contexts can be edited but are NOT tracked
    - Session is "active" for editing
    - User can end session to transition to 'scribe'
 
@@ -833,8 +850,10 @@ Sessions progress through distinct phases:
 
 ## Changed Files Structure
 
-### For Features (*.feature.md)
-Changed files track scenario-level detail:
+**IMPORTANT**: Sessions track ONLY feature files (*.feature.md). Specs, Diagrams, Actors, and Contexts are NOT tracked in sessions.
+
+### Feature Changes (*.feature.md)
+Changed files track scenario-level detail for features:
 
 \`\`\`yaml
 changed_files:
@@ -847,40 +866,20 @@ changed_files:
       - "Successful login with valid credentials"
     scenarios_removed:
       - "Deprecated SSO login"
-\`\`\`
-
-### For Specs (*.spec.md)
-Changed files track section-level detail:
-
-\`\`\`yaml
-changed_files:
-  - path: "ai/specs/api/auth-endpoint.spec.md"
-    change_type: modified
-    sections_modified:
-      - "Login API Contract"
-      - "Validation Rules"
-    description: "Updated validation and added 2FA support"
-\`\`\`
-
-### For Diagrams (*.diagram.md)
-Changed files track basic change:
-
-\`\`\`yaml
-changed_files:
-  - path: "ai/diagrams/auth-flow.diagram.md"
+  - path: "ai/features/user/profile.feature.md"
     change_type: added
-    description: "Added authentication flow diagram"
+    scenarios_added:
+      - "User can update profile"
+      - "User can upload avatar"
 \`\`\`
 
-### For Models (*.model.md)
-Changed files track basic change:
+### What is NOT Tracked
+- **Specs** (*.spec.md) - Always editable, never tracked in sessions
+- **Diagrams** (*.diagram.md) - Always editable, never tracked in sessions
+- **Actors** (*.actor.md) - Always editable, never tracked in sessions
+- **Contexts** (*.context.md) - Always editable, never tracked in sessions
 
-\`\`\`yaml
-changed_files:
-  - path: "ai/models/user.model.md"
-    change_type: modified
-    description: "Added 2FA fields"
-\`\`\`
+These informative documents are discovered during distillation via linkages from features (spec_id, diagram_id, context_id).
 
 ## Content Structure
 The session document should describe:
@@ -893,20 +892,23 @@ The session document should describe:
 
 ## Workflow
 1. Session starts with status: design, problem_statement, and start_time
-2. During design phase, changed_files array tracks all modifications with scenario detail
-3. User ends design session, status changes to 'scribe', end_time is set
-4. User runs forge-scribe to distill session into stories
-5. forge-scribe analyzes changed_files with scenario-level detail
-6. Stories are created in ai/sessions/<session-id>/tickets/
-7. Status changes to 'development' when stories are created
-8. User implements stories
-9. User marks session complete when all stories done
-10. Status changes to 'completed'
+2. During design phase, changed_files array tracks **feature modifications only** with scenario detail
+3. Specs/Diagrams/Actors/Contexts can be edited but are NOT tracked
+4. User ends design session, status changes to 'scribe', end_time is set
+5. User runs forge-scribe to distill session into stories
+6. forge-scribe analyzes changed feature files with scenario-level detail
+7. forge-scribe follows linkages to discover specs, diagrams, and contexts
+8. Stories are created in ai/sessions/<session-id>/tickets/
+9. Status changes to 'development' when stories are created
+10. User implements stories
+11. User marks session complete when all stories done
+12. Status changes to 'completed'
 
 ## Linkages
 - Sessions generate **story** and **task** files in ai/sessions/<session-id>/tickets/
 - Stories and tasks reference the session_id
-- Changed files are analyzed during distillation with scenario-level granularity`,
+- **Only features** are tracked in changed_files with scenario-level granularity
+- Specs/Diagrams/Contexts are discovered via feature linkages (spec_id, diagram_id, context_id)`,
 
       feature: `# Feature File Schema
 
@@ -919,7 +921,7 @@ The session document should describe:
 ---
 feature_id: kebab-case-id  # Must match filename without .feature.md
 spec_id: [spec-id-1, spec-id-2]  # Array of related spec IDs
-model_id: [model-id-1]  # Array of related model IDs
+diagram_id: [diagram-id-1]  # Optional: Array of related diagram IDs
 tags: []  # Optional array of tags for categorization
 ---
 
@@ -977,7 +979,7 @@ Rule: Email addresses must be unique
 
 ## Linkages
 - References one or more **spec_id** values
-- May reference **model_id** values for data structures
+- May reference **diagram_id** values for visual architecture
 - Specs and Stories will reference this feature_id`,
 
       spec: `# Spec File Schema
@@ -991,7 +993,6 @@ Rule: Email addresses must be unique
 ---
 spec_id: kebab-case-id  # Must match filename without .spec.md
 feature_id: [feature-id-1, feature-id-2]  # Array of related feature IDs
-model_id: [model-id-1, model-id-2]  # Array of related model IDs
 diagram_id: [diagram-id-1, diagram-id-2]  # Optional: related diagrams
 context_id: [context-id-1, context-id-2]  # Optional: related contexts
 ---
@@ -1001,7 +1002,7 @@ Specification documents define WHAT must be built through technical contracts, i
 
 1. **Overview** - High-level description of what's being specified
 2. **API Contracts** - Endpoints, methods, parameters, responses
-3. **Data Structures** - Interfaces, types, schemas (reference models for details)
+3. **Data Structures** - Interfaces, types, schemas defined inline
 4. **Validation Rules** - Constraints, business rules, data validation
 5. **Integration Points** - External dependencies and how they connect
 6. **Error Handling** - Expected error cases and responses
@@ -1050,71 +1051,10 @@ interface LoginResponse {
 
 ## Linkages
 - References one or more **feature_id** values for user-facing behavior
-- References **model_id** values for data structures used
 - References **diagram_id** values for visual architecture (create separate diagram files)
 - May reference **context_id** values for implementation guidance
+- Specs can define data structures inline using TypeScript interfaces or tables
 - Stories will reference this spec_id for implementation`,
-
-      model: `# Model File Schema
-
-## File Format
-- **Filename**: <model-id>.model.md
-- **Location**: ai/models/ (nestable)
-- **Format**: Frontmatter + Structured Property Definitions
-
-## Frontmatter Fields
----
-model_id: kebab-case-id  # Must match filename without .model.md
-type: entity  # entity, dto, value-object, interface, enum
-related_models: [user-address, user-role]  # Array of related model IDs
----
-
-## Content Structure
-
-### Overview
-Brief description of the model and its purpose.
-
-### Properties
-
-| Property | Type | Required | Description | Validation |
-|----------|------|----------|-------------|------------|
-| id | string (UUID) | Yes | Unique identifier | Must be valid UUID v4 |
-| email | string | Yes | User email address | Must be valid email format, unique |
-| name | string | Yes | Full name | 2-100 characters |
-| created_at | datetime | Yes | Creation timestamp | ISO 8601 format |
-| status | enum | Yes | Account status | One of: active, suspended, deleted |
-
-### Relationships
-- **One-to-Many**: User has many Orders
-- **Many-to-One**: User belongs to one Organization
-- **Many-to-Many**: User has many Roles through UserRoles
-
-### Validation Rules
-1. Email must be unique across all users
-2. Email must be validated before account activation
-3. Password must be hashed using bcrypt with cost factor 12
-4. Status cannot be changed from deleted to active
-
-### Constraints
-- Unique constraint on email field
-- Check constraint: status IN ('active', 'suspended', 'deleted')
-- Not null constraints on id, email, name, created_at, status
-
-## Example
-
-\`\`\`typescript
-interface User {
-  id: string; // UUID
-  email: string;
-  name: string;
-  created_at: Date;
-  status: 'active' | 'suspended' | 'deleted';
-}
-\`\`\`
-
-## Linkages
-- Referenced by **feature_id** and **spec_id** values
-- May reference other **model_id** values for relationships`,
 
       actor: `# Actor File Schema
 
@@ -1212,7 +1152,7 @@ story_id: kebab-case-id  # Must match filename without .story.md
 session_id: session-id  # Originating session
 feature_id: [feature-id-1]  # Related features
 spec_id: [spec-id-1, spec-id-2]  # Related specs
-model_id: [model-id-1]  # Related models
+diagram_id: [diagram-id-1]  # Optional: Related diagrams
 status: pending  # pending, in-progress, completed, blocked
 priority: high  # low, medium, high
 estimated_minutes: 25  # Estimated time to complete
@@ -1253,7 +1193,7 @@ Why this story exists and how it fits into the larger feature.
 
 ## Linkages
 - References a **session_id** (required)
-- References **feature_id**, **spec_id**, and **model_id** values
+- References **feature_id**, **spec_id**, and optionally **diagram_id** values
 - May depend on other **story_id** values`,
 
       task: `# Task File Schema

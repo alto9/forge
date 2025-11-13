@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import { FileParser } from './FileParser';
 import { GitUtils } from './GitUtils';
+import { FeatureChangeEntry } from '../types/FeatureChangeEntry';
 
 export interface ContextFile {
     contextId: string;
@@ -31,18 +32,47 @@ STEP 3: Create a new session document in the ai/sessions folder with the followi
 The session document should:
 - Follow the session schema from Step 2
 - Have status: active
-- Have an empty changed_files array initially (this will be tracked during the session)
+- Have an empty changed_files array (FeatureChangeEntry[]) initially (this will be tracked during the session)
 - Include sections for Problem Statement, Goals, Approach, Key Decisions, and Notes
 - Describe what you're trying to accomplish in this design session
 
 Ensure the ai/sessions folder exists (create it if needed), use proper markdown formatting, and ensure the frontmatter is valid YAML.
 
-Once created, this session will track all changes to features, specs, models, and contexts during the design process.`;
+Once created, this session will track only feature file changes (*.feature.md) with scenario-level detail during the design process. Specs, diagrams, actors, and contexts are NOT tracked in sessions.`;
     }
 
     /**
-     * Generates a prompt for distilling a session into stories and tasks
+     * Convert old format (string[]) to new format (FeatureChangeEntry[])
+     * Initializes scenario arrays as empty arrays for migrated entries
      */
+    private static migrateChangedFiles(changedFiles: any): FeatureChangeEntry[] {
+        if (!Array.isArray(changedFiles)) {
+            return [];
+        }
+        
+        // If it's already the new format, ensure scenario arrays exist
+        if (changedFiles.length > 0 && typeof changedFiles[0] === 'object' && changedFiles[0].path) {
+            return (changedFiles as FeatureChangeEntry[]).map((entry: FeatureChangeEntry) => ({
+                path: entry.path,
+                change_type: entry.change_type,
+                scenarios_added: entry.scenarios_added || [],
+                scenarios_modified: entry.scenarios_modified || [],
+                scenarios_removed: entry.scenarios_removed || []
+            }));
+        }
+        
+        // Convert old format (string[]) to new format
+        return changedFiles
+            .filter((item: any) => typeof item === 'string')
+            .map((path: string): FeatureChangeEntry => ({
+                path,
+                change_type: 'modified',
+                scenarios_added: [],
+                scenarios_modified: [],
+                scenarios_removed: []
+            }));
+    }
+
     static async generateDistillSessionPrompt(sessionUri: vscode.Uri): Promise<string> {
         const workspaceFolder = vscode.workspace.getWorkspaceFolder(sessionUri);
         if (!workspaceFolder) {
@@ -52,7 +82,13 @@ Once created, this session will track all changes to features, specs, models, an
         const sessionContent = await FileParser.readFile(sessionUri.fsPath);
         const sessionData = FileParser.parseFrontmatter(sessionContent);
         const sessionId = sessionData.frontmatter.session_id || path.basename(sessionUri.fsPath, '.session.md');
-        const changedFiles: string[] = sessionData.frontmatter.changed_files || [];
+        
+        // Handle both old format (string[]) and new format (FeatureChangeEntry[])
+        // Migrate to new format with scenario arrays initialized
+        const changedFilesRaw: any = sessionData.frontmatter.changed_files || [];
+        const changedFilesEntries: FeatureChangeEntry[] = this.migrateChangedFiles(changedFilesRaw);
+        const changedFiles: string[] = changedFilesEntries.map((entry: FeatureChangeEntry) => entry.path);
+        
         const startCommit: string | undefined = sessionData.frontmatter.start_commit;
 
         // Check if workspace is a git repository
@@ -81,7 +117,9 @@ ${sessionContent}
             prompt += `**Changed Files During Session** (${changedFiles.length} files):
 
 `;
-            for (const changedFile of changedFiles) {
+            for (let i = 0; i < changedFiles.length; i++) {
+                const changedFile = changedFiles[i];
+                const changeEntry = changedFilesEntries.length > i ? changedFilesEntries[i] : null;
                 const fullPath = path.join(workspaceFolder.uri.fsPath, changedFile);
                 try {
                     const content = await FileParser.readFile(fullPath);
@@ -91,7 +129,27 @@ ${sessionContent}
                     
                     prompt += `### ${fileType.charAt(0).toUpperCase() + fileType.slice(1)}: ${fileId}
 File: ${changedFile}
-
+`;
+                    
+                    // Add scenario-level change details if available
+                    if (changeEntry && changeEntry.change_type) {
+                        prompt += `Change Type: ${changeEntry.change_type}
+`;
+                        if (changeEntry.scenarios_added && changeEntry.scenarios_added.length > 0) {
+                            prompt += `Scenarios Added: ${changeEntry.scenarios_added.join(', ')}
+`;
+                        }
+                        if (changeEntry.scenarios_modified && changeEntry.scenarios_modified.length > 0) {
+                            prompt += `Scenarios Modified: ${changeEntry.scenarios_modified.join(', ')}
+`;
+                        }
+                        if (changeEntry.scenarios_removed && changeEntry.scenarios_removed.length > 0) {
+                            prompt += `Scenarios Removed: ${changeEntry.scenarios_removed.join(', ')}
+`;
+                        }
+                    }
+                    
+                    prompt += `
 `;
                     
                     // Add git diff if available
