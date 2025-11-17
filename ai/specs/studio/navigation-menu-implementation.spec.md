@@ -11,7 +11,7 @@ context_id: [theme, vsce]
 
 ## Overview
 
-The Forge Studio navigation menu is organized into two distinct sections to clearly communicate which items require active design sessions and which are always accessible. This separation helps developers understand that Actors and Contexts inform their design work and are always accessible, while Features and Specs are created within design sessions.
+The Forge Studio navigation menu is organized into two distinct sections to clearly communicate the workflow distinction between foundational/reference materials (:INFORM:) that are always accessible and active design work (:DESIGN:) that follows structured session management. This separation helps developers understand that Actors, Contexts, Diagrams, and Specifications provide foundational information for design decisions, while Sessions and Features represent the structured design workflow.
 
 ## Architecture
 
@@ -45,23 +45,24 @@ interface SidebarProps {
     onNavigate={onNavigate}
   />
   
-  <NavSection 
-    title="INFORM"
+  <NavSection
+    title=":INFORM:"
     items={[
       { view: 'actors', label: 'Actors', icon: 'person', alwaysEnabled: true },
       { view: 'contexts', label: 'Contexts', icon: 'book', alwaysEnabled: true },
-      { view: 'sessions', label: 'Sessions', icon: 'history', alwaysEnabled: true }
+      { view: 'diagrams', label: 'Diagrams', icon: 'graph', alwaysEnabled: true },
+      { view: 'specs', label: 'Specifications', icon: 'file-code', alwaysEnabled: true }
     ]}
     currentView={currentView}
     activeSession={activeSession}
     onNavigate={onNavigate}
   />
-  
-  <NavSection 
-    title="DESIGN"
+
+  <NavSection
+    title=":DESIGN:"
     items={[
-      { view: 'features', label: 'Features', icon: 'star', requiresSession: true },
-      { view: 'specs', label: 'Specs', icon: 'file-code', requiresSession: true }
+      { view: 'sessions', label: 'Sessions', icon: 'history', alwaysEnabled: true },
+      { view: 'features', label: 'Features', icon: 'star', requiresSession: true }
     ]}
     currentView={currentView}
     activeSession={activeSession}
@@ -169,19 +170,20 @@ const NavItem: React.FC<NavItemProps> = ({
 
 function getTooltip(label: string, isDisabled: boolean, requiresSession: boolean): string {
   const tooltips = {
-    'Actors': 'Define system actors and personas - Always editable',
-    'Contexts': 'Provide technical guidance and context - Always editable',
-    'Sessions': 'Manage design sessions - Create and manage at any time',
-    'Features': 'Define user-facing functionality',
-    'Specs': 'Define technical specifications'
+    'Actors': 'Define system actors and personas - Always accessible foundational reference',
+    'Contexts': 'Provide technical guidance and best practices - Always accessible reference',
+    'Diagrams': 'Visual architecture and system diagrams - Always accessible reference',
+    'Specifications': 'Technical contracts and implementation details - Always accessible reference',
+    'Sessions': 'Manage design sessions and track changes - Always accessible workflow entry',
+    'Features': 'Define user-facing functionality and behavior - Requires active design session'
   };
-  
+
   let tooltip = tooltips[label] || label;
-  
+
   if (requiresSession && isDisabled) {
     tooltip += ' - Active session required';
   }
-  
+
   return tooltip;
 }
 ```
@@ -292,13 +294,13 @@ Or use inline SVG for custom icons that match VSCode theme.
 
 ## Session-Locked View
 
-When a user navigates to Features or Specs without an active session:
+When a user navigates to Features without an active session:
 
 ### SessionRequiredView Component
 
 ```typescript
 interface SessionRequiredViewProps {
-  itemType: 'Features' | 'Specs';
+  itemType: 'Features';
   onStartSession: () => void;
 }
 
@@ -401,8 +403,8 @@ const App: React.FC = () => {
   
   const handleNavigate = (view: string) => {
     // Check if view requires session
-    const sessionRequiredViews = ['features', 'specs'];
-    
+    const sessionRequiredViews = ['features'];
+
     if (sessionRequiredViews.includes(view) && !activeSession) {
       // Show session required view
       setCurrentView(view);
@@ -416,18 +418,16 @@ const App: React.FC = () => {
     if (currentView === 'features' && !activeSession) {
       return <SessionRequiredView itemType="Features" onStartSession={handleStartSession} />;
     }
-    if (currentView === 'specs' && !activeSession) {
-      return <SessionRequiredView itemType="Specs" onStartSession={handleStartSession} />;
-    }
-    
+
     // Normal views
     switch (currentView) {
       case 'dashboard': return <DashboardPage />;
       case 'sessions': return <SessionsPage />;
       case 'actors': return <BrowserPage category="actors" />;
       case 'contexts': return <BrowserPage category="contexts" />;
-      case 'features': return <BrowserPage category="features" />;
+      case 'diagrams': return <BrowserPage category="diagrams" />;
       case 'specs': return <BrowserPage category="specs" />;
+      case 'features': return <BrowserPage category="features" />;
       default: return <DashboardPage />;
     }
   };
@@ -477,23 +477,28 @@ const App: React.FC = () => {
 1. Start without active session
 2. Click on Actors - should navigate successfully
 3. Click on Contexts - should navigate successfully
-4. Click on Features - should show SessionRequiredView
-5. Click "Start New Session" - should navigate to sessions page
-6. Create a session
-7. Navigate to Features - should show Features page
-8. End session
-9. Navigate to Features - should show SessionRequiredView again
+4. Click on Diagrams - should navigate successfully
+5. Click on Specifications - should navigate successfully
+6. Click on Sessions - should navigate successfully
+7. Click on Features - should show SessionRequiredView
+8. Click "Start New Session" - should navigate to sessions page
+9. Create a session
+10. Navigate to Features - should show Features page
+11. End session
+12. Navigate to Features - should show SessionRequiredView again
 
 ## Migration Notes
 
 ### Updating Existing Sidebar
 
 If the sidebar already exists, update it to:
-1. Add section headers ("FOUNDATIONAL" and "DESIGN")
-2. Group navigation items accordingly
-3. Add session-dependent disabled state for Features and Specs
+1. Add section headers (":INFORM:" and ":DESIGN:")
+2. Reorganize navigation items into new sections:
+   - :INFORM: - Actors, Contexts, Diagrams, Specifications (all always enabled)
+   - :DESIGN: - Sessions, Features (Sessions always enabled, Features session-dependent)
+3. Add session-dependent disabled state only for Features
 4. Add lock icons for disabled items
-5. Update tooltips to reflect session requirements
+5. Update tooltips to reflect new organization and session requirements
 
 ### Backwards Compatibility
 

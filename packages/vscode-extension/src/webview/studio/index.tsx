@@ -5,6 +5,7 @@ import { MarkdownEditor } from './components/MarkdownEditor';
 import { Sidebar } from './components/Sidebar';
 import { FileCard } from './components/FileCard';
 import { ChangedFileEntry } from './components/ChangedFileEntry';
+import { SessionRequiredView } from './components/SessionRequiredView';
 import { useSessionIndicators } from './hooks/useSessionIndicators';
 import { useSessionPermissions } from './hooks/useSessionPermissions';
 
@@ -341,32 +342,9 @@ function CategoryEmptyState({ category, title, activeSession, hasFolders }: {
     );
   }
 
-  // For features without session, show message and disabled button
+  // For features without session, show SessionRequiredView
   if (category === 'features' && !activeSession) {
-    return (
-      <div className="p-16">
-        <div className="empty-state">
-          <div className="empty-state-icon">📁</div>
-          <div style={{ marginBottom: 8 }}>No {title.toLowerCase()} yet</div>
-          <div className="alert alert-info" style={{ marginTop: 16, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>🔒</span>
-            <span>{lockMessage || 'Features require an active design session. Start a session to create or modify features.'}</span>
-          </div>
-          <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 24 }}>
-            <button 
-              className="btn btn-primary"
-              onClick={handleCreateFile}
-              disabled={true}
-              style={{ opacity: 0.5, cursor: 'not-allowed' }}
-              title={lockMessage || 'Features require an active design session. Start a session to create or modify features.'}
-            >
-              <span style={{ marginRight: 6 }}>🔒</span>
-              + New {categoryLabel}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <SessionRequiredView itemType="Features" onStartSession={() => setRoute({ page: 'sessions' })} />;
   }
 
   // For other categories without session (shouldn't happen for foundational, but handle gracefully)

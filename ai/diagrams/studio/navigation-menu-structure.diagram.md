@@ -1,7 +1,7 @@
 ---
 diagram_id: navigation-menu-structure
 name: Navigation Menu Structure
-description: Shows the organization of the Forge Studio navigation sidebar with inform and design sections
+description: Shows the reorganized Forge Studio navigation sidebar with INFORM section for foundational materials and DESIGN section for active design work
 diagram_type: component
 feature_id: [navigation-menu]
 spec_id: [navigation-menu-implementation]
@@ -16,23 +16,23 @@ actor_id: []
 
 [Navigation Sidebar]
 [Navigation Sidebar] Contains -> [Dashboard Link]
-[Navigation Sidebar] Contains -> [Inform Section]
-[Navigation Sidebar] Contains -> [Design Section]
+[Navigation Sidebar] Contains -> [:INFORM: Section]
+[Navigation Sidebar] Contains -> [:DESIGN: Section]
 
-[Inform Section] Header -> ["INFORM" Text]
-[Inform Section] Contains -> [Actors Link]
-[Inform Section] Contains -> [Contexts Link]
-[Inform Section] Contains -> [Sessions Link]
+[:INFORM: Section] Header -> [":INFORM:" Text]
+[:INFORM: Section] Contains -> [Actors Link]
+[:INFORM: Section] Contains -> [Contexts Link]
+[:INFORM: Section] Contains -> [Diagrams Link]
+[:INFORM: Section] Contains -> [Specifications Link]
 
-[Design Section] Header -> ["DESIGN" Text]
-[Design Section] Contains -> [Features Link]
-[Design Section] Contains -> [Diagrams Link]
-[Design Section] Contains -> [Specs Link]
+[:DESIGN: Section] Header -> [":DESIGN:" Text]
+[:DESIGN: Section] Contains -> [Sessions Link]
+[:DESIGN: Section] Contains -> [Features Link]
 
 [Actors Link] State -> [Always Enabled]
 [Contexts Link] State -> [Always Enabled]
+[Diagrams Link] State -> [Always Enabled]
+[Specifications Link] State -> [Always Enabled]
 [Sessions Link] State -> [Always Enabled]
 [Features Link] State -> [Session Dependent]
-[Diagrams Link] State -> [Session Dependent]
-[Specs Link] State -> [Session Dependent]
 ```
