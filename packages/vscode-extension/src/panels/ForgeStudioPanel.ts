@@ -1772,11 +1772,16 @@ Scenario: (Describe a scenario)
             case 'diagrams':
                 return `# ${title}
 
-\`\`\`nomnoml
-#direction: down
-#padding: 10
-
-[Component A] -> [Component B]
+\`\`\`json
+{
+  "nodes": [
+    { "id": "component-a", "type": "default", "position": { "x": 0, "y": 0 }, "data": { "label": "Component A" } },
+    { "id": "component-b", "type": "default", "position": { "x": 200, "y": 0 }, "data": { "label": "Component B" } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "component-a", "target": "component-b" }
+  ]
+}
 \`\`\`
 
 ## Notes

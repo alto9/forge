@@ -110,21 +110,18 @@ describe('Spec View Toggle Logic', () => {
       expect(showRendered).toBe(true);
     });
 
-    it('should extract and render nomnoml blocks in rendered mode', () => {
+    it('should render content in rendered mode', () => {
       const content = `## Overview
 
-\`\`\`nomnoml
-[A] -> [B]
-\`\`\`
+Some spec content here.
 
 ## Details`;
 
       const viewMode = 'rendered';
       
       if (viewMode === 'rendered') {
-        // Simulate extraction
-        const hasNomnomlBlock = content.includes('```nomnoml');
-        expect(hasNomnomlBlock).toBe(true);
+        // Content should be available for rendering
+        expect(content).toContain('## Overview');
       }
     });
   });
@@ -194,7 +191,7 @@ describe('Spec View Toggle Logic', () => {
     });
 
     it('should preserve content when toggling between views', () => {
-      const originalContent = '## Overview\n\n```nomnoml\n[A] -> [B]\n```';
+      const originalContent = '## Overview\n\nSpec content with **markdown** formatting.';
       let viewMode: 'source' | 'rendered' = 'source';
       
       // Toggle to rendered

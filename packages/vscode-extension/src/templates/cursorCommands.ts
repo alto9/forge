@@ -31,7 +31,7 @@ When working in design sessions, use the correct file type for each purpose:
 
 ### Diagrams (*.diagram.md)
 - **Purpose**: Visualize HOW the system is structured
-- **Format**: Single nomnoml diagram per file
+- **Format**: JSON diagram data in markdown code blocks
 - **Contains**: ONE visual representation (infrastructure, components, flows, states)
 - **Example**: "User authentication flow through API gateway to Lambda"
 - **Keep it visual**: No pseudocode or implementation details
@@ -74,7 +74,7 @@ Understanding the existing structure helps maintain coherence and makes the docu
 - **Only modify AI documentation files**: Work exclusively within the \`ai/\` folder
 - **Do NOT modify implementation code**: This command is for updating features, diagrams, specs, actors, and contexts only
 - **Track all changes**: Ensure changed files are tracked in the active session's \`changed_files\` array
-- **Use proper formats**: Features use Gherkin in code blocks, Diagrams use single nomnoml diagrams, Specs use markdown only
+- **Use proper formats**: Features use Gherkin in code blocks, Diagrams use react-flow JSON format, Specs use markdown only
 - **Call MCP tools**: Always start by calling \`get_forge_about\` to understand the current Forge workflow
 
 ## Usage
@@ -106,7 +106,7 @@ You must provide a story file (*.story.md) when running this command.
 3. **Analyzes the existing codebase**: Understands current implementation patterns and structure
 4. **Reads AI documentation**: Understands intended behavior from linked files:
    - Features (expected behavior with Gherkin scenarios)
-   - Specs (technical implementation details with Nomnoml diagrams)
+   - Specs (technical implementation details with diagram references)
    - Models (data structures)
    - Contexts (technology-specific guidance)
 5. **Implements the changes**: Writes actual code as described in the story
@@ -219,7 +219,7 @@ None. This command can be run at any time, with or without an active design sess
 - **Be thorough**: Don't skip files or make assumptions; actually read and analyze the code
 - **Maintain accuracy**: Documentation must reflect actual implementation, not aspirational design
 - **Preserve existing docs**: Update rather than replace when possible; don't lose valuable context
-- **Respect Forge patterns**: Use correct file types, formats (Gherkin, nomnoml), and frontmatter
+- **Respect Forge patterns**: Use correct file types, formats (Gherkin, react-flow JSON), and frontmatter
 - **Session awareness**: Actors and Contexts can be created freely; Features/Diagrams/Specs may require a session
 
 ## Output Format
@@ -332,8 +332,8 @@ The command will:
    - This provides just-in-time technical guidance for each technology involved
 
 ### Phase 5: Architectural Understanding
-1. **Read all nomnoml diagrams**
-   - Examine every nomnoml diagram in modified specs
+1. **Read all diagram files**
+   - Examine every diagram file referenced in modified specs
    - Understand:
      - System architecture
      - Component relationships
@@ -364,7 +364,7 @@ Before creating tickets, verify:
 - [ ] All feature/spec \`context_id\` references read
 - [ ] All \`spec_id\` linkages followed
 - [ ] All object types extracted and queried via \`get_forge_context\`
-- [ ] All nomnoml diagrams analyzed
+- [ ] All diagram files analyzed
 - [ ] Complete architectural understanding achieved
 - [ ] Context map synthesized
 

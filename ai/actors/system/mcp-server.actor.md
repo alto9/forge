@@ -43,7 +43,7 @@ Returns comprehensive overview of Forge workflow including:
 Returns schema for specified file type:
 - `session`: Session file format and tracking
 - `feature`: Feature definitions with Gherkin
-- `diagram`: Visual architecture with Nomnoml
+- `diagram`: Visual architecture with react-flow (JSON format)
 - `spec`: Technical specifications and contracts
 - `model`: Data model definitions
 - `actor`: Actor profiles and responsibilities

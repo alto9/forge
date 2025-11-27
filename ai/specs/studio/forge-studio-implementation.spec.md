@@ -285,7 +285,7 @@ category: ''
 Each category gets appropriate markdown template:
 
 - **Features**: Overview, Gherkin behavior block, Notes
-- **Specs**: Overview, Nomnoml architecture, Implementation Details, Notes
+- **Specs**: Overview, Architecture (with diagram references), Implementation Details, Notes
 - **Models**: Overview, Properties table, Relationships, Validation Rules, Notes
 - **Actors**: Overview, Responsibilities, Interactions, Notes
 - **Contexts**: Overview, Gherkin usage block, Guidance, Notes
@@ -541,6 +541,6 @@ Produces `forge-{version}.vsix` file that can be installed in VSCode.
 6. Global search
 7. Git integration (commit from Studio)
 8. Collaborative sessions (multiple users)
-9. Real-time preview of Nomnoml diagrams
+9. Real-time preview of react-flow diagrams
 10. Story/Task management in Studio
 

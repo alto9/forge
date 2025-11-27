@@ -4,59 +4,76 @@ import { describe, it, expect } from 'vitest';
 import { ProgressIndicator } from './ProgressIndicator';
 
 describe('ProgressIndicator', () => {
-    it('renders the component with creating folders message', () => {
+    it('renders the component with initializing message', () => {
         render(
             <ProgressIndicator
-                currentFolder="ai/actors"
+                currentItem="ai/actors"
+                currentItemType="folder"
                 createdCount={2}
                 totalCount={7}
             />
         );
 
-        expect(screen.getByText('Creating folders...')).toBeInTheDocument();
+        expect(screen.getByText('Initializing project...')).toBeInTheDocument();
     });
 
     it('displays the current folder being created', () => {
         render(
             <ProgressIndicator
-                currentFolder="ai/actors"
+                currentItem="ai/actors"
+                currentItemType="folder"
                 createdCount={2}
                 totalCount={7}
             />
         );
 
-        expect(screen.getByText('Currently creating:')).toBeInTheDocument();
         expect(screen.getByText('ai/actors')).toBeInTheDocument();
     });
 
-    it('displays the created count', () => {
+    it('displays creating folder message', () => {
         render(
             <ProgressIndicator
-                currentFolder="ai/actors"
+                currentItem="ai/actors"
+                currentItemType="folder"
                 createdCount={3}
                 totalCount={7}
             />
         );
 
-        expect(screen.getByText('Created 3 of 7 folders')).toBeInTheDocument();
+        expect(screen.getByText(/Creating folder:/)).toBeInTheDocument();
     });
 
-    it('does not display current folder when null', () => {
+    it('displays creating command file message', () => {
         render(
             <ProgressIndicator
-                currentFolder={null}
+                currentItem=".cursor/commands/forge-build.md"
+                currentItemType="file"
+                createdCount={3}
+                totalCount={7}
+            />
+        );
+
+        expect(screen.getByText(/Creating command file:/)).toBeInTheDocument();
+    });
+
+    it('does not display current item when null', () => {
+        render(
+            <ProgressIndicator
+                currentItem={null}
+                currentItemType={null}
                 createdCount={0}
                 totalCount={7}
             />
         );
 
-        expect(screen.queryByText('Currently creating:')).not.toBeInTheDocument();
+        expect(screen.queryByText(/Creating/)).not.toBeInTheDocument();
     });
 
     it('shows correct progress bar width', () => {
         const { container } = render(
             <ProgressIndicator
-                currentFolder="ai/specs"
+                currentItem="ai/specs"
+                currentItemType="folder"
                 createdCount={5}
                 totalCount={10}
             />
@@ -69,7 +86,8 @@ describe('ProgressIndicator', () => {
     it('shows 0% progress at start', () => {
         const { container } = render(
             <ProgressIndicator
-                currentFolder="ai"
+                currentItem="ai"
+                currentItemType="folder"
                 createdCount={0}
                 totalCount={7}
             />
@@ -82,7 +100,8 @@ describe('ProgressIndicator', () => {
     it('shows 100% progress when complete', () => {
         const { container } = render(
             <ProgressIndicator
-                currentFolder={null}
+                currentItem={null}
+                currentItemType={null}
                 createdCount={7}
                 totalCount={7}
             />
@@ -95,7 +114,8 @@ describe('ProgressIndicator', () => {
     it('renders spinner element', () => {
         const { container } = render(
             <ProgressIndicator
-                currentFolder="ai/models"
+                currentItem="ai/models"
+                currentItemType="folder"
                 createdCount={1}
                 totalCount={7}
             />
@@ -108,7 +128,8 @@ describe('ProgressIndicator', () => {
     it('renders progress bar elements', () => {
         const { container } = render(
             <ProgressIndicator
-                currentFolder="ai/features"
+                currentItem="ai/features"
+                currentItemType="folder"
                 createdCount={4}
                 totalCount={7}
             />
@@ -124,7 +145,8 @@ describe('ProgressIndicator', () => {
     it('displays correct message structure', () => {
         const { container } = render(
             <ProgressIndicator
-                currentFolder="ai/contexts"
+                currentItem="ai/contexts"
+                currentItemType="folder"
                 createdCount={2}
                 totalCount={5}
             />
@@ -136,29 +158,31 @@ describe('ProgressIndicator', () => {
         expect(container.querySelector('.progress-bar')).toBeInTheDocument();
     });
 
-    it('handles single folder scenario', () => {
+    it('handles single item scenario', () => {
         render(
             <ProgressIndicator
-                currentFolder="ai"
+                currentItem="ai"
+                currentItemType="folder"
                 createdCount={0}
                 totalCount={1}
             />
         );
 
-        expect(screen.getByText('Created 0 of 1 folders')).toBeInTheDocument();
+        expect(screen.getByText(/Completed 0 of 1 item/)).toBeInTheDocument();
     });
 
-    it('handles multiple folders in progress', () => {
+    it('handles multiple items in progress', () => {
         render(
             <ProgressIndicator
-                currentFolder="ai/sessions"
+                currentItem="ai/sessions"
+                currentItemType="folder"
                 createdCount={5}
                 totalCount={7}
             />
         );
 
         expect(screen.getByText('ai/sessions')).toBeInTheDocument();
-        expect(screen.getByText('Created 5 of 7 folders')).toBeInTheDocument();
+        expect(screen.getByText(/Completed 5 of 7 items/)).toBeInTheDocument();
     });
 
     it('calculates progress percentage correctly for various scenarios', () => {
@@ -172,7 +196,8 @@ describe('ProgressIndicator', () => {
         scenarios.forEach(({ created, total, expectedPercent }) => {
             const { container, unmount } = render(
                 <ProgressIndicator
-                    currentFolder="test"
+                    currentItem="test"
+                    currentItemType="folder"
                     createdCount={created}
                     totalCount={total}
                 />
@@ -187,4 +212,3 @@ describe('ProgressIndicator', () => {
         });
     });
 });
-

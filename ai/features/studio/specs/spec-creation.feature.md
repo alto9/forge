@@ -97,20 +97,17 @@ Feature: Spec Template
     Then it should have proper frontmatter with spec_id, feature_id, model_id, context_id
     And it should have template content with sections for:
       - Overview
-      - Architecture (with Nomnoml diagrams)
+      - Architecture (with diagram references)
       - Implementation Details
       - Notes
     And the template should include helpful placeholder text
     And I should be able to edit all sections
 
-  Scenario: Nomnoml diagram template
+  Scenario: Diagram references in specs
     Given I am creating a new spec
     When the spec template is applied
-    Then it should include a Nomnoml diagram template with:
-      - Basic structure
-      - Placeholder components
-      - Example relationships
-    And the Nomnoml should be in proper code blocks
-    And I should be able to edit the diagram
-    And I should see syntax highlighting for Nomnoml
+    Then it should reference diagram files for architecture visualization
+    And diagrams should be created separately as diagram files
+    And diagrams use react-flow JSON format
+    And I should be able to link to existing diagram files
 ```

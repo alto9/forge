@@ -392,7 +392,7 @@ You must have an active design session before making changes to AI documentation
 
 Run this command when you want to design or modify:
 - Features (with Gherkin scenarios)
-- Technical specifications (with Nomnoml diagrams)  
+- Technical specifications (with diagram references)  
 - Data models
 - Actor definitions
 - Context guidance

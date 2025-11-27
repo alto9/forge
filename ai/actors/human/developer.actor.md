@@ -19,7 +19,7 @@ The Developer is a software engineer who uses Forge to manage context engineerin
 
 ## Responsibilities
 - Define user-facing features using Gherkin scenarios
-- Create technical specifications with Nomnoml diagrams
+- Create technical specifications with diagram references
 - Design data models and system architecture
 - Write context guidance for technical areas
 - Generate command files from design sessions to create minimal implementation stories
@@ -29,7 +29,7 @@ The Developer is a software engineer who uses Forge to manage context engineerin
 - Software development and architecture
 - Requirements analysis and specification writing
 - Gherkin scenario writing
-- Nomnoml diagram creation
+- Diagram creation using react-flow visual editor
 - Context engineering and prompt design
 - AI-assisted development workflows
 

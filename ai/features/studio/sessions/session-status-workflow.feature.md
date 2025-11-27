@@ -32,7 +32,7 @@ Scenario: Design status capabilities
   When I work in Forge Studio
   Then I can create new features with Gherkin scenarios
   And I can create new specs with technical contracts
-  And I can create new diagrams with nomnoml visualizations
+  And I can create new diagrams with react-flow visual editor
   And I can create new models with data structures
   And I can edit existing features, specs, diagrams, and models
   And all modified files are tracked in the session's changed_files

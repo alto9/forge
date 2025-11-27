@@ -100,7 +100,7 @@ Ensure the ai/decisions folder exists, and create it if it doesn't. Use proper m
    - Create new feature files if needed or update existing ones
 
 2. **Specs** in ai/specs/ provide the technical specifications for implementing these features
-   - Specs should include technical details, architecture decisions, and nomnoml diagrams where appropriate
+   - Specs should include technical details, architecture decisions, and diagram references where appropriate (diagrams are created separately as diagram files)
    - Specs should reference relevant feature_ids in their frontmatter
    - Create new spec files if needed or update existing ones
 

@@ -64,15 +64,14 @@ Feature: Spec Content Editing
     And I should be able to edit the Notes section
     And I should be able to add new sections if needed
 
-  Scenario: Edit Nomnoml diagrams
+  Scenario: Edit diagram references
     Given I am editing a spec
-    When I want to modify Nomnoml diagrams
-    Then I should be able to edit existing diagrams
-    And I should be able to add new diagrams
-    And I should be able to delete diagrams
-    And I should see syntax highlighting for Nomnoml
-    And I should be able to validate Nomnoml syntax
-    And I should see a preview of the rendered diagram
+    When I want to modify diagram references
+    Then I should be able to link to existing diagram files
+    And I should be able to create new diagram files
+    And I should be able to remove diagram references
+    And diagrams are edited in separate diagram files using react-flow
+    And I should see links to referenced diagram files
 
   Scenario: Use markdown formatting
     Given I am editing spec content

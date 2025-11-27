@@ -199,7 +199,7 @@ The server provides schemas for eight Forge file types:
 
 1. **Session** (`*.session.md`) - Design session tracking
 2. **Feature** (`*.feature.md`) - Gherkin-based feature specifications
-3. **Spec** (`*.spec.md`) - Technical specifications with Nomnoml diagrams
+3. **Spec** (`*.spec.md`) - Technical specifications with diagram references
 4. **Model** (`*.model.md`) - Data model definitions
 5. **Actor** (`*.actor.md`) - Actor/persona definitions
 6. **Story** (`*.story.md`) - Implementation stories (< 30 min each)

@@ -24,7 +24,7 @@ Feature: View Spec Details
     And I should see the linked feature IDs
     And I should see the linked model IDs
     And I should see the linked context IDs
-    And I should see the Nomnoml diagrams
+    And I should see links to referenced diagram files
     And I should see the implementation details
     And I should see any additional notes or documentation
 
@@ -57,7 +57,7 @@ Feature: Spec Detail Actions
     When I want to edit the spec
     Then I should be able to click "Edit" button
     And I should be able to modify spec fields
-    And I should be able to edit Nomnoml diagrams
+    And I should be able to link to diagram files
     And I should be able to edit implementation details
     And I should be able to save changes
     And I should see a success message

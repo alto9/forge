@@ -15,8 +15,8 @@ import { REQUIRED_FOLDERS, REQUIRED_COMMANDS } from '../projectReadiness';
 
 describe('projectReadiness', () => {
     describe('REQUIRED_FOLDERS constant', () => {
-        it('should have exactly 6 required folders', () => {
-            expect(REQUIRED_FOLDERS).toHaveLength(6);
+        it('should have exactly 7 required folders', () => {
+            expect(REQUIRED_FOLDERS).toHaveLength(7);
         });
 
         it('should include ai root folder', () => {
@@ -33,6 +33,10 @@ describe('projectReadiness', () => {
 
         it('should include ai/features folder', () => {
             expect(REQUIRED_FOLDERS).toContain('ai/features');
+        });
+
+        it('should include ai/diagrams folder', () => {
+            expect(REQUIRED_FOLDERS).toContain('ai/diagrams');
         });
 
         it('should include ai/sessions folder', () => {
@@ -67,8 +71,8 @@ describe('projectReadiness', () => {
     });
 
     describe('REQUIRED_COMMANDS constant', () => {
-        it('should have exactly 2 required commands', () => {
-            expect(REQUIRED_COMMANDS).toHaveLength(2);
+        it('should have exactly 4 required commands', () => {
+            expect(REQUIRED_COMMANDS).toHaveLength(4);
         });
 
         it('should include forge-design.md command', () => {
@@ -77,6 +81,14 @@ describe('projectReadiness', () => {
 
         it('should include forge-build.md command', () => {
             expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-build.md');
+        });
+
+        it('should include forge-sync.md command', () => {
+            expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-sync.md');
+        });
+
+        it('should include forge-scribe.md command', () => {
+            expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-scribe.md');
         });
 
         it('should be a string array', () => {
@@ -100,24 +112,24 @@ describe('projectReadiness', () => {
     });
 
     describe('Readiness criteria logic', () => {
-        it('requires all 6 folders to be present', () => {
-            // A project missing any of the 6 folders should NOT be ready
+        it('requires all 7 folders to be present', () => {
+            // A project missing any of the 7 folders should NOT be ready
             const allFolders = [...REQUIRED_FOLDERS];
             const missingOneFolder = allFolders.slice(0, -1); // Remove last folder
             
-            expect(allFolders.length).toBe(6);
-            expect(missingOneFolder.length).toBe(5);
-            // Project would not be ready with only 5 folders
+            expect(allFolders.length).toBe(7);
+            expect(missingOneFolder.length).toBe(6);
+            // Project would not be ready with only 6 folders
         });
 
-        it('requires all 2 commands to be present', () => {
+        it('requires all 4 commands to be present', () => {
             // A project missing any command should NOT be ready
             const allCommands = [...REQUIRED_COMMANDS];
             const missingOneCommand = allCommands.slice(0, -1); // Remove last command
             
-            expect(allCommands.length).toBe(2);
-            expect(missingOneCommand.length).toBe(1);
-            // Project would not be ready with only 1 command
+            expect(allCommands.length).toBe(4);
+            expect(missingOneCommand.length).toBe(3);
+            // Project would not be ready with only 3 commands
         });
 
         it('requires command files to have valid content (hash validation)', () => {
@@ -131,17 +143,17 @@ describe('projectReadiness', () => {
     });
 
     describe('Consistency requirements', () => {
-        it('all components must check the same 6 folders', () => {
+        it('all components must check the same 7 folders', () => {
             // ProjectPicker, extension.ts, and WelcomePanel must all use REQUIRED_FOLDERS
-            const expectedFolderCount = 6;
+            const expectedFolderCount = 7;
             
             expect(REQUIRED_FOLDERS.length).toBe(expectedFolderCount);
-            // This ensures no component checks 7 folders (including ai/models)
+            // This ensures no component checks wrong number of folders
         });
 
-        it('all components must check the same 2 commands', () => {
+        it('all components must check the same 4 commands', () => {
             // ProjectPicker, extension.ts, and WelcomePanel must all use REQUIRED_COMMANDS
-            const expectedCommandCount = 2;
+            const expectedCommandCount = 4;
             
             expect(REQUIRED_COMMANDS.length).toBe(expectedCommandCount);
         });
@@ -210,9 +222,13 @@ describe('projectReadiness', () => {
             
             const designCommand = '.cursor/commands/forge-design.md';
             const buildCommand = '.cursor/commands/forge-build.md';
+            const syncCommand = '.cursor/commands/forge-sync.md';
+            const scribeCommand = '.cursor/commands/forge-scribe.md';
             
             expect(REQUIRED_COMMANDS).toContain(designCommand);
             expect(REQUIRED_COMMANDS).toContain(buildCommand);
+            expect(REQUIRED_COMMANDS).toContain(syncCommand);
+            expect(REQUIRED_COMMANDS).toContain(scribeCommand);
         });
     });
 
@@ -226,6 +242,7 @@ describe('projectReadiness', () => {
                 'ai/actors',
                 'ai/contexts',
                 'ai/features',
+                'ai/diagrams',
                 'ai/sessions',
                 'ai/specs'
             ];
@@ -254,7 +271,7 @@ describe('projectReadiness', () => {
             copy.push('ai/invalid');
             
             expect(REQUIRED_FOLDERS.length).toBe(originalLength);
-            expect(REQUIRED_FOLDERS.length).toBe(6);
+            expect(REQUIRED_FOLDERS.length).toBe(7);
         });
 
         it('REQUIRED_COMMANDS should not be modifiable', () => {
@@ -265,7 +282,7 @@ describe('projectReadiness', () => {
             copy.push('.cursor/commands/invalid.md');
             
             expect(REQUIRED_COMMANDS.length).toBe(originalLength);
-            expect(REQUIRED_COMMANDS.length).toBe(2);
+            expect(REQUIRED_COMMANDS.length).toBe(4);
         });
     });
 
@@ -279,18 +296,18 @@ describe('projectReadiness', () => {
         });
 
         it('missing any subfolder should fail readiness', () => {
-            // All 6 folders must exist
+            // All 7 folders must exist
             const subfolders = REQUIRED_FOLDERS.filter(f => f !== 'ai');
             
-            expect(subfolders.length).toBe(5);
+            expect(subfolders.length).toBe(6);
             subfolders.forEach(subfolder => {
                 expect(subfolder).toMatch(/^ai\//);
             });
         });
 
         it('missing any command file should fail readiness', () => {
-            // Both command files must exist
-            expect(REQUIRED_COMMANDS.length).toBe(2);
+            // All 4 command files must exist
+            expect(REQUIRED_COMMANDS.length).toBe(4);
             
             REQUIRED_COMMANDS.forEach(command => {
                 expect(command).toBeTruthy();
@@ -309,13 +326,13 @@ describe('projectReadiness', () => {
 
     describe('Documentation alignment', () => {
         it('matches documented required folders count', () => {
-            // Spec says 6 folders (excluding ai/models)
-            expect(REQUIRED_FOLDERS.length).toBe(6);
+            // 7 folders (including ai/diagrams, excluding ai/models)
+            expect(REQUIRED_FOLDERS.length).toBe(7);
         });
 
         it('matches documented required commands count', () => {
-            // Spec says 2 cursor commands
-            expect(REQUIRED_COMMANDS.length).toBe(2);
+            // 4 cursor commands
+            expect(REQUIRED_COMMANDS.length).toBe(4);
         });
 
         it('aligns with forge-ready-status-accuracy session intent', () => {
@@ -330,14 +347,15 @@ describe('projectReadiness', () => {
             expect(REQUIRED_FOLDERS).toContain('ai/actors');
             expect(REQUIRED_FOLDERS).toContain('ai/contexts');
             expect(REQUIRED_FOLDERS).toContain('ai/features');
+            expect(REQUIRED_FOLDERS).toContain('ai/diagrams');
             expect(REQUIRED_FOLDERS).toContain('ai/sessions');
             expect(REQUIRED_FOLDERS).toContain('ai/specs');
             
             // Verify commands ARE checked
             expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-design.md');
             expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-build.md');
+            expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-sync.md');
+            expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-scribe.md');
         });
     });
 });
-
-

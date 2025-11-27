@@ -109,8 +109,8 @@ describe('Webview Build Configuration', () => {
             const stats = fs.statSync(studioBundle);
             const sizeKB = stats.size / 1024;
 
-            // Should be less than 300KB
-            expect(sizeKB).toBeLessThan(300);
+            // Should be less than 1000KB (react-flow adds ~600KB)
+            expect(sizeKB).toBeLessThan(1000);
             expect(sizeKB).toBeGreaterThan(0);
         });
 

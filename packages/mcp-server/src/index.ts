@@ -274,7 +274,7 @@ your-project/
     │           ├── *.story.md
     │           └── *.task.md
     ├── features/              # Feature definitions with Gherkin (nestable)
-    ├── diagrams/              # Visual architecture with Nomnoml (nestable)
+    ├── diagrams/              # Visual architecture with react-flow JSON (nestable)
     ├── specs/                 # Technical specifications (nestable)
     ├── actors/                # Actor/persona definitions (nestable)
     ├── contexts/              # Context guidance (nestable)
@@ -317,7 +317,7 @@ These documents provide context and guidance but are NOT tracked in sessions:
 - **Visual Architecture**: Show technical implementations or workflows as they should exist NOW
 - **No Transitions**: Never show "old way" vs "new way" - just show the current architecture
 - **Single Purpose**: One diagram per file representing one aspect of the system
-- **Nomnoml Format**: Use nomnoml syntax for clean, maintainable diagrams
+- **React-Flow JSON Format**: Use JSON format with react-flow for visual diagram editing
 - **Git Controls History**: Change history is in Git, not in the diagram content
 
 **Actors (*.actor.md)**
@@ -419,12 +419,12 @@ During active session, user edits design documents:
   - Common use-case: contracts between systems
   - **Analyze existing folder structure** before creating new specs
   
-- **Diagrams** (*.diagram.md): Create visual architecture representations (nomnoml)
+- **Diagrams** (*.diagram.md): Create visual architecture representations (react-flow JSON)
   - **INFORMATIVE**: Visualize system architecture and flows
   - NOT tracked in sessions, editable anytime
   - Show technical implementations OR workflows as they should exist NOW
   - One diagram per file for clarity
-  - Use nomnoml syntax for clean, maintainable diagrams
+  - Use react-flow JSON format stored in markdown code blocks
   - **Analyze existing folder structure** before creating new diagrams
   
 - **Actors** (*.actor.md): Define system actors and personas
@@ -1312,7 +1312,7 @@ Context files prevent information overload by providing just-in-time guidance:
 ## File Format
 - **Filename**: <diagram-id>.diagram.md
 - **Location**: ai/diagrams/ (nestable)
-- **Format**: Frontmatter + Single Nomnoml Diagram
+- **Format**: Frontmatter + JSON Diagram Data
 
 ## Frontmatter Fields
 ---
@@ -1326,18 +1326,25 @@ actor_id: []  # Optional: actors shown in diagram
 ---
 
 ## Content Structure
-Diagram files contain a SINGLE nomnoml diagram that visualizes system architecture, flows, or relationships.
+Diagram files contain JSON diagram data stored in a markdown code block that visualizes system architecture, flows, or relationships.
 
-### Single Nomnoml Diagram
-Each diagram file should contain exactly ONE nomnoml diagram block:
+### JSON Diagram Format
+Each diagram file should contain exactly ONE JSON code block with react-flow node and edge data:
 
-\`\`\`nomnoml
-#direction: down
-#padding: 10
-
-[User] -> [API Gateway]
-[API Gateway] -> [Lambda Function]
-[Lambda Function] -> [DynamoDB]
+\`\`\`json
+{
+  "nodes": [
+    { "id": "user", "type": "default", "position": { "x": 0, "y": 0 }, "data": { "label": "User" } },
+    { "id": "api", "type": "aws-apigateway", "position": { "x": 200, "y": 0 }, "data": { "label": "API Gateway" } },
+    { "id": "lambda", "type": "aws-lambda", "position": { "x": 400, "y": 0 }, "data": { "label": "Lambda Function" } },
+    { "id": "dynamodb", "type": "aws-dynamodb", "position": { "x": 600, "y": 0 }, "data": { "label": "DynamoDB" } }
+  ],
+  "edges": [
+    { "id": "e1", "source": "user", "target": "api" },
+    { "id": "e2", "source": "api", "target": "lambda" },
+    { "id": "e3", "source": "lambda", "target": "dynamodb" }
+  ]
+}
 \`\`\`
 
 The description field in the frontmatter should provide any necessary context or legend information for the diagram.

@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { InitializationDialog } from './InitializationDialog';
-import { FolderStatus } from '../types';
+import { FolderStatus, CommandStatus } from '../types';
 
 describe('InitializationDialog', () => {
     const mockFolders: FolderStatus[] = [
@@ -10,6 +10,11 @@ describe('InitializationDialog', () => {
         { path: 'ai/features', exists: false, description: 'Feature definitions' },
         { path: 'ai/models', exists: true, description: 'Data models' },
         { path: 'ai/specs', exists: false, description: 'Technical specs' }
+    ];
+
+    const mockCommands: CommandStatus[] = [
+        { path: '.cursor/commands/forge-design.md', exists: true, valid: true, description: 'Design command' },
+        { path: '.cursor/commands/forge-build.md', exists: false, valid: false, description: 'Build command' }
     ];
 
     const mockOnConfirm = vi.fn();
@@ -23,6 +28,7 @@ describe('InitializationDialog', () => {
         render(
             <InitializationDialog
                 folders={mockFolders}
+                commands={mockCommands}
                 onConfirm={mockOnConfirm}
                 onCancel={mockOnCancel}
             />
@@ -35,6 +41,7 @@ describe('InitializationDialog', () => {
         render(
             <InitializationDialog
                 folders={mockFolders}
+                commands={mockCommands}
                 onConfirm={mockOnConfirm}
                 onCancel={mockOnCancel}
             />
@@ -53,6 +60,7 @@ describe('InitializationDialog', () => {
         render(
             <InitializationDialog
                 folders={mockFolders}
+                commands={mockCommands}
                 onConfirm={mockOnConfirm}
                 onCancel={mockOnCancel}
             />
@@ -67,6 +75,7 @@ describe('InitializationDialog', () => {
         render(
             <InitializationDialog
                 folders={mockFolders}
+                commands={mockCommands}
                 onConfirm={mockOnConfirm}
                 onCancel={mockOnCancel}
             />
@@ -82,6 +91,7 @@ describe('InitializationDialog', () => {
         render(
             <InitializationDialog
                 folders={mockFolders}
+                commands={mockCommands}
                 onConfirm={mockOnConfirm}
                 onCancel={mockOnCancel}
             />
@@ -97,6 +107,7 @@ describe('InitializationDialog', () => {
         render(
             <InitializationDialog
                 folders={mockFolders}
+                commands={mockCommands}
                 onConfirm={mockOnConfirm}
                 onCancel={mockOnCancel}
             />
@@ -108,15 +119,20 @@ describe('InitializationDialog', () => {
         expect(mockOnCancel).toHaveBeenCalledTimes(1);
     });
 
-    it('disables Confirm button when no folders are missing', () => {
+    it('disables Confirm button when no folders or commands are missing/invalid', () => {
         const allExistingFolders: FolderStatus[] = [
             { path: 'ai/actors', exists: true, description: 'Actor definitions' },
             { path: 'ai/features', exists: true, description: 'Feature definitions' }
         ];
 
+        const allValidCommands: CommandStatus[] = [
+            { path: '.cursor/commands/forge-design.md', exists: true, valid: true, description: 'Design command' }
+        ];
+
         render(
             <InitializationDialog
                 folders={allExistingFolders}
+                commands={allValidCommands}
                 onConfirm={mockOnConfirm}
                 onCancel={mockOnCancel}
             />
@@ -126,26 +142,32 @@ describe('InitializationDialog', () => {
         expect(confirmButton).toBeDisabled();
     });
 
-    it('shows info message when no folders are missing', () => {
+    it('shows info message when no folders or commands are missing/invalid', () => {
         const allExistingFolders: FolderStatus[] = [
             { path: 'ai/actors', exists: true, description: 'Actor definitions' }
+        ];
+
+        const allValidCommands: CommandStatus[] = [
+            { path: '.cursor/commands/forge-design.md', exists: true, valid: true, description: 'Design command' }
         ];
 
         render(
             <InitializationDialog
                 folders={allExistingFolders}
+                commands={allValidCommands}
                 onConfirm={mockOnConfirm}
                 onCancel={mockOnCancel}
             />
         );
 
-        expect(screen.getByText('All required folders already exist.')).toBeInTheDocument();
+        expect(screen.getByText('All required folders and command files are already valid.')).toBeInTheDocument();
     });
 
     it('renders backdrop with correct className', () => {
         render(
             <InitializationDialog
                 folders={mockFolders}
+                commands={mockCommands}
                 onConfirm={mockOnConfirm}
                 onCancel={mockOnCancel}
             />
@@ -159,6 +181,7 @@ describe('InitializationDialog', () => {
         render(
             <InitializationDialog
                 folders={mockFolders}
+                commands={mockCommands}
                 onConfirm={mockOnConfirm}
                 onCancel={mockOnCancel}
             />
@@ -168,18 +191,36 @@ describe('InitializationDialog', () => {
         expect(dialogContainer).toBeInTheDocument();
     });
 
-    it('displays folder icon for each missing folder', () => {
+    it('displays folder icon for each missing folder and invalid command', () => {
         render(
             <InitializationDialog
                 folders={mockFolders}
+                commands={mockCommands}
                 onConfirm={mockOnConfirm}
                 onCancel={mockOnCancel}
             />
         );
 
         const folderIcons = document.querySelectorAll('.dialog-folder-icon');
-        // Should have 3 icons for 3 missing folders
-        expect(folderIcons.length).toBe(3);
+        // Should have 4 icons: 3 missing folders + 1 invalid command
+        expect(folderIcons.length).toBe(4);
+    });
+
+    it('shows invalid commands with update message', () => {
+        const commandsWithInvalid: CommandStatus[] = [
+            { path: '.cursor/commands/forge-design.md', exists: true, valid: false, description: 'Design command' }
+        ];
+
+        render(
+            <InitializationDialog
+                folders={[]}
+                commands={commandsWithInvalid}
+                onConfirm={mockOnConfirm}
+                onCancel={mockOnCancel}
+            />
+        );
+
+        expect(screen.getByText('.cursor/commands/forge-design.md')).toBeInTheDocument();
+        expect(screen.getByText(/will be updated/)).toBeInTheDocument();
     });
 });
-

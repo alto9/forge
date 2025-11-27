@@ -25,7 +25,7 @@ The AI Agent is an AI-powered assistant (typically Claude or similar) that opera
 - **Distillation**: Convert design sessions into minimal, actionable stories and tasks
 - **Implementation**: Execute stories by writing code based on linked documentation
 - **Context Awareness**: Use MCP tools to understand Forge workflow and schemas
-- **Quality**: Ensure proper formatting (Gherkin, Nomnoml, frontmatter)
+- **Quality**: Ensure proper formatting (Gherkin, JSON diagrams, frontmatter)
 
 ## Workflow Integration
 

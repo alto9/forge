@@ -1,11 +1,14 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { NomnomlRenderer } from './components/NomnomlRenderer';
 import { MarkdownEditor } from './components/MarkdownEditor';
 import { Sidebar } from './components/Sidebar';
 import { FileCard } from './components/FileCard';
 import { ChangedFileEntry } from './components/ChangedFileEntry';
 import { SessionRequiredView } from './components/SessionRequiredView';
+import { ReactFlowDiagramEditor } from './components/ReactFlowDiagramEditor';
+import { ShapeLibraryPanel, ShapeItem } from './components/ShapeLibraryPanel';
+import { parseDiagramContent, serializeDiagramData } from './utils/diagramUtils';
+import yaml from 'yaml';
 import { useSessionIndicators } from './hooks/useSessionIndicators';
 import { useSessionPermissions } from './hooks/useSessionPermissions';
 
@@ -1687,47 +1690,6 @@ function ScenariosSection({
   );
 }
 
-/**
- * Extract nomnoml code blocks from markdown content
- * Returns an array of sections alternating between text and nomnoml blocks
- */
-function extractNomnomlBlocks(content: string): Array<{ type: 'text' | 'nomnoml'; content: string }> {
-  const sections: Array<{ type: 'text' | 'nomnoml'; content: string }> = [];
-  const nomnomlRegex = /```nomnoml\n([\s\S]*?)```/g;
-  
-  let lastIndex = 0;
-  let match;
-  
-  while ((match = nomnomlRegex.exec(content)) !== null) {
-    // Add text before this nomnoml block
-    if (match.index > lastIndex) {
-      const textContent = content.substring(lastIndex, match.index).trim();
-      if (textContent) {
-        sections.push({ type: 'text', content: textContent });
-      }
-    }
-    
-    // Add the nomnoml block
-    sections.push({ type: 'nomnoml', content: match[1] });
-    lastIndex = nomnomlRegex.lastIndex;
-  }
-  
-  // Add remaining text after last nomnoml block
-  if (lastIndex < content.length) {
-    const textContent = content.substring(lastIndex).trim();
-    if (textContent) {
-      sections.push({ type: 'text', content: textContent });
-    }
-  }
-  
-  // If no nomnoml blocks found, return the entire content as text
-  if (sections.length === 0) {
-    sections.push({ type: 'text', content: content });
-  }
-  
-  return sections;
-}
-
 function ItemProfile({ category, fileContent, activeSession, onBack }: {
   category: string;
   fileContent: FileContent;
@@ -1739,7 +1701,6 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
   const [parsedFeature, setParsedFeature] = React.useState<ParsedFeatureContent | null>(null);
   const [parsedContext, setParsedContext] = React.useState<ParsedContextContent | null>(null);
   const [isDirty, setIsDirty] = React.useState(false);
-  const [diagramViewMode, setDiagramViewMode] = React.useState<'source' | 'rendered'>('source');
   const [propertiesCollapsed, setPropertiesCollapsed] = React.useState(false);
   const isFoundational = category === 'actors' || category === 'contexts' || category === 'specs' || category === 'diagrams';
   const { isEditable, getLockMessage } = useSessionPermissions();
@@ -1779,7 +1740,6 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
     setFrontmatter(fileContent.frontmatter || {});
     setContent(fileContent.content || '');
     setIsDirty(false);
-    setDiagramViewMode('source'); // Reset to source view when switching files
 
     // Parse feature content if this is a feature
     if (category === 'features') {
@@ -1962,71 +1922,30 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
         </>
       ) : category === 'diagrams' ? (
         <>
-          {/* Diagram Rendering Section */}
-          {extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').length > 0 && (
-            <div className="content-section">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                <h3 className="section-title" style={{ margin: 0 }}>Diagram</h3>
-                {!isReadOnly && (
-                  <div style={{ 
-                    display: 'inline-flex', 
-                    background: 'var(--vscode-button-secondaryBackground)',
-                    border: '1px solid var(--vscode-button-border)',
-                    borderRadius: 4,
-                    overflow: 'hidden'
-                  }}>
-                    <button
-                      onClick={() => setDiagramViewMode('source')}
-                      style={{
-                        padding: '6px 12px',
-                        border: 'none',
-                        background: diagramViewMode === 'source' ? 'var(--vscode-button-background)' : 'transparent',
-                        color: diagramViewMode === 'source' ? 'var(--vscode-button-foreground)' : 'var(--vscode-button-secondaryForeground)',
-                        cursor: 'pointer',
-                        fontSize: 12,
-                        fontWeight: diagramViewMode === 'source' ? 600 : 400,
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      Source
-                    </button>
-                    <button
-                      onClick={() => setDiagramViewMode('rendered')}
-                      style={{
-                        padding: '6px 12px',
-                        border: 'none',
-                        background: diagramViewMode === 'rendered' ? 'var(--vscode-button-background)' : 'transparent',
-                        color: diagramViewMode === 'rendered' ? 'var(--vscode-button-foreground)' : 'var(--vscode-button-secondaryForeground)',
-                        cursor: 'pointer',
-                        fontSize: 12,
-                        fontWeight: diagramViewMode === 'rendered' ? 600 : 400,
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      Render
-                    </button>
-                  </div>
-                )}
-              </div>
-              {isReadOnly || diagramViewMode === 'rendered' ? (
-                extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').map((section, idx) => (
-                  <div key={idx} style={{ marginBottom: 24 }}>
-                    <NomnomlRenderer source={section.content} />
-                  </div>
-                ))
-              ) : (
-                <textarea
-                  className="form-textarea"
-                  value={extractNomnomlBlocks(content).filter(s => s.type === 'nomnoml').map(s => '```nomnoml\n' + s.content + '\n```').join('\n\n')}
-                  onChange={(e) => {
-                    const textBlocks = extractNomnomlBlocks(content).filter(s => s.type === 'text');
-                    updateContent(e.target.value + '\n\n' + textBlocks.map(s => s.content).join('\n\n'));
+          {/* Diagram Editor Section */}
+          <div className="content-section">
+            <h3 className="section-title">Diagram</h3>
+            <div style={{ display: 'flex', height: '600px' }}>
+              {!isReadOnly && (
+                <ShapeLibraryPanel
+                  onDragStart={(event: React.DragEvent, shapeType: string, shapeData: ShapeItem) => {
+                    // Drag data is set in the ShapeLibraryPanel component
                   }}
-                  style={{ minHeight: 300, fontFamily: 'monospace' }}
                 />
               )}
+              <div style={{ flex: 1 }}>
+                <ReactFlowDiagramEditor
+                  diagramData={parseDiagramContent(content)}
+                  onChange={(data) => {
+                    const frontmatterYaml = `---\n${yaml.stringify(frontmatter)}---`;
+                    const newContent = serializeDiagramData(data, frontmatterYaml);
+                    updateContent(newContent);
+                  }}
+                  readOnly={isReadOnly}
+                />
+              </div>
             </div>
-          )}
+          </div>
         </>
       ) : category === 'specs' ? (
         <div className="content-section">

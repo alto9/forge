@@ -36,7 +36,7 @@ See [cursor-commands-flow](../diagrams/extension/cursor-commands-flow.diagram.md
 - Only modifies files in the `ai/` folder (features, specs, models, actors, contexts)
 - Reads AI documentation for context
 - Tracks all changes in the active session's `changed_files` array
-- Ensures proper formatting (Gherkin in features, Nomnoml in specs)
+- Ensures proper formatting (Gherkin in features, JSON diagrams in diagram files)
 
 **Template Content**:
 
@@ -63,7 +63,7 @@ You must have an active design session before making changes to AI documentation
 - **Only modify AI documentation files**: Work exclusively within the `ai/` folder
 - **Do NOT modify implementation code**: This command is for updating features, specs, models, actors, and contexts only
 - **Track all changes**: Ensure changed files are tracked in the active session's `changed_files` array
-- **Use proper formats**: Features use Gherkin in code blocks, Specs use Nomnoml diagrams
+- **Use proper formats**: Features use Gherkin in code blocks, Diagrams use JSON format (react-flow)
 - **Call MCP tools**: Always start by calling `get_forge_about` to understand the current Forge workflow
 
 ## Usage
@@ -111,7 +111,7 @@ You must provide a story file (*.story.md) when running this command.
 3. **Analyzes the existing codebase**: Understands current implementation patterns and structure
 4. **Reads AI documentation**: Understands intended behavior from linked files:
    - Features (expected behavior with Gherkin scenarios)
-   - Specs (technical implementation details with Nomnoml diagrams)
+   - Specs (technical implementation details with diagram references)
    - Models (data structures)
    - Contexts (technology-specific guidance)
 5. **Implements the changes**: Writes actual code as described in the story
@@ -256,7 +256,7 @@ You must have an active design session before making changes to AI documentation
 - **Only modify AI documentation files**: Work exclusively within the \`ai/\` folder
 - **Do NOT modify implementation code**: This command is for updating features, specs, models, actors, and contexts only
 - **Track all changes**: Ensure changed files are tracked in the active session's \`changed_files\` array
-- **Use proper formats**: Features use Gherkin in code blocks, Specs use Nomnoml diagrams
+- **Use proper formats**: Features use Gherkin in code blocks, Diagrams use JSON format (react-flow)
 - **Call MCP tools**: Always start by calling \`get_forge_about\` to understand the current Forge workflow
 
 ## Usage
@@ -288,7 +288,7 @@ You must provide a story file (*.story.md) when running this command.
 3. **Analyzes the existing codebase**: Understands current implementation patterns and structure
 4. **Reads AI documentation**: Understands intended behavior from linked files:
    - Features (expected behavior with Gherkin scenarios)
-   - Specs (technical implementation details with Nomnoml diagrams)
+   - Specs (technical implementation details with diagram references)
    - Models (data structures)
    - Contexts (technology-specific guidance)
 5. **Implements the changes**: Writes actual code as described in the story
