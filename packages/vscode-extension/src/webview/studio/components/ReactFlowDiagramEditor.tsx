@@ -49,10 +49,12 @@ const ReactFlowDiagramEditorInner: React.FC<ReactFlowDiagramEditorProps> = ({
 }) => {
   const [nodes, setNodes, onNodesChange] = useNodesState(diagramData.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(diagramData.edges);
-  const { screenToFlowPosition } = useReactFlow();
+  const { project } = useReactFlow();
   
   // Track if this is the initial render to avoid triggering onChange on mount
   const isInitialMount = useRef(true);
+  // Track if we're currently dragging to avoid triggering onChange during drag
+  const isDragging = useRef(false);
 
   // Handle new edge connections
   const onConnect = useCallback(
@@ -78,8 +80,8 @@ const ReactFlowDiagramEditorInner: React.FC<ReactFlowDiagramEditorProps> = ({
       try {
         const { shapeType, shapeData } = JSON.parse(dataStr);
         
-        // Convert screen coordinates to flow coordinates
-        const position = screenToFlowPosition({
+        // Convert client coordinates to flow coordinates
+        const position = project({
           x: event.clientX,
           y: event.clientY,
         });
@@ -97,7 +99,7 @@ const ReactFlowDiagramEditorInner: React.FC<ReactFlowDiagramEditorProps> = ({
         console.error('Failed to parse drop data:', error);
       }
     },
-    [readOnly, screenToFlowPosition, setNodes]
+    [readOnly, project, setNodes]
   );
 
   // Handle drag over to allow drop
@@ -111,12 +113,25 @@ const ReactFlowDiagramEditorInner: React.FC<ReactFlowDiagramEditorProps> = ({
     [readOnly]
   );
 
-  // Update parent when nodes/edges change (skip initial mount)
+  // Update parent when nodes/edges change (skip initial mount and during dragging)
   useEffect(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
     }
+    if (!isDragging.current) {
+      onChange({ nodes, edges });
+    }
+  }, [nodes, edges, onChange]);
+
+  // Handle drag events
+  const onNodeDragStart = useCallback(() => {
+    isDragging.current = true;
+  }, []);
+
+  const onNodeDragStop = useCallback(() => {
+    isDragging.current = false;
+    // Trigger onChange after drag stops
     onChange({ nodes, edges });
   }, [nodes, edges, onChange]);
 
@@ -134,6 +149,8 @@ const ReactFlowDiagramEditorInner: React.FC<ReactFlowDiagramEditorProps> = ({
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeDragStart={onNodeDragStart}
+        onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypes}
         nodesDraggable={!readOnly}
         nodesConnectable={!readOnly}

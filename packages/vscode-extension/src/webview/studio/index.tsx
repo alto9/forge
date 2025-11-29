@@ -1702,6 +1702,7 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
   const [parsedContext, setParsedContext] = React.useState<ParsedContextContent | null>(null);
   const [isDirty, setIsDirty] = React.useState(false);
   const [propertiesCollapsed, setPropertiesCollapsed] = React.useState(false);
+  const [isCancelling, setIsCancelling] = React.useState(false);
   const isFoundational = category === 'actors' || category === 'contexts' || category === 'specs' || category === 'diagrams';
   const { isEditable, getLockMessage } = useSessionPermissions();
   const isReadOnly = !isEditable(category, activeSession);
@@ -1774,6 +1775,7 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
   };
 
   const handleCancel = () => {
+    setIsCancelling(true);
     setFrontmatter(fileContent.frontmatter || {});
     setContent(fileContent.content || '');
     if (category === 'features') {
@@ -1787,6 +1789,8 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
       setParsedContext(null);
     }
     setIsDirty(false);
+    // Reset the cancelling flag after a short delay to allow state updates to complete
+    setTimeout(() => setIsCancelling(false), 0);
   };
 
   const updateFrontmatter = (key: string, value: any) => {
@@ -1937,6 +1941,8 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
                 <ReactFlowDiagramEditor
                   diagramData={parseDiagramContent(content)}
                   onChange={(data) => {
+                    // Don't trigger content updates during cancel operations
+                    if (isCancelling) return;
                     const frontmatterYaml = `---\n${yaml.stringify(frontmatter)}---`;
                     const newContent = serializeDiagramData(data, frontmatterYaml);
                     updateContent(newContent);

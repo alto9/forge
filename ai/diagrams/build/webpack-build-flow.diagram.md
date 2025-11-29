@@ -4,22 +4,30 @@ name: Webpack Build Flow
 description: Shows how TypeScript and React source files are bundled for the extension
 diagram_type: flow
 feature_id: []
-spec_id: [webpack]
+spec_id:
+  - webpack
 actor_id: []
 ---
 
-# Webpack Build Flow
+# Diagram
 
-```nomnoml
-#direction: down
-#padding: 10
-
-[TypeScript Source] -> [Webpack Loader]
-[Webpack Loader] -> [TypeScript Compiler]
-[TypeScript Compiler] -> [JavaScript Bundle]
-[JavaScript Bundle] -> [Extension Entry Point]
-
-[Webview Source] -> [esbuild]
-[esbuild] -> [React Bundle]
-[React Bundle] -> [Webview Assets]
+```json
+{
+  "nodes": [
+    {
+      "id": "lambda-1764371150782",
+      "type": "aws-lambda",
+      "position": {
+        "x": 1068,
+        "y": 456
+      },
+      "data": {
+        "label": "Lambda"
+      },
+      "width": 1160,
+      "height": 48
+    }
+  ],
+  "edges": []
+}
 ```
