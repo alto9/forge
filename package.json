@@ -20,14 +20,22 @@
     "watch": "npm run watch --workspaces --if-present",
     "lint": "npm run lint --workspaces",
     "clean": "npm run clean --workspaces --if-present && rm -rf node_modules packages/*/node_modules",
-    "vscode:package": "cd packages/vscode-extension && npm run package && npx --yes @vscode/vsce package --no-dependencies -o forge-0.1.0.vsix"
+    "vscode:package": "cd packages/vscode-extension && npm run package && npx --yes @vscode/vsce package --no-dependencies -o forge-0.1.0.vsix",
+    "release:dry-run": "semantic-release --dry-run",
+    "release": "semantic-release"
   },
   "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/exec": "^7.1.0",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^12.0.2",
+    "@semantic-release/npm": "^13.1.2",
     "@types/node": "^22.14.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react": "^5.1.0",
     "eslint": "^8.0.0",
+    "semantic-release": "^25.0.2",
     "typescript": "^5.0.0"
   },
   "engines": {

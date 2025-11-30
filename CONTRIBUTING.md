@@ -222,13 +222,124 @@ When adding or modifying prompt generation:
 4. **Avoid Bloat**: Include only necessary context to keep prompts efficient
 5. **Test Thoroughly**: Verify prompts work well with AI agents
 
+## Commit Message Conventions
+
+Forge uses [Conventional Commits](https://www.conventionalcommits.org/) for automated versioning and release management. When you merge to `main`, semantic-release will automatically:
+
+- Determine the next version based on your commit messages
+- Update all package.json files with the new version
+- Generate/update CHANGELOG.md
+- Create a git tag
+- Publish to npm (for @forge/mcp-server)
+- Publish to VSCode Marketplace (for the extension)
+
+### Commit Message Format
+
+```
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+```
+
+### Types
+
+- **feat**: A new feature (increments minor version: 0.1.0 → 0.2.0)
+- **fix**: A bug fix (increments patch version: 0.1.0 → 0.1.1)
+- **perf**: A performance improvement (increments patch version)
+- **refactor**: Code refactoring (no version bump)
+- **docs**: Documentation changes (no version bump)
+- **style**: Code style changes (no version bump)
+- **test**: Adding or updating tests (no version bump)
+- **chore**: Maintenance tasks (no version bump)
+- **ci**: CI/CD changes (no version bump)
+- **build**: Build system changes (no version bump)
+
+### Breaking Changes
+
+To indicate a breaking change (increments major version: 0.1.0 → 1.0.0), add `!` after the type/scope or include `BREAKING CHANGE:` in the footer:
+
+```
+feat!: remove deprecated API
+```
+
+or
+
+```
+feat(api): add new endpoint
+
+BREAKING CHANGE: The old endpoint /api/v1/users is no longer available
+```
+
+### Examples
+
+```bash
+# New feature (minor version bump)
+git commit -m "feat(studio): add diagram editor"
+
+# Bug fix (patch version bump)
+git commit -m "fix(session): handle missing session files"
+
+# Breaking change (major version bump)
+git commit -m "feat!: redesign session workflow
+
+BREAKING CHANGE: Session file format has changed. Existing sessions must be migrated."
+
+# Documentation (no version bump)
+git commit -m "docs: update README with installation steps"
+
+# Multiple changes in one commit
+git commit -m "feat(studio): add new editor
+
+- Add WYSIWYG markdown editor
+- Add React Flow diagram editor
+- Update navigation menu"
+```
+
+### Scope (Optional)
+
+The scope indicates which part of the codebase is affected:
+
+- `studio`: Forge Studio UI
+- `mcp`: MCP server
+- `extension`: VSCode extension
+- `session`: Session management
+- `build`: Build system
+- `ci`: CI/CD
+
+### What Gets Published
+
+- **Merges to `main`**: Automatically triggers release workflow
+- **Pull Requests**: No releases, but CI runs tests
+- **Other branches**: No releases
+
+### Version Bump Rules
+
+- **Major** (1.0.0 → 2.0.0): Breaking changes
+- **Minor** (0.1.0 → 0.2.0): New features
+- **Patch** (0.1.0 → 0.1.1): Bug fixes
+
+### Testing Releases Locally
+
+You can test what semantic-release would do without actually publishing:
+
+```bash
+npm run release:dry-run
+```
+
+This will show you:
+- What version would be released
+- What commits would be included
+- What would be published
+
 ## Pull Request Process
 
-1. Update the CHANGELOG.md with your changes
-2. Update documentation if needed
-3. Ensure your code compiles without errors
-4. Write a clear PR description explaining your changes
-5. Link any related issues
+1. Use conventional commit messages (see above)
+2. Ensure your code compiles without errors
+3. Write a clear PR description explaining your changes
+4. Link any related issues
+5. The CHANGELOG.md will be automatically updated on merge to main
 
 ## Reporting Bugs
 
