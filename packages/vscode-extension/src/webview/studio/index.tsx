@@ -5,8 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { FileCard } from './components/FileCard';
 import { ChangedFileEntry } from './components/ChangedFileEntry';
 import { SessionRequiredView } from './components/SessionRequiredView';
-import { ReactFlowDiagramEditor } from './components/ReactFlowDiagramEditor';
-import { ShapeLibraryPanel, ShapeItem } from './components/ShapeLibraryPanel';
+import { DiagramEditor } from './components/diagram/DiagramEditor';
 import { parseDiagramContent, serializeDiagramData } from './utils/diagramUtils';
 import yaml from 'yaml';
 import { useSessionIndicators } from './hooks/useSessionIndicators';
@@ -60,7 +59,7 @@ interface FileContent {
 function App() {
   const [state, setState] = React.useState<any>({ projectPath: '' });
   const [counts, setCounts] = React.useState<{ sessions: number; features: number; diagrams: number; specs: number; actors: number; contexts: number; stories: number; tasks: number } | null>(null);
-  const [route, setRoute] = React.useState<{ page: 'dashboard' | 'features' | 'diagrams' | 'specs' | 'actors' | 'contexts' | 'sessions'; params?: any }>({ page: 'dashboard' });
+  const [route, setRoute] = React.useState<{ page: 'dashboard' | 'features' | 'diagrams' | 'specs' | 'actors' | 'contexts' | 'sessions'; folderPath?: string; params?: any }>({ page: 'dashboard' });
   const [activeSession, setActiveSession] = React.useState<ActiveSession | null>(null);
   const [sessions, setSessions] = React.useState<Session[]>([]);
   const [showNewSessionForm, setShowNewSessionForm] = React.useState(false);
@@ -112,12 +111,17 @@ function App() {
     return () => window.removeEventListener('message', onMessage);
   }, []);
 
+  const handleNavigate = (page: string, folderPath?: string) => {
+    setRoute({ page: page as any, folderPath });
+  };
+
   return (
     <div className="container">
       <Sidebar
         currentPage={route.page}
         activeSession={activeSession}
-        onNavigate={(page) => setRoute({ page: page as any })}
+        onNavigate={handleNavigate}
+        vscode={vscode}
       />
       <div style={{ flex: 1, overflow: 'auto' }} className="main-content">
         <div style={{ padding: 16, marginBottom: 8, opacity: 0.8, fontSize: 12, borderBottom: '1px solid var(--vscode-panel-border)' }}>Project: {state.projectPath}</div>
@@ -141,23 +145,23 @@ function App() {
         )}
 
         {route.page === 'features' && (
-          <BrowserPage category="features" title="Features" activeSession={activeSession} />
+          <BrowserPage category="features" title="Features" activeSession={activeSession} folderPath={route.folderPath} />
         )}
 
         {route.page === 'diagrams' && (
-          <BrowserPage category="diagrams" title="Diagrams" activeSession={activeSession} />
+          <BrowserPage category="diagrams" title="Diagrams" activeSession={activeSession} folderPath={route.folderPath} />
         )}
 
         {route.page === 'specs' && (
-          <BrowserPage category="specs" title="Specifications" activeSession={activeSession} />
+          <BrowserPage category="specs" title="Specifications" activeSession={activeSession} folderPath={route.folderPath} />
         )}
 
         {route.page === 'actors' && (
-          <BrowserPage category="actors" title="Actors" activeSession={activeSession} />
+          <BrowserPage category="actors" title="Actors" activeSession={activeSession} folderPath={route.folderPath} />
         )}
 
         {route.page === 'contexts' && (
-          <BrowserPage category="contexts" title="Contexts" activeSession={activeSession} />
+          <BrowserPage category="contexts" title="Contexts" activeSession={activeSession} folderPath={route.folderPath} />
         )}
       </div>
       {activeSession && (
@@ -171,25 +175,31 @@ function App() {
   );
 }
 
-function BrowserPage({ category, title, activeSession }: { category: string; title: string; activeSession: ActiveSession | null }) {
-  const [folderTree, setFolderTree] = React.useState<FolderNode[]>([]);
-  const [selectedFolder, setSelectedFolder] = React.useState<string | null>(null);
+function BrowserPage({ category, title, activeSession, folderPath }: { category: string; title: string; activeSession: ActiveSession | null; folderPath?: string }) {
   const [folderContents, setFolderContents] = React.useState<FileItem[]>([]);
   const [selectedFile, setSelectedFile] = React.useState<string | null>(null);
   const [fileContent, setFileContent] = React.useState<FileContent | null>(null);
 
+  // Load folder contents when folderPath changes
   React.useEffect(() => {
-    vscode?.postMessage({ type: 'getFolderTree', category });
+    if (folderPath) {
+      vscode?.postMessage({ type: 'getFolderContents', folderPath, category });
+      setSelectedFile(null);
+      setFileContent(null);
+    }
+  }, [category, folderPath, vscode]);
 
+  // Listen for messages
+  React.useEffect(() => {
     function onMessage(event: MessageEvent) {
       const msg = event.data;
-      if (msg?.type === 'folderTree' && msg?.category === category) {
-        setFolderTree(msg.data || []);
-      }
+      console.log('BrowserPage received message:', msg?.type, msg);
       if (msg?.type === 'folderContents') {
+        console.log('Setting folder contents:', msg.data?.length, 'items');
         setFolderContents(msg.data || []);
       }
       if (msg?.type === 'fileContent') {
+        console.log('Received file content:', msg.data ? 'has data' : 'NO DATA', msg.data);
         setFileContent(msg.data);
       }
       if (msg?.type === 'fileSaved') {
@@ -200,47 +210,29 @@ function BrowserPage({ category, title, activeSession }: { category: string; tit
           }
         }
       }
-      if (msg?.type === 'folderCreated') {
-        if (msg.data?.success) {
-          // Refresh folder tree
-          vscode?.postMessage({ type: 'getFolderTree', category });
-        }
-      }
       if (msg?.type === 'fileCreated') {
         if (msg.data?.success) {
           // Refresh folder contents
-          if (selectedFolder) {
-            vscode?.postMessage({ type: 'getFolderContents', folderPath: selectedFolder, category });
+          if (folderPath) {
+            vscode?.postMessage({ type: 'getFolderContents', folderPath, category });
           }
         }
       }
       if (msg?.type === 'structureChanged') {
-        // Refresh folder tree when structure changes
-        vscode?.postMessage({ type: 'getFolderTree', category });
         // Refresh folder contents if a folder is selected
-        if (selectedFolder) {
-          vscode?.postMessage({ type: 'getFolderContents', folderPath: selectedFolder, category });
+        if (folderPath) {
+          vscode?.postMessage({ type: 'getFolderContents', folderPath, category });
         }
       }
     }
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, [category, selectedFolder, selectedFile]);
-
-  const handleFolderClick = (folderPath: string) => {
-    setSelectedFolder(folderPath);
-    setSelectedFile(null);
-    setFileContent(null);
-    vscode?.postMessage({ type: 'getFolderContents', folderPath, category });
-  };
+  }, [folderPath, selectedFile, vscode]);
 
   const handleItemClick = (itemPath: string, itemType: 'file' | 'folder') => {
     if (itemType === 'folder') {
-      // Navigate into the folder
-      setSelectedFolder(itemPath);
-      setSelectedFile(null);
-      setFileContent(null);
-      vscode?.postMessage({ type: 'getFolderContents', folderPath: itemPath, category });
+      // Navigate into the folder - this would need to update the route, but for now just handle files
+      // In the future, could call a prop function to update route with new folder path
     } else {
       // Open the file
       setSelectedFile(itemPath);
@@ -253,58 +245,52 @@ function BrowserPage({ category, title, activeSession }: { category: string; tit
     setFileContent(null);
   };
 
+  console.log('BrowserPage render - folderPath:', folderPath, 'selectedFile:', selectedFile, 'fileContent:', fileContent ? 'exists' : 'null');
+
   return (
-    <div className="split-view">
-      <div className="split-sidebar">
-        <FolderTreeView 
-          folders={folderTree} 
-          selectedFolder={selectedFolder}
-          onFolderClick={handleFolderClick}
+    <div style={{ width: '100%', height: '100%' }}>
+      {!folderPath && !selectedFile && (
+        <CategoryEmptyState 
+          category={category}
+          title={title}
+          activeSession={activeSession}
+        />
+      )}
+      {folderPath && !selectedFile && (
+        <FolderProfile 
+          files={folderContents}
+          onFileClick={(path) => {
+            const item = folderContents.find(f => f.path === path);
+            if (item) {
+              handleItemClick(path, item.type);
+            }
+          }}
+          folderPath={folderPath}
           category={category}
           activeSession={activeSession}
         />
-      </div>
-      <div className="split-content">
-        {!selectedFolder && !selectedFile && (
-          <CategoryEmptyState 
-            category={category}
-            title={title}
-            activeSession={activeSession}
-            hasFolders={folderTree.length > 0}
-          />
-        )}
-        {selectedFolder && !selectedFile && (
-          <FolderProfile 
-            files={folderContents}
-            onFileClick={(path) => {
-              const item = folderContents.find(f => f.path === path);
-              if (item) {
-                handleItemClick(path, item.type);
-              }
-            }}
-            folderPath={selectedFolder}
-            category={category}
-            activeSession={activeSession}
-          />
-        )}
-        {selectedFile && fileContent && (
-          <ItemProfile 
-            category={category}
-            fileContent={fileContent}
-            activeSession={activeSession}
-            onBack={handleBackToFolder}
-          />
-        )}
-      </div>
+      )}
+      {selectedFile && !fileContent && (
+        <div style={{ padding: 16, textAlign: 'center' }}>
+          <div style={{ marginTop: 40, opacity: 0.7 }}>Loading file...</div>
+        </div>
+      )}
+      {selectedFile && fileContent && (
+        <ItemProfile 
+          category={category}
+          fileContent={fileContent}
+          activeSession={activeSession}
+          onBack={handleBackToFolder}
+        />
+      )}
     </div>
   );
 }
 
-function CategoryEmptyState({ category, title, activeSession, hasFolders }: {
+function CategoryEmptyState({ category, title, activeSession }: {
   category: string;
   title: string;
   activeSession: ActiveSession | null;
-  hasFolders: boolean;
 }) {
   const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1, -1);
   const isFoundational = category === 'actors' || category === 'contexts' || category === 'specs' || category === 'diagrams';
@@ -330,177 +316,14 @@ function CategoryEmptyState({ category, title, activeSession, hasFolders }: {
     });
   };
 
-  // If folders exist, show a different message
-  if (hasFolders) {
-    return (
-      <div className="p-16">
-        <div className="empty-state">
-          <div className="empty-state-icon">📂</div>
-          <div style={{ marginBottom: 16 }}>Select a folder from the tree</div>
-          <div style={{ fontSize: 13, opacity: 0.8 }}>
-            Click on a folder in the tree view to view its contents.
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // For features without session, show SessionRequiredView
-  if (category === 'features' && !activeSession) {
-    return <SessionRequiredView itemType="Features" onStartSession={() => setRoute({ page: 'sessions' })} />;
-  }
-
-  // For other categories without session (shouldn't happen for foundational, but handle gracefully)
-  if (!activeSession && !isFoundational && category !== 'features') {
-    return (
-      <div className="p-16">
-        <div className="empty-state">
-          <div className="empty-state-icon">📁</div>
-          <div style={{ marginBottom: 8 }}>No {title.toLowerCase()} yet</div>
-          <div className="alert alert-info" style={{ marginTop: 16, textAlign: 'left' }}>
-            Start a design session to create {title.toLowerCase()}.
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-16">
       <div className="empty-state">
-        <div className="empty-state-icon">📁</div>
-        <div style={{ marginBottom: 16 }}>No {title.toLowerCase()} yet</div>
-        <div style={{ fontSize: 13, opacity: 0.8, marginBottom: 24 }}>
-          Get started by creating your first {categoryLabel.toLowerCase()} or organizing with folders.
+        <div className="empty-state-icon">📂</div>
+        <div style={{ marginBottom: 16 }}>Select a folder from the sidebar</div>
+        <div style={{ fontSize: 13, opacity: 0.8 }}>
+          Click on a folder in the navigation tree to view its contents.
         </div>
-        <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-          <button 
-            className="btn btn-primary"
-            onClick={handleCreateFile}
-          >
-            + New {categoryLabel}
-          </button>
-          <button 
-            className="btn btn-secondary"
-            onClick={handleCreateFolder}
-          >
-            + New Folder
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function FolderTreeView({ folders, selectedFolder, onFolderClick, category, activeSession }: { 
-  folders: FolderNode[]; 
-  selectedFolder: string | null; 
-  onFolderClick: (path: string) => void;
-  category: string;
-  activeSession: ActiveSession | null;
-}) {
-  const [expanded, setExpanded] = React.useState<Set<string>>(new Set());
-  const isFoundational = category === 'actors' || category === 'contexts' || category === 'specs' || category === 'diagrams';
-
-  const toggleExpand = (path: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    const newExpanded = new Set(expanded);
-    if (newExpanded.has(path)) {
-      newExpanded.delete(path);
-    } else {
-      newExpanded.add(path);
-    }
-    setExpanded(newExpanded);
-  };
-
-  const handleContextMenu = (e: React.MouseEvent, folderPath: string) => {
-    // Allow folder creation in foundational categories (actors, contexts) even without a session
-    // For design categories (features, specs), require an active session
-    if (!activeSession && !isFoundational) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    vscode?.postMessage({ 
-      type: 'promptCreateFolder', 
-      folderPath,
-      category
-    });
-  };
-
-  const handleToolbarContextMenu = (e: React.MouseEvent) => {
-    // Allow root-level folder creation in foundational categories even without a session
-    if (!activeSession && !isFoundational) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    vscode?.postMessage({ 
-      type: 'promptCreateFolder', 
-      folderPath: '', // Empty path means root level
-      category
-    });
-  };
-
-  const renderFolder = (folder: FolderNode, level: number = 0) => {
-    const isExpanded = expanded.has(folder.path);
-    const isSelected = selectedFolder === folder.path;
-    const hasChildren = folder.children && folder.children.length > 0;
-
-    return (
-      <div key={folder.path}>
-        <div 
-          className={`tree-folder ${isSelected ? 'selected' : ''}`}
-          style={{ paddingLeft: level * 16 + 8 }}
-          onClick={() => onFolderClick(folder.path)}
-          onContextMenu={(e) => handleContextMenu(e, folder.path)}
-        >
-          {hasChildren && (
-            <span 
-              className={`tree-chevron ${isExpanded ? 'expanded' : ''}`}
-              onClick={(e) => toggleExpand(folder.path, e)}
-            >
-              ▸
-            </span>
-          )}
-          {!hasChildren && <span className="tree-chevron"></span>}
-          <span className="tree-label">📁 {folder.name}</span>
-        </div>
-        {isExpanded && hasChildren && (
-          <div className="tree-children">
-            {folder.children.map(child => renderFolder(child, level + 1))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  return (
-    <div className="tree-view">
-      <div 
-        className="toolbar" 
-        onContextMenu={handleToolbarContextMenu}
-        style={{ cursor: (activeSession || isFoundational) ? 'context-menu' : 'default' }}
-        title={(activeSession || isFoundational) ? 'Right-click to create a folder' : ''}
-      >
-        <span className="font-medium">{category.charAt(0).toUpperCase() + category.slice(1)}</span>
-      </div>
-      <div onContextMenu={handleToolbarContextMenu}>
-        {folders.length === 0 && (
-          <div 
-            style={{ 
-              padding: 16, 
-              textAlign: 'center', 
-              opacity: 0.7, 
-              fontSize: 12,
-              cursor: (activeSession || isFoundational) ? 'context-menu' : 'default'
-            }}
-            title={(activeSession || isFoundational) ? 'Right-click to create a folder' : ''}
-          >
-            No folders yet
-          </div>
-        )}
-        {folders.map(folder => renderFolder(folder))}
       </div>
     </div>
   );
@@ -1929,27 +1752,18 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
           {/* Diagram Editor Section */}
           <div className="content-section">
             <h3 className="section-title">Diagram</h3>
-            <div style={{ display: 'flex', height: '600px' }}>
-              {!isReadOnly && (
-                <ShapeLibraryPanel
-                  onDragStart={(event: React.DragEvent, shapeType: string, shapeData: ShapeItem) => {
-                    // Drag data is set in the ShapeLibraryPanel component
-                  }}
-                />
-              )}
-              <div style={{ flex: 1 }}>
-                <ReactFlowDiagramEditor
-                  diagramData={parseDiagramContent(content)}
-                  onChange={(data) => {
-                    // Don't trigger content updates during cancel operations
-                    if (isCancelling) return;
-                    const frontmatterYaml = `---\n${yaml.stringify(frontmatter)}---`;
-                    const newContent = serializeDiagramData(data, frontmatterYaml);
-                    updateContent(newContent);
-                  }}
-                  readOnly={isReadOnly}
-                />
-              </div>
+            <div style={{ height: '600px' }}>
+              <DiagramEditor
+                diagramData={parseDiagramContent(content)}
+                onChange={(data) => {
+                  // Don't trigger content updates during cancel operations
+                  if (isCancelling) return;
+                  const frontmatterYaml = `---\n${yaml.stringify(frontmatter)}---`;
+                  const newContent = serializeDiagramData(data, frontmatterYaml);
+                  updateContent(newContent);
+                }}
+                readOnly={isReadOnly}
+              />
             </div>
           </div>
         </>

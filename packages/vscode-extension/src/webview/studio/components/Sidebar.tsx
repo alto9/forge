@@ -9,10 +9,17 @@ interface NavItemConfig {
   requiresSession?: boolean;
 }
 
+interface FolderNode {
+  name: string;
+  path: string;
+  children: FolderNode[];
+}
+
 interface SidebarProps {
   currentPage: string;
   activeSession: any;
-  onNavigate: (page: string) => void;
+  onNavigate: (page: string, folderPath?: string) => void;
+  vscode?: any;
 }
 
 
@@ -23,7 +30,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
   currentPage,
   activeSession,
   onNavigate,
+  vscode,
 }) => {
+  const [expandedSections, setExpandedSections] = React.useState<Set<string>>(new Set());
+  const [folderTrees, setFolderTrees] = React.useState<{ [category: string]: FolderNode[] }>({});
+
   const informItems: NavItemConfig[] = [
     { id: 'actors', label: 'Actors', alwaysEnabled: true },
     { id: 'contexts', label: 'Contexts', alwaysEnabled: true },
@@ -33,8 +44,44 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const designItems: NavItemConfig[] = [
     { id: 'sessions', label: 'Sessions', alwaysEnabled: true },
-    { id: 'features', label: 'Features', requiresSession: true },
+    { id: 'features', label: 'Features', alwaysEnabled: true },
   ];
+
+  // Fetch folder trees on mount
+  React.useEffect(() => {
+    const categories = ['actors', 'contexts', 'diagrams', 'specs', 'features'];
+    categories.forEach(category => {
+      vscode?.postMessage({ type: 'getFolderTree', category });
+    });
+
+    function onMessage(event: MessageEvent) {
+      const msg = event.data;
+      if (msg?.type === 'folderTree') {
+        setFolderTrees(prev => ({
+          ...prev,
+          [msg.category]: msg.data || []
+        }));
+      }
+      if (msg?.type === 'structureChanged') {
+        // Refresh all folder trees when structure changes
+        categories.forEach(category => {
+          vscode?.postMessage({ type: 'getFolderTree', category });
+        });
+      }
+    }
+    window.addEventListener('message', onMessage);
+    return () => window.removeEventListener('message', onMessage);
+  }, [vscode]);
+
+  const toggleSection = (sectionId: string) => {
+    const newExpanded = new Set(expandedSections);
+    if (newExpanded.has(sectionId)) {
+      newExpanded.delete(sectionId);
+    } else {
+      newExpanded.add(sectionId);
+    }
+    setExpandedSections(newExpanded);
+  };
 
   return (
     <div style={styles.sidebar}>
@@ -63,6 +110,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         currentPage={currentPage}
         activeSession={activeSession}
         onNavigate={onNavigate}
+        folderTrees={folderTrees}
+        expandedSections={expandedSections}
+        onToggleSection={toggleSection}
       />
 
       {/* Design Section */}
@@ -72,6 +122,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
         currentPage={currentPage}
         activeSession={activeSession}
         onNavigate={onNavigate}
+        folderTrees={folderTrees}
+        expandedSections={expandedSections}
+        onToggleSection={toggleSection}
       />
     </div>
   );

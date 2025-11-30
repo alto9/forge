@@ -1,4 +1,4 @@
-import type { DiagramData } from '../components/ReactFlowDiagramEditor';
+import type { DiagramData } from '../components/diagram/DiagramEditor';
 
 /**
  * Parse diagram content from a markdown file containing JSON in a code block.

@@ -210,6 +210,7 @@ export class ForgeStudioPanel {
 
     private _getHtmlForWebview(webview: vscode.Webview): string {
         const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'studio', 'main.js'));
+        const reactFlowCssUri = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, 'media', 'studio', 'reactflow.css'));
         const projectName = path.basename(this._projectUri.fsPath);
         const nonce = getNonce();
         return `<!DOCTYPE html>
@@ -219,6 +220,7 @@ export class ForgeStudioPanel {
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} blob: data:; script-src 'nonce-${nonce}'; style-src 'unsafe-inline' ${webview.cspSource}; font-src ${webview.cspSource};" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Forge Studio - ${projectName}</title>
+  <link rel="stylesheet" href="${reactFlowCssUri}" />
   <style>
     /* Base styles */
     html, body, #root { height: 100%; margin: 0; padding: 0; }
