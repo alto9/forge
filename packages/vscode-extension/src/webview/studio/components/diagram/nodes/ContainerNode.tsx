@@ -18,7 +18,6 @@ export const ContainerNode: React.FC<NodeProps<ContainerNodeData>> = ({
     const serviceConfig = classifier ? getServicesConfig(classifier) : null;
     const [isEditing, setIsEditing] = useState(false);
     const [editLabel, setEditLabel] = useState(label);
-    const [imageError, setImageError] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const { setNodes } = useReactFlow();
 
@@ -63,21 +62,41 @@ export const ContainerNode: React.FC<NodeProps<ContainerNodeData>> = ({
         style={{
             width: '100%',
             height: '100%',
-            background: `linear-gradient(135deg, ${backgroundColor} 0%, ${borderColor} 100%)`,
+            minWidth: '400px',
+            minHeight: '300px',
+            backgroundColor: 'transparent',
             border: `2px solid ${borderColor}`,
             borderRadius: '12px',
             padding: '16px',
             boxShadow: selected ? '0 0 10px rgba(0,0,0,0.1)' : 'none',
-            position: 'relative'
+            position: 'relative',
+            boxSizing: 'border-box',
+            overflow: 'visible',
+            pointerEvents: 'all'
         }}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         >
+            {/* Background layer - positioned behind content but doesn't block edges */}
+            <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                background: `linear-gradient(135deg, ${backgroundColor}CC 0%, ${borderColor}CC 100%)`,
+                borderRadius: '10px',
+                zIndex: -1,
+                pointerEvents: 'none'
+            }} />
             {/* Node Resizer */}
             <NodeResizer
-                minWidth={300}
-                minHeight={200}
+                minWidth={400}
+                minHeight={300}
+                maxWidth={2000}
+                maxHeight={2000}
                 isVisible={selected}
+                keepAspectRatio={false}
                 lineStyle={{ border: `2px solid ${borderColor}` }}
                 handleStyle={{
                     width: '10px',
@@ -88,25 +107,116 @@ export const ContainerNode: React.FC<NodeProps<ContainerNodeData>> = ({
                 }}
             />
 
-            {/* Connection Handles */}
+            {/* Connection Handles - Hidden and disabled by default, only active when selected */}
+            {/* Top Handles */}
             <Handle
                 type="target"
                 position={Position.Top}
+                id="top-target"
+                isConnectable={selected}
                 style={{
                     background: backgroundColor,
                     width: '12px',
                     height: '12px',
-                    border: '2px solid white'
+                    border: '2px solid white',
+                    opacity: selected ? 1 : 0
+                }}
+            />
+            <Handle
+                type="source"
+                position={Position.Top}
+                id="top-source"
+                isConnectable={selected}
+                style={{
+                    background: backgroundColor,
+                    width: '12px',
+                    height: '12px',
+                    border: '2px solid white',
+                    opacity: selected ? 1 : 0
+                }}
+            />
+            
+            {/* Bottom Handles */}
+            <Handle
+                type="target"
+                position={Position.Bottom}
+                id="bottom-target"
+                isConnectable={selected}
+                style={{
+                    background: borderColor,
+                    width: '12px',
+                    height: '12px',
+                    border: '2px solid white',
+                    opacity: selected ? 1 : 0
                 }}
             />
             <Handle
                 type="source"
                 position={Position.Bottom}
+                id="bottom-source"
+                isConnectable={selected}
                 style={{
                     background: borderColor,
                     width: '12px',
                     height: '12px',
-                    border: '2px solid white'
+                    border: '2px solid white',
+                    opacity: selected ? 1 : 0
+                }}
+            />
+            
+            {/* Right Handles */}
+            <Handle
+                type="target"
+                position={Position.Right}
+                id="right-target"
+                isConnectable={selected}
+                style={{
+                    background: borderColor,
+                    width: '12px',
+                    height: '12px',
+                    border: '2px solid white',
+                    opacity: selected ? 1 : 0
+                }}
+            />
+            <Handle
+                type="source"
+                position={Position.Right}
+                id="right-source"
+                isConnectable={selected}
+                style={{
+                    background: borderColor,
+                    width: '12px',
+                    height: '12px',
+                    border: '2px solid white',
+                    opacity: selected ? 1 : 0
+                }}
+            />
+            
+            {/* Left Handles */}
+            <Handle
+                type="target"
+                position={Position.Left}
+                id="left-target"
+                isConnectable={selected}
+                style={{
+                    background: borderColor,
+                    width: '12px',
+                    height: '12px',
+                    border: '2px solid white',
+                    opacity: selected ? 1 : 0
+                }}
+            />
+            <Handle
+                type="source"
+                position={Position.Left}
+                id="left-source"
+                isConnectable={selected}
+                style={{
+                    background: borderColor,
+                    width: '12px',
+                    height: '12px',
+                    border: '2px solid white',
+                    opacity: selected ? 1 : 0
                 }}
             />
             {/* Header */}
@@ -126,56 +236,19 @@ export const ContainerNode: React.FC<NodeProps<ContainerNodeData>> = ({
                     zIndex: 1
                 }}
             >
-            {serviceConfig && (
-                <div 
-                    style={{
-                        width: '24px',
-                        height: '24px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        flexShrink: 0
-                    }}
-                >
-                {!imageError ? (
-                    <img
-                        src={serviceConfig.icon}
-                        alt={serviceConfig.displayName}
-                        style={{ width: '24px', height: '24px', display: 'block' }}
-                        onError={(e) => setImageError(true)}
-                        />
-                    ) : (
-                        <div style={{ 
-                                width: '24px', 
-                                height: '24px', 
-                                borderRadius: '4px',
-                                background: serviceConfig.color.fill,
-                                display: 'flex', 
-                                alignItems: 'center', 
-                                justifyContent: 'center', 
-                                color: 'white',
-                                fontSize: '12px',
-                                fontWeight: 'bold' 
-                            }}
-                        >
-                            {serviceConfig.displayName.charAt(0)}
-                        </div>
-                    )}
-                    </div>
-                )}
-
                 <div style={{flex:1}}>
                     <div
                         style={{
-                            fontSize: '9px',
+                            fontSize: '10px',
                             color: '#666',
                             textTransform: 'uppercase',
                             letterSpacing: '0.5px',
                             fontWeight: 600,
-                            textAlign: 'center'
+                            textAlign: 'center',
+                            marginBottom: '4px'
                         }}
                     >
-                        {serviceConfig.displayName || 'Container'}
+                        {serviceConfig?.displayName || 'Container'}
                     </div>
                     {isEditing ? (
                         <input
@@ -193,12 +266,12 @@ export const ContainerNode: React.FC<NodeProps<ContainerNodeData>> = ({
                                 }
                             }}
                             style={{
-                                fontSize: '13px',
+                                fontSize: '14px',
                                 fontWeight: 700,
                                 textAlign: 'center',
                                 border: '1px solid #1a73e8',
                                 borderRadius: '3px',
-                                padding: '2px 4px',
+                                padding: '4px 8px',
                                 outline: 'none',
                                 width: '100%'
                             }}
@@ -207,10 +280,11 @@ export const ContainerNode: React.FC<NodeProps<ContainerNodeData>> = ({
                     ) : (
                         <div
                             style={{
-                                fontSize: '13px',
+                                fontSize: '14px',
                                 fontWeight: 700,
                                 color: '#333',
-                                cursor: 'text'
+                                cursor: 'text',
+                                textAlign: 'center'
                             }}
                             onDoubleClick={(e) => {
                                 e.stopPropagation();

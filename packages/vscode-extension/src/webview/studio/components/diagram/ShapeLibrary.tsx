@@ -52,6 +52,12 @@ export const ShapeLibrary: React.FC<ShapeLibraryProps> = () => {
   const handleDragStart = (e: React.DragEvent, config: AWSServiceConfig | GeneralShapeConfig, library: 'general' | 'aws' = 'aws') => {
     console.log('Drag started:', config.displayName, 'library:', library);
     e.dataTransfer.effectAllowed = 'move';
+    
+    // Check if this is a container - for general shapes, check type === 'container', for AWS, check isContainer property
+    const isContainer = library === 'general' 
+      ? ('type' in config && config.type === 'container')
+      : ('isContainer' in config && config.isContainer === true);
+    
     const dragData = {
       isNewNode: false,
       type: library === 'general' ? 'general-shape' : 'aws-service',
@@ -59,7 +65,7 @@ export const ShapeLibrary: React.FC<ShapeLibraryProps> = () => {
       classifier: config.classifier,
       displayName: config.displayName,
       color: config.color,
-      isContainer: ('isContainer' in config) ? config.isContainer : false,
+      isContainer,
     };
     console.log('Setting drag data:', dragData);
     e.dataTransfer.setData('application/reactflow', JSON.stringify(dragData));
@@ -322,7 +328,6 @@ interface ServiceItemProps {
 }
 
 const ServiceItem: React.FC<ServiceItemProps> = ({ service, onDragStart }) => {
-  const [imageError, setImageError] = React.useState(false);
   return (
     <div 
     draggable
@@ -357,39 +362,18 @@ const ServiceItem: React.FC<ServiceItemProps> = ({ service, onDragStart }) => {
       <div style={{
         width: '28px',
         height: '28px',
+        borderRadius: '4px',
+        background: service.color.stroke,
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        flexShrink: 0
+        color: 'white',
+        fontSize: '12px',
+        fontWeight: 'bold',
+        flexShrink: 0,
+        pointerEvents: 'none'
       }}>
-        {!imageError ? (
-          <img
-          src={service.icon}
-          alt={service.displayName}
-          style={{
-            width: '28px',
-            height: '28px',
-            display: 'block',
-            pointerEvents: 'none'
-          }}
-          />
-        ) : (
-          <div style={{
-            width: '28px',
-            height: '28px',
-            borderRadius: '4px',
-            background: service.color.fill,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            color: 'white',
-            fontSize: '12px',
-            fontWeight: 'bold',
-            pointerEvents: 'none'
-          }}>
-            {service.displayName.charAt(0)}
-          </div>
-        )}
+        {service.displayName.charAt(0)}
       </div>
 
       <span style={{

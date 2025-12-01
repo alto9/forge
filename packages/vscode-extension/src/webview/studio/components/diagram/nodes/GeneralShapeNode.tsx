@@ -52,8 +52,11 @@ export const GeneralShapeNode: React.FC<GeneralShapeNodeProps> = ({ data, shapeC
                 border: `2px solid ${selected ? '#1a73e8' : shapeConfig.color.stroke}`,
                 borderRadius: '8px',
                 padding: '16px',
+                width: '100%',
+                height: '100%',
                 minWidth: '120px',
                 minHeight: '100px',
+                boxSizing: 'border-box',
                 boxShadow: selected ? '0 0 10px rgba(0,0,0,0.1)' : 'none',
                 transition: 'all 0.2s ease'
             }}
@@ -62,7 +65,10 @@ export const GeneralShapeNode: React.FC<GeneralShapeNodeProps> = ({ data, shapeC
             <NodeResizer
                 minWidth={120}
                 minHeight={100}
+                maxWidth={800}
+                maxHeight={800}
                 isVisible={selected}
+                keepAspectRatio={false}
                 lineStyle={{ border: '2px solid #1a73e8' }}
                 handleStyle={{
                     width: '8px',
@@ -73,10 +79,36 @@ export const GeneralShapeNode: React.FC<GeneralShapeNodeProps> = ({ data, shapeC
                 }}
             />
 
-            {/* Connection Handles */}
+            {/* Connection Handles - Bidirectional on all sides */}
+            {/* Top Handles */}
             <Handle
                 type="target"
                 position={Position.Top}
+                id="top-target"
+                style={{
+                    background: shapeConfig.color.fill,
+                    width: '10px',
+                    height: '10px',
+                    border: '2px solid white'
+                }}
+            />
+            <Handle
+                type="source"
+                position={Position.Top}
+                id="top-source"
+                style={{
+                    background: shapeConfig.color.fill,
+                    width: '10px',
+                    height: '10px',
+                    border: '2px solid white'
+                }}
+            />
+            
+            {/* Bottom Handles */}
+            <Handle
+                type="target"
+                position={Position.Bottom}
+                id="bottom-target"
                 style={{
                     background: shapeConfig.color.fill,
                     width: '10px',
@@ -87,6 +119,20 @@ export const GeneralShapeNode: React.FC<GeneralShapeNodeProps> = ({ data, shapeC
             <Handle
                 type="source"
                 position={Position.Bottom}
+                id="bottom-source"
+                style={{
+                    background: shapeConfig.color.fill,
+                    width: '10px',
+                    height: '10px',
+                    border: '2px solid white'
+                }}
+            />
+            
+            {/* Right Handles */}
+            <Handle
+                type="target"
+                position={Position.Right}
+                id="right-target"
                 style={{
                     background: shapeConfig.color.fill,
                     width: '10px',
@@ -97,6 +143,20 @@ export const GeneralShapeNode: React.FC<GeneralShapeNodeProps> = ({ data, shapeC
             <Handle
                 type="source"
                 position={Position.Right}
+                id="right-source"
+                style={{
+                    background: shapeConfig.color.fill,
+                    width: '10px',
+                    height: '10px',
+                    border: '2px solid white'
+                }}
+            />
+            
+            {/* Left Handles */}
+            <Handle
+                type="target"
+                position={Position.Left}
+                id="left-target"
                 style={{
                     background: shapeConfig.color.fill,
                     width: '10px',
@@ -107,6 +167,7 @@ export const GeneralShapeNode: React.FC<GeneralShapeNodeProps> = ({ data, shapeC
             <Handle
                 type="source"
                 position={Position.Left}
+                id="left-source"
                 style={{
                     background: shapeConfig.color.fill,
                     width: '10px',

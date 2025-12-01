@@ -16,7 +16,6 @@ export interface BaseAWSNodeProps extends NodeProps<AWSNodeData> {
 
 export const BaseAWSNode: React.FC<BaseAWSNodeProps> = ({ data, serviceConfig, selected, id }) => {
     const { label, properties = {} } = data;
-    const [imageError, setImageError] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [editLabel, setEditLabel] = useState(label);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -54,8 +53,11 @@ export const BaseAWSNode: React.FC<BaseAWSNodeProps> = ({ data, serviceConfig, s
             border: `2px solid ${selected ? '#1a73e8' : serviceConfig.color.stroke}`,
             borderRadius: '8px',
             padding: '16px',
+            width: '100%',
+            height: '100%',
             minWidth: '120px',
             minHeight: '100px',
+            boxSizing: 'border-box',
             boxShadow: selected ? '0 0 10px rgba(0,0,0,0.1)' : 'none',
             transition: 'all 0.2s ease'
         }}
@@ -64,7 +66,10 @@ export const BaseAWSNode: React.FC<BaseAWSNodeProps> = ({ data, serviceConfig, s
             <NodeResizer
                 minWidth={120}
                 minHeight={100}
+                maxWidth={800}
+                maxHeight={800}
                 isVisible={selected}
+                keepAspectRatio={false}
                 lineStyle={{ border: '2px solid #1a73e8' }}
                 handleStyle={{
                     width: '8px',
@@ -75,10 +80,36 @@ export const BaseAWSNode: React.FC<BaseAWSNodeProps> = ({ data, serviceConfig, s
                 }}
             />
 
-            {/* Connection Handles */}
+            {/* Connection Handles - Bidirectional on all sides */}
+            {/* Top Handles */}
             <Handle
                 type="target"
                 position={Position.Top}
+                id="top-target"
+                style={{
+                    background: serviceConfig.color.fill,
+                    width: '10px',
+                    height: '10px',
+                    border: '2px solid white'
+                }}
+            />
+            <Handle
+                type="source"
+                position={Position.Top}
+                id="top-source"
+                style={{
+                    background: serviceConfig.color.fill,
+                    width: '10px',
+                    height: '10px',
+                    border: '2px solid white'
+                }}
+            />
+            
+            {/* Bottom Handles */}
+            <Handle
+                type="target"
+                position={Position.Bottom}
+                id="bottom-target"
                 style={{
                     background: serviceConfig.color.fill,
                     width: '10px',
@@ -89,6 +120,20 @@ export const BaseAWSNode: React.FC<BaseAWSNodeProps> = ({ data, serviceConfig, s
             <Handle
                 type="source"
                 position={Position.Bottom}
+                id="bottom-source"
+                style={{
+                    background: serviceConfig.color.fill,
+                    width: '10px',
+                    height: '10px',
+                    border: '2px solid white'
+                }}
+            />
+            
+            {/* Right Handles */}
+            <Handle
+                type="target"
+                position={Position.Right}
+                id="right-target"
                 style={{
                     background: serviceConfig.color.fill,
                     width: '10px',
@@ -99,6 +144,20 @@ export const BaseAWSNode: React.FC<BaseAWSNodeProps> = ({ data, serviceConfig, s
             <Handle
                 type="source"
                 position={Position.Right}
+                id="right-source"
+                style={{
+                    background: serviceConfig.color.fill,
+                    width: '10px',
+                    height: '10px',
+                    border: '2px solid white'
+                }}
+            />
+            
+            {/* Left Handles */}
+            <Handle
+                type="target"
+                position={Position.Left}
+                id="left-target"
                 style={{
                     background: serviceConfig.color.fill,
                     width: '10px',
@@ -109,6 +168,7 @@ export const BaseAWSNode: React.FC<BaseAWSNodeProps> = ({ data, serviceConfig, s
             <Handle
                 type="source"
                 position={Position.Left}
+                id="left-source"
                 style={{
                     background: serviceConfig.color.fill,
                     width: '10px',
@@ -117,53 +177,16 @@ export const BaseAWSNode: React.FC<BaseAWSNodeProps> = ({ data, serviceConfig, s
                 }}
             />
 
-            {/* Vertical Layout */}
+            {/* Service Type */}
             <div
                 style={{
-                    width: '48px',
-                    height: '48px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0
-                }}
-            >
-                {!imageError ? (
-                    <img
-                        src={serviceConfig.icon}
-                        alt={serviceConfig.displayName}
-                        style={{ width: '48px', height: '48px', display: 'block' }}
-                        onError={(e) => {
-                            setImageError(true);
-                        }}
-                    />
-                ) : (
-                    <div style={{
-                        width: '48px',
-                        height: '48px',
-                        borderRadius: '8px',
-                        background: serviceConfig.color.fill,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                        fontSize: '20px',
-                        fontWeight: 'bold'
-                    }}>
-                        {serviceConfig.displayName.charAt(0)}
-                    </div>
-                )}
-            </div>
-
-            {/* Service Type (small) */}
-            <div
-                style={{
-                    fontSize: '10px',
+                    fontSize: '11px',
                     color: '#666',
                     textTransform: 'uppercase',
                     letterSpacing: '0.5px',
                     fontWeight: 600,
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    marginBottom: '8px'
                 }}
             >
                 {serviceConfig.displayName}

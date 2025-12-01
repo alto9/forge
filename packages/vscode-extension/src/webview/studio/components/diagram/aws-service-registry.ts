@@ -1,12 +1,3 @@
-import LambdaIcon from './icons/aws/Architecture-Service-Icons/Arch_Compute/48/Arch_AWS-Lambda_48.svg';
-import S3Icon from './icons/aws/Architecture-Service-Icons/Arch_Storage/48/Arch_Amazon-Simple-Storage-Service_48.svg';
-import DynamoDBIcon from './icons/aws/Architecture-Service-Icons/Arch_Database/48/Arch_Amazon-DynamoDB_48.svg';
-import APIGatewayIcon from './icons/aws/Architecture-Service-Icons/Arch_Networking-Content-Delivery/48/Arch_Amazon-API-Gateway_48.svg';
-import EC2Icon from './icons/aws/Architecture-Service-Icons/Arch_Compute/48/Arch_Amazon-EC2_48.svg';
-import RDSIcon from './icons/aws/Architecture-Service-Icons/Arch_Database/48/Arch_Amazon-RDS_48.svg';
-import CloudFrontIcon from './icons/aws/Architecture-Service-Icons/Arch_Networking-Content-Delivery/48/Arch_Amazon-CloudFront_48.svg';
-import VPCIcon from './icons/aws/Architecture-Service-Icons/Arch_Networking-Content-Delivery/48/Arch_Amazon-Virtual-Private-Cloud_48.svg';
-
 export type AWSVisualType = 'box' | 'cylindar' | 'frame' | 'note';
 export type AWSCategory = 'group' | 'compute' | 'database' | 'storage' | 'networking';
 
@@ -14,7 +5,6 @@ export interface AWSServiceConfig {
   classifier: string;
   displayName: string;
   category: AWSCategory;
-  icon: string;
   color: {
     fill: string;
     stroke: string;
@@ -28,7 +18,6 @@ export const AWS_SERVICE_REGISTRY: Record<string, AWSServiceConfig> = {
         classifier: 'lambda',
         displayName: 'Lambda',
         category: 'compute',
-        icon: LambdaIcon,
         color: {
             fill: '#FFF4E6',
             stroke: '#FF9900'
@@ -39,10 +28,9 @@ export const AWS_SERVICE_REGISTRY: Record<string, AWSServiceConfig> = {
         classifier: 's3',
         displayName: 'S3',
         category: 'storage',
-        icon: S3Icon,
         color: {
-            fill: '#FFF4E6',
-            stroke: '#FF9900'
+            fill: '#E8F5E9',
+            stroke: '#3F8624'
         },
         visual: 'cylindar'
     },
@@ -50,10 +38,9 @@ export const AWS_SERVICE_REGISTRY: Record<string, AWSServiceConfig> = {
         classifier: 'dynamodb',
         displayName: 'DynamoDB',
         category: 'database',
-        icon: DynamoDBIcon,
         color: {
-            fill: '#FFF4E6',
-            stroke: '#FF9900'
+            fill: '#E3F2FD',
+            stroke: '#527FFF'
         },
         visual: 'cylindar'
     },
@@ -61,10 +48,9 @@ export const AWS_SERVICE_REGISTRY: Record<string, AWSServiceConfig> = {
         classifier: 'api-gateway',
         displayName: 'API Gateway',
         category: 'networking',
-        icon: APIGatewayIcon,
         color: {
-            fill: '#FFF4E6',
-            stroke: '#FF9900'
+            fill: '#F3E5F5',
+            stroke: '#8B2FC9'
         },
         visual: 'box'
     },
@@ -72,7 +58,6 @@ export const AWS_SERVICE_REGISTRY: Record<string, AWSServiceConfig> = {
         classifier: 'ec2',
         displayName: 'EC2',
         category: 'compute',
-        icon: EC2Icon,
         color: {
             fill: '#FFF4E6',
             stroke: '#FF9900'
@@ -83,10 +68,9 @@ export const AWS_SERVICE_REGISTRY: Record<string, AWSServiceConfig> = {
         classifier: 'rds',
         displayName: 'RDS',
         category: 'database',
-        icon: RDSIcon,
         color: {
-            fill: '#FFF4E6',
-            stroke: '#FF9900'
+            fill: '#E3F2FD',
+            stroke: '#527FFF'
         },
         visual: 'cylindar'
     },
@@ -94,21 +78,63 @@ export const AWS_SERVICE_REGISTRY: Record<string, AWSServiceConfig> = {
         classifier: 'cloudfront',
         displayName: 'CloudFront',
         category: 'networking',
-        icon: CloudFrontIcon,
         color: {
-            fill: '#FFF4E6',
-            stroke: '#FF9900'
+            fill: '#F3E5F5',
+            stroke: '#8B2FC9'
         },
         visual: 'box'
     },
     'vpc': {
         classifier: 'vpc',
         displayName: 'VPC',
-        category: 'networking',
-        icon: VPCIcon,
+        category: 'group',
         color: {
-            fill: '#E7F5FF',
-            stroke: '#147EB3'
+            fill: '#E8F4F8',
+            stroke: '#1E8900'
+        },
+        visual: 'frame',
+        isContainer: true
+    },
+    'subnet': {
+        classifier: 'subnet',
+        displayName: 'Subnet',
+        category: 'group',
+        color: {
+            fill: '#E6F2E6',
+            stroke: '#147D64'
+        },
+        visual: 'frame',
+        isContainer: true
+    },
+    'availability-zone': {
+        classifier: 'availability-zone',
+        displayName: 'Availability Zone',
+        category: 'group',
+        color: {
+            fill: '#FFF8E1',
+            stroke: '#C77700'
+        },
+        visual: 'frame',
+        isContainer: true
+    },
+    'region': {
+        classifier: 'region',
+        displayName: 'Region',
+        category: 'group',
+        color: {
+            fill: '#F3E5F5',
+            stroke: '#6B1B9A'
+        },
+        visual: 'frame',
+        isContainer: true
+    },
+    'security-group': {
+        classifier: 'security-group',
+        displayName: 'Security Group',
+        category: 'group',
+        color: {
+            fill: '#FFEBEE',
+            stroke: '#DD2C00'
         },
         visual: 'frame',
         isContainer: true

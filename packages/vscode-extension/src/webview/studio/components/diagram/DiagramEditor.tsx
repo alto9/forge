@@ -29,8 +29,34 @@ export interface DiagramEditorProps {
     readOnly?: boolean;
 }
 
-let nodeId = 0;
-const getId = () => `node_${nodeId++}`;
+// Generate truly unique IDs to avoid collisions with existing nodes
+const getId = () => `node_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+// Helper function to get absolute position of a node considering all parent hierarchy
+const getAbsolutePosition = (node: Node, allNodes: Node[]): { x: number; y: number } => {
+  if (!node.parentNode) {
+    return { x: node.position.x, y: node.position.y };
+  }
+  
+  const parent = allNodes.find(n => n.id === node.parentNode);
+  if (!parent) {
+    return { x: node.position.x, y: node.position.y };
+  }
+  
+  const parentAbs = getAbsolutePosition(parent, allNodes);
+  return {
+    x: node.position.x + parentAbs.x,
+    y: node.position.y + parentAbs.y
+  };
+};
+
+// Helper function to check if nodeId is a descendant of potentialAncestorId
+const isDescendantOf = (nodeId: string, potentialAncestorId: string, allNodes: Node[]): boolean => {
+  const node = allNodes.find(n => n.id === nodeId);
+  if (!node || !node.parentNode) return false;
+  if (node.parentNode === potentialAncestorId) return true;
+  return isDescendantOf(node.parentNode, potentialAncestorId, allNodes);
+};
 
 // Simple auto-layout function using a grid layout
 const relayoutReactFlow = (nodes: Node[], edges: Edge[]) => {
@@ -137,21 +163,109 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
 
     console.log('Creating node with type:', nodeType);
 
-    const newNode: Node = {
-      id: getId(),
-      type: nodeType,
-      position,
-      data: { 
-        label: dropData.displayName || 'New Node',
-        classifier: dropData.classifier,
-        properties: {},
-        color: dropData.color,
-        isContainer: dropData.isContainer || false
-      },
-    };
+    // Use functional form to access current nodes and add the new node
+    setNodes((currentNodes) => {
+      // Check if dropped inside a container - find the deepest one
+      let parentNodeId: string | undefined = undefined;
+      let adjustedPosition = position;
+      let deepestContainer: { id: string; depth: number } | null = null;
+      
+      console.log('Checking containers, current nodes:', currentNodes.length);
+      for (const node of currentNodes) {
+        if (node.data?.isContainer) {
+          const nodeWidth = node.width || node.style?.width || 0;
+          const nodeHeight = node.height || node.style?.height || 0;
+          const nodeAbsPos = getAbsolutePosition(node, currentNodes);
+          
+          console.log(`Checking container ${node.id}:`, {
+            pos: nodeAbsPos,
+            width: nodeWidth,
+            height: nodeHeight,
+            dropPos: position
+          });
+          
+          if (nodeWidth && nodeHeight) {
+            // Check if drop position is inside this container's absolute bounds
+            const isInside = 
+              position.x >= nodeAbsPos.x &&
+              position.x <= nodeAbsPos.x + nodeWidth &&
+              position.y >= nodeAbsPos.y &&
+              position.y <= nodeAbsPos.y + nodeHeight;
+            
+            if (isInside) {
+              // Calculate depth in hierarchy to find deepest container
+              let depth = 0;
+              let current = node;
+              while (current.parentNode) {
+                depth++;
+                const parent = currentNodes.find(n => n.id === current.parentNode);
+                if (!parent) break;
+                current = parent;
+              }
+              
+              if (!deepestContainer || depth > deepestContainer.depth) {
+                deepestContainer = { id: node.id, depth };
+              }
+            }
+          }
+        }
+      }
+      
+      if (deepestContainer) {
+        parentNodeId = deepestContainer.id;
+        const parentNode = currentNodes.find(n => n.id === parentNodeId);
+        if (parentNode) {
+          const parentAbsPos = getAbsolutePosition(parentNode, currentNodes);
+          adjustedPosition = {
+            x: position.x - parentAbsPos.x,
+            y: position.y - parentAbsPos.y
+          };
+          console.log('✓ Dropped inside container:', parentNodeId, 'relative position:', adjustedPosition);
+        }
+      }
 
-    console.log('Adding new node:', newNode);
-    setNodes((nds) => nds.concat(newNode));
+      const newNode: Node = dropData.isContainer ? {
+        id: getId(),
+        type: nodeType,
+        position: adjustedPosition,
+        data: { 
+          label: dropData.displayName || 'New Node',
+          classifier: dropData.classifier,
+          properties: {},
+          color: dropData.color,
+          isContainer: true
+        },
+        // Explicit dimensions for containers (required for NodeResizer to work)
+        style: {
+          width: 400,
+          height: 300,
+        },
+        width: 400,
+        height: 300,
+        ...(parentNodeId && { 
+          parentNode: parentNodeId,
+          extent: 'parent' as const
+        })
+      } : {
+        id: getId(),
+        type: nodeType,
+        position: adjustedPosition,
+        data: { 
+          label: dropData.displayName || 'New Node',
+          classifier: dropData.classifier,
+          properties: {},
+          color: dropData.color,
+          isContainer: false
+        },
+        ...(parentNodeId && { 
+          parentNode: parentNodeId,
+          extent: 'parent' as const
+        })
+      };
+
+      console.log('Adding new node:', newNode);
+      return currentNodes.concat(newNode);
+    });
   }, [reactFlowInstance, setNodes]);
   
   const handleAutoLayout = useCallback(() => {
@@ -201,6 +315,98 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
       })
     );
   }, [setNodes]);
+
+  // Handle dragging existing nodes into containers
+  const onNodeDragStop = useCallback((_event: any, draggedNode: Node) => {
+    setNodes((nds) => {
+      // Get the absolute position of the dragged node
+      const absPos = getAbsolutePosition(draggedNode, nds);
+      
+      // Check if the dragged node should be parented to a container
+      let newParentId: string | undefined = undefined;
+      let deepestContainer: { id: string; depth: number } | null = null;
+      
+      for (const node of nds) {
+        // Skip self and skip if this would create a circular reference
+        if (node.id === draggedNode.id) continue;
+        if (draggedNode.data?.isContainer && isDescendantOf(node.id, draggedNode.id, nds)) {
+          console.log('Skipping - would create circular reference');
+          continue;
+        }
+        
+        if (node.data?.isContainer) {
+          const nodeWidth = node.width || node.style?.width || 0;
+          const nodeHeight = node.height || node.style?.height || 0;
+          const nodeAbsPos = getAbsolutePosition(node, nds);
+          
+          if (nodeWidth && nodeHeight) {
+            // Check if drop position is inside this container's absolute bounds
+            const isInside = 
+              absPos.x >= nodeAbsPos.x &&
+              absPos.x <= nodeAbsPos.x + nodeWidth &&
+              absPos.y >= nodeAbsPos.y &&
+              absPos.y <= nodeAbsPos.y + nodeHeight;
+            
+            if (isInside) {
+              // Calculate depth in hierarchy to find deepest container
+              let depth = 0;
+              let current = node;
+              while (current.parentNode) {
+                depth++;
+                const parent = nds.find(n => n.id === current.parentNode);
+                if (!parent) break;
+                current = parent;
+              }
+              
+              if (!deepestContainer || depth > deepestContainer.depth) {
+                deepestContainer = { id: node.id, depth };
+              }
+            }
+          }
+        }
+      }
+      
+      newParentId = deepestContainer?.id;
+      
+      // Only update if the parent changed
+      if (newParentId !== draggedNode.parentNode) {
+        console.log('Parent changed from', draggedNode.parentNode, 'to', newParentId);
+        
+        return nds.map(node => {
+          if (node.id === draggedNode.id) {
+            if (newParentId) {
+              // Calculate relative position within new parent
+              const newParent = nds.find(n => n.id === newParentId);
+              if (newParent) {
+                const newParentAbs = getAbsolutePosition(newParent, nds);
+                return {
+                  ...node,
+                  position: {
+                    x: absPos.x - newParentAbs.x,
+                    y: absPos.y - newParentAbs.y
+                  },
+                  parentNode: newParentId,
+                  extent: 'parent' as const
+                };
+              }
+            } else {
+              // Remove parent - use absolute position
+              const updated = {
+                ...node,
+                position: { x: absPos.x, y: absPos.y }
+              };
+              delete updated.parentNode;
+              delete updated.extent;
+              return updated;
+            }
+          }
+          return node;
+        });
+      }
+      
+      return nds;
+    });
+  }, [setNodes]);
   
   return (
     <div style={{ width: '100%', height: '100%', display: 'flex' }}>
@@ -228,8 +434,13 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
         onInit={setReactFlowInstance}
         onNodesDelete={onNodesDelete}
         onSelectionChange={onSelectionChange}
+        onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypes}
         connectionMode={ConnectionMode.Loose}
+        connectOnDrop={false}
+        nodesDraggable={true}
+        nodesConnectable={true}
+        nodesFocusable={true}
         fitView
         attributePosition="bottom-left"
         deleteKeyCode={["Backspace","Delete"]}
