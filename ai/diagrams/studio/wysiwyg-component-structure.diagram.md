@@ -4,7 +4,6 @@ name: WYSIWYG Editor Component Structure
 description: Shows the component hierarchy and integration of TipTap editor with markdown conversion
 diagram_type: component
 feature_id: [wysiwyg-markdown-editor]
-spec_id: [wysiwyg-editor-implementation]
 actor_id: []
 ---
 

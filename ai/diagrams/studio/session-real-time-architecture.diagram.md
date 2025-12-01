@@ -1,9 +1,6 @@
 ---
 diagram_id: session-real-time-architecture
 title: Session Real-Time Update Architecture
-spec_id:
-  - session-file-watching
-  - session-state-management
 ---
 
 # Diagram: Session Real-Time Update Architecture

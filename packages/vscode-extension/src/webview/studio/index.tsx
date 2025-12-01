@@ -14,6 +14,11 @@ import { useSessionPermissions } from './hooks/useSessionPermissions';
 // Acquire VSCode API once at module level
 const vscode = typeof acquireVsCodeApi !== 'undefined' ? acquireVsCodeApi() : undefined;
 
+// Make vscode API globally available for child components (like DiagramEditor)
+if (vscode) {
+  (window as any).vscode = vscode;
+}
+
 interface FeatureChangeEntry {
   path: string;
   change_type: 'added' | 'modified';
@@ -1919,15 +1924,6 @@ function DiagramFrontmatter({ frontmatter, onChange, readOnly }: {
         />
       </div>
       <div className="form-group">
-        <label className="form-label">Spec IDs (comma-separated)</label>
-        <input 
-          className="form-input"
-          value={Array.isArray(frontmatter.spec_id) ? frontmatter.spec_id.join(', ') : frontmatter.spec_id || ''}
-          onChange={(e) => onChange('spec_id', e.target.value.split(',').map((s: string) => s.trim()))}
-          readOnly={readOnly}
-        />
-      </div>
-      <div className="form-group">
         <label className="form-label">Actor IDs (comma-separated)</label>
         <input 
           className="form-input"
@@ -1935,6 +1931,17 @@ function DiagramFrontmatter({ frontmatter, onChange, readOnly }: {
           onChange={(e) => onChange('actor_id', e.target.value.split(',').map((s: string) => s.trim()))}
           readOnly={readOnly}
         />
+      </div>
+      <div className="form-note" style={{ 
+        padding: '8px 12px', 
+        background: 'var(--vscode-textBlockQuote-background)', 
+        border: '1px solid var(--vscode-panel-border)', 
+        borderRadius: '4px',
+        fontSize: '12px',
+        color: 'var(--vscode-descriptionForeground)',
+        marginTop: '8px'
+      }}>
+        <strong>Note:</strong> Specs are linked at the element level via node properties, not in diagram frontmatter.
       </div>
     </>
   );

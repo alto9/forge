@@ -148,6 +148,13 @@ export class ForgeStudioPanel {
                     });
                     break;
                 }
+                case 'getSpecs': {
+                    console.log('ForgeStudioPanel: Received getSpecs request');
+                    const specs = await this._listSpecs();
+                    console.log('ForgeStudioPanel: Found specs:', specs.length, specs);
+                    this._panel.webview.postMessage({ type: 'specs', data: specs });
+                    break;
+                }
                 default:
                     break;
             }
@@ -540,6 +547,34 @@ export class ForgeStudioPanel {
         });
 
         return sessions;
+    }
+
+    private async _listSpecs(): Promise<Array<{ id: string; name: string }>> {
+        const specsDir = vscode.Uri.joinPath(this._projectUri, 'ai', 'specs');
+        const specs: Array<{ id: string; name: string }> = [];
+
+        try {
+            const files = await this._listFilesRecursive(specsDir, '.spec.md');
+            
+            for (const file of files) {
+                const content = await FileParser.readFile(file.fsPath);
+                const parsed = FileParser.parseFrontmatter(content);
+                const specId = parsed.frontmatter.spec_id || path.basename(file.fsPath, '.spec.md');
+                const name = parsed.frontmatter.name || specId;
+                
+                specs.push({
+                    id: specId,
+                    name: name
+                });
+            }
+        } catch (error) {
+            // Specs directory doesn't exist yet
+        }
+
+        // Sort alphabetically by name
+        specs.sort((a, b) => a.name.localeCompare(b.name));
+
+        return specs;
     }
 
     /**

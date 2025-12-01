@@ -318,6 +318,7 @@ These documents provide context and guidance but are NOT tracked in sessions:
 - **No Transitions**: Never show "old way" vs "new way" - just show the current architecture
 - **Single Purpose**: One diagram per file representing one aspect of the system
 - **React-Flow JSON Format**: Use JSON format with react-flow for visual diagram editing
+- **Element-Level Spec Linking**: Individual diagram nodes can link to specs via node.data.spec_id
 - **Git Controls History**: Change history is in Git, not in the diagram content
 
 **Actors (*.actor.md)**
@@ -425,6 +426,7 @@ During active session, user edits design documents:
   - Show technical implementations OR workflows as they should exist NOW
   - One diagram per file for clarity
   - Use react-flow JSON format stored in markdown code blocks
+  - **Element-level spec linking**: Individual nodes can reference specs via node.data.spec_id
   - **Analyze existing folder structure** before creating new diagrams
   
 - **Actors** (*.actor.md): Define system actors and personas
@@ -517,8 +519,10 @@ Specs (*.spec.md) │  │   │
   ├─ diagram_id[] ◄──────┘
   └─ context_id[] ─┐  
                    │  
-Diagrams           │  
-  ◄────────────────┘
+Diagrams (*.diagram.md)
+  ├─ frontmatter.feature_id[]
+  ├─ frontmatter.actor_id[]
+  └─ node.data.spec_id ◄──────┘ (element-level) ⭐
                       
 Contexts              
   ◄───────────────────┘
@@ -529,6 +533,8 @@ Stories & Tasks
   ├─ spec_id[]
   └─ diagram_id[]
 \`\`\`
+
+**⭐ Element-Level Spec Linking**: Diagram nodes reference specs via \`node.data.spec_id\`, enabling granular documentation mapping for specific components. Specs are NOT linked in diagram frontmatter.
 
 ### Systematic Context Gathering (CRITICAL for forge-scribe)
 
@@ -1053,8 +1059,16 @@ interface LoginResponse {
 - References one or more **feature_id** values for user-facing behavior
 - References **diagram_id** values for visual architecture (create separate diagram files)
 - May reference **context_id** values for implementation guidance
+- **Referenced BY diagram elements**: Individual diagram nodes link to specs via node.data.spec_id
 - Specs can define data structures inline using TypeScript interfaces or tables
-- Stories will reference this spec_id for implementation`,
+- Stories will reference this spec_id for implementation
+
+### Diagram Element Linking
+Specs are frequently linked from individual diagram elements to provide technical context for specific components:
+- Visual diagram editor shows a 📋 badge on elements linked to specs
+- Enables granular documentation mapping (e.g., each AWS service in a diagram can link to its config spec)
+- Provides just-in-time technical context when viewing or editing diagrams
+- Specs are linked at the element level, not in diagram frontmatter`,
 
       actor: `# Actor File Schema
 
@@ -1321,9 +1335,10 @@ name: Human Readable Name
 description: Brief description of what this diagram shows
 diagram_type: flow  # flow, infrastructure, component, state, sequence
 feature_id: []  # Optional: related features
-spec_id: []  # Optional: related specs
 actor_id: []  # Optional: actors shown in diagram
 ---
+
+**Note**: Specs are linked at the element level via \`node.data.spec_id\`, not in the diagram frontmatter.
 
 ## Content Structure
 Diagram files contain JSON diagram data stored in a markdown code block that visualizes system architecture, flows, or relationships.
@@ -1334,10 +1349,39 @@ Each diagram file should contain exactly ONE JSON code block with react-flow nod
 \`\`\`json
 {
   "nodes": [
-    { "id": "user", "type": "default", "position": { "x": 0, "y": 0 }, "data": { "label": "User" } },
-    { "id": "api", "type": "aws-apigateway", "position": { "x": 200, "y": 0 }, "data": { "label": "API Gateway" } },
-    { "id": "lambda", "type": "aws-lambda", "position": { "x": 400, "y": 0 }, "data": { "label": "Lambda Function" } },
-    { "id": "dynamodb", "type": "aws-dynamodb", "position": { "x": 600, "y": 0 }, "data": { "label": "DynamoDB" } }
+    { 
+      "id": "user", 
+      "type": "default", 
+      "position": { "x": 0, "y": 0 }, 
+      "data": { 
+        "label": "User",
+        "spec_id": "user-authentication"  // Optional: link node to spec
+      } 
+    },
+    { 
+      "id": "api", 
+      "type": "aws-apigateway", 
+      "position": { "x": 200, "y": 0 }, 
+      "data": { 
+        "label": "API Gateway",
+        "spec_id": "api-gateway-config"  // Optional: link node to spec
+      } 
+    },
+    { 
+      "id": "lambda", 
+      "type": "aws-lambda", 
+      "position": { "x": 400, "y": 0 }, 
+      "data": { 
+        "label": "Lambda Function",
+        "spec_id": "lambda-processing"  // Optional: link node to spec
+      } 
+    },
+    { 
+      "id": "dynamodb", 
+      "type": "aws-dynamodb", 
+      "position": { "x": 600, "y": 0 }, 
+      "data": { "label": "DynamoDB" } 
+    }
   ],
   "edges": [
     { "id": "e1", "source": "user", "target": "api" },
@@ -1346,6 +1390,27 @@ Each diagram file should contain exactly ONE JSON code block with react-flow nod
   ]
 }
 \`\`\`
+
+### Node Data Properties
+Each node's \`data\` object can include:
+- **label** (required): Display name for the node
+- **spec_id** (optional): Link this specific diagram element to a technical specification
+- **classifier**: Node type identifier (auto-populated by shape library)
+- **properties**: Custom key-value pairs for the element
+- **isContainer**: Boolean indicating if node can contain other nodes
+
+### Element-Level Spec Linking
+Individual diagram elements (nodes) can be linked to specifications using the \`spec_id\` field in their data object. This creates a granular connection between visual elements and their technical documentation.
+
+**When to link specs to diagram elements:**
+- When specific components have detailed technical specifications
+- When different parts of a diagram need different implementation guidance
+- When you want to provide just-in-time context for individual elements
+- When showing system architecture with documented components
+
+**Visual Indicator:**
+- Nodes with a spec_id display a 📋 badge in the diagram editor
+- Makes it easy to see which components have technical documentation
 
 The description field in the frontmatter should provide any necessary context or legend information for the diagram.
 
@@ -1364,10 +1429,20 @@ Diagrams provide visual representations for:
 - Keep it visual and high-level
 
 ## Linkages
-- Referenced by **spec_id** for technical specifications
-- May reference **feature_id** to show feature architecture
-- May reference **actor_id** to show which actors are involved
-- Stories may reference **diagram_id** for visual context`,
+
+### Diagram-Level Linkages (Frontmatter)
+- May reference **feature_id[]** to show feature architecture
+- May reference **actor_id[]** to show which actors are involved
+- Stories may reference **diagram_id** for visual context
+
+### Element-Level Linkages (Node Data)
+- Individual nodes link to specs via **node.data.spec_id**
+- Provides granular specification mapping for specific components
+- Enables just-in-time technical context for diagram elements
+- Visual indicator (📋) shown on diagram nodes that have linked specs
+- Each component in a diagram can have its own technical specification
+
+**Note**: Specs are linked at the element level only. There is no diagram-level spec_id in the frontmatter.`,
     };
 
     const schema = schemas[schemaType];

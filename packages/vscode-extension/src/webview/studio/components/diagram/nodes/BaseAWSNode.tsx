@@ -62,6 +62,32 @@ export const BaseAWSNode: React.FC<BaseAWSNodeProps> = ({ data, serviceConfig, s
             transition: 'all 0.2s ease'
         }}
         >
+            {/* Spec Link Indicator */}
+            {(data as any).spec_id && (
+                <div style={{
+                    position: 'absolute',
+                    top: '-8px',
+                    right: '-8px',
+                    width: '20px',
+                    height: '20px',
+                    borderRadius: '50%',
+                    background: '#4CAF50',
+                    border: '2px solid white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '10px',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
+                    zIndex: 10,
+                    cursor: 'help',
+                    title: `Linked to spec: ${(data as any).spec_id}`
+                }}>
+                    📋
+                </div>
+            )}
+            
             {/* Node Resizer */}
             <NodeResizer
                 minWidth={120}

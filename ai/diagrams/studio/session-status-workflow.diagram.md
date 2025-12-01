@@ -1,8 +1,6 @@
 ---
 diagram_id: session-status-workflow
 title: Session Status Workflow and State Transitions
-spec_id:
-  - session-status-transitions
 ---
 
 # Diagram: Session Status Workflow

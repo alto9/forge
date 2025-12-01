@@ -4,7 +4,6 @@ name: Navigation Session State Management
 description: Shows how session state affects the enabled/disabled state of navigation items
 diagram_type: state
 feature_id: [navigation-menu]
-spec_id: [navigation-menu-implementation]
 actor_id: []
 ---
 

@@ -4,7 +4,6 @@ name: Navigation Menu Structure
 description: Shows the reorganized Forge Studio navigation sidebar with INFORM section for foundational materials and DESIGN section for active design work
 diagram_type: component
 feature_id: [navigation-menu]
-spec_id: [navigation-menu-implementation]
 actor_id: []
 ---
 

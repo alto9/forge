@@ -4,7 +4,6 @@ name: Welcome Panel Component Structure
 description: Shows how the welcome screen integrates with project picker and studio initialization
 diagram_type: component
 feature_id: [welcome-screen]
-spec_id: [welcome-initialization]
 actor_id: []
 ---
 

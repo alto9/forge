@@ -4,7 +4,6 @@ name: WYSIWYG Editor State Management
 description: Shows the state flow and auto-save mechanism for the WYSIWYG editor
 diagram_type: state
 feature_id: [wysiwyg-markdown-editor]
-spec_id: [wysiwyg-editor-implementation]
 actor_id: []
 ---
 

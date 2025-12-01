@@ -4,7 +4,6 @@ name: Welcome Panel Initialization Workflow
 description: Shows the sequence of steps during Forge project initialization
 diagram_type: sequence
 feature_id: [welcome-screen]
-spec_id: [welcome-initialization]
 actor_id: []
 ---
 

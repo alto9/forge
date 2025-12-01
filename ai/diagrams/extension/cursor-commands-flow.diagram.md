@@ -4,7 +4,6 @@ name: Cursor Commands Management Flow
 description: Shows the flow of command template loading, validation, and generation
 diagram_type: flow
 feature_id: []
-spec_id: [cursor-commands-management]
 actor_id: []
 ---
 

@@ -7,6 +7,7 @@ import ReactFlow, {
   useNodesState,
   useEdgesState,
   Background,
+  BackgroundVariant,
   Controls,
   MiniMap,
   ReactFlowProvider,
@@ -17,6 +18,7 @@ import ReactFlow, {
 
 import { ShapeLibrary } from './ShapeLibrary';
 import { nodeTypes } from './nodeTypes';
+import { PropertiesPanel } from './PropertiesPanel';
 
 export interface DiagramData {
   nodes: Node[];
@@ -85,6 +87,8 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
   const [edges, setEdges, onEdgesChange] = useEdgesState([]);
   const [reactFlowInstance, setReactFlowInstance] = useState<any>(null);
   const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null);
+  const [availableSpecs, setAvailableSpecs] = useState<Array<{ id: string; name: string }>>([]);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [pendingNodeType, setPendingNodeType] = useState<{
     classifier: string;
@@ -92,11 +96,41 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
     serviceConfig: any;
   } | null>(null);
 
-  // No need for manual event listeners - using React props below
+  // Request available specs from VSCode
+  useEffect(() => {
+    // Request specs list from VSCode
+    const vscode = (window as any).vscode;
+    console.log('DiagramEditor: vscode API available?', !!vscode);
+    if (vscode) {
+      console.log('DiagramEditor: Requesting specs...');
+      vscode.postMessage({ type: 'getSpecs' });
+    }
+
+    // Listen for specs response
+    const handleMessage = (event: MessageEvent) => {
+      const msg = event.data;
+      if (msg?.type === 'specs') {
+        console.log('DiagramEditor: Received specs:', msg.data);
+        setAvailableSpecs(msg.data || []);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   useEffect(() => {
     setIsInitialLoad(true);
-    setNodes(diagramData.nodes || []);
+    // Ensure all nodes have proper z-index when loading
+    const nodesWithZIndex = (diagramData.nodes || []).map(node => {
+      if (node.data?.isContainer) {
+        return { ...node, zIndex: 0 };
+      } else if (node.parentNode) {
+        return { ...node, zIndex: 1 };
+      }
+      return node;
+    });
+    setNodes(nodesWithZIndex);
     setEdges(diagramData.edges || []);
   }, [diagramData, setNodes, setEdges]);
 
@@ -242,6 +276,7 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
         },
         width: 400,
         height: 300,
+        zIndex: 0, // Containers have lower z-index
         ...(parentNodeId && { 
           parentNode: parentNodeId,
           extent: 'parent' as const
@@ -257,6 +292,7 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
           color: dropData.color,
           isContainer: false
         },
+        zIndex: parentNodeId ? 1 : undefined, // Children in containers have higher z-index
         ...(parentNodeId && { 
           parentNode: parentNodeId,
           extent: 'parent' as const
@@ -295,8 +331,17 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
     }, [selectedNode]
   );
 
-  const onSelectionChange = useCallback(({ nodes: selectedNodes} : { nodes: Node[] }) => {
+  const onEdgesDelete = useCallback(
+    (deleted: Edge[]) => {
+      if(deleted.find(e => e.id === selectedEdge?.id)) {
+        setSelectedEdge(null);
+      }
+    }, [selectedEdge]
+  );
+
+  const onSelectionChange = useCallback(({ nodes: selectedNodes, edges: selectedEdges } : { nodes: Node[], edges: Edge[] }) => {
     setSelectedNode(selectedNodes.length > 0 ? selectedNodes[0] : null);
+    setSelectedEdge(selectedEdges.length > 0 ? selectedEdges[0] : null);
   }, [])
 
   const handleUpdateNode = useCallback((nodeId: string, updates: Partial<Node['data']>) => {
@@ -315,6 +360,17 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
       })
     );
   }, [setNodes]);
+
+  const handleUpdateEdge = useCallback((edgeId: string, updates: Partial<Edge>) => {
+    setEdges((eds) =>
+      eds.map((edge) => {
+        if (edge.id === edgeId) {
+          return { ...edge, ...updates };
+        }
+        return edge;
+      })
+    );
+  }, [setEdges]);
 
   // Handle dragging existing nodes into containers
   const onNodeDragStop = useCallback((_event: any, draggedNode: Node) => {
@@ -386,7 +442,8 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
                     y: absPos.y - newParentAbs.y
                   },
                   parentNode: newParentId,
-                  extent: 'parent' as const
+                  extent: 'parent' as const,
+                  zIndex: 1 // Ensure child nodes render on top of containers
                 };
               }
             } else {
@@ -397,6 +454,7 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
               };
               delete updated.parentNode;
               delete updated.extent;
+              delete updated.zIndex;
               return updated;
             }
           }
@@ -413,18 +471,28 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
       {/* Shape Library Panel */}
       <ShapeLibrary />
 
-      {/* React Flow Canvas */}
-      <div
-        ref={reactFlowWrapper}
-        style={{
-          flex: 1,
-          height: '100%',
-          position: 'relative',
-          background: 'var(--vscode-sideBar-background)',
-        }}
-        onDragOver={onDragOver}
-        onDrop={onDrop}
-      >
+      {/* Main Canvas Area */}
+      <div style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column' }}>
+        {/* Properties Panel (Top) - Only shown when something is selected */}
+        <PropertiesPanel
+          selectedNode={selectedNode}
+          selectedEdge={selectedEdge}
+          onUpdateNode={handleUpdateNode}
+          onUpdateEdge={handleUpdateEdge}
+          availableSpecs={availableSpecs}
+        />
+
+        {/* React Flow Canvas */}
+        <div
+          ref={reactFlowWrapper}
+          style={{
+            flex: 1,
+            position: 'relative',
+            background: 'var(--vscode-sideBar-background)',
+          }}
+          onDragOver={onDragOver}
+          onDrop={onDrop}
+        >
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -433,6 +501,7 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
         onConnect={onConnect}
         onInit={setReactFlowInstance}
         onNodesDelete={onNodesDelete}
+        onEdgesDelete={onEdgesDelete}
         onSelectionChange={onSelectionChange}
         onNodeDragStop={onNodeDragStop}
         nodeTypes={nodeTypes}
@@ -447,7 +516,7 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
         elementsSelectable={true}
         selectNodesOnDrag={false}
       >
-        <Background color="var(--vscode-sideBar-background)" gap={16} />
+        <Background variant={BackgroundVariant.Dots} gap={16} />
         <Controls />
         <MiniMap
           nodeColor={(node) => {
@@ -499,10 +568,8 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
           </div>
         </Panel>
       </ReactFlow>
-    </div>
-
-    {/* Properties Panel */}
-    
+        </div>
+      </div>
     </div>
   );
 };

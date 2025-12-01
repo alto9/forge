@@ -4,7 +4,6 @@ name: Forge Studio High-Level Flow
 description: Shows the entry flow from command execution through project readiness check to panel initialization
 diagram_type: flow
 feature_id: [forge-studio]
-spec_id: [forge-studio-implementation]
 actor_id: []
 ---
 
