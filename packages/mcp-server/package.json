@@ -2,21 +2,35 @@
   "name": "@forge/mcp-server",
   "version": "0.0.1",
   "description": "Forge MCP Server - Provides Forge context engineering capabilities via Model Context Protocol",
+  "license": "MIT",
+  "author": "Alto9",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {
     "forge-mcp": "./dist/index.js"
   },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "forge",
+    "context-engineering",
+    "ai-assisted-development",
+    "agentic-development"
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/alto9/cursor-context-engineering",
+    "url": "https://github.com/alto9/forge",
     "directory": "packages/mcp-server"
   },
   "bugs": {
-    "url": "https://github.com/alto9/cursor-context-engineering/issues"
+    "url": "https://github.com/alto9/forge/issues"
   },
-  "homepage": "https://github.com/alto9/cursor-context-engineering#readme",
+  "homepage": "https://github.com/alto9/forge#readme",
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc && chmod +x dist/index.js",
     "compile": "tsc",

@@ -36,25 +36,31 @@ jobs:
       - name: Build packages
         run: npm run build
       
+      - name: Package VSCode extension (pre-release)
+        run: |
+          cd packages/vscode-extension
+          npm run package
+          npx --yes @vscode/vsce package --no-dependencies
+      
       - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npx semantic-release
       
-      - name: Package VSCode extension
+      - name: Re-package VSCode extension (post-release)
         if: success()
         run: |
           cd packages/vscode-extension
           npm run package
           npx --yes @vscode/vsce package --no-dependencies
       
-      - name: Publish VSCode extension
+      - name: Publish VSCode extension to marketplace
         if: success()
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
           cd packages/vscode-extension
-          npx --yes @vscode/vsce publish --pat $VSCE_PAT
-        continue-on-error: true
+          VSIX_FILE=$(ls forge-*.vsix | head -1)
+          npx --yes @vscode/vsce publish --packagePath "$VSIX_FILE" --pat $VSCE_PAT
 

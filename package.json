@@ -2,15 +2,15 @@
   "name": "forge-monorepo",
   "version": "0.0.1",
   "private": true,
-  "description": "Forge - Context Engineering for Agentic Development",
+  "description": "Forge - Context Engineering Add-on for VS Code",
   "repository": {
     "type": "git",
-    "url": "https://github.com/alto9/cursor-context-engineering"
+    "url": "https://github.com/alto9/forge"
   },
   "bugs": {
-    "url": "https://github.com/alto9/cursor-context-engineering/issues"
+    "url": "https://github.com/alto9/forge/issues"
   },
-  "homepage": "https://github.com/alto9/cursor-context-engineering#readme",
+  "homepage": "https://github.com/alto9/forge#readme",
   "workspaces": [
     "packages/*"
   ],

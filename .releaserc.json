@@ -39,8 +39,8 @@
       {
         "assets": [
           {
-            "path": "packages/vscode-extension/*.vsix",
-            "label": "VSCode Extension"
+            "path": "packages/vscode-extension/forge-*.vsix",
+            "label": "Forge VSCode Extension"
           }
         ]
       }

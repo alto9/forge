@@ -1,25 +1,42 @@
 {
   "name": "forge",
-  "displayName": "Forge - Context Engineering for Agentic Development",
+  "displayName": "Forge - Context Engineering Add-on for VS Code",
   "description": "VSCode extension that helps engineers use proper context engineering to build and maintain software using Agentic development practices",
   "version": "0.0.1",
+  "license": "MIT",
+  "author": "Alto9",
   "publisher": "alto9",
+  "keywords": [
+    "forge",
+    "context-engineering",
+    "ai",
+    "agentic-development",
+    "mcp",
+    "session-driven",
+    "gherkin",
+    "specifications"
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/alto9/cursor-context-engineering",
+    "url": "https://github.com/alto9/forge",
     "directory": "packages/vscode-extension"
   },
   "bugs": {
-    "url": "https://github.com/alto9/cursor-context-engineering/issues"
+    "url": "https://github.com/alto9/forge/issues"
   },
-  "homepage": "https://github.com/alto9/cursor-context-engineering#readme",
+  "homepage": "https://github.com/alto9/forge#readme",
   "engines": {
     "vscode": "^1.80.0",
     "node": ">=22.14.0"
   },
   "categories": [
+    "Programming Languages",
     "Other"
   ],
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
   "main": "./dist/extension.js",
   "contributes": {
     "commands": [
