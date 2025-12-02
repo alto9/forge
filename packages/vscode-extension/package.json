@@ -2,7 +2,7 @@
   "name": "forge",
   "displayName": "Forge - Context Engineering for Agentic Development",
   "description": "VSCode extension that helps engineers use proper context engineering to build and maintain software using Agentic development practices",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "publisher": "alto9",
   "repository": {
     "type": "git",

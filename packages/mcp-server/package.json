@@ -1,6 +1,6 @@
 {
   "name": "@forge/mcp-server",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "description": "Forge MCP Server - Provides Forge context engineering capabilities via Model Context Protocol",
   "type": "module",
   "main": "./dist/index.js",

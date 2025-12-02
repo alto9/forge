@@ -1,6 +1,6 @@
 {
   "name": "forge-monorepo",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Forge - Context Engineering for Agentic Development",
   "repository": {
@@ -20,7 +20,7 @@
     "watch": "npm run watch --workspaces --if-present",
     "lint": "npm run lint --workspaces",
     "clean": "npm run clean --workspaces --if-present && rm -rf node_modules packages/*/node_modules",
-    "vscode:package": "cd packages/vscode-extension && npm run package && npx --yes @vscode/vsce package --no-dependencies -o forge-0.1.0.vsix",
+    "vscode:package": "cd packages/vscode-extension && npm run package && npx --yes @vscode/vsce package --no-dependencies -o forge-0.0.1.vsix",
     "release:dry-run": "semantic-release --dry-run",
     "release": "semantic-release"
   },
