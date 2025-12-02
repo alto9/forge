@@ -19,6 +19,7 @@
     "compile": "npm run compile --workspaces",
     "watch": "npm run watch --workspaces --if-present",
     "lint": "npm run lint --workspaces",
+    "test": "npm run test --workspaces --if-present",
     "clean": "npm run clean --workspaces --if-present && rm -rf node_modules packages/*/node_modules",
     "vscode:package": "cd packages/vscode-extension && npm run package && npx --yes @vscode/vsce package --no-dependencies -o forge-0.0.1.vsix",
     "release:dry-run": "semantic-release --dry-run",
