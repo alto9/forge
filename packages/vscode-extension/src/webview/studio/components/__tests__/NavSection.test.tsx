@@ -98,12 +98,12 @@ describe('NavSection Component', () => {
       );
 
       // Features should have lock icon (requires session)
-      const featuresItem = screen.getByText('Features').closest('div');
+      const featuresItem = screen.getByText('Features').closest('div')?.parentElement;
       expect(featuresItem).toHaveTextContent('🔒');
 
       // Actors and Contexts should not have lock icon (always enabled)
-      const actorsItem = screen.getByText('Actors').closest('div');
-      const contextsItem = screen.getByText('Contexts').closest('div');
+      const actorsItem = screen.getByText('Actors').closest('div')?.parentElement;
+      const contextsItem = screen.getByText('Contexts').closest('div')?.parentElement;
       expect(actorsItem).not.toHaveTextContent('🔒');
       expect(contextsItem).not.toHaveTextContent('🔒');
     });
@@ -142,9 +142,9 @@ describe('NavSection Component', () => {
       );
 
       // Only session-required item should have lock icon
-      const item1 = screen.getByText('Always Enabled').closest('div');
-      const item2 = screen.getByText('Session Required').closest('div');
-      const item3 = screen.getByText('Default Item').closest('div');
+      const item1 = screen.getByText('Always Enabled').closest('div')?.parentElement;
+      const item2 = screen.getByText('Session Required').closest('div')?.parentElement;
+      const item3 = screen.getByText('Default Item').closest('div')?.parentElement;
 
       expect(item1).not.toHaveTextContent('🔒');
       expect(item2).toHaveTextContent('🔒');
@@ -218,7 +218,7 @@ describe('NavSection Component', () => {
         />
       );
 
-      const actorsItem = screen.getByText('Actors').closest('div');
+      const actorsItem = screen.getByText('Actors').closest('div')?.parentElement;
       expect(actorsItem).toHaveAttribute('title', 'Define system actors and personas - Always accessible foundational reference');
     });
 
@@ -233,7 +233,7 @@ describe('NavSection Component', () => {
         />
       );
 
-      const contextsItem = screen.getByText('Contexts').closest('div');
+      const contextsItem = screen.getByText('Contexts').closest('div')?.parentElement;
       expect(contextsItem).toHaveAttribute('title', 'Provide technical guidance and best practices - Always accessible reference');
     });
 
@@ -248,8 +248,8 @@ describe('NavSection Component', () => {
         />
       );
 
-      const featuresItem = screen.getByText('Features').closest('div');
-      expect(featuresItem).toHaveAttribute('title', 'Define user-facing functionality and behavior - Requires active design session - Active session required');
+      const featuresItem = screen.getByText('Features').closest('div')?.parentElement;
+      expect(featuresItem).toHaveAttribute('title', 'Browse features anytime, edit during design sessions - Active session required');
     });
 
     it('should show correct tooltip for Features when enabled', () => {
@@ -263,8 +263,8 @@ describe('NavSection Component', () => {
         />
       );
 
-      const featuresItem = screen.getByText('Features').closest('div');
-      expect(featuresItem).toHaveAttribute('title', 'Define user-facing functionality and behavior - Requires active design session');
+      const featuresItem = screen.getByText('Features').closest('div')?.parentElement;
+      expect(featuresItem).toHaveAttribute('title', 'Browse features anytime, edit during design sessions');
     });
 
     it('should show default tooltip for unknown items', () => {
@@ -278,7 +278,7 @@ describe('NavSection Component', () => {
         />
       );
 
-      const unknownItem = screen.getByText('Unknown Item').closest('div');
+      const unknownItem = screen.getByText('Unknown Item').closest('div')?.parentElement;
       expect(unknownItem).toHaveAttribute('title', 'Unknown Item');
     });
   });
@@ -333,7 +333,7 @@ describe('NavSection Component', () => {
       );
 
       // Initially disabled
-      let featuresItem = screen.getByText('Features').closest('div');
+      let featuresItem = screen.getByText('Features').closest('div')?.parentElement;
       expect(featuresItem).toHaveTextContent('🔒');
 
       // Rerender with active session
@@ -348,7 +348,7 @@ describe('NavSection Component', () => {
       );
 
       // Now enabled
-      featuresItem = screen.getByText('Features').closest('div');
+      featuresItem = screen.getByText('Features').closest('div')?.parentElement;
       expect(featuresItem).not.toHaveTextContent('🔒');
     });
   });

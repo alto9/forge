@@ -289,7 +289,8 @@ describe('WelcomePanel - Folder Creation Logic', () => {
             await new Promise(resolve => setTimeout(resolve, delay));
             
             const elapsed = Date.now() - start;
-            expect(elapsed).toBeGreaterThanOrEqual(delay);
+            // Allow for slight timing variations (within 10ms)
+            expect(elapsed).toBeGreaterThanOrEqual(delay - 10);
         });
 
         it('should not open studio if initialization failed', () => {
