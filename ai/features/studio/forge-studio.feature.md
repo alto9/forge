@@ -4,7 +4,6 @@ name: Forge Studio Interface
 description: Visual interface for managing Forge files and sessions with integrated session panel
 spec_id: [studio-ui, studio-components, studio-webview]
 model_id: [session, feature, spec, model, actor, context]
-context_id: [theme, vsce]
 ---
 
 # Forge Studio Interface

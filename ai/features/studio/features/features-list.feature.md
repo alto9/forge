@@ -4,7 +4,6 @@ name: Features List View
 description: User experience for viewing and navigating the list of features in Forge Studio
 spec_id: [features-ui, features-navigation]
 model_id: [feature-list, studio-state]
-context_id: [theme, vsce]
 ---
 
 # Features List View

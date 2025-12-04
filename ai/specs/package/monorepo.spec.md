@@ -4,7 +4,6 @@ name: Monorepo Package Management
 description: Technical implementation for managing multiple packages in the Forge monorepo
 feature_id: [forge-monorepo]
 diagram_id: [monorepo-structure]
-context_id: [node]
 ---
 
 # Monorepo Package Management

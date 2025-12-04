@@ -4,7 +4,6 @@ name: Studio Dashboard Overview
 description: Dashboard interface showing project overview, active session status, and navigation
 spec_id: [dashboard-ui, dashboard-components]
 model_id: [session]
-context_id: [theme]
 ---
 
 # Studio Dashboard Overview

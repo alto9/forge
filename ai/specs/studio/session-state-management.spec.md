@@ -2,7 +2,6 @@
 spec_id: session-state-management
 feature_id:
   - real-time-session-updates
-context_id: []
 ---
 
 # Spec: Session State Management

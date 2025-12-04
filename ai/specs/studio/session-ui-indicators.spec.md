@@ -2,7 +2,6 @@
 spec_id: session-ui-indicators
 feature_id:
   - session-visual-indicators
-context_id: []
 ---
 
 # Spec: Session UI Indicators

@@ -4,7 +4,6 @@ name: WYSIWYG Markdown Editor
 description: Rich text editing experience for markdown content in Forge Studio
 spec_id: [wysiwyg-editor-implementation]
 model_id: []
-context_id: [wysiwyg-markdown-editor-guidance]
 ---
 
 # WYSIWYG Markdown Editor

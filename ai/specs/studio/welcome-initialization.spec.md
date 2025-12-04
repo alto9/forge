@@ -4,7 +4,6 @@ name: Welcome Screen and Project Initialization Specification
 description: Technical specification for the welcome screen that checks project readiness and initializes folder structure
 feature_id: [welcome-screen]
 diagram_id: [welcome-component-structure, welcome-initialization-workflow]
-context_id: [theme, vsce]
 ---
 
 # Welcome Screen and Project Initialization Specification

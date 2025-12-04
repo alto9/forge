@@ -2,7 +2,6 @@
 spec_id: session-status-transitions
 feature_id:
   - session-status-workflow
-context_id: []
 ---
 
 # Spec: Session Status Transitions

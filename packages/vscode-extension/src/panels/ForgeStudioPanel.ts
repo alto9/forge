@@ -845,7 +845,6 @@ ${problemStatement}
                filePath.endsWith('.feature.md') ||
                filePath.endsWith('.spec.md') ||
                filePath.endsWith('.model.md') ||
-               filePath.endsWith('.context.md') ||
                filePath.endsWith('.story.md') ||
                filePath.endsWith('.task.md');
     }
@@ -1760,8 +1759,7 @@ ${problemStatement}
                 return {
                     spec_id: id,
                     feature_id: [],
-                    diagram_id: [],
-                    context_id: []
+                    diagram_id: []
                 };
             case 'actors':
                 return {

@@ -4,7 +4,6 @@ name: Studio Session Management
 description: Complete session lifecycle management within Forge Studio
 spec_id: [session-ui, session-tracking, session-persistence]
 model_id: [session]
-context_id: []
 ---
 
 # Studio Session Management

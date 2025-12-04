@@ -4,7 +4,6 @@ name: Specs List View
 description: User experience for viewing and navigating the list of specs in Forge Studio
 spec_id: [specs-ui, specs-navigation]
 model_id: [spec-list, studio-state]
-context_id: [theme, vsce]
 ---
 
 # Specs List View

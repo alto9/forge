@@ -4,7 +4,6 @@ name: Actor Editing
 description: User experience for editing existing actors in Forge Studio
 spec_id: [actor-editor-ui, actor-validation]
 model_id: [actor-editing, studio-state]
-context_id: [theme, vsce]
 ---
 
 # Actor Editing

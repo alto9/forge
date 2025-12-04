@@ -73,24 +73,13 @@ Ensure the ai/decisions folder exists, and create it if it doesn't. Use proper m
 
     const features = await this.fileManager.listFeatures();
     const specs = await this.fileManager.listSpecs();
-    const contexts = await this.fileManager.listContexts();
 
     let prompt = `Review and distill the following decision into features and specs:
 
 **Decision ID**: ${decisionId}
 **Decision File**: ai/decisions/${decisionId}.decision.md
 
-`;
-
-    if (contexts.length > 0) {
-      prompt += `**Available Context Files**:\n`;
-      for (const context of contexts) {
-        prompt += `- ${context.id}\n`;
-      }
-      prompt += '\n';
-    }
-
-    prompt += `STEP 0: Call the get_forge_objects tool to retrieve the list of supported spec objects and their guidance. Use this knowledge to design specs that leverage supported spec objects where appropriate.
+STEP 0: Call the get_forge_objects tool to retrieve the list of supported spec objects and their guidance. Use this knowledge to design specs that leverage supported spec objects where appropriate.
 
 **Task**: Analyze this decision and ensure that:
 
@@ -139,7 +128,6 @@ When drafting specs, prefer using supported spec objects from get_forge_objects 
 
     const features = await this.fileManager.listFeatures();
     const specs = await this.fileManager.listSpecs();
-    const contexts = await this.fileManager.listContexts();
 
     // Find related features and specs based on decision_id
     const relatedFeatures = features.filter(
@@ -170,23 +158,12 @@ When drafting specs, prefer using supported spec objects from get_forge_objects 
       }
     }
 
-    if (contexts.length > 0) {
-      prompt += `\n**Available Contexts**:\n`;
-      for (const context of contexts) {
-        prompt += `- ${context.id}: ai/contexts/${context.id}.context.md\n`;
-      }
-      prompt += '\n';
-    }
-
     prompt += `\n\nSTEP 1: Read the decision file and all related files listed above
 
 Read each file to understand the full context:
 - Read the decision file to understand what is being decided
 - Read related features to understand the expected behavior
 - Read related specs to understand the technical implementation details
-- Read available contexts for guidance
-
-STEP 2: For each spec object referenced or implied in the related specs (e.g., lambda, dynamodb, api-gateway), call get_forge_context with spec_object set to that object. Use the returned guidance to inform precise implementation details in the tasks.
 
 STEP 3: Create specific, actionable tasks in the ai/tasks/ folder that will implement this decision.
 

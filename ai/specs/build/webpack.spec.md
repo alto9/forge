@@ -4,7 +4,6 @@ name: Webpack Build Configuration
 description: Technical implementation for webpack build process in VSCode extension
 feature_id: [vscode-extension]
 diagram_id: [webpack-build-flow]
-context_id: [node, vsce]
 ---
 
 # Webpack Build Configuration

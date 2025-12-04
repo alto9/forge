@@ -4,7 +4,6 @@ name: Spec Editing
 description: User experience for editing existing specs in Forge Studio
 spec_id: [spec-editor-ui, spec-validation]
 model_id: [spec-editing, studio-state]
-context_id: [theme, vsce]
 ---
 
 # Spec Editing

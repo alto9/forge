@@ -3,7 +3,6 @@ feature_id: react-flow-diagram-editor
 name: React Flow Diagram Editor
 description: Visual drag-and-drop diagram editor using react-flow to replace nomnoml with JSON-based diagram format
 spec_id: [react-flow-diagram-implementation]
-context_id: []
 ---
 
 # React Flow Diagram Editor

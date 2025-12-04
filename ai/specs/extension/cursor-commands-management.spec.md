@@ -4,7 +4,6 @@ name: Cursor Commands Management and Distribution
 description: Technical specification for managing, validating, and distributing Cursor command files as part of Forge initialization
 feature_id: [welcome-screen]
 diagram_id: [cursor-commands-flow]
-context_id: [vsce]
 ---
 
 # Cursor Commands Management and Distribution

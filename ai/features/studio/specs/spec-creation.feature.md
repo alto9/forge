@@ -4,7 +4,6 @@ name: Spec Creation
 description: User experience for creating new specs in Forge Studio
 spec_id: [spec-creation-ui, spec-templates]
 model_id: [spec-creation, studio-state]
-context_id: [theme, vsce]
 ---
 
 # Spec Creation

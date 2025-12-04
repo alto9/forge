@@ -8,9 +8,6 @@ spec_id:
 model_id:
   - mcp-tool
   - mcp-response
-context_id:
-  - mcp
-  - node
 ---
 ```gherkin
 Scenario: Get Forge workflow overview

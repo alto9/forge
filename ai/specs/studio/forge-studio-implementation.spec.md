@@ -4,7 +4,6 @@ name: Forge Studio Implementation Specification
 description: Technical specification for the Forge Studio VSCode webview application
 feature_id: [forge-studio, studio-sessions]
 diagram_id: [forge-studio-flow, forge-studio-components]
-context_id: [theme, vsce]
 ---
 
 # Forge Studio Implementation Specification
@@ -265,7 +264,6 @@ spec_id: []
 ```yaml
 spec_id: {id}
 feature_id: []
-context_id: []
 ```
 
 **Actors:**
@@ -274,11 +272,6 @@ actor_id: {id}
 type: user
 ```
 
-**Contexts:**
-```yaml
-context_id: {id}
-category: ''
-```
 
 ### Content Templates
 

@@ -2,7 +2,6 @@
 spec_id: session-ticket-migration
 feature_id:
   - ticket-migration
-context_id: []
 ---
 
 # Spec: Session Ticket Migration

@@ -4,7 +4,7 @@ session_id: simplify-mcp-and-remove-contexts-feature
 feature_id: []
 spec_id: []
 diagram_id: []
-status: pending
+status: completed
 priority: medium
 estimated_minutes: 15
 ---
@@ -29,12 +29,12 @@ The Forge repository contains existing context files that are no longer needed. 
 - Story files with context_id - Remove context_id field
 
 ## Acceptance Criteria
-- [ ] `ai/contexts/` directory is completely deleted
-- [ ] No files contain `context_id` fields in frontmatter
-- [ ] No broken references to context files remain
-- [ ] Repository builds successfully
-- [ ] All tests pass
-- [ ] Forge functionality works without contexts
+- [x] `ai/contexts/` directory is completely deleted
+- [x] No files contain `context_id` fields in frontmatter
+- [x] No broken references to context files remain
+- [x] Repository builds successfully
+- [x] All tests pass
+- [x] Forge functionality works without contexts
 
 ## Dependencies
 - Can be done after MCP and readiness changes are complete

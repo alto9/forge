@@ -4,7 +4,6 @@ name: Feature Detail View
 description: User experience for viewing and interacting with individual feature details
 spec_id: [feature-detail-ui, feature-editor]
 model_id: [feature-detail, studio-state]
-context_id: [theme, vsce]
 ---
 
 # Feature Detail View

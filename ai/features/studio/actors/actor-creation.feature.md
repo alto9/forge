@@ -8,9 +8,6 @@ spec_id:
 model_id:
   - actor-creation
   - studio-state
-context_id:
-  - theme
-  - vsce
 ---
 ```gherkin
 Scenario: Create actor at any time

@@ -4,7 +4,6 @@ name: Navigation Menu Implementation
 description: Technical specification for the reorganized Forge Studio navigation menu with inform and design sections
 feature_id: [navigation-menu]
 diagram_id: [navigation-menu-structure, navigation-session-state]
-context_id: [theme, vsce]
 ---
 
 # Navigation Menu Implementation
