@@ -4,7 +4,7 @@ session_id: simplify-mcp-and-remove-contexts-feature
 feature_id: []
 spec_id: []
 diagram_id: []
-status: pending
+status: completed
 priority: high
 estimated_minutes: 30
 ---
@@ -31,12 +31,12 @@ The codebase includes tests for context functionality (creation, editing, valida
 - Mock data - Remove context examples
 
 ## Acceptance Criteria
-- [ ] All context-specific tests are removed
-- [ ] Integration tests no longer verify context functionality
-- [ ] Test fixtures don't include context data
-- [ ] All remaining tests pass
-- [ ] No test failures related to missing contexts
-- [ ] Test coverage remains adequate
+- [x] All context-specific tests are removed
+- [x] Integration tests no longer verify context functionality
+- [x] Test fixtures don't include context data
+- [x] All remaining tests pass
+- [x] No test failures related to missing contexts
+- [x] Test coverage remains adequate
 
 ## Dependencies
 - Depends on: 001-remove-mcp-context-tools (tools should be removed first)
