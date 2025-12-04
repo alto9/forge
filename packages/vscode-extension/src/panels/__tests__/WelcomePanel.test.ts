@@ -33,9 +33,8 @@ describe('WelcomePanel - Folder Creation Logic', () => {
             const requiredFolders = [
                 'ai',
                 'ai/actors',
-                'ai/contexts',
                 'ai/features',
-                'ai/models',
+                'ai/diagrams',
                 'ai/sessions',
                 'ai/specs'
             ];
@@ -142,15 +141,14 @@ describe('WelcomePanel - Folder Creation Logic', () => {
         const REQUIRED_FOLDERS = [
             { path: 'ai', description: 'Root directory for all Forge files' },
             { path: 'ai/actors', description: 'Actor definitions and personas' },
-            { path: 'ai/contexts', description: 'Context guidance files' },
             { path: 'ai/features', description: 'Feature definitions with Gherkin' },
-            { path: 'ai/models', description: 'Data model definitions' },
+            { path: 'ai/diagrams', description: 'Visual architecture diagrams' },
             { path: 'ai/sessions', description: 'Design session tracking' },
             { path: 'ai/specs', description: 'Technical specifications' }
         ];
 
-        it('should have 7 required folders', () => {
-            expect(REQUIRED_FOLDERS).toHaveLength(7);
+        it('should have 6 required folders', () => {
+            expect(REQUIRED_FOLDERS).toHaveLength(6);
         });
 
         it('should have root ai folder first', () => {

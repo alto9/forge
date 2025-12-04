@@ -50,9 +50,8 @@ describe('Project Readiness - Command File Integration', () => {
             const folders = [
                 { path: 'ai', exists: true },
                 { path: 'ai/actors', exists: true },
-                { path: 'ai/contexts', exists: true },
                 { path: 'ai/features', exists: true },
-                { path: 'ai/models', exists: true },
+                { path: 'ai/diagrams', exists: true },
                 { path: 'ai/sessions', exists: true },
                 { path: 'ai/specs', exists: true }
             ];
@@ -66,8 +65,8 @@ describe('Project Readiness - Command File Integration', () => {
             const folders = [
                 { path: 'ai', exists: true },
                 { path: 'ai/actors', exists: true },
-                { path: 'ai/contexts', exists: false }, // Missing
-                { path: 'ai/features', exists: true }
+                { path: 'ai/features', exists: false }, // Missing
+                { path: 'ai/diagrams', exists: true }
             ];
 
             const allFoldersExist = folders.every(f => f.exists);
@@ -404,7 +403,7 @@ describe('Project Readiness - Command File Integration', () => {
         });
 
         it('should transition to studio when ready after initialization', () => {
-            const foldersCreated = 7;
+            const foldersCreated = 6;
             const commandsCreated = 2;
             const failed = 0;
 

@@ -4,7 +4,7 @@ session_id: simplify-mcp-and-remove-contexts-feature
 feature_id: []
 spec_id: []
 diagram_id: []
-status: pending
+status: completed
 priority: high
 estimated_minutes: 20
 ---
@@ -33,10 +33,10 @@ Multiple test files verify project readiness checking logic. These tests current
 - `ProjectPicker.test.ts` - Update readiness scenarios
 
 ## Acceptance Criteria
-- [ ] All readiness tests pass with updated folder requirements
-- [ ] Tests no longer expect `ai/contexts` folder
-- [ ] Folder count expectations updated (6 instead of 7)
-- [ ] No test failures related to contexts folder
+- [x] All readiness tests pass with updated folder requirements
+- [x] Tests no longer expect `ai/contexts` folder
+- [x] Folder count expectations updated (6 instead of 7)
+- [x] No test failures related to contexts folder
 
 ## Dependencies
 - Depends on: 005-update-projectreadiness-required-folders

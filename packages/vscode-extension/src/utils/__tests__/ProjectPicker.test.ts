@@ -52,9 +52,8 @@ describe('ProjectPicker', () => {
             const requiredFolders = [
                 'ai',
                 'ai/actors',
-                'ai/contexts',
                 'ai/features',
-                'ai/models',
+                'ai/diagrams',
                 'ai/sessions',
                 'ai/specs'
             ];
@@ -128,15 +127,14 @@ describe('ProjectPicker', () => {
         const REQUIRED_FOLDERS = [
             'ai',
             'ai/actors',
-            'ai/contexts',
             'ai/features',
-            'ai/models',
+            'ai/diagrams',
             'ai/sessions',
             'ai/specs'
         ];
 
         it('should check all required folders', () => {
-            expect(REQUIRED_FOLDERS).toHaveLength(7);
+            expect(REQUIRED_FOLDERS).toHaveLength(6);
             expect(REQUIRED_FOLDERS[0]).toBe('ai');
         });
 
@@ -146,7 +144,7 @@ describe('ProjectPicker', () => {
 
         it('should require all subdirectories', () => {
             const subdirs = REQUIRED_FOLDERS.filter(f => f.startsWith('ai/'));
-            expect(subdirs).toHaveLength(6);
+            expect(subdirs).toHaveLength(5);
         });
 
         it('should return true when all folders exist', () => {
@@ -250,8 +248,8 @@ describe('ProjectPicker', () => {
         });
 
         it('should handle partially initialized project', async () => {
-            const folders = ['ai', 'ai/actors', 'ai/models'];
-            const requiredCount = 7;
+            const folders = ['ai', 'ai/actors', 'ai/features'];
+            const requiredCount = 6;
             const actualCount = folders.length;
 
             expect(actualCount).toBeLessThan(requiredCount);
@@ -262,14 +260,13 @@ describe('ProjectPicker', () => {
             const folders = [
                 'ai',
                 'ai/actors',
-                'ai/contexts',
                 'ai/features',
-                'ai/models',
+                'ai/diagrams',
                 'ai/sessions',
                 'ai/specs'
             ];
 
-            expect(folders.length).toBe(7);
+            expect(folders.length).toBe(6);
             // Should show "Forge Ready"
         });
     });
