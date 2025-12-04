@@ -21,7 +21,6 @@ function getTooltip(
   const tooltips: { [key: string]: string } = {
     'Dashboard': 'Forge Studio dashboard - Always accessible overview',
     'Actors': 'Define system actors and personas - Always accessible foundational reference',
-    'Contexts': 'Provide technical guidance and best practices - Always accessible reference',
     'Diagrams': 'Visual architecture and system diagrams - Always accessible reference',
     'Specifications': 'Technical contracts and implementation details - Always accessible reference',
     'Sessions': 'Manage design sessions and track changes - Always accessible workflow entry',

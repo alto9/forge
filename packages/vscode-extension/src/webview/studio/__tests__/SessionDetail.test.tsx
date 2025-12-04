@@ -220,7 +220,6 @@ describe('ChangedFiles Grouping Logic', () => {
         features: string[];
         specs: string[];
         actors: string[];
-        contexts: string[];
         sessions: string[];
         tickets: string[];
         other: string[];
@@ -228,7 +227,6 @@ describe('ChangedFiles Grouping Logic', () => {
         features: [],
         specs: [],
         actors: [],
-        contexts: [],
         sessions: [],
         tickets: [],
         other: []
@@ -243,8 +241,6 @@ describe('ChangedFiles Grouping Logic', () => {
           groups.specs.push(file);
         } else if (normalizedPath.includes('/actors/')) {
           groups.actors.push(file);
-        } else if (normalizedPath.includes('/contexts/')) {
-          groups.contexts.push(file);
         } else if (normalizedPath.includes('/sessions/')) {
           groups.sessions.push(file);
         } else if (normalizedPath.includes('/tickets/')) {
@@ -288,12 +284,6 @@ describe('ChangedFiles Grouping Logic', () => {
       expect(grouped.actors).toHaveLength(2);
     });
 
-    it('should group contexts correctly', () => {
-      const files = ['ai/contexts/aws.context.md'];
-      const grouped = groupFiles(files);
-      
-      expect(grouped.contexts).toHaveLength(1);
-    });
 
     it('should group sessions correctly', () => {
       const files = ['ai/sessions/my-session.session.md'];
@@ -331,7 +321,6 @@ describe('ChangedFiles Grouping Logic', () => {
         'ai/specs/api.spec.md',
         'src/index.ts',
         'ai/actors/user.actor.md',
-        'ai/contexts/aws.context.md',
         'ai/sessions/test.session.md',
         'ai/tickets/story.story.md',
         'README.md'
@@ -342,7 +331,6 @@ describe('ChangedFiles Grouping Logic', () => {
       expect(grouped.features).toHaveLength(1);
       expect(grouped.specs).toHaveLength(1);
       expect(grouped.actors).toHaveLength(1);
-      expect(grouped.contexts).toHaveLength(1);
       expect(grouped.sessions).toHaveLength(1);
       expect(grouped.tickets).toHaveLength(1);
       expect(grouped.other).toHaveLength(2);
@@ -367,7 +355,6 @@ describe('ChangedFiles Grouping Logic', () => {
       expect(grouped.features).toHaveLength(0);
       expect(grouped.specs).toHaveLength(0);
       expect(grouped.actors).toHaveLength(0);
-      expect(grouped.contexts).toHaveLength(0);
       expect(grouped.sessions).toHaveLength(0);
       expect(grouped.tickets).toHaveLength(0);
       expect(grouped.other).toHaveLength(0);
@@ -443,7 +430,6 @@ describe('ChangedFiles Grouping Logic', () => {
           features: [] as string[],
           specs: [] as string[],
           actors: [] as string[],
-          contexts: [] as string[],
           sessions: [] as string[],
           tickets: [] as string[],
           other: [] as string[]
@@ -458,8 +444,6 @@ describe('ChangedFiles Grouping Logic', () => {
             groups.specs.push(file);
           } else if (normalizedPath.includes('/actors/')) {
             groups.actors.push(file);
-          } else if (normalizedPath.includes('/contexts/')) {
-            groups.contexts.push(file);
           } else if (normalizedPath.includes('/sessions/')) {
             groups.sessions.push(file);
           } else if (normalizedPath.includes('/tickets/')) {
@@ -477,7 +461,6 @@ describe('ChangedFiles Grouping Logic', () => {
       expect(grouped.features.length).toBe(3);
       expect(grouped.specs.length).toBe(2);
       expect(grouped.actors.length).toBe(1);
-      expect(grouped.contexts.length).toBe(0);
       expect(grouped.sessions.length).toBe(0);
       expect(grouped.tickets.length).toBe(0);
       expect(grouped.other.length).toBe(1);

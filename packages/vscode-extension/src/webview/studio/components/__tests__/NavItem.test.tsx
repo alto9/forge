@@ -168,21 +168,6 @@ describe('NavItem Component', () => {
       expect(mockOnNavigate).not.toHaveBeenCalled();
     });
 
-    it('should handle multiple clicks correctly', () => {
-      render(
-        <NavItem
-          id="contexts"
-          label="Contexts"
-          currentPage="dashboard"
-          onNavigate={mockOnNavigate}
-        />
-      );
-
-      fireEvent.click(screen.getByText('Contexts'));
-      fireEvent.click(screen.getByText('Contexts'));
-      expect(mockOnNavigate).toHaveBeenCalledWith('contexts');
-      expect(mockOnNavigate).toHaveBeenCalledTimes(2);
-    });
   });
 
   describe('Tooltips', () => {
@@ -214,19 +199,6 @@ describe('NavItem Component', () => {
       expect(itemElement).toHaveAttribute('title', 'Define system actors and personas - Always accessible foundational reference');
     });
 
-    it('should show correct tooltip for Contexts', () => {
-      render(
-        <NavItem
-          id="contexts"
-          label="Contexts"
-          currentPage="dashboard"
-          onNavigate={mockOnNavigate}
-        />
-      );
-
-      const itemElement = screen.getByText('Contexts').closest('div');
-      expect(itemElement).toHaveAttribute('title', 'Provide technical guidance and best practices - Always accessible reference');
-    });
 
     it('should show correct tooltip for Diagrams', () => {
       render(

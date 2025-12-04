@@ -63,8 +63,8 @@ interface FileContent {
 
 function App() {
   const [state, setState] = React.useState<any>({ projectPath: '' });
-  const [counts, setCounts] = React.useState<{ sessions: number; features: number; diagrams: number; specs: number; actors: number; contexts: number; stories: number; tasks: number } | null>(null);
-  const [route, setRoute] = React.useState<{ page: 'dashboard' | 'features' | 'diagrams' | 'specs' | 'actors' | 'contexts' | 'sessions'; folderPath?: string; params?: any }>({ page: 'dashboard' });
+  const [counts, setCounts] = React.useState<{ sessions: number; features: number; diagrams: number; specs: number; actors: number; stories: number; tasks: number } | null>(null);
+  const [route, setRoute] = React.useState<{ page: 'dashboard' | 'features' | 'diagrams' | 'specs' | 'actors' | 'sessions'; folderPath?: string; params?: any }>({ page: 'dashboard' });
   const [activeSession, setActiveSession] = React.useState<ActiveSession | null>(null);
   const [sessions, setSessions] = React.useState<Session[]>([]);
   const [showNewSessionForm, setShowNewSessionForm] = React.useState(false);
@@ -163,10 +163,6 @@ function App() {
 
         {route.page === 'actors' && (
           <BrowserPage category="actors" title="Actors" activeSession={activeSession} folderPath={route.folderPath} />
-        )}
-
-        {route.page === 'contexts' && (
-          <BrowserPage category="contexts" title="Contexts" activeSession={activeSession} folderPath={route.folderPath} />
         )}
       </div>
       {activeSession && (
@@ -298,7 +294,7 @@ function CategoryEmptyState({ category, title, activeSession }: {
   activeSession: ActiveSession | null;
 }) {
   const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1, -1);
-  const isFoundational = category === 'actors' || category === 'contexts' || category === 'specs' || category === 'diagrams';
+  const isFoundational = category === 'actors' || category === 'specs' || category === 'diagrams';
   const { isEditable, getLockMessage } = useSessionPermissions();
   const canEdit = isEditable(category, activeSession);
   const lockMessage = getLockMessage(category);
@@ -342,7 +338,7 @@ function FolderProfile({ files, onFileClick, folderPath, category, activeSession
   activeSession: ActiveSession | null;
 }) {
   const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1, -1);
-  const isFoundational = category === 'actors' || category === 'contexts';
+  const isFoundational = category === 'actors';
   const { isModified, getChangeType } = useSessionIndicators(activeSession);
   const { isEditable, getLockMessage } = useSessionPermissions();
   const canEdit = isEditable(category, activeSession);
@@ -599,90 +595,6 @@ function serializeFeatureContent(parsed: ParsedFeatureContent): string {
   return gherkinBlocks.join('\n\n');
 }
 
-interface ParsedContextContent {
-  scenarios: GherkinScenario[];
-}
-
-// Parse Context content (only scenarios)
-function parseContextContent(content: string): ParsedContextContent {
-  const result: ParsedContextContent = {
-    scenarios: []
-  };
-
-  // Extract all Gherkin code blocks
-  const gherkinBlockRegex = /```gherkin\s*\n([\s\S]*?)```/g;
-  const blocks: string[] = [];
-  let match;
-  
-  while ((match = gherkinBlockRegex.exec(content)) !== null) {
-    blocks.push(match[1]);
-  }
-
-  // Parse each gherkin block for scenarios only
-  for (const block of blocks) {
-    const lines = block.split(/\r?\n/).map(l => l.trim()).filter(l => l);
-    let i = 0;
-    let currentScenario: GherkinScenario | null = null;
-
-    while (i < lines.length) {
-      const line = lines[i];
-
-      // Skip Feature lines
-      if (line.startsWith('Feature:')) {
-        i++;
-        continue;
-      }
-
-      // Parse Scenario
-      if (line.startsWith('Scenario:')) {
-        if (currentScenario) {
-          result.scenarios.push(currentScenario);
-        }
-        currentScenario = {
-          title: line.substring('Scenario:'.length).trim(),
-          steps: []
-        };
-        i++;
-        continue;
-      }
-
-      // Parse steps
-      const stepMatch = /^(Given|When|Then|And|But)\s+(.*)$/i.exec(line);
-      if (stepMatch && currentScenario) {
-        const step: GherkinStep = {
-          keyword: stepMatch[1].charAt(0).toUpperCase() + stepMatch[1].slice(1).toLowerCase() as any,
-          text: stepMatch[2]
-        };
-        currentScenario.steps.push(step);
-      }
-
-      i++;
-    }
-
-    // Finalize last scenario
-    if (currentScenario) {
-      result.scenarios.push(currentScenario);
-    }
-  }
-
-  return result;
-}
-
-// Serialize Context content back to markdown
-function serializeContextContent(parsed: ParsedContextContent): string {
-  const gherkinBlocks: string[] = [];
-
-  // Scenarios only
-  for (const scenario of parsed.scenarios) {
-    let block = `Scenario: ${scenario.title}\n`;
-    for (const step of scenario.steps) {
-      block += `  ${step.keyword} ${step.text}\n`;
-    }
-    gherkinBlocks.push('```gherkin\n' + block.trim() + '\n```');
-  }
-
-  return gherkinBlocks.join('\n\n');
-}
 
 // TagInput Component
 function TagInput({ tags, onChange, readOnly }: { 
@@ -1527,11 +1439,10 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
   const [frontmatter, setFrontmatter] = React.useState(fileContent.frontmatter || {});
   const [content, setContent] = React.useState(fileContent.content || '');
   const [parsedFeature, setParsedFeature] = React.useState<ParsedFeatureContent | null>(null);
-  const [parsedContext, setParsedContext] = React.useState<ParsedContextContent | null>(null);
   const [isDirty, setIsDirty] = React.useState(false);
   const [propertiesCollapsed, setPropertiesCollapsed] = React.useState(false);
   const [isCancelling, setIsCancelling] = React.useState(false);
-  const isFoundational = category === 'actors' || category === 'contexts' || category === 'specs' || category === 'diagrams';
+  const isFoundational = category === 'actors' || category === 'specs' || category === 'diagrams';
   const { isEditable, getLockMessage } = useSessionPermissions();
   const isReadOnly = !isEditable(category, activeSession);
   const lockMessage = getLockMessage(category);
@@ -1573,13 +1484,8 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
     // Parse feature content if this is a feature
     if (category === 'features') {
       setParsedFeature(parseFeatureContent(fileContent.content || ''));
-      setParsedContext(null);
-    } else if (category === 'contexts') {
-      setParsedContext(parseContextContent(fileContent.content || ''));
-      setParsedFeature(null);
     } else {
       setParsedFeature(null);
-      setParsedContext(null);
     }
   }, [fileContent, category]);
 
@@ -1589,8 +1495,6 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
     // Serialize parsed feature back to content if this is a feature
     if (category === 'features' && parsedFeature) {
       finalContent = serializeFeatureContent(parsedFeature);
-    } else if (category === 'contexts' && parsedContext) {
-      finalContent = serializeContextContent(parsedContext);
     }
 
     vscode?.postMessage({
@@ -1608,13 +1512,8 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
     setContent(fileContent.content || '');
     if (category === 'features') {
       setParsedFeature(parseFeatureContent(fileContent.content || ''));
-      setParsedContext(null);
-    } else if (category === 'contexts') {
-      setParsedContext(parseContextContent(fileContent.content || ''));
-      setParsedFeature(null);
     } else {
       setParsedFeature(null);
-      setParsedContext(null);
     }
     setIsDirty(false);
     // Reset the cancelling flag after a short delay to allow state updates to complete
@@ -1636,10 +1535,6 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
     setIsDirty(true);
   };
 
-  const updateParsedContext = (updated: ParsedContextContent) => {
-    setParsedContext(updated);
-    setIsDirty(true);
-  };
 
   return (
     <div className="p-16">
@@ -1676,7 +1571,6 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
             {category === 'diagrams' && 'Diagram Properties'}
             {category === 'specs' && 'Spec Properties'}
             {category === 'actors' && 'Actor Properties'}
-            {category === 'contexts' && 'Context Properties'}
           </span>
           <span style={{ fontSize: 12, opacity: 0.7 }}>
             {propertiesCollapsed ? '▸' : '▾'}
@@ -1712,13 +1606,6 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
                 readOnly={isReadOnly}
               />
             )}
-            {category === 'contexts' && (
-              <ContextFrontmatter 
-                frontmatter={frontmatter} 
-                onChange={updateFrontmatter}
-                readOnly={isReadOnly}
-              />
-            )}
           </>
         )}
       </div>
@@ -1742,14 +1629,6 @@ function ItemProfile({ category, fileContent, activeSession, onBack }: {
             readOnly={isReadOnly}
             onChange={(scenarios) => updateParsedFeature({ ...parsedFeature, scenarios })}
             scenarioChanges={scenarioChanges}
-          />
-        </>
-      ) : category === 'contexts' && parsedContext ? (
-        <>
-          <ScenariosSection
-            scenarios={parsedContext.scenarios}
-            readOnly={isReadOnly}
-            onChange={(scenarios) => updateParsedContext({ ...parsedContext, scenarios })}
           />
         </>
       ) : category === 'diagrams' ? (
@@ -2003,70 +1882,6 @@ function SpecFrontmatter({ frontmatter, onChange, readOnly }: {
   );
 }
 
-function ContextFrontmatter({ frontmatter, onChange, readOnly }: { 
-  frontmatter: any; 
-  onChange: (key: string, value: any) => void;
-  readOnly: boolean;
-}) {
-  return (
-    <>
-      <div className="form-group">
-        <label className="form-label">Context ID</label>
-        <input 
-          className="form-input"
-          value={frontmatter.context_id || ''}
-          onChange={(e) => onChange('context_id', e.target.value)}
-          readOnly={readOnly}
-        />
-      </div>
-      <div className="form-group">
-        <label className="form-label">Name (optional)</label>
-        <input 
-          className="form-input"
-          value={frontmatter.name || ''}
-          onChange={(e) => onChange('name', e.target.value)}
-          readOnly={readOnly}
-          placeholder="Optional human-readable name"
-        />
-      </div>
-      <div className="form-group">
-        <label className="form-label">Description (optional)</label>
-        <textarea 
-          className="form-textarea"
-          value={frontmatter.description || ''}
-          onChange={(e) => onChange('description', e.target.value)}
-          readOnly={readOnly}
-          placeholder="Optional brief description"
-          style={{ minHeight: 60 }}
-        />
-      </div>
-      <div className="form-group">
-        <label className="form-label">Tags</label>
-        <TagInput
-          tags={Array.isArray(frontmatter.tags) ? frontmatter.tags : []}
-          onChange={(tags) => onChange('tags', tags)}
-          readOnly={readOnly}
-        />
-      </div>
-      <div className="form-group">
-        <label style={{ display: 'flex', alignItems: 'center', cursor: readOnly ? 'default' : 'pointer', userSelect: 'none' }}>
-          <input 
-            type="checkbox"
-            checked={frontmatter.global || false}
-            onChange={(e) => onChange('global', e.target.checked)}
-            disabled={readOnly}
-            style={{ marginRight: 8, cursor: readOnly ? 'default' : 'pointer' }}
-          />
-          <span>Global Context</span>
-        </label>
-        <div style={{ fontSize: 11, opacity: 0.7, marginTop: 4, marginLeft: 24 }}>
-          When checked, this context will be automatically included in all distillation prompts
-        </div>
-      </div>
-    </>
-  );
-}
-
 function ActorFrontmatter({ frontmatter, onChange, readOnly }: { 
   frontmatter: any; 
   onChange: (key: string, value: any) => void;
@@ -2138,7 +1953,6 @@ function DashboardPage({ counts, activeSession }: { counts: any; activeSession: 
         <Card title="Features" value={counts?.features ?? 0} />
         <Card title="Specs" value={counts?.specs ?? 0} />
         <Card title="Actors" value={counts?.actors ?? 0} />
-        <Card title="Contexts" value={counts?.contexts ?? 0} />
         <Card title="Stories" value={counts?.stories ?? 0} />
         <Card title="Tasks" value={counts?.tasks ?? 0} />
       </div>
@@ -2716,7 +2530,6 @@ function ChangedFilesSection({ files }: { files: any[] }) {
       features: FeatureChangeEntry[];
       specs: FeatureChangeEntry[];
       actors: FeatureChangeEntry[];
-      contexts: FeatureChangeEntry[];
       sessions: FeatureChangeEntry[];
       tickets: FeatureChangeEntry[];
       other: FeatureChangeEntry[];
@@ -2724,7 +2537,6 @@ function ChangedFilesSection({ files }: { files: any[] }) {
       features: [],
       specs: [],
       actors: [],
-      contexts: [],
       sessions: [],
       tickets: [],
       other: []
@@ -2739,8 +2551,6 @@ function ChangedFilesSection({ files }: { files: any[] }) {
         groups.specs.push(file);
       } else if (normalizedPath.includes('/actors/')) {
         groups.actors.push(file);
-      } else if (normalizedPath.includes('/contexts/')) {
-        groups.contexts.push(file);
       } else if (normalizedPath.includes('/sessions/')) {
         groups.sessions.push(file);
       } else if (normalizedPath.includes('/tickets/')) {
@@ -2835,7 +2645,6 @@ function ChangedFilesSection({ files }: { files: any[] }) {
       <FileGroup title="Features" files={groupedFiles.features} icon="✨" />
       <FileGroup title="Specifications" files={groupedFiles.specs} icon="📐" />
       <FileGroup title="Actors" files={groupedFiles.actors} icon="👤" />
-      <FileGroup title="Contexts" files={groupedFiles.contexts} icon="🔧" />
       <FileGroup title="Sessions" files={groupedFiles.sessions} icon="📅" />
       <FileGroup title="Stories & Tasks" files={groupedFiles.tickets} icon="📋" />
       <FileGroup title="Other" files={groupedFiles.other} icon="📄" />
