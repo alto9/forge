@@ -4,7 +4,7 @@ session_id: simplify-mcp-and-remove-contexts-feature
 feature_id: []
 spec_id: []
 diagram_id: []
-status: pending
+status: completed
 priority: medium
 estimated_minutes: 10
 ---
@@ -34,10 +34,10 @@ The Studio UI had features for managing contexts (creation, editing, list view, 
 - `ai/features/studio/contexts/` directory - Delete if empty
 
 ## Acceptance Criteria
-- [ ] All 4 context feature files are deleted
-- [ ] `contexts/` directory is deleted
-- [ ] No broken references to these files exist
-- [ ] Git shows the deletions correctly
+- [x] All 4 context feature files are deleted
+- [x] `contexts/` directory is deleted
+- [x] No broken references to these files exist
+- [x] Git shows the deletions correctly
 
 ## Dependencies
 - Can be done in parallel with other Studio changes
