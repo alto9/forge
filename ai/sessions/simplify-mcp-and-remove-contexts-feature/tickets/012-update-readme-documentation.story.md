@@ -4,7 +4,7 @@ session_id: simplify-mcp-and-remove-contexts-feature
 feature_id: []
 spec_id: []
 diagram_id: []
-status: pending
+status: completed
 priority: medium
 estimated_minutes: 25
 ---
@@ -33,12 +33,12 @@ The repository README and package READMEs document the Forge workflow, file stru
 - Any other documentation files mentioning contexts
 
 ## Acceptance Criteria
-- [ ] Main README no longer references contexts
-- [ ] MCP server README lists only remaining tools
-- [ ] Extension README doesn't mention context management features
-- [ ] File structure examples show 4 document types
-- [ ] Schema examples don't include context_id fields
-- [ ] All documentation is consistent and accurate
+- [x] Main README no longer references contexts
+- [x] MCP server README lists only remaining tools
+- [x] Extension README doesn't mention context management features
+- [x] File structure examples show 4 document types
+- [x] Schema examples don't include context_id fields
+- [x] All documentation is consistent and accurate
 
 ## Dependencies
 - Depends on: 011-update-get-forge-about

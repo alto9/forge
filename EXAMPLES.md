@@ -2,30 +2,6 @@
 
 This document provides concrete examples of each Forge file type to help you get started.
 
-## Context File Example
-
-**File**: `ai/contexts/typescript-best-practices.context.md`
-
-```markdown
----
-context_id: typescript-best-practices
----
-
-# TypeScript Best Practices Context
-
-GIVEN we are working within Forge files
-WHEN information is needed about TypeScript implementation
-THEN read the document at `ai/docs/typescript_coding_standards.md`
-AND use that information to guide implementation decisions
-AND follow the principles of type safety and explicit typing
-
-GIVEN a developer is implementing TypeScript code
-WHEN dealing with asynchronous operations
-THEN use async/await syntax over Promise chains
-AND properly handle errors with try-catch blocks
-AND ensure all promises have error handlers
-```
-
 ## Decision File Example
 
 **File**: `ai/decisions/add-user-authentication.decision.md`
@@ -428,7 +404,6 @@ task_id: implement-login-endpoint
 decision_id: add-user-authentication
 feature_id: [user-login]
 spec_id: [authentication-spec]
-context_id: [typescript-best-practices]
 status: pending
 priority: high
 dependencies: []
@@ -515,7 +490,6 @@ Key considerations from the authentication spec:
 - Decision: [add-user-authentication](../decisions/add-user-authentication.decision.md)
 - Feature: [user-login](../features/user-login.feature.md)
 - Spec: [authentication-spec](../specs/authentication-spec.spec.md)
-- Context: [typescript-best-practices](../contexts/typescript-best-practices.context.md)
 
 ## Notes
 

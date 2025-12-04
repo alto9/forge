@@ -16,10 +16,10 @@ VSCode extension that provides commands for session-driven design and implementa
 **Features:**
 - Start and manage design sessions
 - Forge Studio - Full-featured UI for creating and managing Forge files
-  - Create features, specs, actors, and contexts
+  - Create features, specs, and actors
   - Create and navigate nested folder structures
   - Edit files with proper frontmatter and content templates
-  - Session-aware workflows (Features and Specs require active session; Actors and Contexts are always editable)
+  - Session-aware workflows (Features and Specs require active session; Actors are always editable)
 - Distill sessions into Stories and Tasks
 - Build stories with complete context
 - Right-click context menu integration
@@ -29,9 +29,7 @@ Model Context Protocol server that exposes Forge capabilities to AI assistants l
 
 **Tools:**
 - `get_forge_about` - Comprehensive workflow overview and guidance
-- `get_forge_schema` - Schema definitions for sessions, features, specs, actors, contexts, stories, and tasks
-- `get_forge_context` - Technical object research prompts and guidance
-- `get_forge_objects` - List supported spec objects from guidance library
+- `get_forge_schema` - Schema definitions for sessions, features, specs, actors, stories, and tasks
 
 ## 🏗️ Project Structure
 
@@ -49,7 +47,6 @@ your-project/
     ├── features/           # Feature definitions with Gherkin (*.feature.md, nestable, index.md)
     ├── specs/              # Technical specifications with Nomnoml (*.spec.md, nestable)
     ├── actors/             # Actor/persona definitions (*.actor.md, nestable)
-    ├── contexts/           # Context references and guidance (*.context.md, nestable)
     └── docs/               # Supporting documentation
 ```
 
@@ -72,7 +69,7 @@ npm run build
 ### Project Initialization
 
 When you first use Forge in a project, it will create:
-1. **AI folder structure** - Organized folders for sessions, features, specs, actors, and contexts
+1. **AI folder structure** - Organized folders for sessions, features, specs, and actors
 2. **Cursor command files** - Pre-configured commands that guide AI agents through Forge workflows
 
 **Note**: Ticket folders are not created during initialization. When you distill a session, a tickets subdirectory is automatically created within that session's folder (e.g., `ai/sessions/<session-id>/tickets/`) containing the generated stories and tasks. This keeps all session-related files organized together.
@@ -130,11 +127,11 @@ Then use the Command Palette (`Cmd/Ctrl+Shift+P`) to access Forge commands:
 - End sessions and distill into stories
 
 **File Management:**
-- **Dashboard** - View session status and counts of all Forge objects (sessions, features, specs, actors, contexts, stories, tasks)
+- **Dashboard** - View session status and counts of all Forge objects (sessions, features, specs, actors, stories, tasks)
 - **Sessions Page** - Create, view, and manage all design sessions
-- **Category Pages** - Browse and edit Features, Specs, Actors, and Contexts
+- **Category Pages** - Browse and edit Features, Specs, and Actors
 - **Folder Navigation** - Tree view with expand/collapse, nested folder support
-- **Foundational Files** (Actors, Contexts, Sessions):
+- **Foundational Files** (Actors, Sessions):
   - Always editable - no active session required
   - Define system vocabulary and guidance before design work
   - Not tracked in session changed_files
@@ -194,7 +191,7 @@ changed_files: [
   }
 ]
 # Note: Only Features and Specs are tracked in changed_files
-# Actors and Contexts are foundational and not session-tracked
+# Actors are foundational and not session-tracked
 # Tickets are created in ai/sessions/<session-id>/tickets/
 ---
 
@@ -278,7 +275,6 @@ Add email validation to User model
 
 1. **Define Foundational Elements** (No session required)
    - Create Actors to define system personas and roles
-   - Create Contexts to provide technical guidance and standards
    - Build your project vocabulary and foundational knowledge
    - Browse existing Features and Specs for reference
 
@@ -287,12 +283,12 @@ Add email validation to User model
 3. **Design Changes** (Session required for editing)
    - Create and edit Features to define user-facing functionality
    - Create and edit Specs to define technical implementation
-   - Link Features and Specs to relevant Contexts and Actors
-   - Continue editing Actors and Contexts as needed
+   - Link Features and Specs to relevant Actors
+   - Continue editing Actors as needed
 
 4. **Distill to Stories & Tasks** - Convert the session into minimal implementation stories (< 30 min each) and external tasks, organized in `ai/sessions/<session-id>/tickets/`
 
-5. **Build Stories** - Implement each story with complete context from linked features, specs, contexts, and actors
+5. **Build Stories** - Implement each story with complete context from linked features, specs, and actors
 
 The session-driven approach ensures design changes are tracked systematically, while allowing foundational vocabulary to be defined and browsing to happen freely. Features and Specs are always visible for reference but require an active session for editing.
 
@@ -348,17 +344,16 @@ npm run dev -w @forge/mcp-server
 
 ## 🎯 Best Practices
 
-1. **Define Foundational Elements First** - Create Actors and Contexts before starting design sessions
+1. **Define Foundational Elements First** - Create Actors before starting design sessions
    - Actors document who interacts with your system
-   - Contexts provide technical guidance and standards
    - These are always editable and don't require sessions
 2. **Start Sessions for Design Work** - Begin each design phase with a clear problem statement
 3. **Use Forge Studio** - Visual interface makes creating and organizing files easier
 4. **Organize with Folders** - Group related features and specs in nested folders
-5. **Link Everything** - Use IDs to create relationships between files (features ↔ specs ↔ contexts ↔ actors)
+5. **Link Everything** - Use IDs to create relationships between files (features ↔ specs ↔ actors)
 6. **Keep Stories Small** - Target < 30 minutes per story for better focus and completion
 7. **Review Before Distilling** - Ensure your design (features/specs) is complete before generating stories
-8. **Iterate on Foundational Elements** - Update Actors and Contexts as your understanding evolves (no session needed)
+8. **Iterate on Foundational Elements** - Update Actors as your understanding evolves (no session needed)
 
 ## 🔮 Future Plans
 
