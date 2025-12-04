@@ -4,7 +4,7 @@ session_id: simplify-mcp-and-remove-contexts-feature
 feature_id: []
 spec_id: []
 diagram_id: []
-status: pending
+status: completed
 priority: medium
 estimated_minutes: 20
 ---
@@ -28,11 +28,11 @@ Forge includes diagram files showing the linkage system between different docume
 - Diagram descriptions - Update to show current linkage system
 
 ## Acceptance Criteria
-- [ ] All linkage diagrams no longer show Context nodes
-- [ ] No context_id linkages shown in diagrams
-- [ ] Diagrams show clear path: Features → Specs → Diagrams → Actors
-- [ ] Diagram JSON is valid and renders correctly
-- [ ] Diagram descriptions are accurate
+- [x] All linkage diagrams no longer show Context nodes
+- [x] No context_id linkages shown in diagrams
+- [x] Diagrams show clear path: Features → Specs → Diagrams → Actors
+- [x] Diagram JSON is valid and renders correctly
+- [x] Diagram descriptions are accurate
 
 ## Dependencies
 - Can be done in parallel with other documentation updates
