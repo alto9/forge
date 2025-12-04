@@ -1869,15 +1869,6 @@ function SpecFrontmatter({ frontmatter, onChange, readOnly }: {
           readOnly={readOnly}
         />
       </div>
-      <div className="form-group">
-        <label className="form-label">Context IDs (comma-separated)</label>
-        <input 
-          className="form-input"
-          value={Array.isArray(frontmatter.context_id) ? frontmatter.context_id.join(', ') : frontmatter.context_id || ''}
-          onChange={(e) => onChange('context_id', e.target.value.split(',').map((s: string) => s.trim()))}
-          readOnly={readOnly}
-        />
-      </div>
     </>
   );
 }
@@ -2337,7 +2328,7 @@ function SessionDetail({
             <span style={{ color: 'var(--vscode-textLink-foreground)' }}>/forge-design</span>
           </div>
           <div style={{ fontSize: 12, opacity: 0.85, lineHeight: 1.5 }}>
-            Open the agent chat and run this command to update features, specs, diagrams, models, and contexts. All changes will be automatically tracked. When you're finished designing, click "End Session" in the Active Session panel to transition to 'scribe' status.
+            Open the agent chat and run this command to update features, specs, diagrams, and models. All changes will be automatically tracked. When you're finished designing, click "End Session" in the Active Session panel to transition to 'scribe' status.
           </div>
         </div>
       )}

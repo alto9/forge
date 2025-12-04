@@ -459,17 +459,16 @@ export class ForgeStudioPanel {
 </html>`;
     }
 
-    private async _getCounts(): Promise<{ sessions: number; features: number; diagrams: number; specs: number; actors: number; contexts: number; stories: number; tasks: number; }>
+    private async _getCounts(): Promise<{ sessions: number; features: number; diagrams: number; specs: number; actors: number; stories: number; tasks: number; }>
     {
         const sessions = await this._countRecursive(['ai', 'sessions'], (name) => name.endsWith('.session.md'));
         const features = await this._countRecursive(['ai', 'features'], (name) => name.endsWith('.feature.md'));
         const diagrams = await this._countRecursive(['ai', 'diagrams'], (name) => name.endsWith('.diagram.md'));
         const specs = await this._countRecursive(['ai', 'specs'], (name) => name.endsWith('.spec.md'));
         const actors = await this._countRecursive(['ai', 'actors'], (name) => name.endsWith('.actor.md'));
-        const contexts = await this._countRecursive(['ai', 'contexts'], (name) => name.endsWith('.context.md'));
         const stories = await this._countRecursive(['ai', 'tickets'], (name) => name.endsWith('.story.md'));
         const tasks = await this._countRecursive(['ai', 'tickets'], (name) => name.endsWith('.task.md'));
-        return { sessions, features, diagrams, specs, actors, contexts, stories, tasks };
+        return { sessions, features, diagrams, specs, actors, stories, tasks };
     }
 
     private async _countRecursive(pathSegs: string[], predicate: (name: string) => boolean): Promise<number> {
@@ -858,18 +857,14 @@ ${problemStatement}
     private _isFoundationalFile(filePathOrCategory: string): boolean {
         return filePathOrCategory.includes('/actors/') || 
                filePathOrCategory.includes('\\actors\\') ||
-               filePathOrCategory.includes('/contexts/') || 
-               filePathOrCategory.includes('\\contexts\\') ||
                filePathOrCategory.includes('/specs/') || 
                filePathOrCategory.includes('\\specs\\') ||
                filePathOrCategory.includes('/diagrams/') || 
                filePathOrCategory.includes('\\diagrams\\') ||
                filePathOrCategory.endsWith('.actor.md') ||
-               filePathOrCategory.endsWith('.context.md') ||
                filePathOrCategory.endsWith('.spec.md') ||
                filePathOrCategory.endsWith('.diagram.md') ||
                filePathOrCategory === 'actors' ||
-               filePathOrCategory === 'contexts' ||
                filePathOrCategory === 'specs' ||
                filePathOrCategory === 'diagrams';
     }
@@ -1518,7 +1513,6 @@ ${problemStatement}
             'features': 'feature_id',
             'specs': 'spec_id',
             'actors': 'actor_id',
-            'contexts': 'context_id',
             'sessions': 'session_id'
         };
         
@@ -1769,11 +1763,6 @@ ${problemStatement}
                     diagram_id: [],
                     context_id: []
                 };
-            case 'contexts':
-                return {
-                    context_id: id,
-                    category: ''
-                };
             case 'actors':
                 return {
                     actor_id: id,
@@ -1850,28 +1839,6 @@ Scenario: (Describe a scenario)
 
 (Additional context or considerations)
 `;
-            case 'contexts':
-                return `## Overview
-
-(Describe when to use this context)
-
-## Usage
-
-\`\`\`gherkin
-Scenario: When to use this context
-  Given (specific situation)
-  When (working on something)
-  Then (use this guidance)
-\`\`\`
-
-## Guidance
-
-(Provide specific technical guidance)
-
-## Notes
-
-(Additional context or considerations)
-`;
             case 'actors':
                 return `## Overview
 
@@ -1903,8 +1870,7 @@ Scenario: When to use this context
             'features': '.feature.md',
             'diagrams': '.diagram.md',
             'specs': '.spec.md',
-            'actors': '.actor.md',
-            'contexts': '.context.md'
+            'actors': '.actor.md'
         };
         return extensions[category] || '.md';
     }
