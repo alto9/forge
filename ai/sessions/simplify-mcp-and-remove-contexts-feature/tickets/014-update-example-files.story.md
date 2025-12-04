@@ -4,7 +4,7 @@ session_id: simplify-mcp-and-remove-contexts-feature
 feature_id: []
 spec_id: []
 diagram_id: []
-status: pending
+status: completed
 priority: low
 estimated_minutes: 15
 ---
@@ -31,11 +31,11 @@ The repository likely includes example files showing how to use Forge. These exa
 - Example story files - Remove context_id
 
 ## Acceptance Criteria
-- [ ] No example context files remain
-- [ ] Example frontmatter doesn't include context_id
-- [ ] Examples show 4 document type system
-- [ ] Examples are consistent with updated workflow
-- [ ] Examples are clear and helpful
+- [x] No example context files remain
+- [x] Example frontmatter doesn't include context_id
+- [x] Examples show 4 document type system
+- [x] Examples are consistent with updated workflow
+- [x] Examples are clear and helpful
 
 ## Dependencies
 - Can be done in parallel with other documentation updates

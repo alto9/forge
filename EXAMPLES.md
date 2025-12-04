@@ -1,29 +1,36 @@
 # Forge File Format Examples
 
-This document provides concrete examples of each Forge file type to help you get started.
+This document provides concrete examples of each Forge file type to help you get started. Forge uses a 4-document-type system: **Sessions**, **Features**, **Specs**, and **Actors**. Stories and Tasks are created from Sessions during the distillation process.
 
-## Decision File Example
+## Session File Example
 
-**File**: `ai/decisions/add-user-authentication.decision.md`
+**File**: `ai/sessions/add-user-authentication/add-user-authentication.session.md`
 
 ```markdown
 ---
-decision_id: add-user-authentication
-date: 2025-10-01
-status: proposed
+session_id: add-user-authentication
+start_time: 2025-10-01T10:00:00Z
+end_time: null
+status: design
+problem_statement: Our application currently has no authentication mechanism. We need a secure authentication system to protect user data and enable personalized features.
+changed_files: []
 ---
 
-# Add User Authentication System
+## Problem Statement
 
-## Status
-Proposed
-
-## Context
 Our application currently has no authentication mechanism. Users can access all features without any identity verification. As we prepare to launch, we need a secure authentication system to protect user data and enable personalized features.
 
 Market research shows 85% of users expect social login options in addition to traditional email/password authentication.
 
-## Decision
+## Goals
+
+- Implement secure user authentication
+- Support email/password and social login (Google, GitHub)
+- Enable session management with JWT tokens
+- Provide password reset functionality
+
+## Approach
+
 We will implement a JWT-based authentication system with the following components:
 - Email/password registration and login
 - Social authentication (Google, GitHub)
@@ -33,53 +40,19 @@ We will implement a JWT-based authentication system with the following component
 
 The authentication service will be built using Node.js with Express, and will integrate with our existing PostgreSQL database.
 
-## Alternatives Considered
+## Key Decisions
 
-### Alternative 1: Session-based Authentication
-- **Pros**: Simpler to implement, easier to invalidate sessions
-- **Cons**: Doesn't scale well, requires server-side session storage, not suitable for mobile apps
-- **Verdict**: Not chosen due to scalability concerns
+- **JWT over Session-based**: Chosen for scalability and mobile app support
+- **Self-hosted over OAuth2 Provider**: Chosen for cost control and flexibility
+- **Password-based over Passwordless**: Chosen for initial launch, passwordless considered for future enhancement
 
-### Alternative 2: OAuth2 Provider (Auth0, Cognito)
-- **Pros**: Fully managed, enterprise-grade security, less maintenance
-- **Cons**: Additional cost (~$200/month), vendor lock-in, less control
-- **Verdict**: Not chosen for initial launch, may reconsider for enterprise tier
+## Notes
 
-### Alternative 3: Passwordless (Magic Links)
-- **Pros**: Better UX, no password management burden
-- **Cons**: Requires reliable email service, users may not understand the flow
-- **Verdict**: Consider for future enhancement
-
-## Consequences
-
-### Positive
-- Users can create accounts and protect their data
-- Enables personalized features based on user identity
-- Social login improves conversion rates
-- JWT tokens enable stateless authentication for mobile apps
-
-### Negative
-- Adds complexity to the application architecture
-- Requires secure storage of refresh tokens
-- Need to implement password reset flow
-- Must handle token expiration gracefully in the UI
-
-### Risks
-- Security vulnerabilities if not implemented correctly
-- GDPR compliance requirements for storing user data
-- Need to implement rate limiting to prevent brute force attacks
-
-## Implementation Notes
 - Use bcrypt with cost factor 12 for password hashing
 - Store refresh tokens in database with user association
 - Implement email verification for new accounts
 - Add rate limiting: 5 failed login attempts = 15 minute lockout
 - All authentication endpoints must be over HTTPS
-
-## References
-- [JWT Best Practices](https://tools.ietf.org/html/rfc8725)
-- [OWASP Authentication Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html)
-- Related Decision: None (first authentication decision)
 ```
 
 ## Feature File Example
@@ -90,7 +63,6 @@ The authentication service will be built using Node.js with Express, and will in
 ---
 feature_id: user-login
 spec_id: [authentication-spec, session-management-spec]
-decision_id: add-user-authentication
 ---
 
 # User Login Feature
@@ -163,7 +135,6 @@ AND logs the user in
 ---
 spec_id: authentication-spec
 feature_id: [user-login, user-registration, password-reset]
-decision_id: add-user-authentication
 ---
 
 # Authentication System Specification
@@ -394,28 +365,28 @@ CREATE TABLE login_attempts (
 - `passport-github2` (v0.1.12) - GitHub OAuth
 ```
 
-## Task File Example
+## Story File Example
 
-**File**: `ai/tasks/implement-login-endpoint.task.md`
+**File**: `ai/sessions/add-user-authentication/tickets/001-implement-login-endpoint.story.md`
 
 ```markdown
 ---
-task_id: implement-login-endpoint
-decision_id: add-user-authentication
+story_id: implement-login-endpoint
+session_id: add-user-authentication
 feature_id: [user-login]
 spec_id: [authentication-spec]
 status: pending
 priority: high
-dependencies: []
+estimated_minutes: 25
 ---
 
 # Implement Login API Endpoint
 
-## Description
+## Objective
 Create the POST /auth/login endpoint that validates user credentials and returns JWT tokens.
 
 ## Context
-This endpoint is part of the authentication system decided in the `add-user-authentication` decision. It implements the core login functionality described in the `user-login` feature and follows the technical specifications in `authentication-spec`.
+This endpoint is part of the authentication system designed in the `add-user-authentication` session. It implements the core login functionality described in the `user-login` feature and follows the technical specifications in `authentication-spec`.
 
 Key considerations from the authentication spec:
 - Use bcrypt to verify passwords
@@ -469,6 +440,14 @@ Key considerations from the authentication spec:
    - Test token generation
    - Test refresh token storage
 
+## Files Affected
+
+- `src/routes/auth.routes.ts` - Add login route
+- `src/validators/auth.validator.ts` - Add validation logic
+- `src/services/auth.service.ts` - Add login method
+- `src/services/loginAttempts.service.ts` - Add attempt tracking
+- `tests/integration/auth.test.ts` - Add integration tests
+
 ## Acceptance Criteria
 
 - [ ] POST /auth/login endpoint responds on correct path
@@ -485,21 +464,176 @@ Key considerations from the authentication spec:
 - [ ] All tests pass with >80% code coverage
 - [ ] API documentation is updated
 
-## Related Documentation
+## Dependencies
 
-- Decision: [add-user-authentication](../decisions/add-user-authentication.decision.md)
-- Feature: [user-login](../features/user-login.feature.md)
-- Spec: [authentication-spec](../specs/authentication-spec.spec.md)
+- None (first story in session)
+```
 
-## Notes
+## Task File Example
 
-- Ensure HTTPS is enforced in production
-- Consider adding 2FA in future iteration
-- Monitor failed login attempts for security threats
-- Set up alerts for unusual login patterns
+**File**: `ai/sessions/add-user-authentication/tickets/002-setup-auth0-integration.task.md`
+
+```markdown
+---
+task_id: setup-auth0-integration
+session_id: add-user-authentication
+type: external
+status: pending
+priority: medium
+---
+
+# Setup Auth0 Integration
+
+## Description
+Configure Auth0 account and obtain API credentials for social authentication integration.
+
+## Reason
+The authentication system requires Auth0 credentials to enable Google and GitHub social login. This is external configuration work that must be completed before implementing the social login endpoints.
+
+## Steps
+
+1. **Create Auth0 account**
+   - Sign up at auth0.com
+   - Choose appropriate plan (free tier sufficient for initial launch)
+   - Complete account setup
+
+2. **Create Auth0 Application**
+   - Create new application in Auth0 dashboard
+   - Choose "Regular Web Application" type
+   - Configure allowed callback URLs
+   - Configure allowed logout URLs
+   - Note down Client ID and Client Secret
+
+3. **Configure Social Connections**
+   - Enable Google social connection
+   - Configure Google OAuth credentials
+   - Enable GitHub social connection
+   - Configure GitHub OAuth credentials
+
+4. **Store Credentials Securely**
+   - Add Auth0 credentials to environment variables
+   - Update `.env.example` with placeholder values
+   - Document credential setup in README
+
+## Resources
+
+- Auth0 Dashboard: https://manage.auth0.com
+- Auth0 Documentation: https://auth0.com/docs
+- Google OAuth Setup Guide: https://auth0.com/docs/connections/social/google
+- GitHub OAuth Setup Guide: https://auth0.com/docs/connections/social/github
+
+## Completion Criteria
+
+- [ ] Auth0 account created and configured
+- [ ] Application created with correct settings
+- [ ] Google social connection enabled and tested
+- [ ] GitHub social connection enabled and tested
+- [ ] Credentials stored in environment variables
+- [ ] Documentation updated with setup instructions
+```
+
+## Actor File Example
+
+**File**: `ai/actors/user.actor.md`
+
+```markdown
+---
+actor_id: user
+type: user
+---
+
+# User Actor
+
+## Overview
+The primary user of the application who interacts with authentication and user management features.
+
+## Responsibilities
+
+- Register for an account
+- Log in and log out
+- Manage their profile information
+- Reset their password when forgotten
+- Use social authentication providers (Google, GitHub)
+
+## Characteristics
+
+- May be a new user or returning user
+- May prefer email/password or social login
+- May forget their password
+- May want to update their account information
+- May have different roles (user, admin, etc.)
+
+## Interactions
+
+- Interacts with authentication endpoints
+- Uses login and registration forms
+- Receives email notifications for password resets
+- Manages session through browser or mobile app
+```
+
+## Task File Example (Documentation Type)
+
+**File**: `ai/sessions/add-user-authentication/tickets/003-update-documentation.task.md`
+
+```markdown
+---
+task_id: update-documentation
+session_id: add-user-authentication
+type: documentation
+status: pending
+priority: low
+---
+
+# Update Authentication Documentation
+
+## Description
+Update API documentation and README with authentication endpoint details and usage examples.
+
+## Reason
+After implementing authentication endpoints, documentation needs to be updated to help developers integrate with the authentication system.
+
+## Steps
+
+1. **Update API Documentation**
+   - Document POST /auth/login endpoint
+   - Document POST /auth/register endpoint
+   - Document POST /auth/refresh endpoint
+   - Include request/response examples
+   - Document error codes and handling
+
+2. **Update README**
+   - Add authentication setup instructions
+   - Include environment variable configuration
+   - Add authentication flow diagram
+   - Document social login setup
+
+3. **Create Integration Guide**
+   - Step-by-step integration instructions
+   - Code examples for common use cases
+   - Troubleshooting section
+
+## Resources
+
+- Existing API documentation structure
+- README.md template
+- Authentication spec for technical details
+
+## Completion Criteria
+
+- [ ] All authentication endpoints documented
+- [ ] README updated with setup instructions
+- [ ] Integration guide created
+- [ ] Code examples verified and tested
 ```
 
 ---
 
-These examples demonstrate the complete Forge workflow from decision to implementation task, showing how each document type builds upon the others with proper linking and context.
+These examples demonstrate the complete Forge workflow using the 4-document-type system:
+
+1. **Sessions** - Track design work and organize implementation
+2. **Features** - Define user-facing behavior with Gherkin scenarios
+3. **Specs** - Define technical implementation details
+4. **Actors** - Define who interacts with the system
+
+Stories and Tasks are created from Sessions during distillation, linking to Features and Specs to provide complete implementation context.
 
