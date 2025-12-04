@@ -4,7 +4,7 @@ session_id: simplify-mcp-and-remove-contexts-feature
 feature_id: []
 spec_id: []
 diagram_id: []
-status: pending
+status: completed
 priority: high
 estimated_minutes: 10
 ---
@@ -27,10 +27,10 @@ The guidance system stored technical guidance files that were loaded by `get_for
 - Any files importing from `guidance/` - Remove imports
 
 ## Acceptance Criteria
-- [ ] `packages/mcp-server/src/guidance/` directory no longer exists
-- [ ] No import statements reference the guidance directory
-- [ ] MCP server builds without errors
-- [ ] All tests pass
+- [x] `packages/mcp-server/src/guidance/` directory no longer exists
+- [x] No import statements reference the guidance directory
+- [x] MCP server builds without errors
+- [x] All tests pass
 
 ## Dependencies
 - Depends on: 001-remove-mcp-context-tools (tools should be removed before deleting their data)
