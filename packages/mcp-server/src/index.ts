@@ -104,7 +104,7 @@ Forge is a comprehensive workflow system for structured context engineering in A
 
 ## Core Philosophy
 1. **Accurate Context Without Overload** - Provide exactly what's needed, when it's needed
-2. **Features Are Directive** - Features drive code changes and are tracked in sessions at scenario-level; Specs/Diagrams/Actors/Contexts are informative and editable anytime
+2. **Features Are Directive** - Features drive code changes and are tracked in sessions at scenario-level; Specs/Diagrams/Actors are informative and editable anytime
 3. **Session-Driven Design** - Track feature changes made during design sessions with scenario-level granularity
 4. **Minimal Story Size** - Keep implementation stories small, focused, and actionable (< 30 minutes each)
 5. **Status-Driven Workflow** - Sessions progress through explicit phases: design → scribe → development → completed
@@ -124,7 +124,6 @@ your-project/
     ├── diagrams/              # Visual architecture with react-flow JSON (nestable)
     ├── specs/                 # Technical specifications (nestable)
     ├── actors/                # Actor/persona definitions (nestable)
-    ├── contexts/              # Context guidance (nestable)
     └── docs/                  # Supporting documentation
 \`\`\`
 
@@ -145,7 +144,7 @@ Forge documents are organized by their role in the workflow:
 - **Abstract Logically**: Group features by abstracting large concepts into smaller, focused ones
 - **Git Controls History**: Never document "old" or "transitional" states in the file itself
 
-#### INFORMATIVE DOCUMENTS (Specs, Diagrams, Actors, Contexts)
+#### INFORMATIVE DOCUMENTS (Specs, Diagrams, Actors)
 These documents provide context and guidance but are NOT tracked in sessions:
 
 **Specs (*.spec.md)**
@@ -172,11 +171,6 @@ These documents provide context and guidance but are NOT tracked in sessions:
 - **Always Editable**: Not tracked in sessions, can be modified at any time
 - **Define Personas**: Who interacts with the system and their roles
 
-**Contexts (*.context.md)**
-- **Always Editable**: Not tracked in sessions, can be modified at any time
-- **For Agent Benefit**: Technical guidance when implementing features
-- **Patterns & Practices**: Implementation patterns, best practices, technical constraints
-
 #### TRANSITIONAL DOCUMENTS (Sessions, Stories, Tasks)
 These documents **capture point-in-time state and workflow**:
 
@@ -184,7 +178,7 @@ These documents **capture point-in-time state and workflow**:
 - **Transitional**: Records what feature scenarios were changed during a specific design session
 - **Workflow State**: Tracks progress through design → scribe → development → completed
 - **Changed Files**: Contains snapshot of which feature scenarios were added/modified/removed
-- **Features Only**: Only tracks changes to *.feature.md files, not specs/diagrams/actors/contexts
+- **Features Only**: Only tracks changes to *.feature.md files, not specs/diagrams/actors
 - **Historical Record**: Preserved as-is to understand what happened during the session
 
 **Stories (*.story.md) and Tasks (*.task.md)**
@@ -195,7 +189,7 @@ These documents **capture point-in-time state and workflow**:
 
 **Key Distinction**: 
 - **Features are DIRECTIVE**: They drive code changes and are tracked in sessions at scenario-level
-- **Specs/Diagrams/Actors/Contexts are INFORMATIVE**: They provide guidance and context but are NOT tracked in sessions
+- **Specs/Diagrams/Actors are INFORMATIVE**: They provide guidance and context but are NOT tracked in sessions
 - When editing Features, update them to reflect current desired state; Git preserves the history
 - Sessions, Stories, and Tasks capture transitional state and should be preserved as historical records
 
@@ -208,7 +202,7 @@ Sessions progress through four distinct phases:
 - Session folder created at \`ai/sessions/<session-id>/\`
 - Session file created at \`ai/sessions/<session-id>/<session-id>.session.md\`
 - **Feature changes tracked** automatically with scenario-level detail
-- **Specs/Diagrams/Actors/Contexts** can be edited anytime (not tracked in sessions)
+- **Specs/Diagrams/Actors** can be edited anytime (not tracked in sessions)
 - Session is "active" for editing in Forge Studio
 - **Transition**: User clicks "End Design Session" → status becomes 'scribe'
 
@@ -241,7 +235,7 @@ Sessions progress through four distinct phases:
 4. Session file created at \`ai/sessions/<session-id>/<session-id>.session.md\`
 5. File watchers begin tracking changes to **features only** (\`**/*.feature.md\`)
 6. Session is now "active"
-7. Specs/Diagrams/Actors/Contexts remain editable without tracking
+7. Specs/Diagrams/Actors remain editable without tracking
 
 ### Phase 2: Design Changes (status: 'design')
 During active session, user edits design documents:
@@ -280,13 +274,6 @@ During active session, user edits design documents:
   - **INFORMATIVE**: Define who interacts with the system
   - NOT tracked in sessions, editable anytime
   - **Analyze existing folder structure** before creating new actors
-  
-- **Contexts** (*.context.md): Add guidance for specific technologies
-  - **INFORMATIVE**: Technical guidance when implementing features
-  - NOT tracked in sessions, editable anytime
-  - Provide implementation patterns, best practices, and technical constraints
-  - Help agents make consistent technical decisions
-  - **Analyze existing folder structure** before creating new contexts
 
 ### Phase 3: End Design Session (design → scribe)
 1. User clicks "End Design Session" in Forge Studio
@@ -301,7 +288,7 @@ During active session, user edits design documents:
 2. AI calls \`get_forge_about\` and \`get_forge_schema\` MCP tools
 3. AI analyzes session's \`changed_files\` array with scenario-level detail
 4. AI reads git diffs (if available) to understand exact changes
-5. AI follows context linkages to gather technical guidance
+5. AI follows linkages to gather technical guidance from specs and diagrams
 6. AI creates Stories (*.story.md) for code changes
 7. AI creates Tasks (*.task.md) for manual work
 8. All tickets placed in \`ai/sessions/<session-id>/tickets/\`
@@ -382,18 +369,12 @@ Stories & Tasks
 
 When distilling a session, follow this EXACT methodical process:
 
-#### Phase 1: Global Context Discovery
-1. **Find ALL global contexts**
-   - Search \`ai/contexts/**/*.context.md\`
-   - Read every global context file
-   - These provide overarching technical guidance
-
-#### Phase 2: Changed Files Analysis
+#### Phase 1: Changed Files Analysis
 1. **Read all changed feature files**
    - Extract from session's \`changed_files\` array (features only)
    - Identify all \`*.feature.md\` files with scenario-level changes
 
-#### Phase 3: Spec Linkage Discovery
+#### Phase 2: Spec Linkage Discovery
 1. **Follow spec_id references**
    - For each changed \`*.feature.md\`, examine \`spec_id\` array
    - Read all referenced spec files
@@ -404,7 +385,7 @@ When distilling a session, follow this EXACT methodical process:
    - Map spec → feature relationships
    - Understand complete technical implementation
 
-#### Phase 4: Architectural Understanding
+#### Phase 3: Architectural Understanding
 1. **Read all diagrams from linked specs**
    - Check \`diagram_id\` linkages in specs (from Phase 3)
    - Read all referenced diagram files
@@ -420,7 +401,7 @@ When distilling a session, follow this EXACT methodical process:
    - Identify integration points
    - Understand story dependencies
 
-#### Phase 5: Complete Context Synthesis
+#### Phase 4: Complete Context Synthesis
 1. **Validate coverage**
    - Every changed feature analyzed
    - All linked specs read
@@ -575,18 +556,17 @@ Even when creating new folders, ensure they align with the project's organizatio
 
 ## Best Practices
 
-1. **Features Are Directive** - Features drive code changes and are tracked in sessions at scenario-level; Specs/Diagrams/Actors/Contexts are informative and always editable
+1. **Features Are Directive** - Features drive code changes and are tracked in sessions at scenario-level; Specs/Diagrams/Actors are informative and always editable
 2. **Analyze Folder Structure First** - Always examine existing folder organization before creating or modifying files; respect established patterns and place files logically
 3. **Feature Organization is CRITICAL** - Structure features logically to directly inform automated test organization; abstract large concepts into smaller ones
 4. **Specs Without Code/Diagrams** - Specs contain business logic and contracts, but NO code (except pseudocode) and NO diagrams (link to diagram files instead)
-5. **Contexts for Agents** - Use context files to provide technical guidance that helps agents implement features consistently
-6. **Nested Organization** - Group related features/specs in folders that reflect conceptual hierarchy; don't create files at root level if subfolders exist
-7. **Status Awareness** - Respect session status transitions (design → scribe → development → completed)
-8. **Minimal Stories** - Keep stories small and focused (< 30 minutes each)
-9. **Follow Linkages** - Discover specs/diagrams through feature linkages (spec_id, diagram_id), not from session tracking
-10. **Iterative Sessions** - Keep sessions focused on one problem area
-11. **Clear Naming** - Use descriptive kebab-case IDs that align with existing naming patterns
-12. **Git Controls History** - Never document "old" vs "new" in design files; Git handles change tracking
+5. **Nested Organization** - Group related features/specs in folders that reflect conceptual hierarchy; don't create files at root level if subfolders exist
+6. **Status Awareness** - Respect session status transitions (design → scribe → development → completed)
+7. **Minimal Stories** - Keep stories small and focused (< 30 minutes each)
+8. **Follow Linkages** - Discover specs/diagrams through feature linkages (spec_id, diagram_id), not from session tracking
+9. **Iterative Sessions** - Keep sessions focused on one problem area
+10. **Clear Naming** - Use descriptive kebab-case IDs that align with existing naming patterns
+11. **Git Controls History** - Never document "old" vs "new" in design files; Git handles change tracking
 
 ## Output Expectations for forge-scribe
 
@@ -602,12 +582,11 @@ When distilling a session, the AI MUST:
 
 **Important Reminders**:
 - **Features Are Directive** - Only features are tracked in sessions at scenario-level
-- **Specs/Diagrams/Actors/Contexts Are Informative** - Always editable, never tracked in sessions
+- **Specs/Diagrams/Actors Are Informative** - Always editable, never tracked in sessions
 - **Analyze folder structure first** - Always examine existing organization before creating files
 - **Feature organization is CRITICAL** - Structure should inform test organization; place files logically within existing folder hierarchies
 - **Discover via Linkages** - Find specs/diagrams through feature linkages (spec_id, diagram_id), not from session tracking
 - **Specs never contain actual code** (only pseudocode) or diagrams (only links to diagrams)
-- **Contexts provide technical guidance** to agents during implementation
 - **Stories implement the current state** as defined in features and their linked specs
 - **Git handles history** for all design documents; never document "old" vs "new" states
 
@@ -638,7 +617,7 @@ Sessions progress through distinct phases:
 
 1. **design** - Active design session, feature files are being modified
    - **Only feature changes** are tracked automatically at scenario-level
-   - Specs/Diagrams/Actors/Contexts can be edited but are NOT tracked
+   - Specs/Diagrams/Actors can be edited but are NOT tracked
    - Session is "active" for editing
    - User can end session to transition to 'scribe'
 
@@ -660,7 +639,7 @@ Sessions progress through distinct phases:
 
 ## Changed Files Structure
 
-**IMPORTANT**: Sessions track ONLY feature files (*.feature.md). Specs, Diagrams, Actors, and Contexts are NOT tracked in sessions.
+**IMPORTANT**: Sessions track ONLY feature files (*.feature.md). Specs, Diagrams, and Actors are NOT tracked in sessions.
 
 ### Feature Changes (*.feature.md)
 Changed files track scenario-level detail for features:
@@ -687,7 +666,6 @@ changed_files:
 - **Specs** (*.spec.md) - Always editable, never tracked in sessions
 - **Diagrams** (*.diagram.md) - Always editable, never tracked in sessions
 - **Actors** (*.actor.md) - Always editable, never tracked in sessions
-- **Contexts** (*.context.md) - Always editable, never tracked in sessions
 
 These informative documents are discovered during distillation via linkages from features (spec_id, diagram_id).
 
@@ -703,11 +681,11 @@ The session document should describe:
 ## Workflow
 1. Session starts with status: design, problem_statement, and start_time
 2. During design phase, changed_files array tracks **feature modifications only** with scenario detail
-3. Specs/Diagrams/Actors/Contexts can be edited but are NOT tracked
+3. Specs/Diagrams/Actors can be edited but are NOT tracked
 4. User ends design session, status changes to 'scribe', end_time is set
 5. User runs forge-scribe to distill session into stories
 6. forge-scribe analyzes changed feature files with scenario-level detail
-7. forge-scribe follows linkages to discover specs, diagrams, and contexts
+7. forge-scribe follows linkages to discover specs and diagrams
 8. Stories are created in ai/sessions/<session-id>/tickets/
 9. Status changes to 'development' when stories are created
 10. User implements stories
@@ -826,8 +804,7 @@ Specification documents define WHAT must be built through technical contracts, i
 
 ## What Specs Should NOT Contain
 - **Diagrams**: Use separate diagram files (*.diagram.md) and link via diagram_id
-- **Implementation code**: Use context files (*.context.md) for code examples and patterns
-- **Step-by-step guides**: Use context files for implementation guidance
+- **Implementation code**: Only pseudocode for clarity, never real code
 
 ## Example Content
 \`\`\`markdown

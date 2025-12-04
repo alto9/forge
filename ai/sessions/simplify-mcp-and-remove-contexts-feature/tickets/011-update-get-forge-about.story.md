@@ -4,7 +4,7 @@ session_id: simplify-mcp-and-remove-contexts-feature
 feature_id: []
 spec_id: []
 diagram_id: []
-status: pending
+status: completed
 priority: high
 estimated_minutes: 30
 ---
@@ -31,12 +31,12 @@ The `get_forge_about` tool provides comprehensive workflow overview. It currentl
 - About tool response data - Remove context sections
 
 ## Acceptance Criteria
-- [ ] `get_forge_about` output no longer mentions contexts
-- [ ] Linkage system shows: Features → Specs → Diagrams → Actors (no contexts)
-- [ ] Context Building Checklist no longer includes context steps
-- [ ] File structure documentation shows 4 document types (not 5)
-- [ ] All workflow descriptions are accurate without contexts
-- [ ] Tool returns successfully with updated content
+- [x] `get_forge_about` output no longer mentions contexts
+- [x] Linkage system shows: Features → Specs → Diagrams → Actors (no contexts)
+- [x] Context Building Checklist no longer includes context steps
+- [x] File structure documentation shows 4 document types (not 5)
+- [x] All workflow descriptions are accurate without contexts
+- [x] Tool returns successfully with updated content
 
 ## Dependencies
 - Depends on: 001-remove-mcp-context-tools
