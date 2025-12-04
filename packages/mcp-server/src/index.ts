@@ -45,13 +45,13 @@ class ForgeMCPServer {
           },
           {
             name: 'get_forge_schema',
-            description: 'Get the schema specification for a Forge file type (session, feature, spec, diagram, actor, story, task, or context)',
+            description: 'Get the schema specification for a Forge file type (session, feature, spec, diagram, actor, story, task)',
             inputSchema: {
               type: 'object',
               properties: {
                 schema_type: {
                   type: 'string',
-                  enum: ['session', 'feature', 'spec', 'diagram', 'actor', 'story', 'task', 'context'],
+                  enum: ['session', 'feature', 'spec', 'diagram', 'actor', 'story', 'task'],
                   description: 'The type of schema to retrieve',
                 },
               },
@@ -1112,61 +1112,6 @@ Configuration changes in external systems
 ## Linkages
 - References a **session_id** (required)
 - No code dependencies - these are external/manual work items`,
-
-      context: `# Context File Schema
-
-## File Format
-- **Filename**: <context-id>.context.md
-- **Location**: ai/contexts/ (nestable, folder structure defines categories)
-- **Format**: Frontmatter + Gherkin Scenarios
-
-## Frontmatter Fields
----
-context_id: kebab-case-id  # Must match filename without .context.md
-name: Optional Name  # Optional human-readable name
-description: Optional Description  # Optional brief description
-tags: []  # Optional array of tags for categorization
----
-
-## Content Structure
-Context files provide guidance on when and how to use specific information or tools using Gherkin scenarios.
-
-Use \`\`\`gherkin code blocks for structured guidance scenarios.
-
-### Example Structure
-
-\`\`\`markdown
-\`\`\`gherkin
-Scenario: When to use this context
-  Given a specific technical situation
-  When implementing a feature
-  Then follow these guidelines
-  And reference appropriate documentation
-
-Scenario: How to implement
-  Given you need to implement this pattern
-  When writing code
-  Then use these best practices
-  And ensure proper error handling
-\`\`\`
-\`\`\`
-
-## Purpose
-Context files prevent information overload by providing just-in-time guidance:
-- When to consult documentation
-- Which tools to use for specific technologies
-- Where to find additional information
-- Research strategies for unknown technologies
-
-## Organization
-- Use nested folders to organize contexts by category
-- Folder structure replaces the deprecated category field
-- Example: ai/contexts/foundation/, ai/contexts/vscode/
-
-## Linkages
-- Referenced by **spec_id** and **story_id** values
-- May reference documentation in ai/docs/
-- May reference MCP tools or external resources`,
 
       diagram: `# Diagram File Schema
 

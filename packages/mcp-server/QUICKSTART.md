@@ -11,7 +11,7 @@ Your Forge MCP Server provides **four powerful tools**:
 
 ### 2. `get_forge_schema`
 - **Purpose:** Returns the complete schema specification for Forge file types
-- **Input:** `schema_type` - one of: `session`, `feature`, `spec`, `model`, `actor`, `story`, `task`, `context`
+- **Input:** `schema_type` - one of: `session`, `feature`, `spec`, `model`, `actor`, `story`, `task`
 - **Output:** Detailed schema with frontmatter fields, content structure, and linkage requirements
 
 ### 3. `get_forge_objects`

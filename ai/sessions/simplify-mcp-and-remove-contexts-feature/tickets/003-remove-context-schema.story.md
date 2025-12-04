@@ -4,7 +4,7 @@ session_id: simplify-mcp-and-remove-contexts-feature
 feature_id: []
 spec_id: []
 diagram_id: []
-status: pending
+status: completed
 priority: high
 estimated_minutes: 15
 ---
@@ -28,11 +28,11 @@ The `get_forge_schema` tool provides schemas for all Forge file types. Since con
 - Type definitions - Update schema_type enum
 
 ## Acceptance Criteria
-- [ ] `schema_type` enum no longer includes `context`
-- [ ] Calling `get_forge_schema` with `schema_type: "context"` returns error or undefined
-- [ ] Other schema types (session, feature, spec, diagram, actor, story, task) still work
-- [ ] All tests pass
-- [ ] TypeScript builds without errors
+- [x] `schema_type` enum no longer includes `context`
+- [x] Calling `get_forge_schema` with `schema_type: "context"` returns error or undefined
+- [x] Other schema types (session, feature, spec, diagram, actor, story, task) still work
+- [x] All tests pass
+- [x] TypeScript builds without errors
 
 ## Dependencies
 - Depends on: 001-remove-mcp-context-tools

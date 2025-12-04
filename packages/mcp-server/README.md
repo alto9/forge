@@ -13,7 +13,7 @@ The Forge MCP Server exposes two powerful tools that help agents understand and 
 Returns the complete schema specification for a Forge file type.
 
 **Parameters:**
-- `schema_type` (required): One of `session`, `feature`, `spec`, `model`, `actor`, `story`, `task`, or `context`
+- `schema_type` (required): One of `session`, `feature`, `spec`, `model`, `actor`, `story`, `task`
 
 **Returns:** Detailed schema documentation including:
 - File format and naming conventions
