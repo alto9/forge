@@ -37,7 +37,7 @@ class ForgeMCPServer {
         tools: [
           {
             name: 'get_forge_about',
-            description: 'Get a comprehensive overview of the Forge workflow, including the session-driven approach, the powerful linkage system for context gathering, when to create Stories vs Tasks, and guidance on implementation. The linkage system is CRITICAL - it shows how to systematically gather complete context by following document relationships (feature_id, spec_id, context_id, diagram_id) and using get_forge_context for technical object types.',
+            description: 'Get a comprehensive overview of the Forge workflow, including the session-driven approach, the powerful linkage system for context gathering, when to create Stories vs Tasks, and guidance on implementation. The linkage system is CRITICAL - it shows how to systematically gather complete context by following document relationships (feature_id, spec_id, diagram_id).',
             inputSchema: {
               type: 'object',
               properties: {},
@@ -359,20 +359,15 @@ Forge documents are interconnected through explicit ID references:
 Features (*.feature.md)
   └─ spec_id[] ──────────┐
   └─ diagram_id[] ───┐   │
-  └─ context_id[] ┐  │   │
-                  │  │   │
-Specs (*.spec.md) │  │   │
+                     │   │
+Specs (*.spec.md)    │   │
   ├─ feature_id[] ◄──┘   │
   ├─ diagram_id[] ◄──────┘
-  └─ context_id[] ─┐  
-                   │  
+  
 Diagrams (*.diagram.md)
   ├─ frontmatter.feature_id[]
   ├─ frontmatter.actor_id[]
   └─ node.data.spec_id ◄──────┘ (element-level) ⭐
-                      
-Contexts              
-  ◄───────────────────┘
   
 Stories & Tasks
   ├─ session_id
@@ -397,12 +392,6 @@ When distilling a session, follow this EXACT methodical process:
 1. **Read all changed feature files**
    - Extract from session's \`changed_files\` array (features only)
    - Identify all \`*.feature.md\` files with scenario-level changes
-   
-2. **Extract context_id linkages**
-   - From each feature's frontmatter, find \`context_id\` arrays
-   - From referenced specs (via spec_id), extract \`context_id\` arrays
-   - Read each referenced context file
-   - These provide technology-specific guidance
 
 #### Phase 3: Spec Linkage Discovery
 1. **Follow spec_id references**
@@ -415,22 +404,7 @@ When distilling a session, follow this EXACT methodical process:
    - Map spec → feature relationships
    - Understand complete technical implementation
 
-#### Phase 4: Object Type Context Discovery
-1. **Extract technical object types from specs**
-   - Read specs linked from changed features (via spec_id)
-   - Scan all linked specs for object references: \`<object-type>ObjectName\`
-   - Examples:
-     - \`<lambda>ProcessOrder\` → "lambda"
-     - \`<dynamodb>UsersTable\` → "dynamodb"
-     - \`<api>PaymentEndpoint\` → "api"
-     - \`<component>LoginForm\` → "component"
-   
-2. **Query MCP for each object type**
-   - Call \`get_forge_context(objectType)\` for each unique type
-   - This provides just-in-time technical guidance
-   - Examples: \`get_forge_context("lambda")\`, \`get_forge_context("dynamodb")\`
-
-#### Phase 5: Architectural Understanding
+#### Phase 4: Architectural Understanding
 1. **Read all diagrams from linked specs**
    - Check \`diagram_id\` linkages in specs (from Phase 3)
    - Read all referenced diagram files
@@ -446,19 +420,15 @@ When distilling a session, follow this EXACT methodical process:
    - Identify integration points
    - Understand story dependencies
 
-#### Phase 6: Complete Context Synthesis
+#### Phase 5: Complete Context Synthesis
 1. **Validate coverage**
    - Every changed feature analyzed
    - All linked specs read
-   - All context linkages followed
-   - All object types queried
    - All linked diagrams read
    
 2. **Build comprehensive understanding**
    - Complete feature behavior (from changed features)
    - Technical implementation (from linked specs)
-   - Technology guidance (from contexts)
-   - Object-specific patterns (from get_forge_context)
    - Architecture understanding (from linked diagrams)
 
 ### Why the Linkage System is Powerful
@@ -470,13 +440,8 @@ When distilling a session, follow this EXACT methodical process:
 ### Context Building Checklist (Use Every Time)
 
 Before creating tickets from a session, verify:
-- [ ] All global contexts read from \`ai/contexts/\`
 - [ ] All changed features read from session's \`changed_files\` array
-- [ ] All feature \`context_id\` references followed and read
 - [ ] All \`spec_id\` linkages followed from changed features
-- [ ] All spec \`context_id\` references followed and read
-- [ ] All technical object types (e.g., \`<lambda>X\`) extracted from linked specs
-- [ ] \`get_forge_context\` called for each unique object type
 - [ ] All \`diagram_id\` references followed from linked specs
 - [ ] All linked diagrams analyzed
 - [ ] Complete architectural understanding achieved
@@ -491,9 +456,7 @@ Before creating tickets from a session, verify:
 1. **Always Follow the Chain**: When you encounter a reference ID, always read that file
 2. **Bidirectional Checking**: Check both directions of relationships (feature→spec AND spec→feature)
 3. **Object Type Extraction**: Don't skip the \`<object-type>Name\` extraction step
-4. **Use MCP Tools**: Call \`get_forge_context\` for every unique object type found
-5. **Diagram Analysis**: Visual architecture is critical for understanding system design
-6. **Context Prioritization**: Global contexts apply everywhere; specific contexts apply to linked features/specs
+4. **Diagram Analysis**: Visual architecture is critical for understanding system design
 
 ## Key Principles for Distillation
 
@@ -519,13 +482,7 @@ When running forge-scribe to distill a session:
    - Focus on what was added, modified, or removed
    - Don't create stories for unchanged parts
 
-5. **Follow Context Linkages** (Critical - see linkage system above)
-   - Check \`context_id\` references in frontmatter
-   - Read context files for technical guidance
-   - Apply patterns consistently
-   - Extract and query object types via \`get_forge_context\`
-
-6. **Create Complete Stories**
+5. **Create Complete Stories**
    - Include file paths involved
    - Link to feature_id, spec_id, model_id, diagram_id
    - Add clear acceptance criteria
@@ -626,7 +583,7 @@ Even when creating new folders, ensure they align with the project's organizatio
 6. **Nested Organization** - Group related features/specs in folders that reflect conceptual hierarchy; don't create files at root level if subfolders exist
 7. **Status Awareness** - Respect session status transitions (design → scribe → development → completed)
 8. **Minimal Stories** - Keep stories small and focused (< 30 minutes each)
-9. **Follow Linkages** - Discover specs/diagrams/contexts through feature linkages (spec_id, diagram_id, context_id), not from session tracking
+9. **Follow Linkages** - Discover specs/diagrams through feature linkages (spec_id, diagram_id), not from session tracking
 10. **Iterative Sessions** - Keep sessions focused on one problem area
 11. **Clear Naming** - Use descriptive kebab-case IDs that align with existing naming patterns
 12. **Git Controls History** - Never document "old" vs "new" in design files; Git handles change tracking
@@ -732,7 +689,7 @@ changed_files:
 - **Actors** (*.actor.md) - Always editable, never tracked in sessions
 - **Contexts** (*.context.md) - Always editable, never tracked in sessions
 
-These informative documents are discovered during distillation via linkages from features (spec_id, diagram_id, context_id).
+These informative documents are discovered during distillation via linkages from features (spec_id, diagram_id).
 
 ## Content Structure
 The session document should describe:
@@ -761,7 +718,7 @@ The session document should describe:
 - Sessions generate **story** and **task** files in ai/sessions/<session-id>/tickets/
 - Stories and tasks reference the session_id
 - **Only features** are tracked in changed_files with scenario-level granularity
-- Specs/Diagrams/Contexts are discovered via feature linkages (spec_id, diagram_id, context_id)`,
+- Specs/Diagrams are discovered via feature linkages (spec_id, diagram_id)`,
 
       feature: `# Feature File Schema
 
@@ -847,7 +804,6 @@ Rule: Email addresses must be unique
 spec_id: kebab-case-id  # Must match filename without .spec.md
 feature_id: [feature-id-1, feature-id-2]  # Array of related feature IDs
 diagram_id: [diagram-id-1, diagram-id-2]  # Optional: related diagrams
-context_id: [context-id-1, context-id-2]  # Optional: related contexts
 ---
 
 ## Content Structure
@@ -905,7 +861,6 @@ interface LoginResponse {
 ## Linkages
 - References one or more **feature_id** values for user-facing behavior
 - References **diagram_id** values for visual architecture (create separate diagram files)
-- May reference **context_id** values for implementation guidance
 - **Referenced BY diagram elements**: Individual diagram nodes link to specs via node.data.spec_id
 - Specs can define data structures inline using TypeScript interfaces or tables
 - Stories will reference this spec_id for implementation

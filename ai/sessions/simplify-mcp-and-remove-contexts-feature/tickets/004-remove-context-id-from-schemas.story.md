@@ -4,7 +4,7 @@ session_id: simplify-mcp-and-remove-contexts-feature
 feature_id: []
 spec_id: []
 diagram_id: []
-status: pending
+status: completed
 priority: high
 estimated_minutes: 25
 ---
