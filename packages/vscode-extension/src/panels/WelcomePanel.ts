@@ -24,7 +24,6 @@ type ProjectItemStatus = FolderStatus | CommandStatus;
 const REQUIRED_FOLDERS: Omit<FolderStatus, 'exists'>[] = [
     { path: 'ai', description: 'Root directory for all Forge files', type: 'folder' },
     { path: 'ai/actors', description: 'Actor definitions and personas', type: 'folder' },
-    { path: 'ai/contexts', description: 'Context guidance files', type: 'folder' },
     { path: 'ai/features', description: 'Feature definitions with Gherkin', type: 'folder' },
     { path: 'ai/diagrams', description: 'Visual architecture diagrams', type: 'folder' },
     { path: 'ai/sessions', description: 'Design session tracking', type: 'folder' },
