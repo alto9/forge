@@ -2,9 +2,6 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
 import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
@@ -61,28 +58,6 @@ class ForgeMCPServer {
               required: ['schema_type'],
             },
           },
-          {
-            name: 'get_forge_objects',
-            description: 'List supported spec objects with brief guidance. Use these object IDs with get_forge_context.',
-            inputSchema: {
-              type: 'object',
-              properties: {},
-            },
-          },
-          {
-            name: 'get_forge_context',
-            description: 'Return guidance for a supported spec object from the guidance library; if none exists, return a best-practice research prompt for that object.',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                spec_object: {
-                  type: 'string',
-                  description: 'A technical object or concept that needs to be researched (e.g., "AWS CDK Stack", "React component architecture", "PostgreSQL indexes")',
-                },
-              },
-              required: ['spec_object'],
-            },
-          },
         ],
       };
     });
@@ -115,138 +90,10 @@ class ForgeMCPServer {
             ],
           };
 
-        case 'get_forge_objects':
-          return {
-            content: [
-              {
-                type: 'text',
-                text: this.getForgeObjects(),
-              },
-            ],
-          };
-
-        case 'get_forge_context':
-          if (!args || typeof args.spec_object !== 'string') {
-            throw new Error('spec_object is required');
-          }
-          return {
-            content: [
-              {
-                type: 'text',
-                text: this.getForgeContext(args.spec_object),
-              },
-            ],
-          };
-
         default:
           throw new Error(`Unknown tool: ${name}`);
       }
     });
-  }
-
-  private getGuidanceDir(): string {
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    return path.resolve(__dirname, 'guidance');
-  }
-
-  private normalizeObjectId(name: string): string {
-    return name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9\s-_]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/_+/g, '-');
-  }
-
-  private readGuidanceIndex(): Array<{ id: string; title: string; aliases: string[]; filePath: string; summary: string }> {
-    const dir = this.getGuidanceDir();
-    let entries: string[] = [];
-    try {
-      entries = fs.readdirSync(dir);
-    } catch {
-      return [];
-    }
-
-    const items: Array<{ id: string; title: string; aliases: string[]; filePath: string; summary: string }> = [];
-    for (const name of entries) {
-      if (!name.endsWith('.spec.md')) continue;
-      const filePath = path.join(dir, name);
-      let content = '';
-      try {
-        content = fs.readFileSync(filePath, 'utf8');
-      } catch {
-        continue;
-      }
-
-      let fm: Record<string, unknown> = {};
-      let body = content;
-      const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n?/);
-      if (fmMatch) {
-        const raw = fmMatch[1];
-        body = content.slice(fmMatch[0].length);
-        fm = this.parseSimpleFrontmatter(raw);
-      }
-
-      const id = (this.normalizeObjectId(String((fm as any).object_id || '')) || this.normalizeObjectId(name.replace(/\.spec\.md$/, '')));
-      const title = String((fm as any).title || id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()));
-      const aliases: string[] = Array.isArray((fm as any).aliases)
-        ? (fm as any).aliases.map((a: unknown) => this.normalizeObjectId(String(a)))
-        : [];
-      const summary = this.extractSummary(body);
-
-      items.push({ id, title, aliases, filePath, summary });
-    }
-    return items;
-  }
-
-  private parseSimpleFrontmatter(raw: string): Record<string, unknown> {
-    const result: Record<string, unknown> = {};
-    const lines = raw.split(/\r?\n/);
-    for (const line of lines) {
-      const m = line.match(/^([A-Za-z0-9_\-]+):\s*(.*)$/);
-      if (!m) continue;
-      const key = m[1];
-      const value = m[2].trim();
-      if (value.startsWith('[') && value.endsWith(']')) {
-        const arr = value
-          .slice(1, -1)
-          .split(',')
-          .map((v) => v.trim().replace(/^"|"$/g, ''))
-          .filter((v) => v.length > 0);
-        result[key] = arr;
-      } else {
-        result[key] = value.replace(/^"|"$/g, '');
-      }
-    }
-    return result;
-  }
-
-  private extractSummary(body: string): string {
-    const lines = body.split(/\r?\n/).map((l) => l.trim());
-    for (const line of lines) {
-      if (line.length === 0) continue;
-      // Skip headings
-      if (line.startsWith('#')) continue;
-      return line.length > 200 ? line.slice(0, 200) + '…' : line;
-    }
-    return '';
-  }
-
-  private getForgeObjects(): string {
-    const items = this.readGuidanceIndex();
-    if (items.length === 0) {
-      return `No spec objects are currently registered. To add guidance, create markdown files in guidance/*.spec.md (e.g., guidance/lambda.spec.md).`;
-    }
-    const header = `Supported Spec Objects (${items.length})\n`;
-    const lines = items
-      .map((it) => {
-        const aliasStr = it.aliases.length > 0 ? `\n  aliases: ${it.aliases.join(', ')}` : '';
-        const summary = it.summary ? `\n  summary: ${it.summary}` : '';
-        return `- ${it.id} — ${it.title}${aliasStr}${summary}`;
-      })
-      .join('\n');
-    const footer = `\n\nUse get_forge_context with spec_object set to one of the IDs above.`;
-    return header + lines + footer;
   }
 
   private getForgeAbout(): string {
@@ -1451,70 +1298,6 @@ Diagrams provide visual representations for:
     }
 
     return schema;
-  }
-
-  private getForgeContext(specObject: string): string {
-    const items = this.readGuidanceIndex();
-    const requested = this.normalizeObjectId(specObject);
-
-    // Attempt to find a matching guidance file by id or alias
-    const match = items.find((it) => it.id === requested || it.aliases.includes(requested));
-    if (match) {
-      try {
-        const content = fs.readFileSync(match.filePath, 'utf8');
-        return content;
-      } catch {
-        // Fall through to research prompt if file cannot be read
-      }
-    }
-
-    return `# Research Prompt for: ${specObject}
-
-You need to research and understand "${specObject}" to properly implement or work with it in the current project context.
-
-## Research Instructions
-
-Execute the following research steps in order:
-
-### 1. Check Project Documentation
-First, search the project's ai/docs/ directory for any existing documentation about "${specObject}":
-- Look for markdown files that might contain relevant information
-- Check for naming patterns that relate to this object
-
-### 2. Search Codebase
-Use codebase_search to find existing implementations or references:
-- Query: "How is ${specObject} implemented in this codebase?"
-- Query: "Where is ${specObject} used?"
-- Review the results to understand current usage patterns
-
-### 3. External Research (if needed)
-If the above steps don't provide sufficient information, perform web research:
-- Search for official documentation for "${specObject}"
-- Look for best practices and common patterns
-- Find implementation examples and tutorials
-- Check for version-specific considerations
-
-### 4. Synthesize Findings
-After gathering information, create a summary that includes:
-- **Definition**: What is ${specObject}?
-- **Purpose**: Why is it used?
-- **Implementation**: How should it be implemented in this project?
-- **Best Practices**: What are the recommended approaches?
-- **Gotchas**: What are common pitfalls to avoid?
-- **Dependencies**: What does it depend on or integrate with?
-
-### 5. Create Context (if needed)
-If this is a recurring concept that will be needed in multiple stories, consider creating a context file at:
-ai/contexts/${specObject.toLowerCase().replace(/\s+/g, '-')}-guidance.context.md
-
-This context file should follow the context schema and provide Gherkin scenarios for when and how to use this information in future work.
-
-## Output Format
-Provide your research findings in a structured format that can be easily referenced during implementation. Include specific code examples, configuration patterns, and integration points relevant to this project.
-
----
-
-**Note**: This is a research prompt. Execute each step thoroughly before proceeding to implementation. Document your findings for future reference.`;
   }
 
   async start() {

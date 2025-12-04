@@ -4,7 +4,7 @@ session_id: simplify-mcp-and-remove-contexts-feature
 feature_id: []
 spec_id: []
 diagram_id: []
-status: pending
+status: completed
 priority: high
 estimated_minutes: 20
 ---
@@ -27,11 +27,11 @@ These tools are no longer needed as specs and diagrams now provide all technical
 - `packages/mcp-server/src/tools/` - Remove tool implementation files (if separate)
 
 ## Acceptance Criteria
-- [ ] `get_forge_context` tool is no longer registered or callable
-- [ ] `get_forge_objects` tool is no longer registered or callable
-- [ ] MCP server starts without errors
-- [ ] Remaining tools (`get_forge_about`, `get_forge_schema`) still work correctly
-- [ ] All existing tests pass
+- [x] `get_forge_context` tool is no longer registered or callable
+- [x] `get_forge_objects` tool is no longer registered or callable
+- [x] MCP server starts without errors
+- [x] Remaining tools (`get_forge_about`, `get_forge_schema`) still work correctly
+- [x] All existing tests pass (mcp-server has no tests; build verification successful)
 
 ## Dependencies
 None - this is the first story in the sequence
