@@ -45,7 +45,7 @@ your-project/
     │   │       └── *.task.md
     │   └── *.session.md
     ├── features/           # Feature definitions with Gherkin (*.feature.md, nestable, index.md)
-    ├── specs/              # Technical specifications with Nomnoml (*.spec.md, nestable)
+    ├── specs/              # Technical specifications (*.spec.md, nestable)
     ├── actors/             # Actor/persona definitions (*.actor.md, nestable)
     └── docs/               # Supporting documentation
 ```
