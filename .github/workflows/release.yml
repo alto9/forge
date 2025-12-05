@@ -45,8 +45,7 @@ jobs:
       - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          echo "Skipping semantic-release npm publish in CI until publish access is restored."
+        run: npx semantic-release
       
       - name: Re-package VSCode extension (post-release)
         if: success()

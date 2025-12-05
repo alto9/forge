@@ -19,7 +19,8 @@
       "@semantic-release/npm",
       {
         "pkgRoot": "packages/mcp-server",
-        "tarballDir": "dist"
+        "tarballDir": "dist",
+        "npmPublish": false
       }
     ],
     [
