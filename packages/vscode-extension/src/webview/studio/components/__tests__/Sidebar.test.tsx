@@ -143,23 +143,11 @@ describe('Sidebar Component Integration', () => {
       expect(screen.getByText('Features')).toBeInTheDocument();
     });
 
-    it('should handle current page highlighting through components', () => {
-      render(
-        <Sidebar
-          currentPage="contexts"
-          activeSession={null}
-          onNavigate={mockOnNavigate}
-        />
-      );
-
-      // The active state should be handled by the NavItem components
-      expect(screen.getByText('Contexts')).toBeInTheDocument();
-    });
   });
 
   describe('Props Handling', () => {
     it('should handle different currentPage values', () => {
-      const pages = ['dashboard', 'actors', 'contexts', 'diagrams', 'specs', 'sessions', 'features'];
+      const pages = ['dashboard', 'actors', 'diagrams', 'specs', 'sessions', 'features'];
 
       pages.forEach(page => {
         const { unmount } = render(
@@ -224,7 +212,7 @@ describe('Sidebar Component Integration', () => {
 
       // Verify that all navigation items are present
       const expectedItems = [
-        'Dashboard', 'Actors', 'Contexts', 'Diagrams', 'Specifications',
+        'Dashboard', 'Actors', 'Diagrams', 'Specifications',
         'Sessions', 'Features'
       ];
 
@@ -246,7 +234,7 @@ describe('Sidebar Component Integration', () => {
       const informSection = screen.getByText('INFORM').parentElement;
       const designSection = screen.getByText('DESIGN').parentElement;
 
-      // INFORM section should contain Actors, Contexts, Diagrams, Specifications
+      // INFORM section should contain Actors, Diagrams, Specifications
       expect(informSection).toBeInTheDocument();
 
       // DESIGN section should contain Sessions, Features

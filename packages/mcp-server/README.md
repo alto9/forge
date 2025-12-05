@@ -8,12 +8,28 @@ The Forge MCP Server exposes two powerful tools that help agents understand and 
 
 ### Tools
 
-#### 1. `get_forge_schema`
+#### 1. `get_forge_about`
+
+Returns comprehensive overview of Forge workflow including session-driven approach, when to create Stories vs Tasks, and implementation guidance.
+
+**Parameters:** None
+
+**Returns:** Complete workflow documentation including:
+- Session-driven approach
+- Linkage system
+- When to create Stories vs Tasks
+- Minimal story size guidance
+- File structure and linkages
+- Context building process
+
+**Example use case:** When an agent needs to understand the Forge workflow or how to distill sessions into stories, it can call this tool for comprehensive guidance.
+
+#### 2. `get_forge_schema`
 
 Returns the complete schema specification for a Forge file type.
 
 **Parameters:**
-- `schema_type` (required): One of `session`, `feature`, `spec`, `model`, `actor`, `story`, `task`, or `context`
+- `schema_type` (required): One of `session`, `feature`, `spec`, `model`, `actor`, `story`, `task`
 
 **Returns:** Detailed schema documentation including:
 - File format and naming conventions
@@ -22,22 +38,6 @@ Returns the complete schema specification for a Forge file type.
 - Linkage requirements between different file types
 
 **Example use case:** When an agent needs to create or validate a Forge file, it can call this tool to understand the exact format requirements.
-
-#### 2. `get_forge_context`
-
-Generates a comprehensive research prompt for investigating a technical object or concept.
-
-**Parameters:**
-- `spec_object` (required): A string describing the technical object to research (e.g., "AWS CDK Stack", "React hooks", "PostgreSQL connection pooling")
-
-**Returns:** A structured research prompt that guides the agent through:
-1. Checking project documentation
-2. Searching the codebase
-3. Performing external research if needed
-4. Synthesizing findings
-5. Creating context files for future reference
-
-**Example use case:** When working on a task that requires understanding a specific technology or pattern, the agent can use this tool to get a systematic research plan.
 
 ## Installation
 
@@ -120,9 +120,9 @@ After updating the configuration:
 
 ## Tool Usage Examples
 
-### Example 1: Getting the Decision Schema
+### Example 1: Getting the Feature Schema
 
-When creating a new decision file, the agent can call:
+When creating a new feature file, the agent can call:
 
 ```javascript
 // Tool call
@@ -136,21 +136,19 @@ When creating a new decision file, the agent can call:
 
 The server returns the complete feature schema including frontmatter structure and Gherkin format requirements.
 
-### Example 2: Researching AWS CDK
+### Example 2: Understanding the Forge Workflow
 
-When implementing AWS infrastructure, the agent can call:
+When an agent needs to understand how to work with Forge, it can call:
 
 ```javascript
 // Tool call
 {
-  "name": "get_forge_context",
-  "arguments": {
-    "spec_object": "AWS CDK Stack configuration"
-  }
+  "name": "get_forge_about",
+  "arguments": {}
 }
 ```
 
-The server returns a research prompt that guides the agent through investigating CDK best practices.
+The server returns comprehensive workflow documentation including session management, file structure, and linkage system.
 
 ## Architecture
 
@@ -195,7 +193,7 @@ npm run clean
 
 ## Schema Specifications
 
-The server provides schemas for eight Forge file types:
+The server provides schemas for seven Forge file types:
 
 1. **Session** (`*.session.md`) - Design session tracking
 2. **Feature** (`*.feature.md`) - Gherkin-based feature specifications
@@ -204,7 +202,6 @@ The server provides schemas for eight Forge file types:
 5. **Actor** (`*.actor.md`) - Actor/persona definitions
 6. **Story** (`*.story.md`) - Implementation stories (< 30 min each)
 7. **Task** (`*.task.md`) - External/manual task definitions
-8. **Context** (`*.context.md`) - Contextual guidance with instructions and Gherkin
 
 Each schema includes:
 - File naming conventions

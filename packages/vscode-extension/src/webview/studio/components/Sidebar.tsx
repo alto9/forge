@@ -37,7 +37,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   const informItems: NavItemConfig[] = [
     { id: 'actors', label: 'Actors', alwaysEnabled: true },
-    { id: 'contexts', label: 'Contexts', alwaysEnabled: true },
     { id: 'diagrams', label: 'Diagrams', alwaysEnabled: true },
     { id: 'specs', label: 'Specifications', alwaysEnabled: true },
   ];
@@ -49,7 +48,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
   // Fetch folder trees on mount
   React.useEffect(() => {
-    const categories = ['actors', 'contexts', 'diagrams', 'specs', 'features'];
+    const categories = ['actors', 'diagrams', 'specs', 'features'];
     categories.forEach(category => {
       vscode?.postMessage({ type: 'getFolderTree', category });
     });

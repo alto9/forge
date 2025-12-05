@@ -4,12 +4,6 @@ import { FileParser } from './FileParser';
 import { GitUtils } from './GitUtils';
 import { FeatureChangeEntry } from '../types/FeatureChangeEntry';
 
-export interface ContextFile {
-    contextId: string;
-    filePath: string;
-    content: string;
-}
-
 export class PromptGenerator {
     /**
      * Generates a prompt for starting a new design session
@@ -209,38 +203,11 @@ Please review the session content and manually identify which features, specs, m
 `;
         }
 
-        // Find global contexts
-        const globalContexts = await this.findGlobalContexts(workspaceFolder.uri.fsPath);
-        
-        // Add global contexts section if any are found
-        if (globalContexts.length > 0) {
-            prompt += `## Global Contexts
-
-The following contexts are marked as global and should inform all story generation:
-
-`;
-            for (const context of globalContexts) {
-                const relativePath = path.relative(workspaceFolder.uri.fsPath, context.filePath);
-                prompt += `### ${context.contextId} (${relativePath})
-
-${context.content}
-
----
-
-`;
-            }
-            prompt += `Use the guidance above when creating stories and tasks. These foundational contexts ensure consistency across all implementation work.
-
-`;
-        }
-
-        prompt += `STEP 5: Review changed files and follow context guidance
+        prompt += `STEP 5: Review changed files
 
 For each changed file listed above:
 1. Review the git diff (if available) to understand exactly what changed
 2. If no git diff is available, read the file directly to understand its content
-3. Identify any context_id references in the file's frontmatter
-4. Read any referenced context files and execute their Gherkin scenarios (GIVEN/WHEN/THEN)
 
 STEP 6: Analyze and break down into Stories and Tasks
 
@@ -341,39 +308,13 @@ ${storyContent}
         // Include related specs
         if (specIds.length > 0) {
             prompt += `\n**Related Specs**:\n`;
-            const contextIds = new Set<string>();
-            
             for (const specId of specIds) {
                 const specFile = await this.findFileById(workspaceFolder.uri.fsPath, 'specs', specId, '.spec.md');
                 if (specFile) {
                     const relativePath = path.relative(workspaceFolder.uri.fsPath, specFile);
                     prompt += `- ${specId}: ${relativePath}\n`;
-                    
-                    // Collect context_ids from specs
-                    const content = await FileParser.readFile(specFile);
-                    const parsed = FileParser.parseFrontmatter(content);
-                    if (parsed.frontmatter.context_id) {
-                        const contexts = FileParser.extractIds(parsed.frontmatter, 'context_id');
-                        for (const contextId of contexts) {
-                            contextIds.add(contextId);
-                        }
-                    }
                 } else {
                     prompt += `- ${specId}: (file not found)\n`;
-                }
-            }
-            
-            // Include related contexts
-            if (contextIds.size > 0) {
-                prompt += `\n**Related Contexts**:\n`;
-                for (const contextId of contextIds) {
-                    const contextFile = await this.findFileById(workspaceFolder.uri.fsPath, 'contexts', contextId, '.context.md');
-                    if (contextFile) {
-                        const relativePath = path.relative(workspaceFolder.uri.fsPath, contextFile);
-                        prompt += `- ${contextId}: ${relativePath}\n`;
-                    } else {
-                        prompt += `- ${contextId}: (file not found)\n`;
-                    }
                 }
             }
         }
@@ -446,7 +387,6 @@ Begin implementation now.`;
         if (filePath.includes('.spec.md')) return 'spec';
         if (filePath.includes('.model.md')) return 'model';
         if (filePath.includes('.actor.md')) return 'actor';
-        if (filePath.includes('.context.md')) return 'context';
         if (filePath.includes('.session.md')) return 'session';
         if (filePath.includes('.story.md')) return 'story';
         if (filePath.includes('.task.md')) return 'task';
@@ -498,60 +438,5 @@ Begin implementation now.`;
         return null;
     }
 
-    /**
-     * Find all global context files in the ai/contexts directory
-     */
-    static async findGlobalContexts(workspaceRoot: string): Promise<ContextFile[]> {
-        const contextsPath = path.join(workspaceRoot, 'ai', 'contexts');
-        const globalContexts: ContextFile[] = [];
-
-        try {
-            await this.scanContextsDirectory(contextsPath, globalContexts);
-        } catch (error) {
-            // If ai/contexts doesn't exist or can't be read, return empty array
-            return [];
-        }
-
-        return globalContexts;
-    }
-
-    /**
-     * Recursively scan contexts directory for global context files
-     */
-    private static async scanContextsDirectory(dirPath: string, results: ContextFile[]): Promise<void> {
-        try {
-            const entries = await vscode.workspace.fs.readDirectory(vscode.Uri.file(dirPath));
-
-            for (const [name, type] of entries) {
-                const fullPath = path.join(dirPath, name);
-
-                if (type === vscode.FileType.File && name.endsWith('.context.md')) {
-                    try {
-                        // Read and parse the context file
-                        const content = await FileParser.readFile(fullPath);
-                        const parsed = FileParser.parseFrontmatter(content);
-
-                        // Check if this is a global context
-                        if (parsed.frontmatter.global === true) {
-                            const contextId = parsed.frontmatter.context_id || path.basename(name, '.context.md');
-                            results.push({
-                                contextId,
-                                filePath: fullPath,
-                                content
-                            });
-                        }
-                    } catch (error) {
-                        // If we can't read or parse a file, skip it and continue
-                        console.warn(`Failed to read context file ${fullPath}:`, error);
-                    }
-                } else if (type === vscode.FileType.Directory) {
-                    // Recursively scan subdirectories
-                    await this.scanContextsDirectory(fullPath, results);
-                }
-            }
-        } catch (error) {
-            // If directory can't be read, just return (results will remain unchanged)
-        }
-    }
 }
 

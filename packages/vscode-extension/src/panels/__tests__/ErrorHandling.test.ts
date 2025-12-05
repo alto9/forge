@@ -101,7 +101,7 @@ describe('Folder Creation Error Handling', () => {
         });
 
         it('should format generic error messages', () => {
-            const folderPath = 'ai/contexts';
+            const folderPath = 'ai/specs';
             const errorMessage = 'Unknown error occurred';
             const expectedMessage = `Failed to create folder "${folderPath}": ${errorMessage}`;
 

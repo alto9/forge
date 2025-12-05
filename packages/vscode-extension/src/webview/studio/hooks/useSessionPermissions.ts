@@ -9,12 +9,12 @@ interface ActiveSession {
  * Hook to determine if a category of files is editable based on session status
  * 
  * Features are directive - require active session for editing
- * Specs/diagrams/actors/contexts are informative - always editable
+ * Specs/diagrams/actors are informative - always editable
  */
 export function useSessionPermissions() {
   /**
    * Check if a category is editable given the current session state
-   * @param category - The file category ('features', 'specs', 'diagrams', 'actors', 'contexts')
+   * @param category - The file category ('features', 'specs', 'diagrams', 'actors')
    * @param activeSession - The active session or null
    * @returns true if editable, false if read-only
    */
@@ -23,7 +23,7 @@ export function useSessionPermissions() {
     if (category === 'features') {
       return activeSession !== null;
     }
-    // Specs, diagrams, actors, contexts are informative - always editable
+    // Specs, diagrams, actors are informative - always editable
     return true;
   };
 

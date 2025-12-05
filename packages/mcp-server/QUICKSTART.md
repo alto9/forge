@@ -2,7 +2,7 @@
 
 ## What You Have
 
-Your Forge MCP Server provides **four powerful tools**:
+Your Forge MCP Server provides **two powerful tools**:
 
 ### 1. `get_forge_about`
 - **Purpose:** Returns comprehensive overview of Forge workflow
@@ -11,18 +11,8 @@ Your Forge MCP Server provides **four powerful tools**:
 
 ### 2. `get_forge_schema`
 - **Purpose:** Returns the complete schema specification for Forge file types
-- **Input:** `schema_type` - one of: `session`, `feature`, `spec`, `model`, `actor`, `story`, `task`, `context`
+- **Input:** `schema_type` - one of: `session`, `feature`, `spec`, `model`, `actor`, `story`, `task`
 - **Output:** Detailed schema with frontmatter fields, content structure, and linkage requirements
-
-### 3. `get_forge_objects`
-- **Purpose:** Lists supported spec objects with brief guidance
-- **Input:** None
-- **Output:** List of supported spec objects and their IDs for use with `get_forge_context`
-
-### 4. `get_forge_context`
-- **Purpose:** Returns guidance for technical objects or research prompts
-- **Input:** `spec_object` - any technical concept (e.g., "AWS Lambda", "React Context API", "PostgreSQL indexes")
-- **Output:** Guidance from library if available, or best-practice research prompt
 
 ## How to Start the MCP Server
 
@@ -115,24 +105,6 @@ You should see a detailed feature file schema returned.
 }
 ```
 
-### List Supported Spec Objects
-```javascript
-{
-  "name": "get_forge_objects",
-  "arguments": {}
-}
-```
-
-### Get Context Guidance
-```javascript
-{
-  "name": "get_forge_context",
-  "arguments": {
-    "spec_object": "AWS CDK Stack"
-  }
-}
-```
-
 ## Schema Content
 
 Each schema provides:
@@ -141,18 +113,6 @@ Each schema provides:
 - **Frontmatter fields** with data types and requirements
 - **Content structure** guidelines
 - **Linkage rules** showing relationships between file types
-
-## Context Guidance
-
-When you call `get_forge_context` with a technical object, it:
-1. Checks the guidance library for existing context
-2. Returns guidance if found
-3. Otherwise returns a best-practice research prompt that guides the agent to:
-   - Check project docs (`ai/docs/`)
-   - Search codebase for implementations
-   - Perform external research
-   - Synthesize findings
-   - Create context files for future use
 
 ## Troubleshooting
 
@@ -179,7 +139,5 @@ Now that your MCP server is set up, you can:
 
 1. Use `get_forge_about` to understand the Forge workflow
 2. Use `get_forge_schema` when creating/validating Forge files
-3. Use `get_forge_objects` to see available spec objects
-4. Use `get_forge_context` when researching technical concepts
 
 The server provides comprehensive Forge capabilities for AI-assisted development workflows.

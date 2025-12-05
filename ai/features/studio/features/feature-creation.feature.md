@@ -4,7 +4,6 @@ name: Feature Creation
 description: User experience for creating new features in Forge Studio
 spec_id: [feature-creation-ui, feature-templates]
 model_id: [feature-creation, studio-state]
-context_id: [theme, vsce]
 ---
 
 # Feature Creation

@@ -34,7 +34,6 @@ function getTooltip(
 ): string {
   const tooltips: { [key: string]: string } = {
     'Actors': 'Define system actors and personas - Always accessible foundational reference',
-    'Contexts': 'Provide technical guidance and best practices - Always accessible reference',
     'Diagrams': 'Visual architecture and system diagrams - Always accessible reference',
     'Specifications': 'Technical contracts and implementation details - Always accessible reference',
     'Sessions': 'Manage design sessions and track changes - Always accessible workflow entry',
@@ -165,7 +164,7 @@ export const NavSection: React.FC<NavSectionProps> = ({
         const folders = folderTrees[item.id] || [];
         const hasFolders = folders.length > 0;
         const isExpanded = expandedSections.has(item.id);
-        const showChevron = hasFolders || item.id === 'features' || item.id === 'actors' || item.id === 'contexts' || item.id === 'diagrams' || item.id === 'specs';
+        const showChevron = hasFolders || item.id === 'features' || item.id === 'actors' || item.id === 'diagrams' || item.id === 'specs';
 
         return (
           <div key={item.id}>

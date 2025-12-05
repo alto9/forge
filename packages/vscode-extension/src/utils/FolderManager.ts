@@ -101,11 +101,10 @@ export class FolderManager {
      * Parse file information from filename
      */
     private static parseFileInfo(filename: string, fullPath: string): FileInfo | null {
-        const extensionMap: Record<string, 'feature' | 'spec' | 'model' | 'context' | 'session' | 'story' | 'task'> = {
+        const extensionMap: Record<string, 'feature' | 'spec' | 'model' | 'session' | 'story' | 'task'> = {
             '.feature.md': 'feature',
             '.spec.md': 'spec',
             '.model.md': 'model',
-            '.context.md': 'context',
             '.session.md': 'session',
             '.story.md': 'story',
             '.task.md': 'task'

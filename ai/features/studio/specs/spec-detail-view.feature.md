@@ -4,7 +4,6 @@ name: Spec Detail View
 description: User experience for viewing and interacting with individual spec details
 spec_id: [spec-detail-ui, spec-editor]
 model_id: [spec-detail, studio-state]
-context_id: [theme, vsce]
 ---
 
 # Spec Detail View

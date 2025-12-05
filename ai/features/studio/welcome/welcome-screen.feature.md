@@ -4,7 +4,6 @@ name: Welcome Screen and Project Initialization
 description: Welcome screen that checks project readiness and initializes required folder structure
 spec_id: [welcome-initialization, forge-studio-implementation]
 model_id: []
-context_id: [theme, vsce]
 ---
 
 # Welcome Screen and Project Initialization

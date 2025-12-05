@@ -4,7 +4,6 @@ name: Structured Gherkin Editing
 description: Visual structured editor for Gherkin scenarios in feature files
 spec_id: [gherkin-parser, gherkin-ui]
 model_id: [feature]
-context_id: []
 ---
 
 # Structured Gherkin Editing

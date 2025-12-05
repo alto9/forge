@@ -14,11 +14,10 @@ VSCode extension that helps engineers use proper context engineering to build an
   - **Specs**: Browse all specs; create/edit requires active session
   - **Models**: Browse all models; create/edit requires active session
   - **Actors**: Document system actors and their responsibilities (always editable)
-  - **Contexts**: Create context guidance for technical decisions (always editable)
   - **Folder Management**: Create nested folders, navigate hierarchies
   - **File Creation**: Create new files with proper templates
   - **Context Menus**: Right-click folders to create subfolders
-  - **Session-Aware**: Features/Specs/Models are read-only without session; Actors and Contexts are always editable
+  - **Session-Aware**: Features/Specs/Models are read-only without session; Actors are always editable
 - **Context Menu Integration** - Right-click on files and folders for quick access
 - **Output Panel** - Clean, formatted prompts ready to copy and paste
 
@@ -58,7 +57,7 @@ code --install-extension forge-0.1.0.vsix
 
 1. Open Command Palette (Cmd/Ctrl+Shift+P)
 2. Type "Forge: Open Forge Studio"
-3. The Studio opens with tabs for Dashboard, Sessions, Features, Specs, Models, Actors, and Contexts
+3. The Studio opens with tabs for Dashboard, Sessions, Features, Specs, Models, and Actors
 
 **Studio Workflows:**
 
@@ -68,7 +67,7 @@ code --install-extension forge-0.1.0.vsix
   3. Files are read-only without an active session
 
 - **Creating Foundational Elements** (No session required):
-  1. Navigate to Actors or Contexts tab
+  1. Navigate to Actors tab
   2. Create and edit at any time
   3. Define system vocabulary and guidance before design work
 
@@ -86,7 +85,7 @@ code --install-extension forge-0.1.0.vsix
 - **Editing Files**:
   1. Click a file in the contents view to open it
   2. Features/Specs/Models: Visible but read-only without session, editable with active session
-  3. Actors/Contexts: Always editable
+  3. Actors: Always editable
   4. Edit frontmatter fields and content, then click "Save Changes"
 
 ### Distill Session into Stories and Tasks
@@ -102,7 +101,7 @@ code --install-extension forge-0.1.0.vsix
 
 1. Right-click on a `.story.md` file in `ai/tickets/`
 2. Select "Forge: Build Story Implementation"
-3. Copy the generated prompt (includes all linked features, specs, models, and contexts)
+3. Copy the generated prompt (includes all linked features, specs, models, and actors)
 4. Paste into Cursor Agent to implement the story
 
 ## Project Structure
@@ -117,7 +116,6 @@ your-project/
     ├── specs/         # Technical specifications (*.spec.md, nestable)
     ├── models/        # Data model definitions (*.model.md, nestable)
     ├── actors/        # Actor/persona definitions (*.actor.md, nestable)
-    ├── contexts/      # Context guidance (*.context.md, nestable)
     ├── tickets/       # Stories and Tasks (*.story.md, *.task.md, organized by session)
     └── docs/          # Supporting documentation
 ```

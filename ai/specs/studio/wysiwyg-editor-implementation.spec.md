@@ -4,7 +4,6 @@ name: WYSIWYG Markdown Editor Implementation
 description: Technical specification for implementing a WYSIWYG markdown editor using TipTap
 feature_id: [wysiwyg-markdown-editor]
 diagram_id: [wysiwyg-component-structure, wysiwyg-state-management]
-context_id: [wysiwyg-markdown-editor-guidance, theme]
 ---
 
 # WYSIWYG Markdown Editor Implementation

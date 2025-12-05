@@ -20,7 +20,6 @@ actor_id: []
 
 [:INFORM: Section] Header -> [":INFORM:" Text]
 [:INFORM: Section] Contains -> [Actors Link]
-[:INFORM: Section] Contains -> [Contexts Link]
 [:INFORM: Section] Contains -> [Diagrams Link]
 [:INFORM: Section] Contains -> [Specifications Link]
 
@@ -29,7 +28,6 @@ actor_id: []
 [:DESIGN: Section] Contains -> [Features Link]
 
 [Actors Link] State -> [Always Enabled]
-[Contexts Link] State -> [Always Enabled]
 [Diagrams Link] State -> [Always Enabled]
 [Specifications Link] State -> [Always Enabled]
 [Sessions Link] State -> [Always Enabled]

@@ -9,7 +9,6 @@ describe('NavSection Component', () => {
 
   const defaultItems = [
     { id: 'actors', label: 'Actors', alwaysEnabled: true },
-    { id: 'contexts', label: 'Contexts', alwaysEnabled: true },
     { id: 'features', label: 'Features', requiresSession: true },
   ];
 
@@ -60,7 +59,6 @@ describe('NavSection Component', () => {
       );
 
       expect(screen.getByText('Actors')).toBeInTheDocument();
-      expect(screen.getByText('Contexts')).toBeInTheDocument();
       expect(screen.getByText('Features')).toBeInTheDocument();
     });
 
@@ -101,11 +99,9 @@ describe('NavSection Component', () => {
       const featuresItem = screen.getByText('Features').closest('div')?.parentElement;
       expect(featuresItem).toHaveTextContent('🔒');
 
-      // Actors and Contexts should not have lock icon (always enabled)
+      // Actors should not have lock icon (always enabled)
       const actorsItem = screen.getByText('Actors').closest('div')?.parentElement;
-      const contextsItem = screen.getByText('Contexts').closest('div')?.parentElement;
       expect(actorsItem).not.toHaveTextContent('🔒');
-      expect(contextsItem).not.toHaveTextContent('🔒');
     });
 
     it('should not show lock icon for session-required items when session is active', () => {
@@ -167,10 +163,6 @@ describe('NavSection Component', () => {
       // Click on Actors (always enabled)
       fireEvent.click(screen.getByText('Actors'));
       expect(mockOnNavigate).toHaveBeenCalledWith('actors');
-
-      // Click on Contexts (always enabled)
-      fireEvent.click(screen.getByText('Contexts'));
-      expect(mockOnNavigate).toHaveBeenCalledWith('contexts');
     });
 
     it('should not call onNavigate when clicking disabled items', () => {
@@ -222,20 +214,6 @@ describe('NavSection Component', () => {
       expect(actorsItem).toHaveAttribute('title', 'Define system actors and personas - Always accessible foundational reference');
     });
 
-    it('should show correct tooltip for Contexts', () => {
-      render(
-        <NavSection
-          title="INFORM"
-          items={[{ id: 'contexts', label: 'Contexts', alwaysEnabled: true }]}
-          currentPage="dashboard"
-          activeSession={null}
-          onNavigate={mockOnNavigate}
-        />
-      );
-
-      const contextsItem = screen.getByText('Contexts').closest('div')?.parentElement;
-      expect(contextsItem).toHaveAttribute('title', 'Provide technical guidance and best practices - Always accessible reference');
-    });
 
     it('should show correct tooltip for Features when disabled', () => {
       render(

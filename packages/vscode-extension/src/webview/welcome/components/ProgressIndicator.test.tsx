@@ -145,7 +145,7 @@ describe('ProgressIndicator', () => {
     it('displays correct message structure', () => {
         const { container } = render(
             <ProgressIndicator
-                currentItem="ai/contexts"
+                currentItem="ai/specs"
                 currentItemType="folder"
                 createdCount={2}
                 totalCount={5}

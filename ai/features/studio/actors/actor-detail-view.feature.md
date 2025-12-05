@@ -4,7 +4,6 @@ name: Actor Detail View
 description: User experience for viewing and interacting with individual actor details
 spec_id: [actor-detail-ui, actor-editor]
 model_id: [actor-detail, studio-state]
-context_id: [theme, vsce]
 ---
 
 # Actor Detail View

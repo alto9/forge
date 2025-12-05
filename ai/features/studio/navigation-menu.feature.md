@@ -5,7 +5,6 @@ description: Forge Studio navigation menu with INFORM and DESIGN sections to gui
 spec_id: [navigation-menu-implementation]
 diagram_id: [navigation-menu-structure, navigation-session-state]
 actor_id: []
-context_id: [theme]
 ---
 # Navigation Menu Organization
 

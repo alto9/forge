@@ -2,7 +2,6 @@
 spec_id: session-ticket-file-structure
 feature_id:
   - session-ticket-organization
-context_id: []
 ---
 
 # Spec: Session Ticket File Structure

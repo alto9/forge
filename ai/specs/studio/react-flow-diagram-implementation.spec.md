@@ -4,7 +4,6 @@ name: React Flow Diagram Editor Implementation
 description: Technical specification for replacing nomnoml with react-flow JSON-based diagram editor
 feature_id: [react-flow-diagram-editor]
 diagram_id: []
-context_id: []
 ---
 
 # React Flow Diagram Editor Implementation

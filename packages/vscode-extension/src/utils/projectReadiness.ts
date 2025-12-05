@@ -11,7 +11,6 @@ import { validateCommandFileHash } from './commandValidation';
 export const REQUIRED_FOLDERS = [
   'ai',
   'ai/actors',
-  'ai/contexts',
   'ai/features',
   'ai/diagrams',
   'ai/sessions',
@@ -29,7 +28,7 @@ export const REQUIRED_COMMANDS = getManagedCommandPaths();
  * All components MUST use this function to ensure consistency.
  * 
  * A project is "Forge-ready" when:
- * 1. All REQUIRED_FOLDERS exist (7 folders, excluding legacy ai/models)
+ * 1. All REQUIRED_FOLDERS exist (6 folders, excluding legacy ai/models)
  * 2. All REQUIRED_COMMANDS exist with valid content (hash validation passes)
  * 
  * @param projectUri - The URI of the project to check

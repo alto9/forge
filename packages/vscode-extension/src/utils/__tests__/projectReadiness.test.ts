@@ -15,8 +15,8 @@ import { REQUIRED_FOLDERS, REQUIRED_COMMANDS } from '../projectReadiness';
 
 describe('projectReadiness', () => {
     describe('REQUIRED_FOLDERS constant', () => {
-        it('should have exactly 7 required folders', () => {
-            expect(REQUIRED_FOLDERS).toHaveLength(7);
+        it('should have exactly 6 required folders', () => {
+            expect(REQUIRED_FOLDERS).toHaveLength(6);
         });
 
         it('should include ai root folder', () => {
@@ -25,10 +25,6 @@ describe('projectReadiness', () => {
 
         it('should include ai/actors folder', () => {
             expect(REQUIRED_FOLDERS).toContain('ai/actors');
-        });
-
-        it('should include ai/contexts folder', () => {
-            expect(REQUIRED_FOLDERS).toContain('ai/contexts');
         });
 
         it('should include ai/features folder', () => {
@@ -112,14 +108,14 @@ describe('projectReadiness', () => {
     });
 
     describe('Readiness criteria logic', () => {
-        it('requires all 7 folders to be present', () => {
-            // A project missing any of the 7 folders should NOT be ready
+        it('requires all 6 folders to be present', () => {
+            // A project missing any of the 6 folders should NOT be ready
             const allFolders = [...REQUIRED_FOLDERS];
             const missingOneFolder = allFolders.slice(0, -1); // Remove last folder
             
-            expect(allFolders.length).toBe(7);
-            expect(missingOneFolder.length).toBe(6);
-            // Project would not be ready with only 6 folders
+            expect(allFolders.length).toBe(6);
+            expect(missingOneFolder.length).toBe(5);
+            // Project would not be ready with only 5 folders
         });
 
         it('requires all 4 commands to be present', () => {
@@ -143,9 +139,9 @@ describe('projectReadiness', () => {
     });
 
     describe('Consistency requirements', () => {
-        it('all components must check the same 7 folders', () => {
+        it('all components must check the same 6 folders', () => {
             // ProjectPicker, extension.ts, and WelcomePanel must all use REQUIRED_FOLDERS
-            const expectedFolderCount = 7;
+            const expectedFolderCount = 6;
             
             expect(REQUIRED_FOLDERS.length).toBe(expectedFolderCount);
             // This ensures no component checks wrong number of folders
@@ -240,7 +236,6 @@ describe('projectReadiness', () => {
             const modernFolders = [
                 'ai',
                 'ai/actors',
-                'ai/contexts',
                 'ai/features',
                 'ai/diagrams',
                 'ai/sessions',
@@ -271,7 +266,7 @@ describe('projectReadiness', () => {
             copy.push('ai/invalid');
             
             expect(REQUIRED_FOLDERS.length).toBe(originalLength);
-            expect(REQUIRED_FOLDERS.length).toBe(7);
+            expect(REQUIRED_FOLDERS.length).toBe(6);
         });
 
         it('REQUIRED_COMMANDS should not be modifiable', () => {
@@ -296,10 +291,10 @@ describe('projectReadiness', () => {
         });
 
         it('missing any subfolder should fail readiness', () => {
-            // All 7 folders must exist
+            // All 6 folders must exist
             const subfolders = REQUIRED_FOLDERS.filter(f => f !== 'ai');
             
-            expect(subfolders.length).toBe(6);
+            expect(subfolders.length).toBe(5);
             subfolders.forEach(subfolder => {
                 expect(subfolder).toMatch(/^ai\//);
             });
@@ -326,8 +321,8 @@ describe('projectReadiness', () => {
 
     describe('Documentation alignment', () => {
         it('matches documented required folders count', () => {
-            // 7 folders (including ai/diagrams, excluding ai/models)
-            expect(REQUIRED_FOLDERS.length).toBe(7);
+            // 6 folders (including ai/diagrams, excluding ai/models and ai/contexts)
+            expect(REQUIRED_FOLDERS.length).toBe(6);
         });
 
         it('matches documented required commands count', () => {
@@ -342,10 +337,12 @@ describe('projectReadiness', () => {
             // Verify ai/models is NOT checked (was the bug)
             expect(REQUIRED_FOLDERS).not.toContain('ai/models');
             
+            // Verify ai/contexts is NOT checked (removed feature)
+            expect(REQUIRED_FOLDERS).not.toContain('ai/contexts');
+            
             // Verify all other folders ARE checked
             expect(REQUIRED_FOLDERS).toContain('ai');
             expect(REQUIRED_FOLDERS).toContain('ai/actors');
-            expect(REQUIRED_FOLDERS).toContain('ai/contexts');
             expect(REQUIRED_FOLDERS).toContain('ai/features');
             expect(REQUIRED_FOLDERS).toContain('ai/diagrams');
             expect(REQUIRED_FOLDERS).toContain('ai/sessions');

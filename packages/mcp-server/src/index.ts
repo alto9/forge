@@ -2,9 +2,6 @@
 
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import * as fs from 'fs';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
 import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
@@ -40,7 +37,7 @@ class ForgeMCPServer {
         tools: [
           {
             name: 'get_forge_about',
-            description: 'Get a comprehensive overview of the Forge workflow, including the session-driven approach, the powerful linkage system for context gathering, when to create Stories vs Tasks, and guidance on implementation. The linkage system is CRITICAL - it shows how to systematically gather complete context by following document relationships (feature_id, spec_id, context_id, diagram_id) and using get_forge_context for technical object types.',
+            description: 'Get a comprehensive overview of the Forge workflow, including the session-driven approach, the powerful linkage system for context gathering, when to create Stories vs Tasks, and guidance on implementation. The linkage system is CRITICAL - it shows how to systematically gather complete context by following document relationships (feature_id, spec_id, diagram_id).',
             inputSchema: {
               type: 'object',
               properties: {},
@@ -48,39 +45,17 @@ class ForgeMCPServer {
           },
           {
             name: 'get_forge_schema',
-            description: 'Get the schema specification for a Forge file type (session, feature, spec, diagram, actor, story, task, or context)',
+            description: 'Get the schema specification for a Forge file type (session, feature, spec, diagram, actor, story, task)',
             inputSchema: {
               type: 'object',
               properties: {
                 schema_type: {
                   type: 'string',
-                  enum: ['session', 'feature', 'spec', 'diagram', 'actor', 'story', 'task', 'context'],
+                  enum: ['session', 'feature', 'spec', 'diagram', 'actor', 'story', 'task'],
                   description: 'The type of schema to retrieve',
                 },
               },
               required: ['schema_type'],
-            },
-          },
-          {
-            name: 'get_forge_objects',
-            description: 'List supported spec objects with brief guidance. Use these object IDs with get_forge_context.',
-            inputSchema: {
-              type: 'object',
-              properties: {},
-            },
-          },
-          {
-            name: 'get_forge_context',
-            description: 'Return guidance for a supported spec object from the guidance library; if none exists, return a best-practice research prompt for that object.',
-            inputSchema: {
-              type: 'object',
-              properties: {
-                spec_object: {
-                  type: 'string',
-                  description: 'A technical object or concept that needs to be researched (e.g., "AWS CDK Stack", "React component architecture", "PostgreSQL indexes")',
-                },
-              },
-              required: ['spec_object'],
             },
           },
         ],
@@ -115,138 +90,10 @@ class ForgeMCPServer {
             ],
           };
 
-        case 'get_forge_objects':
-          return {
-            content: [
-              {
-                type: 'text',
-                text: this.getForgeObjects(),
-              },
-            ],
-          };
-
-        case 'get_forge_context':
-          if (!args || typeof args.spec_object !== 'string') {
-            throw new Error('spec_object is required');
-          }
-          return {
-            content: [
-              {
-                type: 'text',
-                text: this.getForgeContext(args.spec_object),
-              },
-            ],
-          };
-
         default:
           throw new Error(`Unknown tool: ${name}`);
       }
     });
-  }
-
-  private getGuidanceDir(): string {
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    return path.resolve(__dirname, 'guidance');
-  }
-
-  private normalizeObjectId(name: string): string {
-    return name
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9\s-_]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/_+/g, '-');
-  }
-
-  private readGuidanceIndex(): Array<{ id: string; title: string; aliases: string[]; filePath: string; summary: string }> {
-    const dir = this.getGuidanceDir();
-    let entries: string[] = [];
-    try {
-      entries = fs.readdirSync(dir);
-    } catch {
-      return [];
-    }
-
-    const items: Array<{ id: string; title: string; aliases: string[]; filePath: string; summary: string }> = [];
-    for (const name of entries) {
-      if (!name.endsWith('.spec.md')) continue;
-      const filePath = path.join(dir, name);
-      let content = '';
-      try {
-        content = fs.readFileSync(filePath, 'utf8');
-      } catch {
-        continue;
-      }
-
-      let fm: Record<string, unknown> = {};
-      let body = content;
-      const fmMatch = content.match(/^---\n([\s\S]*?)\n---\n?/);
-      if (fmMatch) {
-        const raw = fmMatch[1];
-        body = content.slice(fmMatch[0].length);
-        fm = this.parseSimpleFrontmatter(raw);
-      }
-
-      const id = (this.normalizeObjectId(String((fm as any).object_id || '')) || this.normalizeObjectId(name.replace(/\.spec\.md$/, '')));
-      const title = String((fm as any).title || id.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()));
-      const aliases: string[] = Array.isArray((fm as any).aliases)
-        ? (fm as any).aliases.map((a: unknown) => this.normalizeObjectId(String(a)))
-        : [];
-      const summary = this.extractSummary(body);
-
-      items.push({ id, title, aliases, filePath, summary });
-    }
-    return items;
-  }
-
-  private parseSimpleFrontmatter(raw: string): Record<string, unknown> {
-    const result: Record<string, unknown> = {};
-    const lines = raw.split(/\r?\n/);
-    for (const line of lines) {
-      const m = line.match(/^([A-Za-z0-9_\-]+):\s*(.*)$/);
-      if (!m) continue;
-      const key = m[1];
-      const value = m[2].trim();
-      if (value.startsWith('[') && value.endsWith(']')) {
-        const arr = value
-          .slice(1, -1)
-          .split(',')
-          .map((v) => v.trim().replace(/^"|"$/g, ''))
-          .filter((v) => v.length > 0);
-        result[key] = arr;
-      } else {
-        result[key] = value.replace(/^"|"$/g, '');
-      }
-    }
-    return result;
-  }
-
-  private extractSummary(body: string): string {
-    const lines = body.split(/\r?\n/).map((l) => l.trim());
-    for (const line of lines) {
-      if (line.length === 0) continue;
-      // Skip headings
-      if (line.startsWith('#')) continue;
-      return line.length > 200 ? line.slice(0, 200) + '…' : line;
-    }
-    return '';
-  }
-
-  private getForgeObjects(): string {
-    const items = this.readGuidanceIndex();
-    if (items.length === 0) {
-      return `No spec objects are currently registered. To add guidance, create markdown files in guidance/*.spec.md (e.g., guidance/lambda.spec.md).`;
-    }
-    const header = `Supported Spec Objects (${items.length})\n`;
-    const lines = items
-      .map((it) => {
-        const aliasStr = it.aliases.length > 0 ? `\n  aliases: ${it.aliases.join(', ')}` : '';
-        const summary = it.summary ? `\n  summary: ${it.summary}` : '';
-        return `- ${it.id} — ${it.title}${aliasStr}${summary}`;
-      })
-      .join('\n');
-    const footer = `\n\nUse get_forge_context with spec_object set to one of the IDs above.`;
-    return header + lines + footer;
   }
 
   private getForgeAbout(): string {
@@ -257,7 +104,7 @@ Forge is a comprehensive workflow system for structured context engineering in A
 
 ## Core Philosophy
 1. **Accurate Context Without Overload** - Provide exactly what's needed, when it's needed
-2. **Features Are Directive** - Features drive code changes and are tracked in sessions at scenario-level; Specs/Diagrams/Actors/Contexts are informative and editable anytime
+2. **Features Are Directive** - Features drive code changes and are tracked in sessions at scenario-level; Specs/Diagrams/Actors are informative and editable anytime
 3. **Session-Driven Design** - Track feature changes made during design sessions with scenario-level granularity
 4. **Minimal Story Size** - Keep implementation stories small, focused, and actionable (< 30 minutes each)
 5. **Status-Driven Workflow** - Sessions progress through explicit phases: design → scribe → development → completed
@@ -277,7 +124,6 @@ your-project/
     ├── diagrams/              # Visual architecture with react-flow JSON (nestable)
     ├── specs/                 # Technical specifications (nestable)
     ├── actors/                # Actor/persona definitions (nestable)
-    ├── contexts/              # Context guidance (nestable)
     └── docs/                  # Supporting documentation
 \`\`\`
 
@@ -298,7 +144,7 @@ Forge documents are organized by their role in the workflow:
 - **Abstract Logically**: Group features by abstracting large concepts into smaller, focused ones
 - **Git Controls History**: Never document "old" or "transitional" states in the file itself
 
-#### INFORMATIVE DOCUMENTS (Specs, Diagrams, Actors, Contexts)
+#### INFORMATIVE DOCUMENTS (Specs, Diagrams, Actors)
 These documents provide context and guidance but are NOT tracked in sessions:
 
 **Specs (*.spec.md)**
@@ -325,11 +171,6 @@ These documents provide context and guidance but are NOT tracked in sessions:
 - **Always Editable**: Not tracked in sessions, can be modified at any time
 - **Define Personas**: Who interacts with the system and their roles
 
-**Contexts (*.context.md)**
-- **Always Editable**: Not tracked in sessions, can be modified at any time
-- **For Agent Benefit**: Technical guidance when implementing features
-- **Patterns & Practices**: Implementation patterns, best practices, technical constraints
-
 #### TRANSITIONAL DOCUMENTS (Sessions, Stories, Tasks)
 These documents **capture point-in-time state and workflow**:
 
@@ -337,7 +178,7 @@ These documents **capture point-in-time state and workflow**:
 - **Transitional**: Records what feature scenarios were changed during a specific design session
 - **Workflow State**: Tracks progress through design → scribe → development → completed
 - **Changed Files**: Contains snapshot of which feature scenarios were added/modified/removed
-- **Features Only**: Only tracks changes to *.feature.md files, not specs/diagrams/actors/contexts
+- **Features Only**: Only tracks changes to *.feature.md files, not specs/diagrams/actors
 - **Historical Record**: Preserved as-is to understand what happened during the session
 
 **Stories (*.story.md) and Tasks (*.task.md)**
@@ -348,7 +189,7 @@ These documents **capture point-in-time state and workflow**:
 
 **Key Distinction**: 
 - **Features are DIRECTIVE**: They drive code changes and are tracked in sessions at scenario-level
-- **Specs/Diagrams/Actors/Contexts are INFORMATIVE**: They provide guidance and context but are NOT tracked in sessions
+- **Specs/Diagrams/Actors are INFORMATIVE**: They provide guidance and context but are NOT tracked in sessions
 - When editing Features, update them to reflect current desired state; Git preserves the history
 - Sessions, Stories, and Tasks capture transitional state and should be preserved as historical records
 
@@ -361,7 +202,7 @@ Sessions progress through four distinct phases:
 - Session folder created at \`ai/sessions/<session-id>/\`
 - Session file created at \`ai/sessions/<session-id>/<session-id>.session.md\`
 - **Feature changes tracked** automatically with scenario-level detail
-- **Specs/Diagrams/Actors/Contexts** can be edited anytime (not tracked in sessions)
+- **Specs/Diagrams/Actors** can be edited anytime (not tracked in sessions)
 - Session is "active" for editing in Forge Studio
 - **Transition**: User clicks "End Design Session" → status becomes 'scribe'
 
@@ -394,7 +235,7 @@ Sessions progress through four distinct phases:
 4. Session file created at \`ai/sessions/<session-id>/<session-id>.session.md\`
 5. File watchers begin tracking changes to **features only** (\`**/*.feature.md\`)
 6. Session is now "active"
-7. Specs/Diagrams/Actors/Contexts remain editable without tracking
+7. Specs/Diagrams/Actors remain editable without tracking
 
 ### Phase 2: Design Changes (status: 'design')
 During active session, user edits design documents:
@@ -433,13 +274,6 @@ During active session, user edits design documents:
   - **INFORMATIVE**: Define who interacts with the system
   - NOT tracked in sessions, editable anytime
   - **Analyze existing folder structure** before creating new actors
-  
-- **Contexts** (*.context.md): Add guidance for specific technologies
-  - **INFORMATIVE**: Technical guidance when implementing features
-  - NOT tracked in sessions, editable anytime
-  - Provide implementation patterns, best practices, and technical constraints
-  - Help agents make consistent technical decisions
-  - **Analyze existing folder structure** before creating new contexts
 
 ### Phase 3: End Design Session (design → scribe)
 1. User clicks "End Design Session" in Forge Studio
@@ -454,7 +288,7 @@ During active session, user edits design documents:
 2. AI calls \`get_forge_about\` and \`get_forge_schema\` MCP tools
 3. AI analyzes session's \`changed_files\` array with scenario-level detail
 4. AI reads git diffs (if available) to understand exact changes
-5. AI follows context linkages to gather technical guidance
+5. AI follows linkages to gather technical guidance from specs and diagrams
 6. AI creates Stories (*.story.md) for code changes
 7. AI creates Tasks (*.task.md) for manual work
 8. All tickets placed in \`ai/sessions/<session-id>/tickets/\`
@@ -512,20 +346,15 @@ Forge documents are interconnected through explicit ID references:
 Features (*.feature.md)
   └─ spec_id[] ──────────┐
   └─ diagram_id[] ───┐   │
-  └─ context_id[] ┐  │   │
-                  │  │   │
-Specs (*.spec.md) │  │   │
+                     │   │
+Specs (*.spec.md)    │   │
   ├─ feature_id[] ◄──┘   │
   ├─ diagram_id[] ◄──────┘
-  └─ context_id[] ─┐  
-                   │  
+  
 Diagrams (*.diagram.md)
   ├─ frontmatter.feature_id[]
   ├─ frontmatter.actor_id[]
   └─ node.data.spec_id ◄──────┘ (element-level) ⭐
-                      
-Contexts              
-  ◄───────────────────┘
   
 Stories & Tasks
   ├─ session_id
@@ -540,24 +369,12 @@ Stories & Tasks
 
 When distilling a session, follow this EXACT methodical process:
 
-#### Phase 1: Global Context Discovery
-1. **Find ALL global contexts**
-   - Search \`ai/contexts/**/*.context.md\`
-   - Read every global context file
-   - These provide overarching technical guidance
-
-#### Phase 2: Changed Files Analysis
+#### Phase 1: Changed Files Analysis
 1. **Read all changed feature files**
    - Extract from session's \`changed_files\` array (features only)
    - Identify all \`*.feature.md\` files with scenario-level changes
-   
-2. **Extract context_id linkages**
-   - From each feature's frontmatter, find \`context_id\` arrays
-   - From referenced specs (via spec_id), extract \`context_id\` arrays
-   - Read each referenced context file
-   - These provide technology-specific guidance
 
-#### Phase 3: Spec Linkage Discovery
+#### Phase 2: Spec Linkage Discovery
 1. **Follow spec_id references**
    - For each changed \`*.feature.md\`, examine \`spec_id\` array
    - Read all referenced spec files
@@ -568,22 +385,7 @@ When distilling a session, follow this EXACT methodical process:
    - Map spec → feature relationships
    - Understand complete technical implementation
 
-#### Phase 4: Object Type Context Discovery
-1. **Extract technical object types from specs**
-   - Read specs linked from changed features (via spec_id)
-   - Scan all linked specs for object references: \`<object-type>ObjectName\`
-   - Examples:
-     - \`<lambda>ProcessOrder\` → "lambda"
-     - \`<dynamodb>UsersTable\` → "dynamodb"
-     - \`<api>PaymentEndpoint\` → "api"
-     - \`<component>LoginForm\` → "component"
-   
-2. **Query MCP for each object type**
-   - Call \`get_forge_context(objectType)\` for each unique type
-   - This provides just-in-time technical guidance
-   - Examples: \`get_forge_context("lambda")\`, \`get_forge_context("dynamodb")\`
-
-#### Phase 5: Architectural Understanding
+#### Phase 3: Architectural Understanding
 1. **Read all diagrams from linked specs**
    - Check \`diagram_id\` linkages in specs (from Phase 3)
    - Read all referenced diagram files
@@ -599,19 +401,15 @@ When distilling a session, follow this EXACT methodical process:
    - Identify integration points
    - Understand story dependencies
 
-#### Phase 6: Complete Context Synthesis
+#### Phase 4: Complete Context Synthesis
 1. **Validate coverage**
    - Every changed feature analyzed
    - All linked specs read
-   - All context linkages followed
-   - All object types queried
    - All linked diagrams read
    
 2. **Build comprehensive understanding**
    - Complete feature behavior (from changed features)
    - Technical implementation (from linked specs)
-   - Technology guidance (from contexts)
-   - Object-specific patterns (from get_forge_context)
    - Architecture understanding (from linked diagrams)
 
 ### Why the Linkage System is Powerful
@@ -623,13 +421,8 @@ When distilling a session, follow this EXACT methodical process:
 ### Context Building Checklist (Use Every Time)
 
 Before creating tickets from a session, verify:
-- [ ] All global contexts read from \`ai/contexts/\`
 - [ ] All changed features read from session's \`changed_files\` array
-- [ ] All feature \`context_id\` references followed and read
 - [ ] All \`spec_id\` linkages followed from changed features
-- [ ] All spec \`context_id\` references followed and read
-- [ ] All technical object types (e.g., \`<lambda>X\`) extracted from linked specs
-- [ ] \`get_forge_context\` called for each unique object type
 - [ ] All \`diagram_id\` references followed from linked specs
 - [ ] All linked diagrams analyzed
 - [ ] Complete architectural understanding achieved
@@ -644,9 +437,7 @@ Before creating tickets from a session, verify:
 1. **Always Follow the Chain**: When you encounter a reference ID, always read that file
 2. **Bidirectional Checking**: Check both directions of relationships (feature→spec AND spec→feature)
 3. **Object Type Extraction**: Don't skip the \`<object-type>Name\` extraction step
-4. **Use MCP Tools**: Call \`get_forge_context\` for every unique object type found
-5. **Diagram Analysis**: Visual architecture is critical for understanding system design
-6. **Context Prioritization**: Global contexts apply everywhere; specific contexts apply to linked features/specs
+4. **Diagram Analysis**: Visual architecture is critical for understanding system design
 
 ## Key Principles for Distillation
 
@@ -672,13 +463,7 @@ When running forge-scribe to distill a session:
    - Focus on what was added, modified, or removed
    - Don't create stories for unchanged parts
 
-5. **Follow Context Linkages** (Critical - see linkage system above)
-   - Check \`context_id\` references in frontmatter
-   - Read context files for technical guidance
-   - Apply patterns consistently
-   - Extract and query object types via \`get_forge_context\`
-
-6. **Create Complete Stories**
+5. **Create Complete Stories**
    - Include file paths involved
    - Link to feature_id, spec_id, model_id, diagram_id
    - Add clear acceptance criteria
@@ -771,18 +556,17 @@ Even when creating new folders, ensure they align with the project's organizatio
 
 ## Best Practices
 
-1. **Features Are Directive** - Features drive code changes and are tracked in sessions at scenario-level; Specs/Diagrams/Actors/Contexts are informative and always editable
+1. **Features Are Directive** - Features drive code changes and are tracked in sessions at scenario-level; Specs/Diagrams/Actors are informative and always editable
 2. **Analyze Folder Structure First** - Always examine existing folder organization before creating or modifying files; respect established patterns and place files logically
 3. **Feature Organization is CRITICAL** - Structure features logically to directly inform automated test organization; abstract large concepts into smaller ones
 4. **Specs Without Code/Diagrams** - Specs contain business logic and contracts, but NO code (except pseudocode) and NO diagrams (link to diagram files instead)
-5. **Contexts for Agents** - Use context files to provide technical guidance that helps agents implement features consistently
-6. **Nested Organization** - Group related features/specs in folders that reflect conceptual hierarchy; don't create files at root level if subfolders exist
-7. **Status Awareness** - Respect session status transitions (design → scribe → development → completed)
-8. **Minimal Stories** - Keep stories small and focused (< 30 minutes each)
-9. **Follow Linkages** - Discover specs/diagrams/contexts through feature linkages (spec_id, diagram_id, context_id), not from session tracking
-10. **Iterative Sessions** - Keep sessions focused on one problem area
-11. **Clear Naming** - Use descriptive kebab-case IDs that align with existing naming patterns
-12. **Git Controls History** - Never document "old" vs "new" in design files; Git handles change tracking
+5. **Nested Organization** - Group related features/specs in folders that reflect conceptual hierarchy; don't create files at root level if subfolders exist
+6. **Status Awareness** - Respect session status transitions (design → scribe → development → completed)
+7. **Minimal Stories** - Keep stories small and focused (< 30 minutes each)
+8. **Follow Linkages** - Discover specs/diagrams through feature linkages (spec_id, diagram_id), not from session tracking
+9. **Iterative Sessions** - Keep sessions focused on one problem area
+10. **Clear Naming** - Use descriptive kebab-case IDs that align with existing naming patterns
+11. **Git Controls History** - Never document "old" vs "new" in design files; Git handles change tracking
 
 ## Output Expectations for forge-scribe
 
@@ -798,12 +582,11 @@ When distilling a session, the AI MUST:
 
 **Important Reminders**:
 - **Features Are Directive** - Only features are tracked in sessions at scenario-level
-- **Specs/Diagrams/Actors/Contexts Are Informative** - Always editable, never tracked in sessions
+- **Specs/Diagrams/Actors Are Informative** - Always editable, never tracked in sessions
 - **Analyze folder structure first** - Always examine existing organization before creating files
 - **Feature organization is CRITICAL** - Structure should inform test organization; place files logically within existing folder hierarchies
 - **Discover via Linkages** - Find specs/diagrams through feature linkages (spec_id, diagram_id), not from session tracking
 - **Specs never contain actual code** (only pseudocode) or diagrams (only links to diagrams)
-- **Contexts provide technical guidance** to agents during implementation
 - **Stories implement the current state** as defined in features and their linked specs
 - **Git handles history** for all design documents; never document "old" vs "new" states
 
@@ -834,7 +617,7 @@ Sessions progress through distinct phases:
 
 1. **design** - Active design session, feature files are being modified
    - **Only feature changes** are tracked automatically at scenario-level
-   - Specs/Diagrams/Actors/Contexts can be edited but are NOT tracked
+   - Specs/Diagrams/Actors can be edited but are NOT tracked
    - Session is "active" for editing
    - User can end session to transition to 'scribe'
 
@@ -856,7 +639,7 @@ Sessions progress through distinct phases:
 
 ## Changed Files Structure
 
-**IMPORTANT**: Sessions track ONLY feature files (*.feature.md). Specs, Diagrams, Actors, and Contexts are NOT tracked in sessions.
+**IMPORTANT**: Sessions track ONLY feature files (*.feature.md). Specs, Diagrams, and Actors are NOT tracked in sessions.
 
 ### Feature Changes (*.feature.md)
 Changed files track scenario-level detail for features:
@@ -883,9 +666,8 @@ changed_files:
 - **Specs** (*.spec.md) - Always editable, never tracked in sessions
 - **Diagrams** (*.diagram.md) - Always editable, never tracked in sessions
 - **Actors** (*.actor.md) - Always editable, never tracked in sessions
-- **Contexts** (*.context.md) - Always editable, never tracked in sessions
 
-These informative documents are discovered during distillation via linkages from features (spec_id, diagram_id, context_id).
+These informative documents are discovered during distillation via linkages from features (spec_id, diagram_id).
 
 ## Content Structure
 The session document should describe:
@@ -899,11 +681,11 @@ The session document should describe:
 ## Workflow
 1. Session starts with status: design, problem_statement, and start_time
 2. During design phase, changed_files array tracks **feature modifications only** with scenario detail
-3. Specs/Diagrams/Actors/Contexts can be edited but are NOT tracked
+3. Specs/Diagrams/Actors can be edited but are NOT tracked
 4. User ends design session, status changes to 'scribe', end_time is set
 5. User runs forge-scribe to distill session into stories
 6. forge-scribe analyzes changed feature files with scenario-level detail
-7. forge-scribe follows linkages to discover specs, diagrams, and contexts
+7. forge-scribe follows linkages to discover specs and diagrams
 8. Stories are created in ai/sessions/<session-id>/tickets/
 9. Status changes to 'development' when stories are created
 10. User implements stories
@@ -914,7 +696,7 @@ The session document should describe:
 - Sessions generate **story** and **task** files in ai/sessions/<session-id>/tickets/
 - Stories and tasks reference the session_id
 - **Only features** are tracked in changed_files with scenario-level granularity
-- Specs/Diagrams/Contexts are discovered via feature linkages (spec_id, diagram_id, context_id)`,
+- Specs/Diagrams are discovered via feature linkages (spec_id, diagram_id)`,
 
       feature: `# Feature File Schema
 
@@ -1000,7 +782,6 @@ Rule: Email addresses must be unique
 spec_id: kebab-case-id  # Must match filename without .spec.md
 feature_id: [feature-id-1, feature-id-2]  # Array of related feature IDs
 diagram_id: [diagram-id-1, diagram-id-2]  # Optional: related diagrams
-context_id: [context-id-1, context-id-2]  # Optional: related contexts
 ---
 
 ## Content Structure
@@ -1023,8 +804,7 @@ Specification documents define WHAT must be built through technical contracts, i
 
 ## What Specs Should NOT Contain
 - **Diagrams**: Use separate diagram files (*.diagram.md) and link via diagram_id
-- **Implementation code**: Use context files (*.context.md) for code examples and patterns
-- **Step-by-step guides**: Use context files for implementation guidance
+- **Implementation code**: Only pseudocode for clarity, never real code
 
 ## Example Content
 \`\`\`markdown
@@ -1058,7 +838,6 @@ interface LoginResponse {
 ## Linkages
 - References one or more **feature_id** values for user-facing behavior
 - References **diagram_id** values for visual architecture (create separate diagram files)
-- May reference **context_id** values for implementation guidance
 - **Referenced BY diagram elements**: Individual diagram nodes link to specs via node.data.spec_id
 - Specs can define data structures inline using TypeScript interfaces or tables
 - Stories will reference this spec_id for implementation
@@ -1266,61 +1045,6 @@ Configuration changes in external systems
 - References a **session_id** (required)
 - No code dependencies - these are external/manual work items`,
 
-      context: `# Context File Schema
-
-## File Format
-- **Filename**: <context-id>.context.md
-- **Location**: ai/contexts/ (nestable, folder structure defines categories)
-- **Format**: Frontmatter + Gherkin Scenarios
-
-## Frontmatter Fields
----
-context_id: kebab-case-id  # Must match filename without .context.md
-name: Optional Name  # Optional human-readable name
-description: Optional Description  # Optional brief description
-tags: []  # Optional array of tags for categorization
----
-
-## Content Structure
-Context files provide guidance on when and how to use specific information or tools using Gherkin scenarios.
-
-Use \`\`\`gherkin code blocks for structured guidance scenarios.
-
-### Example Structure
-
-\`\`\`markdown
-\`\`\`gherkin
-Scenario: When to use this context
-  Given a specific technical situation
-  When implementing a feature
-  Then follow these guidelines
-  And reference appropriate documentation
-
-Scenario: How to implement
-  Given you need to implement this pattern
-  When writing code
-  Then use these best practices
-  And ensure proper error handling
-\`\`\`
-\`\`\`
-
-## Purpose
-Context files prevent information overload by providing just-in-time guidance:
-- When to consult documentation
-- Which tools to use for specific technologies
-- Where to find additional information
-- Research strategies for unknown technologies
-
-## Organization
-- Use nested folders to organize contexts by category
-- Folder structure replaces the deprecated category field
-- Example: ai/contexts/foundation/, ai/contexts/vscode/
-
-## Linkages
-- Referenced by **spec_id** and **story_id** values
-- May reference documentation in ai/docs/
-- May reference MCP tools or external resources`,
-
       diagram: `# Diagram File Schema
 
 ## File Format
@@ -1451,70 +1175,6 @@ Diagrams provide visual representations for:
     }
 
     return schema;
-  }
-
-  private getForgeContext(specObject: string): string {
-    const items = this.readGuidanceIndex();
-    const requested = this.normalizeObjectId(specObject);
-
-    // Attempt to find a matching guidance file by id or alias
-    const match = items.find((it) => it.id === requested || it.aliases.includes(requested));
-    if (match) {
-      try {
-        const content = fs.readFileSync(match.filePath, 'utf8');
-        return content;
-      } catch {
-        // Fall through to research prompt if file cannot be read
-      }
-    }
-
-    return `# Research Prompt for: ${specObject}
-
-You need to research and understand "${specObject}" to properly implement or work with it in the current project context.
-
-## Research Instructions
-
-Execute the following research steps in order:
-
-### 1. Check Project Documentation
-First, search the project's ai/docs/ directory for any existing documentation about "${specObject}":
-- Look for markdown files that might contain relevant information
-- Check for naming patterns that relate to this object
-
-### 2. Search Codebase
-Use codebase_search to find existing implementations or references:
-- Query: "How is ${specObject} implemented in this codebase?"
-- Query: "Where is ${specObject} used?"
-- Review the results to understand current usage patterns
-
-### 3. External Research (if needed)
-If the above steps don't provide sufficient information, perform web research:
-- Search for official documentation for "${specObject}"
-- Look for best practices and common patterns
-- Find implementation examples and tutorials
-- Check for version-specific considerations
-
-### 4. Synthesize Findings
-After gathering information, create a summary that includes:
-- **Definition**: What is ${specObject}?
-- **Purpose**: Why is it used?
-- **Implementation**: How should it be implemented in this project?
-- **Best Practices**: What are the recommended approaches?
-- **Gotchas**: What are common pitfalls to avoid?
-- **Dependencies**: What does it depend on or integrate with?
-
-### 5. Create Context (if needed)
-If this is a recurring concept that will be needed in multiple stories, consider creating a context file at:
-ai/contexts/${specObject.toLowerCase().replace(/\s+/g, '-')}-guidance.context.md
-
-This context file should follow the context schema and provide Gherkin scenarios for when and how to use this information in future work.
-
-## Output Format
-Provide your research findings in a structured format that can be easily referenced during implementation. Include specific code examples, configuration patterns, and integration points relevant to this project.
-
----
-
-**Note**: This is a research prompt. Execute each step thoroughly before proceeding to implementation. Document your findings for future reference.`;
   }
 
   async start() {

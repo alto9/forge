@@ -4,7 +4,6 @@ name: Feature Editing
 description: User experience for editing existing features in Forge Studio
 spec_id: [feature-editor-ui, feature-validation]
 model_id: [feature-editing, studio-state]
-context_id: [theme, vsce]
 ---
 
 # Feature Editing

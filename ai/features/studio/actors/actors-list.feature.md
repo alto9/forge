@@ -4,7 +4,6 @@ name: Actors List View
 description: User experience for viewing and navigating the list of actors in Forge Studio
 spec_id: [actors-ui, actors-navigation]
 model_id: [actor-list, studio-state]
-context_id: [theme, vsce]
 ---
 
 # Actors List View

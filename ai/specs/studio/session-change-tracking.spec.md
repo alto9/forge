@@ -1,7 +1,6 @@
 ---
 spec_id: session-change-tracking
 feature_id: []
-context_id: []
 ---
 
 # Spec: Session Change Tracking

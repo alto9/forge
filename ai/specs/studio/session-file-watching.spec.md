@@ -2,7 +2,6 @@
 spec_id: session-file-watching
 feature_id:
   - real-time-session-updates
-context_id: []
 ---
 
 # Spec: Session File Watching
