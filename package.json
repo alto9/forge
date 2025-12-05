@@ -1,6 +1,6 @@
 {
   "name": "forge-monorepo",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Forge - Context Engineering Add-on for VS Code",
   "repository": {

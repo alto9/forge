@@ -1,6 +1,6 @@
 {
   "name": "@forge/mcp-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Forge MCP Server - Provides Forge context engineering capabilities via Model Context Protocol",
   "license": "MIT",
   "author": "Alto9",
