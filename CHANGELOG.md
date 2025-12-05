@@ -1,3 +1,11 @@
+# 1.0.0 (2025-12-05)
+
+
+### Bug Fixes
+
+* **extension:** remove ai/contexts from REQUIRED_FOLDERS ([aac9e0a](https://github.com/alto9/forge/commit/aac9e0aa32acedb0e56a7c9636c64c3b1ca7b500))
+* **mcp:** remove context from schema_type enum ([43fd532](https://github.com/alto9/forge/commit/43fd5326919e72ef17337c7cd587a4dedbdcf93d))
+
 # Changelog
 
 All notable changes to the Forge extension will be documented in this file.
@@ -54,4 +62,3 @@ All notable changes to the Forge extension will be documented in this file.
 - File format validation and linting
 - Relationship visualization
 - Batch operations for multiple files
-

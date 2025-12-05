@@ -2,7 +2,7 @@
   "name": "forge-studio",
   "displayName": "Forge Studio",
   "description": "VSCode extension that helps engineers use proper context engineering to build and maintain software using Agentic development practices",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "license": "MIT",
   "author": "Alto9",
   "publisher": "alto9",
