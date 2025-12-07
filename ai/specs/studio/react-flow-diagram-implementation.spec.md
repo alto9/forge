@@ -706,6 +706,348 @@ function updateContainerSize(container: Node, nodes: Node[]): Node {
 }
 ```
 
+## Actor Node Implementation
+
+### Actor List Retrieval
+
+The extension host scans `ai/actors/` recursively and returns actor metadata:
+
+```typescript
+interface ActorInfo {
+  actor_id: string;
+  name: string;
+  type: string;       // 'human' | 'system' | 'external'
+  filePath: string;
+}
+
+// Add message handler in ForgeStudioPanel.ts
+case 'getActors':
+  const actors = await this._listActors();
+  this._panel.webview.postMessage({ type: 'actors', data: actors });
+  break;
+
+// Implementation
+private async _listActors(): Promise<ActorInfo[]> {
+  const actorsDir = vscode.Uri.joinPath(this._aiDir, 'actors');
+  const files = await this._listFilesRecursive(actorsDir, '.actor.md');
+  
+  const actors: ActorInfo[] = [];
+  for (const file of files) {
+    const content = await vscode.workspace.fs.readFile(file);
+    const text = new TextDecoder().decode(content);
+    const frontmatter = this._parseFrontmatter(text);
+    
+    actors.push({
+      actor_id: frontmatter.actor_id || '',
+      name: frontmatter.name || frontmatter.actor_id || 'Unknown',
+      type: frontmatter.type || 'system',
+      filePath: file.fsPath
+    });
+  }
+  return actors;
+}
+```
+
+### Actors Section in Shape Library
+
+Add Actors section between General Shapes and AWS Services:
+
+```typescript
+// In ShapeLibrary.tsx
+
+// State for actors
+const [actors, setActors] = useState<ActorInfo[]>([]);
+
+// Request actors on mount
+useEffect(() => {
+  const vscode = (window as any).vscode;
+  if (vscode) {
+    vscode.postMessage({ type: 'getActors' });
+  }
+  
+  const handleMessage = (event: MessageEvent) => {
+    if (event.data?.type === 'actors') {
+      setActors(event.data.data || []);
+    }
+  };
+  
+  window.addEventListener('message', handleMessage);
+  return () => window.removeEventListener('message', handleMessage);
+}, []);
+
+// Drag handler for actors
+const handleActorDragStart = (e: React.DragEvent, actor: ActorInfo) => {
+  const dragData = {
+    isNewNode: false,
+    type: 'actor',
+    library: 'actor',
+    actor_id: actor.actor_id,
+    displayName: actor.name,
+    actorType: actor.type,
+    isContainer: false
+  };
+  e.dataTransfer.setData('application/reactflow', JSON.stringify(dragData));
+  e.dataTransfer.effectAllowed = 'move';
+};
+
+// Render Actors section
+<div style={{ marginBottom: '16px' }}>
+  <h4 style={{ /* VSCode styling */ }}>Actors</h4>
+  {actors.length === 0 ? (
+    <div style={{ /* empty state styling */ }}>No actors defined</div>
+  ) : (
+    actors.map(actor => (
+      <ActorItem key={actor.actor_id} actor={actor} onDragStart={handleActorDragStart} />
+    ))
+  )}
+</div>
+```
+
+### Actor Item Component
+
+Display actors with silhouette icon:
+
+```typescript
+interface ActorItemProps {
+  actor: ActorInfo;
+  onDragStart: (event: React.DragEvent, actor: ActorInfo) => void;
+}
+
+const ActorItem: React.FC<ActorItemProps> = ({ actor, onDragStart }) => {
+  return (
+    <div
+      draggable
+      onDragStart={(e) => onDragStart(e, actor)}
+      style={{
+        padding: '8px 12px',
+        background: 'var(--vscode-list-inactiveSelectionBackground)',
+        border: '1px solid var(--vscode-panel-border)',
+        borderRadius: '4px',
+        marginBottom: '4px',
+        cursor: 'grab',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        transition: 'all 0.2s',
+        fontSize: '12px',
+        color: 'var(--vscode-foreground)'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'var(--vscode-list-hoverBackground)';
+        e.currentTarget.style.transform = 'translateX(2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'var(--vscode-list-inactiveSelectionBackground)';
+        e.currentTarget.style.transform = 'translateX(0)';
+      }}
+    >
+      {/* Silhouette Icon */}
+      <div style={{
+        width: '28px',
+        height: '28px',
+        borderRadius: '4px',
+        background: '#6b7280',  // Neutral gray
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0
+      }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+      </div>
+      <span style={{ fontWeight: 500 }}>{actor.name}</span>
+    </div>
+  );
+};
+```
+
+### ActorNode Component
+
+Create `packages/vscode-extension/src/webview/studio/components/diagram/nodes/ActorNode.tsx`:
+
+```typescript
+import React from 'react';
+import { Handle, Position, NodeProps, NodeResizer } from 'reactflow';
+
+export interface ActorNodeData {
+  label: string;
+  actor_id?: string;
+  actorType?: string;
+}
+
+export const ActorNode: React.FC<NodeProps<ActorNodeData>> = ({ data, selected }) => {
+  return (
+    <>
+      <NodeResizer
+        minWidth={80}
+        minHeight={100}
+        isVisible={selected}
+        lineClassName="resize-line"
+        handleClassName="resize-handle"
+      />
+      <div style={{
+        padding: '16px',
+        background: 'var(--vscode-editor-background)',
+        border: `2px solid ${selected ? 'var(--vscode-focusBorder)' : '#6b7280'}`,
+        borderRadius: '8px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '8px',
+        minWidth: '80px',
+        minHeight: '100px'
+      }}>
+        {/* Silhouette Icon */}
+        <div style={{
+          width: '48px',
+          height: '48px',
+          borderRadius: '50%',
+          background: '#6b7280',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="white">
+            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+          </svg>
+        </div>
+        
+        {/* Actor Name */}
+        <div style={{
+          fontSize: '12px',
+          fontWeight: 500,
+          color: 'var(--vscode-foreground)',
+          textAlign: 'center',
+          wordBreak: 'break-word',
+          maxWidth: '100%'
+        }}>
+          {data.label}
+        </div>
+      </div>
+      
+      {/* Connection Handles */}
+      <Handle type="source" position={Position.Top} id="top" />
+      <Handle type="source" position={Position.Right} id="right" />
+      <Handle type="source" position={Position.Bottom} id="bottom" />
+      <Handle type="source" position={Position.Left} id="left" />
+      <Handle type="target" position={Position.Top} id="top-target" style={{ top: 0 }} />
+      <Handle type="target" position={Position.Right} id="right-target" style={{ right: 0 }} />
+      <Handle type="target" position={Position.Bottom} id="bottom-target" style={{ bottom: 0 }} />
+      <Handle type="target" position={Position.Left} id="left-target" style={{ left: 0 }} />
+    </>
+  );
+};
+```
+
+### Register Actor Node Type
+
+Update `nodeTypes.ts`:
+
+```typescript
+import { ActorNode } from './nodes/ActorNode';
+
+function generateNodeTypes(): NodeTypes {
+  const nodeTypes: NodeTypes = {
+    container: ContainerNode,
+    actor: ActorNode  // Add actor node type
+  };
+  
+  // ... existing AWS and General node types
+  
+  return nodeTypes;
+}
+```
+
+### Handle Actor Drop in DiagramEditor
+
+Update `DiagramEditor.tsx` onDrop handler:
+
+```typescript
+const onDrop = useCallback((event: React.DragEvent) => {
+  // ... existing code ...
+  
+  // Determine node type based on library
+  let nodeType: string;
+  if (dropData.library === 'actor') {
+    nodeType = 'actor';
+  } else if (dropData.library === 'general') {
+    nodeType = `general-${dropData.classifier}`;
+  } else {
+    nodeType = `aws-${dropData.classifier}`;
+  }
+  
+  // Create node with actor-specific data
+  const newNode: Node = {
+    id: getId(),
+    type: nodeType,
+    position: adjustedPosition,
+    data: {
+      label: dropData.displayName || 'New Actor',
+      classifier: dropData.library === 'actor' ? 'actor' : dropData.classifier,
+      actor_id: dropData.actor_id,  // Link to actor file
+      actorType: dropData.actorType,
+      isContainer: false
+    },
+    zIndex: parentNodeId ? 1 : undefined,
+    ...(parentNodeId && {
+      parentNode: parentNodeId,
+      extent: 'parent' as const
+    })
+  };
+  
+  // ... rest of drop handling
+}, [reactFlowInstance, setNodes]);
+```
+
+### Actor Properties Panel Display
+
+Update `PropertiesPanel.tsx` to show actor-specific badge:
+
+```typescript
+// In NodePropertiesPanel
+const getNodeTypeBadge = (localData: any, nodeType: string): string => {
+  if (nodeType === 'actor') {
+    return 'Actor';
+  }
+  return localData.classifier || 'Node';
+};
+
+// Use in render:
+<div style={{
+  fontSize: '11px',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  padding: '4px 8px',
+  background: node.type === 'actor' 
+    ? '#6b7280'  // Gray for actors
+    : 'var(--vscode-badge-background)',
+  color: 'var(--vscode-badge-foreground)',
+  borderRadius: '3px'
+}}>
+  {getNodeTypeBadge(localData, node.type)}
+</div>
+```
+
+### Actor Node JSON Structure
+
+When saved, actor nodes have this structure:
+
+```json
+{
+  "id": "node_1733612345_abc123",
+  "type": "actor",
+  "position": { "x": 100, "y": 100 },
+  "data": {
+    "label": "Developer",
+    "classifier": "actor",
+    "actor_id": "developer",
+    "actorType": "human"
+  }
+}
+```
+
 ## Save Functionality
 
 The save functionality is already handled by the existing `ItemProfile` component:

@@ -48,15 +48,14 @@ describe('forge.openStudio command', () => {
         const REQUIRED_FOLDERS = [
             'ai',
             'ai/actors',
-            'ai/contexts',
+            'ai/diagrams',
             'ai/features',
-            'ai/models',
             'ai/sessions',
             'ai/specs'
         ];
 
         it('should check all required folders exist', () => {
-            expect(REQUIRED_FOLDERS).toHaveLength(7);
+            expect(REQUIRED_FOLDERS).toHaveLength(6);
         });
 
         it('should return true when all folders exist', async () => {
@@ -255,8 +254,8 @@ describe('forge.openStudio command', () => {
 
     describe('Readiness criteria consistency', () => {
         it('should use same readiness check as WelcomePanel', () => {
-            const extensionCheck = ['ai', 'ai/actors', 'ai/contexts', 'ai/features', 'ai/models', 'ai/sessions', 'ai/specs'];
-            const welcomePanelCheck = ['ai', 'ai/actors', 'ai/contexts', 'ai/features', 'ai/models', 'ai/sessions', 'ai/specs'];
+            const extensionCheck = ['ai', 'ai/actors', 'ai/diagrams', 'ai/features', 'ai/sessions', 'ai/specs'];
+            const welcomePanelCheck = ['ai', 'ai/actors', 'ai/diagrams', 'ai/features', 'ai/sessions', 'ai/specs'];
 
             expect(extensionCheck).toEqual(welcomePanelCheck);
         });
@@ -265,9 +264,8 @@ describe('forge.openStudio command', () => {
             const folders = [
                 'ai',
                 'ai/actors',
-                'ai/contexts',
+                'ai/diagrams',
                 'ai/features',
-                'ai/models',
                 'ai/sessions',
                 'ai/specs'
             ];
