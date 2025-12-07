@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/alto9/forge/compare/v1.0.1...v1.1.0) (2025-12-07)
+
+
+### Features
+
+* **actors:** add actors to diagrams ([a57028d](https://github.com/alto9/forge/commit/a57028d71d66740bb046a3cb9e6006b6d71f64bd))
+
 ## [1.0.1](https://github.com/alto9/forge/compare/v1.0.0...v1.0.1) (2025-12-05)
 
 # 1.0.0 (2025-12-05)
