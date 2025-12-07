@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 
 import {
   getAllServices,
@@ -14,6 +14,13 @@ import {
   GeneralShapeConfig
 } from './general-shapes-registry';
 
+interface ActorInfo {
+  actor_id: string;
+  name: string;
+  type: string;
+  filePath: string;
+}
+
 export interface ShapeLibraryProps {
   // No props needed - drag and drop handled internally
 }
@@ -23,7 +30,26 @@ export const ShapeLibrary: React.FC<ShapeLibraryProps> = () => {
   const [expandedCategories, setExpandedCategories] = useState<Set<AWSCategory | 'general'>>(
     new Set(['groups', 'compute', 'database', 'storage', 'networking'])
   );
+  const [actors, setActors] = useState<ActorInfo[]>([]);
   const categories = getCategories();
+
+  // Load actors from extension host
+  useEffect(() => {
+    const vscode = (window as any).vscode;
+    if (vscode) {
+      vscode.postMessage({ type: 'getActors' });
+    }
+    
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'actors') {
+        setActors(event.data.data || []);
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+  
   const filteredServices = useMemo(() => {
     const query = searchQuery.toLowerCase();
     if (!query) {
@@ -33,9 +59,33 @@ export const ShapeLibrary: React.FC<ShapeLibraryProps> = () => {
     return getAllServices().filter(service =>
       service.displayName.toLowerCase().includes(query) ||
       service.classifier.toLowerCase().includes(query)
-    )
-
+    );
   }, [searchQuery]);
+
+  const filteredGeneralShapes = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    if (!query) {
+      return null;
+    }
+
+    return getAllGeneralShapes().filter(shape =>
+      shape.displayName.toLowerCase().includes(query) ||
+      shape.classifier.toLowerCase().includes(query)
+    );
+  }, [searchQuery]);
+
+  const filteredActors = useMemo(() => {
+    const query = searchQuery.toLowerCase();
+    if (!query) {
+      return null;
+    }
+
+    return actors.filter(actor =>
+      actor.name.toLowerCase().includes(query) ||
+      actor.type.toLowerCase().includes(query) ||
+      actor.actor_id.toLowerCase().includes(query)
+    );
+  }, [searchQuery, actors]);
 
   const toggleCategory = (category: AWSCategory | 'general') => {
     setExpandedCategories((prev) => {
@@ -70,6 +120,24 @@ export const ShapeLibrary: React.FC<ShapeLibraryProps> = () => {
     console.log('Setting drag data:', dragData);
     e.dataTransfer.setData('application/reactflow', JSON.stringify(dragData));
     e.dataTransfer.setData('text/plain', config.displayName); // Fallback for debugging
+  };
+
+  const handleActorDragStart = (e: React.DragEvent, actor: ActorInfo) => {
+    console.log('Actor drag started:', actor.name);
+    e.dataTransfer.effectAllowed = 'move';
+    
+    const dragData = {
+      isNewNode: false,
+      type: 'actor',
+      library: 'actor',
+      actor_id: actor.actor_id,
+      displayName: actor.name,
+      actorType: actor.type,
+      isContainer: false,
+    };
+    console.log('Setting actor drag data:', dragData);
+    e.dataTransfer.setData('application/reactflow', JSON.stringify(dragData));
+    e.dataTransfer.setData('text/plain', actor.name);
   };
 
   return (
@@ -122,22 +190,76 @@ export const ShapeLibrary: React.FC<ShapeLibraryProps> = () => {
         overflowY: 'auto',
         padding: '8px'
       }}>
-        {filteredServices ? (
+        {searchQuery ? (
           // Search Results
           <div>
-            {filteredServices.length === 0 ? (
+            {(filteredGeneralShapes?.length ?? 0) === 0 && 
+             (filteredActors?.length ?? 0) === 0 && 
+             (filteredServices?.length ?? 0) === 0 ? (
               <div style={{
                 padding: '16px',
                 textAlign: 'center',
                 color: 'var(--vscode-descriptionForeground)',
                 fontSize: '13px'
               }}>
-                No services found
+                No shapes found
               </div>
             ) : (
-              filteredServices.map((service) => (
-                <ServiceItem key={service.classifier} service={service} onDragStart={(e, s) => handleDragStart(e, s, 'aws')} />
-              ))
+              <>
+                {/* Filtered General Shapes */}
+                {filteredGeneralShapes && filteredGeneralShapes.length > 0 && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <h4 style={{
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: 'var(--vscode-descriptionForeground)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      marginBottom: '8px',
+                      paddingLeft: '4px'
+                    }}>General Shapes</h4>
+                    {filteredGeneralShapes.map((shape) => (
+                      <GeneralShapeItem key={shape.classifier} shape={shape} onDragStart={(e, s) => handleDragStart(e, s, 'general')} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Filtered Actors */}
+                {filteredActors && filteredActors.length > 0 && (
+                  <div style={{ marginBottom: '16px' }}>
+                    <h4 style={{
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: 'var(--vscode-descriptionForeground)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      marginBottom: '8px',
+                      paddingLeft: '4px'
+                    }}>Actors</h4>
+                    {filteredActors.map((actor) => (
+                      <ActorItem key={actor.actor_id} actor={actor} onDragStart={handleActorDragStart} />
+                    ))}
+                  </div>
+                )}
+
+                {/* Filtered AWS Services */}
+                {filteredServices && filteredServices.length > 0 && (
+                  <div>
+                    <h4 style={{
+                      fontSize: '11px',
+                      fontWeight: 600,
+                      color: 'var(--vscode-descriptionForeground)',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      marginBottom: '8px',
+                      paddingLeft: '4px'
+                    }}>AWS Services</h4>
+                    {filteredServices.map((service) => (
+                      <ServiceItem key={service.classifier} service={service} onDragStart={(e, s) => handleDragStart(e, s, 'aws')} />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </div>
         ) : (
@@ -157,6 +279,31 @@ export const ShapeLibrary: React.FC<ShapeLibraryProps> = () => {
             {getAllGeneralShapes().map(shape => (
               <GeneralShapeItem key={shape.classifier} shape={shape} onDragStart={(e, s) => handleDragStart(e, s, 'general')} />
             ))}
+          </div>
+
+          {/* Actors Section */}
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{
+              fontSize: '11px',
+              fontWeight: 600,
+              color: 'var(--vscode-descriptionForeground)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+              marginBottom: '8px',
+              paddingLeft: '4px'
+            }}>Actors</h4>
+            {actors.length === 0 ? (
+              <div style={{
+                padding: '12px',
+                fontSize: '12px',
+                color: 'var(--vscode-descriptionForeground)',
+                fontStyle: 'italic'
+              }}>No actors defined</div>
+            ) : (
+              actors.map(actor => (
+                <ActorItem key={actor.actor_id} actor={actor} onDragStart={handleActorDragStart} />
+              ))
+            )}
           </div>
 
           {/* AWS Services Section */}
@@ -383,6 +530,78 @@ const ServiceItem: React.FC<ServiceItemProps> = ({ service, onDragStart }) => {
         {service.displayName}
       </span>
 
+    </div>
+  );
+};
+
+interface ActorItemProps {
+  actor: ActorInfo;
+  onDragStart: (event: React.DragEvent, actor: ActorInfo) => void;
+}
+
+const ActorItem: React.FC<ActorItemProps> = ({ actor, onDragStart }) => {
+  // Color based on actor type
+  const getActorColor = () => {
+    switch (actor.type) {
+      case 'human':
+        return '#6b7280'; // Gray
+      case 'external':
+        return '#9333ea'; // Purple
+      case 'system':
+      default:
+        return '#3b82f6'; // Blue
+    }
+  };
+
+  const actorColor = getActorColor();
+
+  return (
+    <div
+      draggable
+      onDragStart={(e) => onDragStart(e, actor)}
+      style={{
+        padding: '8px 12px',
+        background: 'var(--vscode-list-inactiveSelectionBackground)',
+        border: '1px solid var(--vscode-panel-border)',
+        borderRadius: '4px',
+        marginBottom: '4px',
+        cursor: 'grab',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        transition: 'all 0.2s',
+        fontSize: '12px',
+        color: 'var(--vscode-foreground)'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = 'var(--vscode-list-hoverBackground)';
+        e.currentTarget.style.borderColor = 'var(--vscode-list-focusBorder)';
+        e.currentTarget.style.transform = 'translateX(2px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'var(--vscode-list-inactiveSelectionBackground)';
+        e.currentTarget.style.borderColor = 'var(--vscode-panel-border)';
+        e.currentTarget.style.transform = 'translateX(0)';
+      }}
+      onDragStartCapture={(e) => e.currentTarget.style.cursor = 'grabbing'}
+      onDragEnd={(e) => e.currentTarget.style.cursor = 'grab'}
+    >
+      {/* Silhouette Icon */}
+      <div style={{
+        width: '28px',
+        height: '28px',
+        borderRadius: '4px',
+        background: actorColor,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        flexShrink: 0
+      }}>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+      </div>
+      <span style={{ fontWeight: 500 }}>{actor.name}</span>
     </div>
   );
 };

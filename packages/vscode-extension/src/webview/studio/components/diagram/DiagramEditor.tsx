@@ -191,9 +191,14 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
     console.log('Drop position:', position);
 
     // Determine node type based on library
-    const nodeType = dropData.library === 'general' 
-      ? `general-${dropData.classifier}`
-      : `aws-${dropData.classifier}`;
+    let nodeType: string;
+    if (dropData.library === 'actor') {
+      nodeType = 'actor';
+    } else if (dropData.library === 'general') {
+      nodeType = `general-${dropData.classifier}`;
+    } else {
+      nodeType = `aws-${dropData.classifier}`;
+    }
 
     console.log('Creating node with type:', nodeType);
 
@@ -287,11 +292,19 @@ const DiagramEditorInner: React.FC<DiagramEditorProps> = ({diagramData, onChange
         position: adjustedPosition,
         data: { 
           label: dropData.displayName || 'New Node',
-          classifier: dropData.classifier,
+          classifier: dropData.library === 'actor' ? 'actor' : dropData.classifier,
+          actor_id: dropData.actor_id,      // For actors
+          actorType: dropData.actorType,    // For actors
           properties: {},
           color: dropData.color,
           isContainer: false
         },
+        // Actor nodes need explicit dimensions for proper React Flow handling
+        ...(dropData.library === 'actor' && {
+          style: { width: 120, height: 140 },
+          width: 120,
+          height: 140
+        }),
         zIndex: parentNodeId ? 1 : undefined, // Children in containers have higher z-index
         ...(parentNodeId && { 
           parentNode: parentNodeId,

@@ -4,7 +4,7 @@ session_id: add-actors-to-diagram-library
 feature_id: [react-flow-diagram-editor]
 spec_id: [react-flow-diagram-implementation]
 diagram_id: [react-flow-editor-architecture]
-status: pending
+status: completed
 priority: high
 estimated_minutes: 20
 ---

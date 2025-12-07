@@ -14,6 +14,13 @@ interface ActiveSession {
     changedFiles: FeatureChangeEntry[];
 }
 
+interface ActorInfo {
+    actor_id: string;
+    name: string;
+    type: string;  // 'human' | 'system' | 'external'
+    filePath: string;
+}
+
 export class ForgeStudioPanel {
     public static currentPanel: ForgeStudioPanel | undefined;
     private readonly _panel: vscode.WebviewPanel;
@@ -153,6 +160,11 @@ export class ForgeStudioPanel {
                     const specs = await this._listSpecs();
                     console.log('ForgeStudioPanel: Found specs:', specs.length, specs);
                     this._panel.webview.postMessage({ type: 'specs', data: specs });
+                    break;
+                }
+                case 'getActors': {
+                    const actors = await this._listActors();
+                    this._panel.webview.postMessage({ type: 'actors', data: actors });
                     break;
                 }
                 default:
@@ -574,6 +586,38 @@ export class ForgeStudioPanel {
         specs.sort((a, b) => a.name.localeCompare(b.name));
 
         return specs;
+    }
+
+    /**
+     * List all actors from ai/actors/ directory recursively.
+     * Extracts actor_id, name, and type from frontmatter.
+     */
+    private async _listActors(): Promise<ActorInfo[]> {
+        const actorsDir = vscode.Uri.joinPath(this._projectUri, 'ai', 'actors');
+        const actors: ActorInfo[] = [];
+
+        try {
+            const files = await this._listFilesRecursive(actorsDir, '.actor.md');
+            
+            for (const file of files) {
+                const content = await FileParser.readFile(file.fsPath);
+                const parsed = FileParser.parseFrontmatter(content);
+                
+                actors.push({
+                    actor_id: parsed.frontmatter.actor_id || '',
+                    name: parsed.frontmatter.name || parsed.frontmatter.actor_id || 'Unknown',
+                    type: parsed.frontmatter.type || 'system',
+                    filePath: file.fsPath
+                });
+            }
+        } catch (error) {
+            // Actors directory doesn't exist yet - return empty array
+        }
+
+        // Sort alphabetically by name
+        actors.sort((a, b) => a.name.localeCompare(b.name));
+
+        return actors;
     }
 
     /**
