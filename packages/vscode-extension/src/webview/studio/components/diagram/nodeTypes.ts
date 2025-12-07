@@ -3,6 +3,7 @@ import type { NodeTypes } from 'reactflow';
 import { BaseAWSNode, AWSNodeData } from './nodes/BaseAWSNode';
 import { ContainerNode } from './nodes/ContainerNode';
 import { GeneralShapeNode } from './nodes/GeneralShapeNode';
+import { ActorNode } from './nodes/ActorNode';
 import { AWS_SERVICE_REGISTRY, getServicesConfig } from './aws-service-registry';
 import { GENERAL_SHAPES_REGISTRY, getGeneralShapeConfig } from './general-shapes-registry';
 
@@ -66,7 +67,8 @@ function createGeneralShapeNodeComponent(classifier: string) {
 
 function generateNodeTypes(): NodeTypes {
     const nodeTypes: NodeTypes = {
-        container: ContainerNode
+        container: ContainerNode,
+        actor: ActorNode
     };
 
     for (const classifier of Object.keys(AWS_SERVICE_REGISTRY)){
@@ -82,9 +84,13 @@ function generateNodeTypes(): NodeTypes {
 
 export const nodeTypes = generateNodeTypes();
 
-export function getNodeTypeFromClassifier(classifier?: string, library: 'aws' | 'general' = 'aws'): string {
+export function getNodeTypeFromClassifier(classifier?: string, library: 'aws' | 'general' | 'actor' = 'aws'): string {
     if (!classifier) {
         return 'default';
+    }
+
+    if (library === 'actor') {
+        return 'actor';
     }
 
     return library === 'general' ? `general-${classifier}` : `aws-${classifier}`;

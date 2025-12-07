@@ -28,36 +28,56 @@ export const PropertiesPanel: React.FC<PropertiesPanelProps> = ({
     }
   }, [selectedNode, selectedEdge]);
 
-  if (!localData) {
-    return null; // Don't show anything when nothing is selected
-  }
+  // Always render the container to maintain consistent layout
+  return (
+    <div style={{
+      width: '100%',
+      minHeight: '48px',
+      background: 'var(--vscode-editor-background)',
+      borderBottom: '1px solid var(--vscode-panel-border)',
+    }}>
+      {/* Node Properties Panel */}
+      {selectedNode && localData && (
+        <NodePropertiesPanel
+          node={selectedNode}
+          localData={localData}
+          setLocalData={setLocalData}
+          onUpdate={onUpdateNode}
+          availableSpecs={availableSpecs}
+        />
+      )}
 
-  // Node Properties Panel
-  if (selectedNode) {
-    return (
-      <NodePropertiesPanel
-        node={selectedNode}
-        localData={localData}
-        setLocalData={setLocalData}
-        onUpdate={onUpdateNode}
-        availableSpecs={availableSpecs}
-      />
-    );
-  }
+      {/* Edge Properties Panel */}
+      {selectedEdge && localData && !selectedNode && (
+        <EdgePropertiesPanel
+          edge={selectedEdge}
+          localData={localData}
+          setLocalData={setLocalData}
+          onUpdate={onUpdateEdge}
+        />
+      )}
 
-  // Edge Properties Panel
-  if (selectedEdge) {
-    return (
-      <EdgePropertiesPanel
-        edge={selectedEdge}
-        localData={localData}
-        setLocalData={setLocalData}
-        onUpdate={onUpdateEdge}
-      />
-    );
-  }
+      {/* Empty state - show hint when nothing selected */}
+      {!selectedNode && !selectedEdge && (
+        <div style={{
+          padding: '12px 16px',
+          fontSize: '12px',
+          color: 'var(--vscode-descriptionForeground)',
+          fontStyle: 'italic'
+        }}>
+          Select a node or edge to view properties
+        </div>
+      )}
+    </div>
+  );
+};
 
-  return null;
+// Helper function to get badge text based on node type
+const getNodeTypeBadge = (localData: any, nodeType: string): string => {
+  if (nodeType === 'actor') {
+    return 'Actor';
+  }
+  return localData.classifier || 'Node';
 };
 
 // Node-specific properties
@@ -75,11 +95,10 @@ const NodePropertiesPanel: React.FC<{
     onUpdate(node.id, updated);
   };
 
+  const isActorNode = node.type === 'actor';
+
   return (
     <div style={{
-      width: '100%',
-      background: 'var(--vscode-editor-background)',
-      borderBottom: '1px solid var(--vscode-panel-border)',
       padding: '8px 16px',
       display: 'flex',
       alignItems: 'center',
@@ -93,11 +112,11 @@ const NodePropertiesPanel: React.FC<{
         textTransform: 'uppercase',
         letterSpacing: '0.5px',
         padding: '4px 8px',
-        background: 'var(--vscode-badge-background)',
-        color: 'var(--vscode-badge-foreground)',
+        background: isActorNode ? '#6b7280' : 'var(--vscode-badge-background)',
+        color: isActorNode ? 'white' : 'var(--vscode-badge-foreground)',
         borderRadius: '3px'
       }}>
-        {localData.classifier || 'Node'}
+        {getNodeTypeBadge(localData, node.type)}
       </div>
 
       {/* Name Field */}
@@ -129,48 +148,50 @@ const NodePropertiesPanel: React.FC<{
         />
       </div>
 
-      {/* Spec Linking */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '250px', flex: 1 }}>
-        <label style={{
-          fontSize: '12px',
-          fontWeight: 500,
-          color: 'var(--vscode-foreground)',
-          whiteSpace: 'nowrap'
-        }}>
-          Spec:
-        </label>
-        <select
-          value={localData.spec_id || ''}
-          onChange={(e) => handleChange('spec_id', e.target.value || undefined)}
-          style={{
-            flex: 1,
-            padding: '4px 8px',
+      {/* Spec Linking - Not shown for actor nodes */}
+      {!isActorNode && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: '250px', flex: 1 }}>
+          <label style={{
             fontSize: '12px',
-            border: '1px solid var(--vscode-input-border)',
-            borderRadius: '3px',
-            background: 'var(--vscode-input-background)',
-            color: 'var(--vscode-input-foreground)',
-            outline: 'none',
-            minWidth: '200px'
-          }}
-        >
-          <option value="">-- No Spec --</option>
-          {availableSpecs.map(spec => (
-            <option key={spec.id} value={spec.id}>
-              {spec.name}
-            </option>
-          ))}
-        </select>
-        {localData.spec_id && (
-          <span style={{
-            fontSize: '11px',
-            color: 'var(--vscode-charts-green)',
+            fontWeight: 500,
+            color: 'var(--vscode-foreground)',
             whiteSpace: 'nowrap'
           }}>
-            ✓ Linked
-          </span>
-        )}
-      </div>
+            Spec:
+          </label>
+          <select
+            value={localData.spec_id || ''}
+            onChange={(e) => handleChange('spec_id', e.target.value || undefined)}
+            style={{
+              flex: 1,
+              padding: '4px 8px',
+              fontSize: '12px',
+              border: '1px solid var(--vscode-input-border)',
+              borderRadius: '3px',
+              background: 'var(--vscode-input-background)',
+              color: 'var(--vscode-input-foreground)',
+              outline: 'none',
+              minWidth: '200px'
+            }}
+          >
+            <option value="">-- No Spec --</option>
+            {availableSpecs.map(spec => (
+              <option key={spec.id} value={spec.id}>
+                {spec.name}
+              </option>
+            ))}
+          </select>
+          {localData.spec_id && (
+            <span style={{
+              fontSize: '11px',
+              color: 'var(--vscode-charts-green)',
+              whiteSpace: 'nowrap'
+            }}>
+              ✓ Linked
+            </span>
+          )}
+        </div>
+      )}
     </div>
   );
 };
@@ -203,9 +224,6 @@ const EdgePropertiesPanel: React.FC<{
 
   return (
     <div style={{
-      width: '100%',
-      background: 'var(--vscode-editor-background)',
-      borderBottom: '1px solid var(--vscode-panel-border)',
       padding: '8px 16px',
       display: 'flex',
       alignItems: 'center',

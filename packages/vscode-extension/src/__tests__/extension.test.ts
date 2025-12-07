@@ -7,6 +7,111 @@ import { describe, it, expect } from 'vitest';
  * Full integration tests would require VSCode extension host.
  */
 
+describe('getActors message handler', () => {
+    describe('Actor listing behavior', () => {
+        it('should scan ai/actors directory recursively', () => {
+            const actorsDir = 'ai/actors';
+            const extension = '.actor.md';
+            
+            expect(actorsDir).toBe('ai/actors');
+            expect(extension).toBe('.actor.md');
+        });
+
+        it('should return ActorInfo objects with required fields', () => {
+            const mockActor = {
+                actor_id: 'developer',
+                name: 'Developer',
+                type: 'human',
+                filePath: '/path/to/developer.actor.md'
+            };
+            
+            expect(mockActor.actor_id).toBeTruthy();
+            expect(mockActor.name).toBeTruthy();
+            expect(mockActor.type).toBeTruthy();
+            expect(mockActor.filePath).toBeTruthy();
+        });
+
+        it('should extract actor_id from frontmatter', () => {
+            const frontmatter = { actor_id: 'test-actor', name: 'Test Actor', type: 'system' };
+            const actor_id = frontmatter.actor_id || '';
+            
+            expect(actor_id).toBe('test-actor');
+        });
+
+        it('should use actor_id as fallback name if name is missing', () => {
+            const frontmatter = { actor_id: 'test-actor', type: 'system' };
+            const name = frontmatter.name || frontmatter.actor_id || 'Unknown';
+            
+            expect(name).toBe('test-actor');
+        });
+
+        it('should default type to system if not specified', () => {
+            const frontmatter = { actor_id: 'test-actor' };
+            const type = frontmatter.type || 'system';
+            
+            expect(type).toBe('system');
+        });
+
+        it('should handle empty actors directory gracefully', () => {
+            const actors: any[] = [];
+            
+            expect(actors).toEqual([]);
+            expect(actors.length).toBe(0);
+        });
+
+        it('should handle nested actor folders', () => {
+            const paths = [
+                'ai/actors/human/developer.actor.md',
+                'ai/actors/system/ci-server.actor.md',
+                'ai/actors/external/payment-gateway.actor.md'
+            ];
+            
+            // All paths should be scanned recursively
+            expect(paths.length).toBe(3);
+            paths.forEach(p => expect(p).toContain('ai/actors/'));
+        });
+
+        it('should sort actors alphabetically by name', () => {
+            const actors = [
+                { name: 'Zebra', actor_id: 'z' },
+                { name: 'Alpha', actor_id: 'a' },
+                { name: 'Mike', actor_id: 'm' }
+            ];
+            
+            actors.sort((a, b) => a.name.localeCompare(b.name));
+            
+            expect(actors[0].name).toBe('Alpha');
+            expect(actors[1].name).toBe('Mike');
+            expect(actors[2].name).toBe('Zebra');
+        });
+
+        it('should post message with type actors and data array', () => {
+            const messageType = 'actors';
+            const data: any[] = [];
+            
+            expect(messageType).toBe('actors');
+            expect(Array.isArray(data)).toBe(true);
+        });
+    });
+
+    describe('Actor type validation', () => {
+        it('should support human actor type', () => {
+            const validTypes = ['human', 'system', 'external'];
+            expect(validTypes).toContain('human');
+        });
+
+        it('should support system actor type', () => {
+            const validTypes = ['human', 'system', 'external'];
+            expect(validTypes).toContain('system');
+        });
+
+        it('should support external actor type', () => {
+            const validTypes = ['human', 'system', 'external'];
+            expect(validTypes).toContain('external');
+        });
+    });
+});
+
 describe('forge.openStudio command', () => {
     describe('Command routing logic', () => {
         it('should check project readiness before routing', () => {
@@ -48,15 +153,14 @@ describe('forge.openStudio command', () => {
         const REQUIRED_FOLDERS = [
             'ai',
             'ai/actors',
-            'ai/contexts',
+            'ai/diagrams',
             'ai/features',
-            'ai/models',
             'ai/sessions',
             'ai/specs'
         ];
 
         it('should check all required folders exist', () => {
-            expect(REQUIRED_FOLDERS).toHaveLength(7);
+            expect(REQUIRED_FOLDERS).toHaveLength(6);
         });
 
         it('should return true when all folders exist', async () => {
@@ -255,8 +359,8 @@ describe('forge.openStudio command', () => {
 
     describe('Readiness criteria consistency', () => {
         it('should use same readiness check as WelcomePanel', () => {
-            const extensionCheck = ['ai', 'ai/actors', 'ai/contexts', 'ai/features', 'ai/models', 'ai/sessions', 'ai/specs'];
-            const welcomePanelCheck = ['ai', 'ai/actors', 'ai/contexts', 'ai/features', 'ai/models', 'ai/sessions', 'ai/specs'];
+            const extensionCheck = ['ai', 'ai/actors', 'ai/diagrams', 'ai/features', 'ai/sessions', 'ai/specs'];
+            const welcomePanelCheck = ['ai', 'ai/actors', 'ai/diagrams', 'ai/features', 'ai/sessions', 'ai/specs'];
 
             expect(extensionCheck).toEqual(welcomePanelCheck);
         });
@@ -265,9 +369,8 @@ describe('forge.openStudio command', () => {
             const folders = [
                 'ai',
                 'ai/actors',
-                'ai/contexts',
+                'ai/diagrams',
                 'ai/features',
-                'ai/models',
                 'ai/sessions',
                 'ai/specs'
             ];

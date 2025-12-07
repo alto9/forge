@@ -228,3 +228,113 @@ Feature: JSON-Based Diagram Storage
     And all containers should be restored with their nested elements
 ```
 
+## Feature: Actors in Shape Library
+
+```gherkin
+Feature: Actors in Diagram Shape Library
+  As a developer
+  I want to add Actors to my diagrams from the Shape Library
+  So that I can visually represent system actors in my architecture diagrams
+
+  Scenario: Actors section in shape library
+    Given I am viewing the shape library panel
+    When I look at the available categories
+    Then I should see an "Actors" section
+    And the Actors section should appear between General Shapes and AWS Services
+    And the section should display all actors from ai/actors/ including nested folders
+
+  Scenario: Actor item display
+    Given I am viewing the Actors section in the shape library
+    When I see an actor item
+    Then it should display a silhouette icon (person shape)
+    And it should display the actor name
+    And it should be draggable
+
+  Scenario: Drag actor from library to diagram
+    Given I have a diagram open with an active session
+    And actors exist in the ai/actors/ folder
+    When I drag an actor from the Actors section
+    And drop it onto the diagram canvas
+    Then an actor node should be added to the diagram
+    And the actor node should appear at the drop location
+    And the diagram JSON should be updated with the actor node data
+
+  Scenario: Empty actors section
+    Given I am viewing the shape library panel
+    And no actors exist in the ai/actors/ folder
+    When I view the Actors section
+    Then I should see a message "No actors defined"
+    And the section should still be visible but empty
+
+  Scenario: Actors from nested folders
+    Given actors exist in nested folders like ai/actors/human/ and ai/actors/system/
+    When I view the Actors section
+    Then all actors from all nested folders should be displayed
+    And actors should be grouped by their folder structure
+```
+
+## Feature: Actor Node Type
+
+```gherkin
+Feature: Actor Node Component
+  As a developer
+  I want actor nodes to have a distinct visual appearance
+  So that I can easily identify actors in my diagrams
+
+  Scenario: Actor node visual appearance
+    Given I have added an actor node to the diagram
+    When I view the actor node
+    Then it should display a silhouette icon (person shape)
+    And it should display the actor name below the icon
+    And it should use neutral gray tones for the silhouette
+    And it should be visually distinct from AWS and General shapes
+
+  Scenario: Actor node connection handles
+    Given I have an actor node on the diagram
+    When I want to connect it to other nodes
+    Then the actor node should have connection handles on all four sides
+    And I should be able to create edges to and from the actor
+
+  Scenario: Actor node resizing
+    Given I have an actor node on the diagram
+    When I select the actor node
+    Then I should be able to resize the node
+    And the silhouette icon should scale proportionally
+    And the label should remain readable
+
+  Scenario: Actor node label editing
+    Given I have an actor node on the diagram
+    When I select the actor node
+    Then I should be able to edit the label in the Properties Panel
+    And changes should be reflected on the node immediately
+
+  Scenario: Actor node data structure
+    Given I add an actor to the diagram
+    When the diagram is saved
+    Then the node should have type "actor"
+    And the node data should contain actor_id linking to the actor file
+    And the node data should contain a label field
+```
+
+## Feature: Actor Properties Panel
+
+```gherkin
+Feature: Actor Node Properties Panel
+  As a developer
+  I want to see and edit actor properties when selected
+  So that I can customize actor nodes in my diagrams
+
+  Scenario: Actor node properties display
+    Given I have an actor node on the diagram
+    When I select the actor node
+    Then the Properties Panel should appear
+    And it should show a type badge displaying "Actor"
+    And it should show the actor name field
+    And it should allow editing the actor name
+
+  Scenario: Actor node type badge
+    Given I have selected an actor node
+    When I view the Properties Panel
+    Then the type badge should display "Actor"
+    And the badge should have a distinct style from AWS and General nodes
+```

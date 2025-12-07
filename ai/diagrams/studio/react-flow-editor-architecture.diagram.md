@@ -22,7 +22,7 @@ actor_id: []
         "isContainer": true,
         "spec_id": "react-flow-diagram-implementation"
       },
-      "style": { "width": 750, "height": 450 }
+      "style": { "width": 850, "height": 500 }
     },
     {
       "id": "shape-library",
@@ -37,9 +37,21 @@ actor_id: []
       "extent": "parent"
     },
     {
-      "id": "properties-panel",
+      "id": "actors-section",
       "type": "general-box",
       "position": { "x": 20, "y": 140 },
+      "data": {
+        "label": "Actors Section",
+        "classifier": "box",
+        "spec_id": "react-flow-diagram-implementation"
+      },
+      "parentNode": "diagram-editor",
+      "extent": "parent"
+    },
+    {
+      "id": "properties-panel",
+      "type": "general-box",
+      "position": { "x": 20, "y": 220 },
       "data": {
         "label": "PropertiesPanel (Top)",
         "classifier": "box",
@@ -97,6 +109,18 @@ actor_id: []
       "extent": "parent"
     },
     {
+      "id": "actor-nodes",
+      "type": "general-box",
+      "position": { "x": 500, "y": 200 },
+      "data": {
+        "label": "Actor Nodes",
+        "classifier": "box",
+        "spec_id": "react-flow-diagram-implementation"
+      },
+      "parentNode": "diagram-editor",
+      "extent": "parent"
+    },
+    {
       "id": "container-nodes",
       "type": "general-box",
       "position": { "x": 500, "y": 280 },
@@ -123,9 +147,18 @@ actor_id: []
     {
       "id": "filesystem",
       "type": "general-box",
-      "position": { "x": 350, "y": 550 },
+      "position": { "x": 350, "y": 600 },
       "data": {
         "label": "Diagram File (*.diagram.md)",
+        "classifier": "box"
+      }
+    },
+    {
+      "id": "actors-filesystem",
+      "type": "general-box",
+      "position": { "x": 100, "y": 600 },
+      "data": {
+        "label": "Actor Files (ai/actors/)",
         "classifier": "box"
       }
     }
@@ -171,6 +204,24 @@ actor_id: []
       "id": "e7",
       "source": "node-types",
       "target": "container-nodes"
+    },
+    {
+      "id": "e8",
+      "source": "node-types",
+      "target": "actor-nodes"
+    },
+    {
+      "id": "e9",
+      "source": "actors-section",
+      "target": "react-flow",
+      "label": "Drag Actor",
+      "animated": true
+    },
+    {
+      "id": "e10",
+      "source": "actors-filesystem",
+      "target": "actors-section",
+      "label": "Load Actors"
     }
   ]
 }
