@@ -166,11 +166,15 @@ describe('Webview Build Configuration', () => {
             expect(buildScript).toContain('build:webview');
         });
 
-        it('should include webview build in package script', () => {
+        it('should call vsce package in package script', () => {
             const packageJson = require('../../package.json');
             const packageScript = packageJson.scripts.package;
+            const prepublishScript = packageJson.scripts['vscode:prepublish'];
 
-            expect(packageScript).toContain('build:webview');
+            // Package script calls vsce, which triggers vscode:prepublish
+            expect(packageScript).toContain('vsce package');
+            // vscode:prepublish includes webview build
+            expect(prepublishScript).toContain('build:webview');
         });
 
         it('should include webview watch in watch script', () => {
