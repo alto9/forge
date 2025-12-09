@@ -1,3 +1,9 @@
+## <small>1.1.1 (2025-12-09)</small>
+
+* feat!: remove mcp server and refine extension code ([727fa4e](https://github.com/alto9/forge/commit/727fa4e))
+* Merge pull request #6 from alto9/5-migrate-mcp-server-functionality-to-cursor-commands-and-simplify- ([554eb32](https://github.com/alto9/forge/commit/554eb32)), closes [#6](https://github.com/alto9/forge/issues/6)
+* ci: fix unit tests ([f9bc700](https://github.com/alto9/forge/commit/f9bc700))
+
 # [1.1.0](https://github.com/alto9/forge/compare/v1.0.1...v1.1.0) (2025-12-07)
 
 
