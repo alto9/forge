@@ -1,3 +1,7 @@
+## <small>1.1.2 (2025-12-09)</small>
+
+* ci: fix package name for marketplace ([a49fe02](https://github.com/alto9/forge/commit/a49fe02))
+
 ## <small>1.1.1 (2025-12-09)</small>
 
 * feat!: remove mcp server and refine extension code ([727fa4e](https://github.com/alto9/forge/commit/727fa4e))
