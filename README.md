@@ -1,388 +1,174 @@
-# Forge - Context Engineering Framework
+# Forge VSCode Extension
 
-A comprehensive toolkit for structured context engineering in AI-assisted development. Forge provides both a VSCode extension and an MCP server to help engineers create well-structured prompts with complete context.
+VSCode extension that helps engineers use proper context engineering to build and maintain software using Agentic development practices.
 
-## 🎯 What is Forge?
+## Features
 
-Forge is a session-driven workflow system for structured context engineering in AI-assisted development. It helps you design software systematically by tracking changes during design sessions, then distills those sessions into minimal, actionable implementation stories (< 30 minutes each) with complete context.
+- **Forge: Start Design Session** - Begin a new design session with a problem statement
+- **Forge: Distill Session into Stories and Tasks** - Convert completed sessions into actionable work items
+- **Forge: Build Story Implementation** - Generate implementation prompts for specific stories
+- **Forge: Open Forge Studio** - Full-featured React-based UI for managing Forge files
+  - **Dashboard**: View session status and object counts
+  - **Sessions**: Create and manage design sessions
+  - **Features**: Browse all features; create/edit requires active session
+  - **Specs**: Browse all specs; create/edit requires active session
+  - **Models**: Browse all models; create/edit requires active session
+  - **Actors**: Document system actors and their responsibilities (always editable)
+  - **Folder Management**: Create nested folders, navigate hierarchies
+  - **File Creation**: Create new files with proper templates
+  - **Context Menus**: Right-click folders to create subfolders
+  - **Session-Aware**: Features/Specs/Models are read-only without session; Actors are always editable
+- **Context Menu Integration** - Right-click on files and folders for quick access
+- **Output Panel** - Clean, formatted prompts ready to copy and paste
 
-## 📦 Packages
+## Installation
 
-This is a monorepo containing two packages:
+### From Source (Development)
 
-### [@forge/vscode-extension](./packages/vscode-extension/)
-VSCode extension that provides commands for session-driven design and implementation.
+```bash
+# From the monorepo root
+npm install
+npm run build -w forge
 
-**Features:**
-- Start and manage design sessions
-- Forge Studio - Full-featured UI for creating and managing Forge files
-  - Create features, specs, and actors
-  - Create and navigate nested folder structures
-  - Edit files with proper frontmatter and content templates
-  - Session-aware workflows (Features and Specs require active session; Actors are always editable)
-- Distill sessions into Stories and Tasks
-- Build stories with complete context
-- Right-click context menu integration
+# Package the extension (from root)
+npm run vscode:package
 
-### [@forge/mcp-server](./packages/mcp-server/)
-Model Context Protocol server that exposes Forge capabilities to AI assistants like Claude Desktop and Cursor.
+# Install
+code --install-extension packages/vscode-extension/forge-0.1.0.vsix
+```
 
-**Tools:**
-- `get_forge_about` - Comprehensive workflow overview and guidance
-- `get_forge_schema` - Schema definitions for sessions, features, specs, actors, stories, and tasks
+### From VSIX
 
-## 🏗️ Project Structure
+```bash
+code --install-extension forge-0.1.0.vsix
+```
 
-When you use Forge in a project, it manages files in a nestable folder structure:
+## Usage
+
+### Start a Design Session
+
+1. Open Command Palette (`Cmd/Ctrl+Shift+P`)
+2. Type "Forge: Start Design Session"
+3. Enter your problem statement
+4. A new session file is created in `ai/sessions/`
+5. You can now create and edit Forge files in the Studio
+
+### Open Forge Studio
+
+1. Open Command Palette (Cmd/Ctrl+Shift+P)
+2. Type "Forge: Open Forge Studio"
+3. The Studio opens with tabs for Dashboard, Sessions, Features, Specs, Models, and Actors
+
+**Studio Workflows:**
+
+- **Browsing and Reference** (No session required):
+  1. Navigate to any category tab to browse existing files
+  2. View Features, Specs, Models for reference
+  3. Files are read-only without an active session
+
+- **Creating Foundational Elements** (No session required):
+  1. Navigate to Actors tab
+  2. Create and edit at any time
+  3. Define system vocabulary and guidance before design work
+
+- **Creating Design Files** (Requires active session):
+  1. Start a session from Dashboard or Sessions page
+  2. Navigate to Features or Specs tab
+  3. Create and edit during active session
+  4. Changes are automatically tracked in session's changed_files
+
+- **Organizing with Folders**:
+  1. Right-click any folder in the tree (when session active for Features/Specs)
+  2. Enter subfolder name (auto-kebab-cased)
+  3. Navigate by clicking folders in the contents view
+
+- **Editing Files**:
+  1. Click a file in the contents view to open it
+  2. Features/Specs/Models: Visible but read-only without session, editable with active session
+  3. Actors: Always editable
+  4. Edit frontmatter fields and content, then click "Save Changes"
+
+### Distill Session into Stories and Tasks
+
+1. Complete your design work in Studio
+2. Stop the active session from Dashboard or Sessions page
+3. Right-click on the `.session.md` file OR use Command Palette
+4. Select "Forge: Distill Session into Stories and Tasks"
+5. Copy the generated prompt
+6. Paste into Cursor Agent to generate story and task files in `ai/tickets/<session-id>/`
+
+### Build Story Implementation
+
+1. Right-click on a `.story.md` file in `ai/tickets/`
+2. Select "Forge: Build Story Implementation"
+3. Copy the generated prompt (includes all linked features, specs, models, and actors)
+4. Paste into Cursor Agent to implement the story
+
+## Project Structure
+
+Forge works with the following directory structure:
 
 ```
 your-project/
 └── ai/
-    ├── sessions/           # Design session tracking (*.session.md)
-    │   ├── <session-id>/
-    │   │   └── tickets/    # Stories and Tasks for this session
-    │   │       ├── *.story.md
-    │   │       └── *.task.md
-    │   └── *.session.md
-    ├── features/           # Feature definitions with Gherkin (*.feature.md, nestable, index.md)
-    ├── specs/              # Technical specifications (*.spec.md, nestable)
-    ├── actors/             # Actor/persona definitions (*.actor.md, nestable)
-    └── docs/               # Supporting documentation
+    ├── sessions/      # Design session tracking (*.session.md)
+    ├── features/      # Feature definitions with Gherkin (*.feature.md, nestable)
+    ├── specs/         # Technical specifications (*.spec.md, nestable)
+    ├── models/        # Data model definitions (*.model.md, nestable)
+    ├── actors/        # Actor/persona definitions (*.actor.md, nestable)
+    ├── tickets/       # Stories and Tasks (*.story.md, *.task.md, organized by session)
+    └── docs/          # Supporting documentation
 ```
 
-## 🚀 Getting Started
+**Note**: All folders except `docs` and `tickets` are nestable, meaning you can create subfolders to organize your files hierarchically.
 
-### Installation
+## Development
 
 ```bash
-# Clone the repository
-git clone https://github.com/alto9/cursor-context-engineering.git
-cd cursor-context-engineering
-
-# Install dependencies for all packages
+# From the monorepo root
 npm install
 
-# Build all packages
-npm run build
-```
-
-### Project Initialization
-
-When you first use Forge in a project, it will create:
-1. **AI folder structure** - Organized folders for sessions, features, specs, and actors
-2. **Cursor command files** - Pre-configured commands that guide AI agents through Forge workflows
-
-**Note**: Ticket folders are not created during initialization. When you distill a session, a tickets subdirectory is automatically created within that session's folder (e.g., `ai/sessions/<session-id>/tickets/`) containing the generated stories and tasks. This keeps all session-related files organized together.
-
-#### Cursor Commands
-
-Forge automatically installs command files to `.cursor/commands/` that provide context-aware guidance for AI agents:
-
-- **forge-design.md** - Guides AI when working within active design sessions
-- **forge-build.md** - Guides AI when implementing stories from tickets
-
-These commands ensure AI agents follow Forge workflows correctly, tracking changes and maintaining proper file structure.
-
-#### Command Validation
-
-Forge uses **hash-based validation** to ensure command files stay up-to-date:
-
-- Each command file includes an embedded content hash
-- During initialization, Forge checks if existing commands match the current templates
-- Outdated commands are automatically updated when you initialize the project
-- This ensures all Forge projects use consistent, validated command templates
-
-**What happens if commands are outdated?**
-
-1. The Welcome Screen will show which commands need updating (⚠ orange indicator)
-2. Running "Initialize Project" will update all outdated commands
-3. You can verify command status at any time by opening Forge Studio
-
-**Note**: Command files are managed by Forge and should not be manually edited. Any modifications will be detected and the file will be marked as outdated.
-
-### Using the VSCode Extension
-
-```bash
-# Package the extension
-npm run vscode:package
-
-# Install the extension
-code --install-extension packages/vscode-extension/forge-0.1.0.vsix
-```
-
-Then use the Command Palette (`Cmd/Ctrl+Shift+P`) to access Forge commands:
-- `Forge: Open Forge Studio` - Open the visual interface for managing Forge files and sessions
-- `Forge: Distill Session into Stories and Tasks` - Create a Cursor command file that distills a completed session into actionable stories and tasks (also available via right-click on .session.md files)
-- `Forge: Build Story Implementation` - Generate implementation prompt for a specific story (also available via right-click on .story.md files)
-
-**Forge Studio Features:**
-
-**Session Management:**
-- Start new design sessions with problem statements
-- Persistent session panel for real-time editing
-- Auto-tracked file changes during sessions
-- Document goals, approach, key decisions, and notes
-- Auto-save with 500ms debounce
-- Resume sessions across Studio reopens (filesystem is source of truth)
-- End sessions and distill into stories
-
-**File Management:**
-- **Dashboard** - View session status and counts of all Forge objects (sessions, features, specs, actors, stories, tasks)
-- **Sessions Page** - Create, view, and manage all design sessions
-- **Category Pages** - Browse and edit Features, Specs, and Actors
-- **Folder Navigation** - Tree view with expand/collapse, nested folder support
-- **Foundational Files** (Actors, Sessions):
-  - Always editable - no active session required
-  - Define system vocabulary and guidance before design work
-  - Not tracked in session changed_files
-- **Design Files** (Features, Specs):
-  - Always browsable - view existing features and specs at any time
-  - Require active session for creation and editing (read-only without session)
-  - Tracked in session changed_files during design work
-  - Session-locked for design discipline
-- **Gherkin Editor** - Structured visual editor for feature files with Background, Rules, and Scenarios
-
-**UI Features:**
-- Three-panel layout (navigation sidebar, main content, session panel)
-- Split view for browsing (folder tree + content)
-- Real-time updates when files change on disk
-- Automatic theme integration with VSCode
-- Minimizable session panel
-
-### Using the MCP Server
-
-Add to your MCP settings file:
-
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-**Windows**: `%APPDATA%/Claude/claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "forge": {
-      "command": "node",
-      "args": ["/path/to/cursor-context-engineering/packages/mcp-server/dist/index.js"],
-      "cwd": "/path/to/your/project"
-    }
-  }
-}
-```
-
-## 📋 File Formats
-
-### Session Files (*.session.md)
-```markdown
----
-session_id: user-authentication-session
-start_time: 2025-10-25T10:00:00Z
-end_time: null
-status: design  # design, scribe, development, completed
-problem_statement: "Add user authentication with email verification"
-changed_files: [
-  {
-    path: "ai/features/user/login.feature.md",
-    change_type: "added",
-    scenarios_added: ["Successful login", "Failed login with invalid password"]
-  },
-  {
-    path: "ai/specs/api/auth-endpoint.spec.md",
-    change_type: "modified",
-    sections_modified: ["Login API Contract", "Validation Rules"]
-  }
-]
-# Note: Only Features and Specs are tracked in changed_files
-# Actors are foundational and not session-tracked
-# Tickets are created in ai/sessions/<session-id>/tickets/
----
-
-# User Authentication Session
-
-## Problem Statement
-Add secure user authentication...
-
-## Goals
-- Secure password handling
-- Email verification
-- Session management
-```
-
-### Feature Files (*.feature.md)
-```markdown
----
-feature_id: user-login
-spec_id: [authentication-spec]
----
-
-\`\`\`gherkin
-Feature: User Login
-
-Scenario: Successful login
-  Given a registered user with email "user@example.com"
-  When they enter valid credentials
-  Then they should be logged into the system
-  And receive a session token
-\`\`\`
-```
-
-### Actor Files (*.actor.md)
-```markdown
----
-actor_id: system-administrator
-type: user
----
-
-## Overview
-System administrator responsible for managing users and system configuration.
-
-## Responsibilities
-- Manage user accounts and permissions
-- Configure system settings
-- Monitor system health
-- Perform backups and maintenance
-
-## Interactions
-- Creates and manages user accounts
-- Accesses admin dashboard
-- Reviews system logs and metrics
-```
-
-### Story Files (*.story.md)
-```markdown
----
-story_id: add-email-validation
-session_id: user-authentication-session
-feature_id: [user-login]
-spec_id: [authentication-spec]
-status: pending
-priority: high
-estimated_minutes: 25
----
-
-## Objective
-Add email validation to User model
-
-## Implementation Steps
-1. Add validation function
-2. Update tests
-3. Apply to registration endpoint
-
-## Acceptance Criteria
-- [ ] Valid emails pass validation
-- [ ] Invalid emails are rejected
-```
-
-## 🔄 The Forge Workflow
-
-1. **Define Foundational Elements** (No session required)
-   - Create Actors to define system personas and roles
-   - Build your project vocabulary and foundational knowledge
-   - Browse existing Features and Specs for reference
-
-2. **Start a Design Session** - Begin a design session with a clear problem statement
-
-3. **Design Changes** (Session required for editing)
-   - Create and edit Features to define user-facing functionality
-   - Create and edit Specs to define technical implementation
-   - Link Features and Specs to relevant Actors
-   - Continue editing Actors as needed
-
-4. **Distill to Stories & Tasks** - Convert the session into minimal implementation stories (< 30 min each) and external tasks, organized in `ai/sessions/<session-id>/tickets/`
-
-5. **Build Stories** - Implement each story with complete context from linked features, specs, and actors
-
-The session-driven approach ensures design changes are tracked systematically, while allowing foundational vocabulary to be defined and browsing to happen freely. Features and Specs are always visible for reference but require an active session for editing.
-
-## 💡 Why Forge?
-
-Traditional prompting can be ad-hoc and miss important context. Forge helps you:
-
-- **Build Comprehensive Context** - Systematically gather all relevant information
-- **Maintain Consistency** - Use standardized formats across your project
-- **Improve AI Accuracy** - Provide complete context for better AI-generated code
-- **Create Traceable Documentation** - Link decisions, features, specs, and tasks
-- **Reduce Rework** - Get it right the first time with well-structured prompts
-
-## 🛠️ Development
-
-```bash
-# Install dependencies
-npm install
-
-# Build all packages
-npm run build
-
-# Watch mode for development
-npm run watch
-
-# Lint all packages
-npm run lint
-
-# Clean build artifacts
-npm run clean
-```
-
-### Working with Individual Packages
-
-```bash
-# Build just the VSCode extension
+# Build the extension
 npm run build -w forge
 
-# Build just the MCP server
-npm run build -w @forge/mcp-server
+# Watch mode (builds extension + webview)
+npm run watch -w forge
 
-# Watch the MCP server
-npm run dev -w @forge/mcp-server
+# Lint
+npm run lint -w forge
+
+# Package for distribution
+npm run vscode:package
 ```
 
-## 📚 Documentation
+## Architecture
 
-- [VSCode Extension README](./packages/vscode-extension/README.md)
-- [MCP Server README](./packages/mcp-server/README.md)
-- [File Format Examples](./EXAMPLES.md)
-- [Contributing Guidelines](./CONTRIBUTING.md)
-- [Changelog](./CHANGELOG.md)
+```
+src/
+├── extension.ts                    # Extension entry point
+├── commands/                       # Command implementations
+│   ├── StartSessionCommand.ts      # Start design session
+│   ├── DistillSessionCommand.ts    # Distill session to stories/tasks
+│   └── BuildStoryCommand.ts        # Build story implementation
+├── panels/                         # Webview panels
+│   └── ForgeStudioPanel.ts          # Main Studio UI
+├── webview/                        # React-based webview code
+│   └── studio/
+│       └── index.tsx               # Studio React app
+└── utils/                          # Utilities
+    ├── PromptGenerator.ts          # Prompt generation logic
+    ├── FileParser.ts               # Frontmatter parsing
+    └── GitUtils.ts                 # Git integration
+```
 
-## 🎯 Best Practices
+**Key Technologies:**
+- **VSCode Extension API** for commands and panels
+- **React** for the Studio UI
+- **WebView API** for embedded web UI
+- **File System Watchers** for real-time updates
+- **Gray Matter** for frontmatter parsing
 
-1. **Define Foundational Elements First** - Create Actors before starting design sessions
-   - Actors document who interacts with your system
-   - These are always editable and don't require sessions
-2. **Start Sessions for Design Work** - Begin each design phase with a clear problem statement
-3. **Use Forge Studio** - Visual interface makes creating and organizing files easier
-4. **Organize with Folders** - Group related features and specs in nested folders
-5. **Link Everything** - Use IDs to create relationships between files (features ↔ specs ↔ actors)
-6. **Keep Stories Small** - Target < 30 minutes per story for better focus and completion
-7. **Review Before Distilling** - Ensure your design (features/specs) is complete before generating stories
-8. **Iterate on Foundational Elements** - Update Actors as your understanding evolves (no session needed)
+## License
 
-## 🔮 Future Plans
+MIT
 
-- Real-time file editing in Studio (currently requires save/reload)
-- Drag-and-drop folder reorganization
-- Visualization of feature/spec/model relationships
-- Template customization for different project types
-- Validation and linting for file formats
-- Export to various documentation formats (PDF, Confluence, etc.)
-- Story execution tracking and status updates
-- Enhanced MCP server capabilities with more specialized tools
-- AI-assisted content generation for features and specs
-
-## 🤝 Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
-
-- Submit issues for bugs or feature requests
-- Create pull requests with improvements
-- Share your experiences and use cases
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## 🙏 Credits
-
-Created by alto9 to provide structured context engineering for AI-assisted development with Cursor IDE.
-
----
-
-**Note**: Forge generates prompts for AI agents rather than executing tasks directly. This gives you full control and visibility into what's being requested, ensuring quality and allowing for customization before execution.

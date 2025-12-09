@@ -12,11 +12,7 @@ export class PromptGenerator {
         const timestamp = new Date().toISOString();
         const sessionId = this.generateId(problemStatement);
 
-        return `STEP 1: First, call the get_forge_about MCP tool to understand the Forge workflow.
-
-STEP 2: Call the get_forge_schema MCP tool with schema_type "session" to retrieve the proper session file format.
-
-STEP 3: Create a new session document in the ai/sessions folder with the following details:
+        return `STEP 1: Create a new session document in the ai/sessions folder with the following details:
 
 **Session ID**: ${sessionId}
 **Filename**: ai/sessions/${sessionId}.session.md
@@ -24,7 +20,7 @@ STEP 3: Create a new session document in the ai/sessions folder with the followi
 **Problem Statement**: ${problemStatement}
 
 The session document should:
-- Follow the session schema from Step 2
+- Follow the standard Forge session schema
 - Have status: active
 - Have an empty changed_files array (FeatureChangeEntry[]) initially (this will be tracked during the session)
 - Include sections for Problem Statement, Goals, Approach, Key Decisions, and Notes
@@ -88,13 +84,7 @@ Once created, this session will track only feature file changes (*.feature.md) w
         // Check if workspace is a git repository
         const isGitRepo = await GitUtils.isGitRepository(workspaceFolder.uri.fsPath);
 
-        let prompt = `STEP 1: Call the get_forge_about MCP tool to understand the Forge workflow and distillation principles.
-
-STEP 2: Retrieve the required schemas:
-- get_forge_schema with schema_type "story"
-- get_forge_schema with schema_type "task"
-
-STEP 3: Review the design session:
+        let prompt = `STEP 1: Review the design session:
 
 **Session File**: ${sessionUri.fsPath}
 **Session ID**: ${sessionId}
@@ -203,13 +193,13 @@ Please review the session content and manually identify which features, specs, m
 `;
         }
 
-        prompt += `STEP 5: Review changed files
+        prompt += `STEP 2: Review changed files
 
 For each changed file listed above:
 1. Review the git diff (if available) to understand exactly what changed
 2. If no git diff is available, read the file directly to understand its content
 
-STEP 6: Analyze and break down into Stories and Tasks
+STEP 3: Analyze and break down into Stories and Tasks
 
 Based on the session and the git diffs (or file contents) of changed files:
 
@@ -244,9 +234,9 @@ This precise change information should guide your story creation - focus on impl
 5. **Be Specific** - Include exact file paths, clear objectives, and acceptance criteria
 6. **Add Context** - Each story should have enough information to be implemented independently
 7. **Order Matters** - Set dependencies and order stories logically
-8. **Follow Schemas** - All files must adhere to schemas from Step 2
+8. **Follow Schemas** - All files must adhere to standard Forge schemas
 
-STEP 7: Verify completeness and create files
+STEP 4: Verify completeness and create files
 
 Ensure that:
 - Every changed file is accounted for in at least one story or task

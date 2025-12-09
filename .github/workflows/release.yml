@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-      - master
 
 jobs:
   release:
@@ -23,43 +22,34 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Use Node.js 22.x
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 22.x
+          node-version: '22'
           cache: 'npm'
-          registry-url: 'https://registry.npmjs.org'
       
       - name: Install dependencies
         run: npm ci
       
-      - name: Build packages
+      - name: Build extension
         run: npm run build
       
-      - name: Package VSCode extension (pre-release)
-        run: |
-          cd packages/vscode-extension
-          npm run package
-          npx --yes @vscode/vsce package --no-dependencies
+      - name: Package extension (pre-release)
+        run: npm run package
       
-      - name: Run semantic-release
+      - name: Semantic Release
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
       
-      - name: Re-package VSCode extension (post-release)
+      - name: Re-package extension (post-release)
         if: success()
-        run: |
-          cd packages/vscode-extension
-          npm run package
-          npx --yes @vscode/vsce package --no-dependencies
+        run: npm run package
       
       - name: Publish VSCode extension to marketplace
         if: success()
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
-          cd packages/vscode-extension
           VSIX_FILE=$(ls forge-*.vsix | head -1)
           npx --yes @vscode/vsce publish --packagePath "$VSIX_FILE" --pat $VSCE_PAT
-
