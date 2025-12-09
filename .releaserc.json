@@ -1,5 +1,5 @@
 {
-  "branches": ["main", "master"],
+  "branches": ["main"],
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
@@ -12,7 +12,12 @@
         ]
       }
     ],
-    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "conventionalcommits"
+      }
+    ],
     [
       "@semantic-release/changelog",
       {
@@ -20,16 +25,8 @@
       }
     ],
     [
-      "@semantic-release/exec",
-      {
-        "prepareCmd": "node scripts/sync-versions.js ${nextRelease.version}"
-      }
-    ],
-    [
       "@semantic-release/npm",
       {
-        "pkgRoot": "packages/mcp-server",
-        "tarballDir": "dist",
         "npmPublish": false
       }
     ],
@@ -39,8 +36,7 @@
         "assets": [
           "CHANGELOG.md",
           "package.json",
-          "packages/mcp-server/package.json",
-          "packages/vscode-extension/package.json"
+          "package-lock.json"
         ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
@@ -50,7 +46,7 @@
       {
         "assets": [
           {
-            "path": "packages/vscode-extension/forge-*.vsix",
+            "path": "forge-*.vsix",
             "label": "Forge VSCode Extension"
           }
         ]
@@ -58,4 +54,3 @@
     ]
   ]
 }
-

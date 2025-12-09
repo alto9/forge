@@ -1,4 +1,4 @@
-<!-- forge-hash: 262930671a1b9f1a5ae678b40b0457a10cefab3cfaa7869fd4da21201e88ca74 -->
+<!-- forge-hash: a6e7a25e3e9ad4816cf3c37bd7f393d83410739e4f4de981b2e9ce6651104a6e -->
 
 # Forge Scribe
 
@@ -10,11 +10,10 @@ You must have a session in 'scribe' status before running this command.
 
 ## What This Command Does
 
-1. **Calls MCP Tools**: Uses `get_forge_about` and `get_forge_schema` to understand distillation principles
-2. **Analyzes session changes**: Reviews all changed files and their scenario-level modifications
-3. **Creates Stories**: Generates implementation stories (< 30 minutes each) for code changes
-4. **Creates Tasks**: Generates manual work items for non-code activities
-5. **Updates session status**: Transitions session from 'scribe' to 'development'
+1. **Analyzes session changes**: Reviews all changed files and their scenario-level modifications
+2. **Creates Stories**: Generates implementation stories (< 30 minutes each) for code changes
+3. **Creates Tasks**: Generates manual work items for non-code activities
+4. **Updates session status**: Transitions session from 'scribe' to 'development'
 
 ## When to Use This Command
 
@@ -151,8 +150,8 @@ ai/sessions/
 
 ### 5. Follow Schemas
 All files must adhere to:
-- Story schema (call `get_forge_schema story`)
-- Task schema (call `get_forge_schema task`)
+- Story schema (see `/forge-design` command for complete schema)
+- Task schema (see `/forge-design` command for complete schema)
 
 ### 6. Link Everything
 Every story/task MUST include:
@@ -180,9 +179,8 @@ After distillation, provide a summary:
 
 1. User ends design session → status changes to 'scribe'
 2. User runs `@forge-scribe`
-3. AI calls `get_forge_about` and `get_forge_schema`
-4. AI reads session file and changed files
-5. AI creates 5-10 small stories in `ai/sessions/<session-id>/tickets/`
+3. AI reads session file and changed files
+4. AI creates 5-10 small stories in `ai/sessions/<session-id>/tickets/`
 6. AI updates session status to 'development'
 7. User can now implement stories using `@forge-build`
 

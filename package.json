@@ -1,8 +1,20 @@
 {
-  "name": "forge-monorepo",
+  "name": "forge",
+  "displayName": "Forge",
+  "description": "Context engineering for AI-assisted development",
   "version": "1.1.0",
-  "private": true,
-  "description": "Forge - Context Engineering Add-on for VS Code",
+  "license": "MIT",
+  "author": "Alto9",
+  "publisher": "alto9",
+  "keywords": [
+    "forge",
+    "context-engineering",
+    "ai",
+    "agentic-development",
+    "session-driven",
+    "gherkin",
+    "specifications"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/alto9/forge"
@@ -11,17 +23,64 @@
     "url": "https://github.com/alto9/forge/issues"
   },
   "homepage": "https://github.com/alto9/forge#readme",
-  "workspaces": [
-    "packages/*"
+  "engines": {
+    "vscode": "^1.80.0",
+    "node": ">=22.14.0",
+    "npm": ">=10.0.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
   ],
+  "galleryBanner": {
+    "color": "#1e1e1e",
+    "theme": "dark"
+  },
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "forge.distillSession",
+        "title": "Forge: Distill Session into Stories and Tasks"
+      },
+      {
+        "command": "forge.buildStory",
+        "title": "Forge: Build Story Implementation"
+      },
+      {
+        "command": "forge.openStudio",
+        "title": "Forge: Open Forge Studio"
+      }
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "when": "resourceExtname == .md && resourcePath =~ /.*\\.session\\.md$/",
+          "command": "forge.distillSession",
+          "group": "forge@1"
+        },
+        {
+          "when": "resourceExtname == .md && resourcePath =~ /.*\\.story\\.md$/",
+          "command": "forge.buildStory",
+          "group": "forge@1"
+        }
+      ]
+    }
+  },
   "scripts": {
-    "build": "npm run build --workspaces",
-    "compile": "npm run compile --workspaces",
-    "watch": "npm run watch --workspaces --if-present",
-    "lint": "npm run lint --workspaces",
-    "test": "npm run test --workspaces --if-present",
-    "clean": "npm run clean --workspaces --if-present && rm -rf node_modules packages/*/node_modules",
-    "vscode:package": "cd packages/vscode-extension && npm run package && npx --yes @vscode/vsce package --no-dependencies",
+    "vscode:prepublish": "webpack --mode production --devtool hidden-source-map && npm run build:webview",
+    "compile": "webpack && npm run build:webview",
+    "build": "webpack && npm run build:webview",
+    "watch": "concurrently \"webpack --watch\" \"npm run dev:webview\"",
+    "package": "npx @vscode/vsce package --no-dependencies",
+    "build:webview": "esbuild src/webview/studio/index.tsx --bundle --outfile=media/studio/main.js --format=iife --platform=browser --minify --external:fs --external:path && esbuild src/webview/welcome/index.tsx --bundle --outfile=media/welcome/main.js --format=iife --platform=browser --minify",
+    "dev:webview": "concurrently \"esbuild src/webview/studio/index.tsx --bundle --outfile=media/studio/main.js --format=iife --platform=browser --watch --external:fs --external:path\" \"esbuild src/webview/welcome/index.tsx --bundle --outfile=media/welcome/main.js --format=iife --platform=browser --watch\"",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "lint": "eslint src --ext ts,tsx",
+    "test": "vitest run",
+    "clean": "rm -rf dist out *.vsix node_modules",
     "release:dry-run": "semantic-release --dry-run",
     "release": "semantic-release"
   },
@@ -31,17 +90,43 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.2",
     "@semantic-release/npm": "^13.1.2",
-    "conventional-changelog-conventionalcommits": "^7.0.2",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "@tiptap/extension-image": "^3.10.4",
+    "@tiptap/extension-link": "^3.10.4",
+    "@tiptap/react": "^3.10.4",
+    "@tiptap/starter-kit": "^3.10.4",
     "@types/node": "^22.14.0",
+    "@types/react": "^18.2.73",
+    "@types/react-dom": "^18.2.18",
+    "@types/turndown": "^5.0.6",
+    "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
     "@vitejs/plugin-react": "^5.1.0",
+    "@vitest/ui": "^4.0.15",
+    "@vscode/vsce": "^3.2.1",
+    "concurrently": "^8.2.2",
+    "conventional-changelog-conventionalcommits": "^7.0.2",
+    "esbuild": "^0.27.1",
     "eslint": "^8.0.0",
+    "happy-dom": "^20.0.11",
+    "marked": "^17.0.0",
     "semantic-release": "^25.0.2",
-    "typescript": "^5.0.0"
+    "ts-loader": "^9.5.4",
+    "turndown": "^7.2.2",
+    "typescript": "^5.0.0",
+    "vitest": "^4.0.15",
+    "webpack": "^5.102.0",
+    "webpack-cli": "^6.0.1"
   },
-  "engines": {
-    "node": ">=22.14.0",
-    "npm": ">=10.0.0"
+  "dependencies": {
+    "gray-matter": "^4.0.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "reactflow": "^11.11.4",
+    "yaml": "^2.6.0",
+    "zustand": "^5.0.8"
   }
 }

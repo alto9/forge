@@ -1,12 +1,3 @@
 {
-  "mcpServers": {
-    "forge-mcp": {
-      "command": "node",
-      "args": [
-        "packages/mcp-server/dist/index.js"
-      ],
-      "disabled": false,
-      "autoApprove": []
-    }
-  }
+  "mcpServers": {}
 }

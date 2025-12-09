@@ -1,7 +1,7 @@
 ---
 session_id: add-actors-to-diagram-library
 start_time: '2025-12-07T21:24:43.158Z'
-status: development
+status: completed
 problem_statement: Add Actors to Diagram Library
 changed_files:
   - path: ai/features/studio/editors/react-flow-diagram-editor.feature.md
