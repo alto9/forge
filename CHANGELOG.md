@@ -1,3 +1,7 @@
+## <small>1.1.3 (2025-12-10)</small>
+
+* fix: adjust cursor commands ([734970e](https://github.com/alto9/forge/commit/734970e))
+
 ## <small>1.1.2 (2025-12-09)</small>
 
 * ci: fix package name for marketplace ([a49fe02](https://github.com/alto9/forge/commit/a49fe02))
