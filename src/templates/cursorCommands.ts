@@ -2,546 +2,124 @@
 
 /**
  * Template for forge.md Cursor command
- * Provides comprehensive Forge workflow guidance, replacing get_forge_about MCP tool
+ * Introduces AI agents to the Forge documentation system
  */
 export const FORGE_COMMAND_TEMPLATE = `# Forge
 
-Forge is a session-driven context engineering system for AI-assisted development.
+Forge is a session-driven context engineering system for AI-assisted development. This command introduces you to the Forge documentation system and how its elements work together.
 
-## 1. What is Forge?
+## What is Forge?
 
-Forge helps you design software systematically by:
-- **Tracking changes** during design sessions
-- **Converting design decisions** into minimal implementation stories
-- **Providing complete context** for AI agents to implement changes
-- **Following a session-driven workflow** from design to implementation
+Forge helps you design software systematically by tracking design changes during sessions and converting them into minimal implementation stories with complete context.
 
-### Value Proposition
-
-- **Context Engineering**: Build comprehensive context without overload
-- **Session-Driven**: Track what changes and why during design work
-- **Minimal Stories**: Break work into < 30 minute implementation stories
-- **Complete Linkage**: Connect features, specs, diagrams, and code seamlessly
-
-## 2. The Forge Workflow
-
-### Phase 1: Start a Design Session
-
-\`\`\`
-1. Run "Forge: Start Design Session" command
-2. Provide problem statement
-3. Session file created in ai/sessions/ with status: design
-4. Changed files tracking begins (feature files only)
-\`\`\`
-
-**What happens**:
-- Session file created: \`ai/sessions/<session-id>/<session-id>.session.md\`
-- Status set to \`design\`
-- \`changed_files\` array tracks feature modifications at scenario-level
-- \`start_commit\` records git SHA for comparison
-
-### Phase 2: Design Changes
-
-During an active session, you update AI documentation:
-
-**TRACKED** (recorded in \`changed_files\`):
-- ✅ **Features** (\*.feature.md) - User-facing behavior with Gherkin scenarios
-
-**NOT TRACKED** (always editable):
-- ⚪ **Specs** (\*.spec.md) - Technical implementation details
-- ⚪ **Diagrams** (\*.diagram.md) - Visual architecture with React Flow
-- ⚪ **Actors** (\*.actor.md) - System personas and roles
-
-**Why Only Features?**
-Features are **DIRECTIVE** (they drive code changes). Specs and diagrams are **INFORMATIVE** (they explain how to implement). Only tracking features keeps sessions focused while allowing specs to evolve freely.
-
-### Phase 3: Distill Session
-
-\`\`\`
-1. End design session (status changes to 'scribe')
-2. Run "Forge: Distill Session" command
-3. System analyzes changed feature files
-4. Follows linkages to discover related specs and diagrams
-5. Creates Stories (code work) and Tasks (non-code work)
-6. Places them in ai/sessions/<session-id>/tickets/
-7. Status changes to 'development'
-\`\`\`
-
-**Distillation Magic**:
-- Reads all changed feature files
-- Follows \`spec_id\` linkages to find related specs
-- Follows \`diagram_id\` linkages for architecture context
-- Creates minimal stories (< 30 minutes each)
-- Ensures complete context without overload
-
-### Phase 4: Build Implementation
-
-\`\`\`
-1. Select a story file from ai/sessions/<session-id>/tickets/
-2. Run "Forge: Build Story" command
-3. AI reads story with complete linked context
-4. AI implements the code changes
-5. AI writes tests
-6. Review and commit
-\`\`\`
-
-## 3. File Types and Structure
+## Documentation Elements
 
 ### Sessions (ai/sessions/)
 
-**Purpose**: Track design work and changes
+**Purpose**: Track design work and changes over time
 
-**File Format**: \`<session-id>.session.md\`
-
-**Structure**:
-\`\`\`yaml
----
-session_id: unique-session-id
-start_time: ISO timestamp
-end_time: ISO timestamp (when ended)
-status: design | scribe | development
-problem_statement: What are we solving?
-changed_files:
-  - path: ai/features/path/to/feature.feature.md
-    change_type: added | modified | removed
-    scenarios_added: [list of scenario names]
-    scenarios_modified: [list of scenario names]
-    scenarios_removed: [list of scenario names]
-start_commit: git SHA at session start
----
-\`\`\`
+Sessions are the only time-bound element in Forge. They capture:
+- What problem is being solved
+- Which features changed during the session
+- The progression from design → scribe → development
 
 **Status Lifecycle**:
-- \`design\` → Active session, making changes
-- \`scribe\` → Design complete, ready to distill into stories
-- \`development\` → Stories created, ready for implementation
+- \`design\` - Active session, making design changes
+- \`scribe\` - Design complete, ready to distill into stories
+- \`development\` - Stories created, ready for implementation
 
 ### Features (ai/features/)
 
 **Purpose**: Define WHAT users can do (user-facing behavior)
 
-**File Format**: \`<feature-name>.feature.md\`
+Features describe user-facing functionality using Gherkin scenarios. They are **DIRECTIVE** - they drive code changes and are tracked during design sessions.
 
-**Structure**:
-\`\`\`yaml
----
-feature_id: unique-feature-id
-name: Human Readable Name
-description: Brief description
-spec_id:
-  - related-spec-id-1
-  - related-spec-id-2
----
-
-\\\`\\\`\\\`gherkin
-Scenario: Scenario name
-  Given a precondition
-  When an action occurs
-  Then an expected outcome happens
-  And additional assertions
-\\\`\\\`\\\`
-\`\`\`
-
-**Key Points**:
-- **DIRECTIVE**: Features drive code changes
+**Key Characteristics**:
 - Uses Gherkin format in code blocks
 - Tracked at scenario-level during sessions
-- Every features folder should have \`index.md\` with Background and Rules
+- Links to specs via \`spec_id\` field
+- Folders can have \`index.md\` with Background and Rules
 
 ### Specs (ai/specs/)
 
 **Purpose**: Define HOW features should be implemented (technical contracts)
 
-**File Format**: \`<spec-name>.spec.md\`
+Specs describe technical implementation details, API contracts, data structures, and validation rules. They are **INFORMATIVE** - they explain how to implement features.
 
-**Structure**:
-\`\`\`yaml
----
-spec_id: unique-spec-id
-name: Human Readable Name
-description: Brief description
-feature_id:
-  - related-feature-id-1
-diagram_id:
-  - related-diagram-id-1
----
-
-# Spec Name
-
-## Overview
-High-level technical overview
-
-## Architecture
-See [diagram-name](../diagrams/path/diagram.diagram.md)
-
-## Implementation Details
-API contracts, data structures, validation rules, constraints
-
-## Technical Requirements
-Technologies, versions, dependencies
-\`\`\`
-
-**Key Points**:
-- **INFORMATIVE**: Specs explain implementation details
-- NOT tracked in sessions, always editable
-- Links to diagrams for visual architecture
+**Key Characteristics**:
+- NOT tracked in sessions (always editable)
+- Links to features via \`feature_id\` field
+- Links to diagrams via \`diagram_id\` field
 - Contains contracts, not implementation code
 
 ### Diagrams (ai/diagrams/)
 
-**Purpose**: Visualize system architecture and flows
+**Purpose**: Visualize system architecture and workflows
 
-**File Format**: \`<diagram-name>.diagram.md\`
+Diagrams provide visual representation of system structure using React Flow JSON format. They support both technical implementations and user workflows.
 
-**Structure**:
-\`\`\`yaml
----
-diagram_id: unique-diagram-id
-name: Human Readable Name
-description: What the diagram shows
-type: infrastructure | components | flows | states
-spec_id:
-  - related-spec-id-1
-feature_id:
-  - related-feature-id-1
----
-
-# Diagram Name
-
-Brief description
-
-\\\`\\\`\\\`json
-{
-  "nodes": [
-    {
-      "id": "node-1",
-      "type": "default",
-      "position": { "x": 100, "y": 100 },
-      "data": { "label": "Component", "description": "Details" }
-    }
-  ],
-  "edges": [
-    {
-      "id": "edge-1",
-      "source": "node-1",
-      "target": "node-2",
-      "label": "Connection",
-      "type": "smoothstep"
-    }
-  ]
-}
-\\\`\\\`\\\`
-\`\`\`
-
-**Key Points**:
+**Key Characteristics**:
 - Uses React Flow JSON format
-- NOT tracked in sessions
 - Types: infrastructure, components, flows, states
-- Keep visual, avoid pseudocode
+- NOT tracked in sessions (always editable)
+- Links to specs via \`spec_id\` field
+- Links to features via \`feature_id\` field
 
 ### Actors (ai/actors/)
 
 **Purpose**: Define who/what interacts with the system
 
-**File Format**: \`<actor-name>.actor.md\`
+Actors describe system users, external systems, and other entities that interact with the system.
 
-**Structure**:
-\`\`\`yaml
----
-actor_id: unique-actor-id
-name: Human Readable Name
-type: user | system | external
-description: Brief description
----
-
-# Actor Name
-
-## Overview
-Who/what this actor is
-
-## Responsibilities
-- What they do
-- Actions they take
-
-## Characteristics
-- Key attributes
-- Permissions/access levels
-\`\`\`
-
-**Key Points**:
-- NOT tracked in sessions, always editable
-- Describes system users and external systems
+**Key Characteristics**:
+- Types: user, system, external
+- NOT tracked in sessions (always editable)
 - Informs feature design and UX decisions
 
 ### Tickets (ai/sessions/<session-id>/tickets/)
 
 **Purpose**: Implementation work items generated from sessions
 
-**File Formats**:
-- \`<number>-<name>.story.md\` - Code implementation (< 30 minutes)
-- \`<number>-<name>.task.md\` - Manual/external work
+Tickets are created during session distillation:
+- **Stories** (*.story.md) - Code implementation work (< 30 minutes each)
+- **Tasks** (*.task.md) - Manual/external work
 
-**Story Structure**:
-\`\`\`yaml
----
-story_id: unique-story-id
-session_id: parent-session-id
-feature_id:
-  - related-feature-id
-spec_id:
-  - related-spec-id
-status: pending | in_progress | completed
----
+## How the System Works
 
-# Story Title
+### The Linkage System
 
-## Objective
-Clear goal
+Files link together through ID references:
+- Features link to Specs (\`spec_id\`)
+- Specs link to Features (\`feature_id\`) and Diagrams (\`diagram_id\`)
+- Diagrams link to Specs (\`spec_id\`) and Features (\`feature_id\`)
+- Tickets link to Features (\`feature_id\`) and Specs (\`spec_id\`)
 
-## Context
-Why this matters
+These linkages enable systematic context gathering - when working with a feature, you can follow links to discover all related specs and diagrams.
 
-## Files to Modify
-- path/to/file.ts
+### Session-Driven Workflow
 
-## Implementation Steps
-1. Step one
-2. Step two
+1. **Design**: Create/modify features during a design session
+2. **Scribe**: Distill changed features into stories and tasks
+3. **Development**: Implement stories using linked documentation
 
-## Acceptance Criteria
-- [ ] Criterion 1
-- [ ] Criterion 2
+Only features are tracked during sessions. Specs, diagrams, and actors are always editable and evolve independently.
 
-## Estimated Time
-< 30 minutes
-\`\`\`
+## Key Principles
 
-## 4. Key Principles
+- **Timeless Documentation**: All documents (except sessions) describe the ideal state, not changes or decisions
+- **Complete Context**: Linkages ensure all related documentation is discoverable
+- **Minimal Stories**: Each story should take < 30 minutes to implement
+- **Nestable Structure**: Folders can be nested to group related concepts
 
-### Gherkin Format
-
-All Gherkin MUST use code blocks:
-
-\`\`\`gherkin
-Feature: Feature Name
-
-Scenario: Scenario Name
-  Given a precondition
-  When an action occurs
-  Then an expected outcome happens
-\`\`\`
-
-**Why?** Consistent formatting, syntax highlighting, clear structure.
-
-### Minimal Stories
-
-- **Each story < 30 minutes** to implement
-- **Break complex changes** into multiple small stories
-- **One focused change** per story
-- **Clear acceptance criteria** for verification
-
-**Example**:
-❌ "Implement user authentication" (too big)
-✅ "Add login API endpoint" (15 min)
-✅ "Add password validation logic" (20 min)
-✅ "Create login UI component" (25 min)
-
-### Nestable Structure
-
-- **All folders are nestable** to group related concepts
-- **Features folders have index.md** with Background and Rules
-- **index.md never shows** in tree views
-- **Nesting reflects** logical relationships
-
-**Example**:
-\`\`\`
-ai/features/
-  └── authentication/
-      ├── index.md (Background, Rules)
-      ├── login.feature.md
-      ├── logout.feature.md
-      └── password-reset/
-          ├── index.md
-          ├── request-reset.feature.md
-          └── confirm-reset.feature.md
-\`\`\`
-
-### Complete Context
-
-- **Stories link** to features, specs, diagrams
-- **Distillation follows** all linkages to gather context
-- **Context building** ensures nothing is missed
-- **No overload** - only relevant context included
-
-## 5. When to Create Stories vs Tasks
-
-### Create Stories (*.story.md) When:
-
-✅ **Code implementations**
-- Writing or modifying application code
-- Adding new features or endpoints
-- Refactoring existing code
-- Fixing bugs in codebase
-
-✅ **Testable work**
-- Changes are verifiable through tests
-- Implementation can be validated
-- Takes < 30 minutes to complete
-
-✅ **Within codebase**
-- Work happens in version-controlled code
-- Changes committed to git
-- Affects application functionality
-
-### Create Tasks (*.task.md) When:
-
-📋 **Manual work**
-- Configuration in external systems
-- Third-party service setup (AWS, Auth0, Stripe)
-- Manual testing procedures
-- Documentation outside codebase
-
-📋 **Coordination required**
-- Human decision-making needed
-- External approvals or reviews
-- Research or investigation
-- DevOps configuration
-
-📋 **Non-code activities**
-- README updates
-- Wiki documentation
-- Process changes
-- Manual data migrations
-
-## 6. The Linkage System
-
-### How Files Link Together
-
-\`\`\`
-Features ←→ Specs ←→ Diagrams
-   ↓           ↓
-Stories     Stories
-\`\`\`
-
-**Linkage Fields**:
-- \`feature_id\` - Links features to specs and stories
-- \`spec_id\` - Links specs to features, diagrams, and stories
-- \`diagram_id\` - Links diagrams to specs
-
-**Bidirectional**:
-- Features reference specs (\`spec_id: []\`)
-- Specs reference features (\`feature_id: []\`)
-- Both directions work for context gathering
-
-### Context Gathering Process
-
-When distilling a session:
-
-1. **Start with changed features**
-   - Read all modified feature files
-   - Understand what behavior changed
-
-2. **Follow feature_id → spec_id**
-   - For each feature, find linked specs
-   - Understand technical implementation details
-
-3. **Follow spec_id → diagram_id**
-   - For each spec, find linked diagrams
-   - Understand architecture and visual context
-
-4. **Include all discovered context**
-   - Stories get complete context from chain
-   - No manual hunting for related files
-
-5. **Ensure complete picture**
-   - Nothing missed through systematic linkage
-   - No context overload, only relevant info
-
-**Example**:
-\`\`\`
-Feature: user-login.feature.md
-  spec_id: [authentication-api]
-  
-Spec: authentication-api.spec.md
-  feature_id: [user-login]
-  diagram_id: [auth-flow]
-  
-Diagram: auth-flow.diagram.md
-  spec_id: [authentication-api]
-
-Story: 001-implement-login-endpoint.story.md
-  feature_id: [user-login]
-  spec_id: [authentication-api]
-  // Gets complete context from feature + spec + diagram
-\`\`\`
-
-## 7. Session Status Management
-
-### Session Statuses
-
-| Status | Meaning | Actions Available |
-|--------|---------|------------------|
-| \`design\` | Active design session | Edit features, specs, diagrams |
-| \`scribe\` | Design complete | Ready to distill into stories |
-| \`development\` | Stories created | Implement stories with /forge-build |
-
-### Status Transitions
-
-\`\`\`
-[Start Session] → design
-      ↓
-[End Session] → scribe
-      ↓
-[Distill Session] → development
-      ↓
-[Implement Stories] → (back to design for new session)
-\`\`\`
-
-### Status Rules
-
-**design status**:
-- Features can be edited (tracked in changed_files)
-- Specs/diagrams/actors always editable (not tracked)
-- Session file shows status: design
-
-**scribe status**:
-- Design work complete
-- Ready for distillation
-- Run "Forge: Distill Session" command
-- System creates stories and tasks
-
-**development status**:
-- Stories created in ai/sessions/<session-id>/tickets/
-- Ready for implementation
-- Use "Forge: Build Story" command
-- Implement, test, commit, repeat
-
-## Usage Patterns
-
-### Combined with other commands
-
-\`\`\`
-/forge /forge-design
-# Provides complete workflow context + design guidance
-
-/forge /forge-build <story-file>
-# Provides complete workflow context + build guidance
-
-/forge /forge-scribe <session-id>
-# Provides complete workflow context + distillation guidance
-\`\`\`
-
-### When to use /forge
+## When to Use This Command
 
 Use \`/forge\` when you need to understand:
-- The complete Forge workflow
-- How sessions work
-- File types and their purposes
-- How to structure documentation
-- The linkage system
-- When to create stories vs tasks
+- What Forge is and how it works
+- The purpose of each documentation element
+- How the linkage system enables context gathering
+- The session-driven workflow
 
-This command provides foundational context that other Forge commands build upon.`;
+For detailed schemas and implementation guidance, use \`/forge-design\`.`;
 
 /**
  * Template for forge-design.md Cursor command
@@ -552,11 +130,13 @@ This command guides AI agents when working within Forge design sessions to updat
 
 ## Prerequisites
 
+If you're not familiar with Forge, run \`/forge\` first to understand the documentation system.
+
 You must have an active design session before making changes to AI documentation.
 
 ## What This Command Does
 
-1. **Provides complete schema information**: All document schemas embedded below for self-contained design guidance
+1. **Provides complete schema information**: All document schemas embedded below
 2. **Checks for active session**: Ensures you're working within a structured design workflow
 3. **Reads AI documentation**: Understands existing design patterns and structure
 4. **Guides documentation updates**: Helps create or modify features, diagrams, specs, actors
@@ -975,36 +555,158 @@ When working in design sessions, use the correct file type for each purpose:
 - **Contains**: Responsibilities, characteristics, context
 - **Note**: Always editable (no session required)
 
+## The Linkage System
+
+### How Files Link Together
+
+Files connect through ID references in their frontmatter:
+
+\`\`\`
+Features ←→ Specs ←→ Diagrams
+   ↓           ↓
+Tickets     Tickets
+\`\`\`
+
+**Linkage Fields**:
+- \`feature_id\` - Links features to specs and tickets
+- \`spec_id\` - Links specs to features, diagrams, and tickets
+- \`diagram_id\` - Links diagrams to specs
+
+**Bidirectional Relationships**:
+- Features reference specs (\`spec_id: []\`)
+- Specs reference features (\`feature_id: []\`)
+- Both directions work for context gathering
+
+**Multiple Relationships**:
+- Multiple diagram objects can share the same spec if it makes sense
+- A diagram can link to multiple specs
+- A spec can link to multiple diagrams
+- Relationships are not mutually exclusive
+
+### Context Gathering Process
+
+When following linkages:
+
+1. **Start with a feature or spec**
+2. **Follow \`spec_id\` or \`feature_id\`** to discover related files
+3. **Follow \`diagram_id\`** to find visual architecture
+4. **Build complete context** by following all linkages
+5. **Ensure nothing is missed** through systematic traversal
+
+**Example**:
+\`\`\`
+Feature: user-login.feature.md
+  spec_id: [authentication-api]
+  
+Spec: authentication-api.spec.md
+  feature_id: [user-login]
+  diagram_id: [auth-flow, api-architecture]
+  
+Diagram: auth-flow.diagram.md
+  spec_id: [authentication-api]
+  
+Diagram: api-architecture.diagram.md
+  spec_id: [authentication-api, user-management-api]
+\`\`\`
+
+## Diagram-First Approach
+
+### Create Diagrams Before Specs
+
+**CRITICAL**: When designing new functionality, create diagrams first, then derive specs from diagram objects.
+
+**Workflow**:
+1. **Create diagrams** that visualize:
+   - Technical implementations (infrastructure, components)
+   - User workflows (flows, states)
+2. **Analyze diagram objects** (nodes, edges, components)
+3. **Create specs** based on what the diagrams show
+4. **Link specs to diagrams** via \`diagram_id\`
+
+### Diagram Types
+
+Diagrams should support both:
+- **Technical implementations**: Infrastructure, components, system architecture
+- **User workflows**: Flows, states, user journeys
+
+**Types**:
+- \`infrastructure\` - System infrastructure and deployment
+- \`components\` - Component architecture and relationships
+- \`flows\` - Process flows and user workflows
+- \`states\` - State machines and state transitions
+
+### Spec Creation from Diagrams
+
+When creating specs based on diagrams:
+- **Identify diagram objects** that need technical contracts
+- **Group related objects** into logical specs
+- **Multiple diagram objects can share a spec** if they represent the same technical concept
+- **Prefer specs that reflect diagram structure** rather than arbitrary groupings
+
+**Example**: If a diagram shows "API Gateway → Auth Service → Database", create specs for:
+- API Gateway contract (based on API Gateway node)
+- Auth Service contract (based on Auth Service node)
+- Database schema (based on Database node)
+
+These specs link back to the diagram via \`diagram_id\`.
+
+## Timeless Documentation
+
+**CRITICAL**: All Forge documents (except sessions) must describe the **ideal state**, not changes or decisions.
+
+**Do NOT**:
+- ❌ Describe what changed or why
+- ❌ Reference specific decisions or alternatives considered
+- ❌ Use language like "we decided to..." or "changed from X to Y"
+- ❌ Include timestamps or version history
+- ❌ Describe implementation status
+
+**DO**:
+- ✅ Describe what the system IS
+- ✅ Describe how it SHOULD work
+- ✅ Use present tense ("The system authenticates users...")
+- ✅ Focus on the ideal, complete state
+- ✅ Write as if the system already exists perfectly
+
+**Example**:
+
+❌ **Bad**: "We decided to use JWT tokens for authentication. This replaced the previous session-based approach."
+
+✅ **Good**: "The system authenticates users using JWT tokens. Tokens are issued upon successful login and included in subsequent requests."
+
+Sessions are the only exception - they track changes over time. All other documentation is timeless.
+
 ## Intelligent Linkage and Grouping
 
-When working with Forge documentation, it's essential to understand and respect the existing organizational structure:
+When working with Forge documentation:
 
-- **Analyze folder structure**: Before creating new files, examine the existing \`ai/\` subfolder structure to understand how elements are logically grouped
-- **Follow existing patterns**: Contribute to existing grouping patterns rather than creating new arbitrary structures
-- **Respect nesting**: Folder nesting reflects logical relationships - preserve and extend these relationships when adding new files
-- **Utilize linkages effectively**: Use all element linkages (feature_id, spec_id) to build complete context, but avoid over-verbosity
-- **Group logically**: Place related files together in nested folders that reflect their relationships and dependencies
-- **Maintain consistency**: When adding new documentation, follow the same organizational patterns already established in the project
-
-Understanding the existing structure helps maintain coherence and makes the documentation easier to navigate and understand.
+- **Analyze folder structure**: Examine existing \`ai/\` subfolder structure to understand grouping patterns
+- **Follow existing patterns**: Contribute to existing patterns rather than creating arbitrary structures
+- **Respect nesting**: Folder nesting reflects logical relationships
+- **Utilize linkages effectively**: Use all element linkages to build complete context
+- **Group logically**: Place related files together in nested folders
+- **Maintain consistency**: Follow established organizational patterns
 
 ## Important Constraints
 
 - **This is a Forge design session**: You are working within a structured design workflow
 - **Only modify AI documentation files**: Work exclusively within the \`ai/\` folder
 - **Do NOT modify implementation code**: This command is for updating features, diagrams, specs, actors only
-- **Track all changes**: Ensure changed files are tracked in the active session's \`changed_files\` array
+- **Track all changes**: Ensure changed files are tracked in the active session's \`changed_files\` array (features only)
 - **Use proper formats**: Features use Gherkin in code blocks, Diagrams use react-flow JSON format, Specs use markdown only
-- **No MCP tools needed**: All schemas and guidance are embedded in this command - completely self-contained
+- **Timeless documentation**: Write about ideal state, not changes or decisions
+- **Diagram-first**: Create diagrams before specs, derive specs from diagram objects
+- **Follow linkages**: Use the linkage system to discover related documentation
 
 ## Usage
 
-1. Ensure you have an active design session
-2. Run this command
-3. The AI will use embedded schemas to understand file formats
-4. The AI will analyze existing AI documentation
-5. The AI will update documentation in the ai/ folder
-6. All changes will be tracked in the active design session
+1. Run \`/forge\` if you need to understand the Forge system
+2. Ensure you have an active design session
+3. Run this command
+4. Use embedded schemas to understand file formats
+5. Analyze existing AI documentation
+6. Update documentation following diagram-first approach and timeless principles
+7. Track all feature changes in the active session
 
 The documentation updates will be consistent with your existing design patterns and the Forge workflow.`;
 
@@ -1017,38 +719,47 @@ This command helps you implement a Forge story by analyzing both the codebase an
 
 ## Prerequisites
 
+If you're not familiar with Forge, run \`/forge\` first to understand the documentation system.
+
 You must provide a story file (*.story.md) when running this command.
 
 ## What This Command Does
 
 1. **Reads the story file**: Understands what needs to be implemented
-2. **Analyzes the existing codebase**: Understands current implementation patterns and structure
-3. **Reads AI documentation**: Understands intended behavior from linked files:
+2. **Reads all linked AI documentation**: Follows linkages to gather complete context:
    - Features (expected behavior with Gherkin scenarios)
    - Specs (technical implementation details with diagram references)
-   - Models (data structures)
-   - Contexts (technology-specific guidance)
-4. **Implements the changes**: Writes actual code as described in the story
-5. **Writes tests**: Creates unit tests for the implementation
-6. **Ensures consistency**: Implementation matches the documented design
+   - Diagrams (visual architecture)
+   - Actors (system personas)
+3. **Reads the session**: Understands the session context from \`ai/sessions/<session-id>/<session-id>.session.md\`
+4. **Analyzes the existing codebase**: Understands current implementation patterns and structure
+5. **Implements the changes**: Writes actual code as described in the story
+6. **Runs linting**: Seeks out and runs lint packages after each change
+7. **Runs tests**: Seeks out and runs test packages after each change
+8. **Marks story complete**: Updates story status to 'completed' when all work is done and tests pass
 
 ## Important Guidelines
 
 - **Follow the story**: Implement exactly what the story describes (< 30 minutes of work)
+- **Read all linked documentation**: Follow \`feature_id\` and \`spec_id\` linkages to gather complete context
+- **Read the session**: Understand the problem statement and session context
 - **Use AI documentation as reference**: Features and specs define the intended behavior
 - **Match existing patterns**: Follow the codebase's existing architecture and conventions
 - **Write tests**: Include unit tests as specified in the story
+- **Run linting**: After each change, seek out lint packages (ESLint, Prettier, etc.) and run them
+- **Run tests**: After each change, seek out test packages (Jest, Vitest, etc.) and run them
 - **Stay focused**: If the story is too large, break it into smaller stories
-- **Run tests**: After implementing changes, always run the test suite to verify the implementation works correctly
-- **Mark story as completed**: Update the story file's status field to 'completed' when all work is done and tests pass
+- **Mark story as completed**: Update the story file's status field to 'completed' when all work is done and all tests pass
 
 ## Usage
 
-1. Select a story file from ai/tickets/
+1. Select a story file from \`ai/sessions/<session-id>/tickets/\`
 2. Run this command
-3. The AI will analyze the story and linked documentation
+3. The AI will read the story, linked documentation, and session
 4. The AI will implement the changes with tests
-5. Review and commit the implementation
+5. The AI will run linting and tests after each change
+6. The AI will mark the story as completed when done
+7. Review and commit the implementation
 
 The implementation will be consistent with your documented design and existing codebase patterns.`;
 
@@ -1064,11 +775,13 @@ This command synchronizes your Forge AI documentation with your actual codebase.
 
 ## Prerequisites
 
-None. This command can be run at any time, with or without an active design session.
+If you're not familiar with Forge, run \`/forge\` first to understand the documentation system.
+
+If you need to understand file schemas, run \`/forge-design\` to see complete schemas for all document types.
 
 ## What This Command Does
 
-1. **Deep codebase analysis**: Systematically analyzes your entire codebase to understand:
+1. **Examines the codebase fully**: Systematically analyzes your entire codebase to understand:
    - Project structure and architecture
    - Component hierarchy and relationships
    - API endpoints and contracts
@@ -1076,67 +789,71 @@ None. This command can be run at any time, with or without an active design sess
    - Business logic and workflows
    - Dependencies and integrations
    - Existing documentation (README, comments, etc.)
+
 2. **Reads existing AI documentation**: Reviews all existing AI files:
    - Features (*.feature.md)
    - Diagrams (*.diagram.md)
    - Specs (*.spec.md)
-   - Models (*.model.md)
    - Actors (*.actor.md)
-3. **Identifies gaps and inconsistencies**:
-   - Missing documentation for existing code
-   - Outdated documentation that doesn't match current implementation
-   - Undocumented features, APIs, or data structures
-   - Inconsistent or conflicting information
-4. **Creates or updates AI files**: Systematically updates documentation to reflect reality:
-   - Create missing features, diagrams, specs, models
-   - Update outdated information
-   - Ensure all linkages are correct (feature_id, spec_id, diagram_id, etc.)
-   - Maintain proper file structure and naming conventions
-5. **Generates a sync report**: Provides summary of changes made
+
+3. **Represents the codebase**:
+   - **Technically**: With diagrams and specs
+   - **Behaviorally**: With actors and features
+
+4. **Generates documentation**:
+   - **Technical diagrams**: Infrastructure, components, flows, states
+   - **Workflow diagrams**: User flows and process flows
+   - **Specs**: Technical contracts based on diagram objects
+   - **Actors**: System users and external systems
+   - **Features**: User-facing behavior with Gherkin scenarios
+
+5. **Ensures proper linkages**: Links all generated files using the linkage system
 
 ## Sync Strategy
 
-### Phase 1: Discovery
-- Scan the entire codebase to map:
-  - File structure and organization
-  - Key components, services, modules
-  - API routes and handlers
-  - Database models and schemas
-  - Configuration and environment
-  - External dependencies
+### Phase 1: Codebase Analysis
+- Scan the entire codebase systematically
+- Map file structure and organization
+- Identify key components, services, modules
+- Discover API routes and handlers
+- Understand data models and schemas
+- Analyze business logic and workflows
 
-### Phase 2: Analysis
-- Compare discovered code with existing AI documentation
-- Identify what exists in code but not in docs
-- Identify what exists in docs but not in code (potentially obsolete)
-- Check for version mismatches and inconsistencies
+### Phase 2: Technical Representation
+- **Create diagrams** that visualize:
+  - Infrastructure and deployment architecture
+  - Component relationships and interactions
+  - Technical flows and data flows
+- **Create specs** based on diagram objects:
+  - API contracts from API components
+  - Data structures from data components
+  - Service contracts from service components
 
-### Phase 3: Actors & Contexts (Always Editable)
-- Create/update **Actors** first (who/what uses the system)
-- Create/update **Contexts** for technologies used (AWS, React, Node.js, etc.)
-- These are foundational and don't require a session
+### Phase 3: Behavioral Representation
+- **Create actors** for:
+  - System users (from authentication/user code)
+  - External systems (from integration code)
+  - System services (from service code)
+- **Create features** for:
+  - User-facing functionality (from UI/API endpoints)
+  - User workflows (from flow analysis)
+  - Business processes (from business logic)
 
-### Phase 4: Design Documentation (May Require Session)
-- Create/update **Features** for user-facing functionality
-- Create/update **Diagrams** for architecture visualization
-- Create/update **Specs** for technical contracts and APIs
-- Create/update **Models** for data structures
-- **Note**: If no active session exists, provide recommendations but do not create these files
-
-### Phase 5: Linkages & Validation
-- Ensure all cross-references are correct (feature_id, spec_id, diagram_id, model_id)
-- Validate frontmatter completeness
-- Check for orphaned or unreferenced files
-- Verify file naming conventions
+### Phase 4: Linkages
+- Link features to specs via \`spec_id\`
+- Link specs to diagrams via \`diagram_id\`
+- Link diagrams to specs via \`spec_id\`
+- Link features to actors (implicitly through behavior)
+- Ensure bidirectional relationships where appropriate
 
 ## Important Constraints
 
 - **Read the code, don't modify it**: This command ONLY updates AI documentation, never implementation code
 - **Be thorough**: Don't skip files or make assumptions; actually read and analyze the code
-- **Maintain accuracy**: Documentation must reflect actual implementation, not aspirational design
-- **Preserve existing docs**: Update rather than replace when possible; don't lose valuable context
+- **Timeless documentation**: Write about ideal state, not changes or decisions
+- **Diagram-first**: Create diagrams before specs, derive specs from diagram objects
 - **Respect Forge patterns**: Use correct file types, formats (Gherkin, react-flow JSON), and frontmatter
-- **Session awareness**: Actors and Contexts can be created freely; Features/Diagrams/Specs may require a session
+- **Complete representation**: Ensure both technical (diagrams/specs) and behavioral (actors/features) aspects are covered
 
 ## Output Format
 
@@ -1144,27 +861,28 @@ After sync, provide a summary report:
 
 ### Created
 - List of new AI files created with brief description
+- Organized by type (diagrams, specs, actors, features)
 
 ### Updated
 - List of existing AI files updated with what changed
 
-### Warnings
-- Files that need attention (obsolete docs, missing linkages, etc.)
+### Linkages
+- Summary of linkages created between files
 
 ### Recommendations
-- Suggestions for design sessions to address major gaps
-- Areas that need deeper documentation
+- Areas that may need deeper documentation
+- Suggestions for design sessions if major gaps exist
 
 ## Usage
 
-1. Run this command from the project root
-2. The AI will systematically analyze your codebase
-3. The AI will read and compare existing AI documentation
-4. The AI will create or update AI files to match reality
-5. Review the sync report and any recommendations
-7. Consider starting a design session to address any major architectural changes
+1. Run \`/forge\` if needed to understand the system
+2. Run \`/forge-design\` if needed to understand schemas
+3. Run this command from the project root
+4. The AI will systematically analyze your codebase
+5. The AI will generate technical and workflow diagrams, actors, features, and specs
+6. Review the sync report and verify linkages
 
-This command ensures your Forge documentation stays in sync with your actual implementation.`;
+This command ensures your Forge documentation accurately represents your codebase.`;
 
 /**
  * Template for forge-scribe.md Cursor command
@@ -1175,7 +893,16 @@ This command distills a completed design session into actionable Stories and Tas
 
 ## Prerequisites
 
+If you're not familiar with Forge, run \`/forge\` first to understand the documentation system.
+
 You must have a session in 'scribe' status before running this command.
+
+## Finding the Session
+
+1. **Seek out the open design session** in Scribe mode in the current project
+2. **Look for session files** in \`ai/sessions/\` with status: 'scribe'
+3. **Or use the session name** if provided by the user in the prompt
+4. **Read the session file** at \`ai/sessions/<session-id>/<session-id>.session.md\`
 
 ## What This Command Does
 
