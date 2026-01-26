@@ -38,6 +38,32 @@
   },
   "main": "./dist/extension.js",
   "contributes": {
+    "chatParticipants": [
+      {
+        "id": "forge.participant",
+        "name": "forge-agent",
+        "fullName": "Forge",
+        "description": "Chat participant for working with Forge sessions, features, and stories"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "forgeStudio",
+          "title": "Forge Studio",
+          "icon": "$(file-code)"
+        }
+      ]
+    },
+    "views": {
+      "forgeStudio": [
+        {
+          "id": "forgeStudioExplorer",
+          "name": "Forge Studio",
+          "when": "true"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "forge.distillSession",
@@ -50,6 +76,45 @@
       {
         "command": "forge.openStudio",
         "title": "Forge: Open Forge Studio"
+      },
+      {
+        "command": "forgeStudio.openDashboard",
+        "title": "Open Dashboard",
+        "icon": "$(dashboard)"
+      },
+      {
+        "command": "forgeStudio.openFile",
+        "title": "Open File"
+      },
+      {
+        "command": "forgeStudio.refresh",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "forgeStudio.newFolder",
+        "title": "New Folder",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "forgeStudio.newDiagram",
+        "title": "New Diagram",
+        "icon": "$(file-add)"
+      },
+      {
+        "command": "forgeStudio.newSpec",
+        "title": "New Specification",
+        "icon": "$(file-add)"
+      },
+      {
+        "command": "forgeStudio.newActor",
+        "title": "New Actor",
+        "icon": "$(file-add)"
+      },
+      {
+        "command": "forgeStudio.newSession",
+        "title": "New Session",
+        "icon": "$(file-add)"
       }
     ],
     "menus": {
@@ -63,6 +128,45 @@
           "when": "resourceExtname == .md && resourcePath =~ /.*\\.story\\.md$/",
           "command": "forge.buildStory",
           "group": "forge@1"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "forgeStudio.refresh",
+          "when": "view == forgeStudioExplorer",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "forgeStudio.openFile",
+          "when": "view == forgeStudioExplorer && viewItem == forgeFile",
+          "group": "inline"
+        },
+        {
+          "command": "forgeStudio.newFolder",
+          "when": "view == forgeStudioExplorer && viewItem =~ /^forgeCategory|^forgeFolder/",
+          "group": "1_new@1"
+        },
+        {
+          "command": "forgeStudio.newDiagram",
+          "when": "view == forgeStudioExplorer && viewItem =~ /diagrams/",
+          "group": "1_new@2"
+        },
+        {
+          "command": "forgeStudio.newSpec",
+          "when": "view == forgeStudioExplorer && viewItem =~ /specs/",
+          "group": "1_new@3"
+        },
+        {
+          "command": "forgeStudio.newActor",
+          "when": "view == forgeStudioExplorer && viewItem =~ /actors/",
+          "group": "1_new@4"
+        },
+        {
+          "command": "forgeStudio.newSession",
+          "when": "view == forgeStudioExplorer && viewItem =~ /sessions/",
+          "group": "1_new@5"
         }
       ]
     }

@@ -110,7 +110,7 @@ export const ContainerNode: React.FC<NodeProps<ContainerNodeData>> = ({
                 left: 0,
                 right: 0,
                 bottom: 0,
-                background: `linear-gradient(135deg, ${backgroundColor}CC 0%, ${borderColor}CC 100%)`,
+                background: `linear-gradient(135deg, ${backgroundColor}66 0%, ${borderColor}40 100%)`,
                 borderRadius: '10px',
                 zIndex: -1,
                 pointerEvents: 'none'

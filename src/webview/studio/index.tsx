@@ -1802,15 +1802,6 @@ function DiagramFrontmatter({ frontmatter, onChange, readOnly }: {
           readOnly={readOnly}
         />
       </div>
-      <div className="form-group">
-        <label className="form-label">Actor IDs (comma-separated)</label>
-        <input 
-          className="form-input"
-          value={Array.isArray(frontmatter.actor_id) ? frontmatter.actor_id.join(', ') : frontmatter.actor_id || ''}
-          onChange={(e) => onChange('actor_id', e.target.value.split(',').map((s: string) => s.trim()))}
-          readOnly={readOnly}
-        />
-      </div>
       <div className="form-note" style={{ 
         padding: '8px 12px', 
         background: 'var(--vscode-textBlockQuote-background)', 

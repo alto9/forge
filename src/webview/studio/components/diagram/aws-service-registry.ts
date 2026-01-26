@@ -90,7 +90,7 @@ export const AWS_SERVICE_REGISTRY: Record<string, AWSServiceConfig> = {
         category: 'group',
         color: {
             fill: '#E8F4F8',
-            stroke: '#1E8900'
+            stroke: '#7CB342'
         },
         visual: 'frame',
         isContainer: true
@@ -101,7 +101,7 @@ export const AWS_SERVICE_REGISTRY: Record<string, AWSServiceConfig> = {
         category: 'group',
         color: {
             fill: '#E6F2E6',
-            stroke: '#147D64'
+            stroke: '#4DB6AC'
         },
         visual: 'frame',
         isContainer: true
@@ -112,7 +112,7 @@ export const AWS_SERVICE_REGISTRY: Record<string, AWSServiceConfig> = {
         category: 'group',
         color: {
             fill: '#FFF8E1',
-            stroke: '#C77700'
+            stroke: '#FFB74D'
         },
         visual: 'frame',
         isContainer: true
@@ -123,7 +123,7 @@ export const AWS_SERVICE_REGISTRY: Record<string, AWSServiceConfig> = {
         category: 'group',
         color: {
             fill: '#F3E5F5',
-            stroke: '#6B1B9A'
+            stroke: '#9575CD'
         },
         visual: 'frame',
         isContainer: true
@@ -134,7 +134,7 @@ export const AWS_SERVICE_REGISTRY: Record<string, AWSServiceConfig> = {
         category: 'group',
         color: {
             fill: '#FFEBEE',
-            stroke: '#DD2C00'
+            stroke: '#E57373'
         },
         visual: 'frame',
         isContainer: true
