@@ -1714,24 +1714,6 @@ function FeatureFrontmatter({ frontmatter, onChange, readOnly }: {
         />
       </div>
       <div className="form-group">
-        <label className="form-label">Spec IDs (comma-separated)</label>
-        <input 
-          className="form-input"
-          value={Array.isArray(frontmatter.spec_id) ? frontmatter.spec_id.join(', ') : frontmatter.spec_id || ''}
-          onChange={(e) => onChange('spec_id', e.target.value.split(',').map((s: string) => s.trim()))}
-          readOnly={readOnly}
-        />
-      </div>
-      <div className="form-group">
-        <label className="form-label">Model IDs (comma-separated)</label>
-        <input 
-          className="form-input"
-          value={Array.isArray(frontmatter.model_id) ? frontmatter.model_id.join(', ') : frontmatter.model_id || ''}
-          onChange={(e) => onChange('model_id', e.target.value.split(',').map((s: string) => s.trim()))}
-          readOnly={readOnly}
-        />
-      </div>
-      <div className="form-group">
         <label className="form-label">Tags</label>
         <TagInput
           tags={Array.isArray(frontmatter.tags) ? frontmatter.tags : []}

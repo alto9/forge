@@ -4,6 +4,8 @@ import * as fs from 'fs';
 import { DistillSessionCommand } from './commands/DistillSessionCommand';
 import { BuildStoryCommand } from './commands/BuildStoryCommand';
 import { WelcomePanel } from './panels/WelcomePanel';
+import { DiagramViewerPanel } from './panels/DiagramViewerPanel';
+import { FeatureViewerPanel } from './panels/FeatureViewerPanel';
 import { ProjectPicker } from './utils/ProjectPicker';
 import { checkProjectReadiness } from './utils/projectReadiness';
 import { ForgeStudioTreeProvider, ForgeTreeItem } from './providers/ForgeStudioTreeProvider';
@@ -110,8 +112,20 @@ export function activate(context: vscode.ExtensionContext) {
         if (filePath) {
             try {
                 const fileUri = vscode.Uri.file(filePath);
-                const document = await vscode.workspace.openTextDocument(fileUri);
-                await vscode.window.showTextDocument(document);
+                
+                // Check if this is a diagram file - open in custom diagram viewer
+                if (filePath.endsWith('.diagram.md')) {
+                    DiagramViewerPanel.render(context.extensionUri, fileUri);
+                } 
+                // Check if this is a feature file - open in custom feature viewer
+                else if (filePath.endsWith('.feature.md')) {
+                    FeatureViewerPanel.render(context.extensionUri, fileUri);
+                } 
+                else {
+                    // Open normally for other files
+                    const document = await vscode.workspace.openTextDocument(fileUri);
+                    await vscode.window.showTextDocument(document);
+                }
             } catch (error) {
                 vscode.window.showErrorMessage(`Failed to open file: ${error}`);
             }
