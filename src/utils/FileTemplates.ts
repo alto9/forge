@@ -131,14 +131,17 @@ Add additional context about this actor.
 /**
  * Generate session file template
  */
-export function generateSessionTemplate(name: string, problemStatement: string): string {
+export function generateSessionTemplate(name: string, problemStatement: string, githubIssue?: string): string {
     const id = nameToId(name);
     const startTime = new Date().toISOString();
+    const githubIssueField = githubIssue ? `github_issue: '${githubIssue}'` : `github_issue: ''`;
     return `---
 session_id: ${id}
+${githubIssueField}
 start_time: '${startTime}'
-status: active
+status: planning
 problem_statement: ${problemStatement}
+priority: Medium - Would be helpful
 changed_files: []
 ---
 
@@ -147,14 +150,17 @@ changed_files: []
 ## Problem Statement
 ${problemStatement}
 
-## Goals
-- Add session goals here
+## Proposed Solution
+Add your proposed solution here.
 
-## Approach
-Add your design approach here.
+## Alternatives Considered
+- Add alternatives you've considered
 
-## Notes
-Add session notes here as you work.
+## Use Cases
+- Add specific use cases where this would be useful
+
+## Additional Context
+Add any additional notes, mockups, or context here.
 `;
 }
 

@@ -7,7 +7,7 @@ import { FileParser } from '../utils/FileParser';
  * Only used when opening diagrams from Forge Studio sidebar
  */
 export class DiagramViewerPanel {
-    public static currentPanel: DiagramViewerPanel | undefined;
+    private static panels: Map<string, DiagramViewerPanel> = new Map();
     private readonly _panel: vscode.WebviewPanel;
     private readonly _extensionUri: vscode.Uri;
     private _disposables: vscode.Disposable[] = [];
@@ -57,10 +57,13 @@ export class DiagramViewerPanel {
 
     public static render(extensionUri: vscode.Uri, documentUri: vscode.Uri) {
         const fileName = path.basename(documentUri.fsPath);
+        const filePath = documentUri.fsPath;
         
-        // If we already have a panel, dispose it
-        if (DiagramViewerPanel.currentPanel) {
-            DiagramViewerPanel.currentPanel.dispose();
+        // If we already have a panel for this file, reveal it
+        const existingPanel = DiagramViewerPanel.panels.get(filePath);
+        if (existingPanel) {
+            existingPanel._panel.reveal();
+            return;
         }
 
         const panel = vscode.window.createWebviewPanel(
@@ -76,11 +79,13 @@ export class DiagramViewerPanel {
             }
         );
 
-        DiagramViewerPanel.currentPanel = new DiagramViewerPanel(panel, extensionUri, documentUri);
+        const newPanel = new DiagramViewerPanel(panel, extensionUri, documentUri);
+        DiagramViewerPanel.panels.set(filePath, newPanel);
     }
 
     public dispose() {
-        DiagramViewerPanel.currentPanel = undefined;
+        // Remove this panel from the map
+        DiagramViewerPanel.panels.delete(this._documentUri.fsPath);
 
         this._panel.dispose();
 

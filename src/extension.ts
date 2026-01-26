@@ -6,6 +6,7 @@ import { BuildStoryCommand } from './commands/BuildStoryCommand';
 import { WelcomePanel } from './panels/WelcomePanel';
 import { DiagramViewerPanel } from './panels/DiagramViewerPanel';
 import { FeatureViewerPanel } from './panels/FeatureViewerPanel';
+import { SessionViewerPanel } from './panels/SessionViewerPanel';
 import { ProjectPicker } from './utils/ProjectPicker';
 import { checkProjectReadiness } from './utils/projectReadiness';
 import { ForgeStudioTreeProvider, ForgeTreeItem } from './providers/ForgeStudioTreeProvider';
@@ -121,6 +122,10 @@ export function activate(context: vscode.ExtensionContext) {
                 else if (filePath.endsWith('.feature.md')) {
                     FeatureViewerPanel.render(context.extensionUri, fileUri);
                 } 
+                // Check if this is a session file - open in custom session viewer
+                else if (filePath.endsWith('.session.md')) {
+                    SessionViewerPanel.render(context.extensionUri, fileUri);
+                }
                 else {
                     // Open normally for other files
                     const document = await vscode.workspace.openTextDocument(fileUri);
@@ -297,6 +302,21 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
+            const githubIssue = await vscode.window.showInputBox({
+                prompt: 'Enter GitHub issue (e.g., owner/repo#123)',
+                placeHolder: 'owner/repo#123 (optional)',
+                validateInput: (value) => {
+                    // Allow empty or valid format
+                    if (value && value.trim().length > 0) {
+                        const issuePattern = /^[\w-]+\/[\w-]+#\d+$/;
+                        if (!issuePattern.test(value.trim())) {
+                            return 'Invalid format. Use: owner/repo#123';
+                        }
+                    }
+                    return undefined;
+                }
+            });
+
             const problemStatement = await vscode.window.showInputBox({
                 prompt: 'Enter problem statement',
                 placeHolder: 'Describe the problem to solve...',
@@ -312,7 +332,7 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            await createFile(item, sessionName, 'session', generateSessionTemplate(sessionName, problemStatement));
+            await createFile(item, sessionName, 'session', generateSessionTemplate(sessionName, problemStatement, githubIssue?.trim()));
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to create session: ${error}`);
         }

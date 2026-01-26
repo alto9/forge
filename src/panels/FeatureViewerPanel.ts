@@ -8,7 +8,7 @@ import { FileParser } from '../utils/FileParser';
  * Provides visual Gherkin editing capabilities
  */
 export class FeatureViewerPanel {
-    public static currentPanel: FeatureViewerPanel | undefined;
+    private static panels: Map<string, FeatureViewerPanel> = new Map();
     private readonly _panel: vscode.WebviewPanel;
     private readonly _extensionUri: vscode.Uri;
     private _disposables: vscode.Disposable[] = [];
@@ -54,10 +54,13 @@ export class FeatureViewerPanel {
 
     public static render(extensionUri: vscode.Uri, documentUri: vscode.Uri) {
         const fileName = path.basename(documentUri.fsPath);
+        const filePath = documentUri.fsPath;
         
-        // If we already have a panel, dispose it
-        if (FeatureViewerPanel.currentPanel) {
-            FeatureViewerPanel.currentPanel.dispose();
+        // If we already have a panel for this file, reveal it
+        const existingPanel = FeatureViewerPanel.panels.get(filePath);
+        if (existingPanel) {
+            existingPanel._panel.reveal();
+            return;
         }
 
         const panel = vscode.window.createWebviewPanel(
@@ -73,11 +76,13 @@ export class FeatureViewerPanel {
             }
         );
 
-        FeatureViewerPanel.currentPanel = new FeatureViewerPanel(panel, extensionUri, documentUri);
+        const newPanel = new FeatureViewerPanel(panel, extensionUri, documentUri);
+        FeatureViewerPanel.panels.set(filePath, newPanel);
     }
 
     public dispose() {
-        FeatureViewerPanel.currentPanel = undefined;
+        // Remove this panel from the map
+        FeatureViewerPanel.panels.delete(this._documentUri.fsPath);
 
         this._panel.dispose();
 
