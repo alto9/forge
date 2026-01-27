@@ -144,5 +144,18 @@ export class GitUtils {
             return false;
         }
     }
+
+    /**
+     * Execute a git command with arguments
+     */
+    static async executeGitCommand(workspacePath: string, args: string[]): Promise<string> {
+        try {
+            const command = `git ${args.join(' ')}`;
+            const { stdout } = await execAsync(command, { cwd: workspacePath });
+            return stdout;
+        } catch (error: any) {
+            throw new Error(`Git command failed: ${error.message || error}`);
+        }
+    }
 }
 

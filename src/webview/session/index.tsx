@@ -28,6 +28,15 @@ interface SessionData {
   content: string;
 }
 
+interface GitHubIssue {
+  number: number;
+  title: string;
+  body: string;
+  html_url: string;
+  labels: Array<{ name: string; color: string }>;
+  state: string;
+}
+
 function App() {
   const [sessionData, setSessionData] = React.useState<SessionData | null>(null);
   const [editedData, setEditedData] = React.useState<{
@@ -40,10 +49,19 @@ function App() {
     additionalContext: string;
     status: string;
   } | null>(null);
+  const [showGitHubPicker, setShowGitHubPicker] = React.useState(false);
+  const [githubRepoInfo, setGithubRepoInfo] = React.useState<{ owner: string; repo: string } | null>(null);
+  const [githubIssues, setGithubIssues] = React.useState<GitHubIssue[]>([]);
+  const [selectedGithubIssue, setSelectedGithubIssue] = React.useState<GitHubIssue | null>(null);
+  const [githubLoading, setGithubLoading] = React.useState(false);
+  const [githubError, setGithubError] = React.useState<string | null>(null);
+  const [githubActiveTab, setGithubActiveTab] = React.useState<'browse' | 'input'>('browse');
+  const [githubIssueInput, setGithubIssueInput] = React.useState('');
 
   React.useEffect(() => {
     // Request initial data
     vscode?.postMessage({ type: 'getInitialData' });
+    vscode?.postMessage({ type: 'getGitHubRepoInfo' });
 
     // Listen for messages from extension
     function handleMessage(event: MessageEvent) {
@@ -70,6 +88,33 @@ function App() {
           status: msg.data.frontmatter.status || 'planning'
         });
       }
+      
+      if (msg?.type === 'githubRepoInfo') {
+        setGithubRepoInfo(msg.data);
+        if (!msg.data) {
+          setGithubError('No GitHub repository detected');
+        }
+      }
+      
+      if (msg?.type === 'githubIssuesResponse') {
+        setGithubLoading(false);
+        setGithubIssues(msg.data?.issues || []);
+      }
+      
+      if (msg?.type === 'githubIssuesError') {
+        setGithubLoading(false);
+        setGithubError(msg.error);
+      }
+      
+      if (msg?.type === 'githubIssueResponse') {
+        setGithubLoading(false);
+        setSelectedGithubIssue(msg.data);
+      }
+      
+      if (msg?.type === 'githubIssueError') {
+        setGithubLoading(false);
+        setGithubError(msg.error);
+      }
     }
 
     // Add keyboard shortcut listener for Cmd+S / Ctrl+S
@@ -88,6 +133,13 @@ function App() {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
+
+  // Load GitHub issues when picker opens on browse tab
+  React.useEffect(() => {
+    if (showGitHubPicker && githubActiveTab === 'browse' && githubIssues.length === 0 && githubRepoInfo) {
+      handleLoadGitHubIssues();
+    }
+  }, [showGitHubPicker, githubActiveTab, githubRepoInfo]);
 
   const handleSave = () => {
     if (!sessionData || !editedData) {
@@ -127,6 +179,44 @@ ${editedData.additionalContext}
       frontmatter: updatedFrontmatter,
       content: content
     });
+  };
+
+  const handleLoadGitHubIssues = () => {
+    if (!githubRepoInfo) return;
+    setGithubLoading(true);
+    setGithubError(null);
+    vscode?.postMessage({ type: 'getGitHubIssues', perPage: 20 });
+  };
+
+  const handleFetchGitHubIssue = () => {
+    if (!githubIssueInput.trim()) {
+      setGithubError('Please enter a GitHub issue URL or issue number');
+      return;
+    }
+    
+    setGithubLoading(true);
+    setGithubError(null);
+    vscode?.postMessage({ type: 'getGitHubIssue', issueIdentifier: githubIssueInput.trim() });
+  };
+
+  const handleLinkGitHubIssue = () => {
+    if (!selectedGithubIssue) {
+      setGithubError('Please select an issue');
+      return;
+    }
+    
+    // Format as owner/repo#number
+    const issueRef = `${githubRepoInfo?.owner || ''}/${githubRepoInfo?.repo || ''}#${selectedGithubIssue.number}`;
+    
+    setEditedData({
+      ...editedData!,
+      githubIssue: issueRef,
+      problemStatement: editedData!.problemStatement || selectedGithubIssue.title
+    });
+    
+    setShowGitHubPicker(false);
+    setSelectedGithubIssue(null);
+    setGithubIssueInput('');
   };
 
   const statusFlow = ['planning', 'design', 'scribe', 'development', 'completed'];
@@ -274,21 +364,42 @@ ${editedData.additionalContext}
         borderRadius: 4
       }}>
         <h3 style={{ marginTop: 0, marginBottom: 8 }}>GitHub Issue</h3>
-        <input
-          type="text"
-          value={editedData.githubIssue}
-          onChange={(e) => setEditedData({ ...editedData, githubIssue: e.target.value })}
-          placeholder="owner/repo#123"
-          style={{
-            width: '100%',
-            padding: '8px 12px',
-            fontSize: 13,
-            background: 'var(--vscode-input-background)',
-            color: 'var(--vscode-input-foreground)',
-            border: '1px solid var(--vscode-input-border)',
-            borderRadius: 4
-          }}
-        />
+        <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
+          <input
+            type="text"
+            value={editedData.githubIssue}
+            onChange={(e) => setEditedData({ ...editedData, githubIssue: e.target.value })}
+            placeholder="owner/repo#123"
+            style={{
+              flex: 1,
+              padding: '8px 12px',
+              fontSize: 13,
+              background: 'var(--vscode-input-background)',
+              color: 'var(--vscode-input-foreground)',
+              border: '1px solid var(--vscode-input-border)',
+              borderRadius: 4
+            }}
+          />
+          <button
+            onClick={() => {
+              setShowGitHubPicker(true);
+              setGithubError(null);
+            }}
+            style={{
+              padding: '8px 16px',
+              background: 'var(--vscode-button-secondaryBackground)',
+              color: 'var(--vscode-button-secondaryForeground)',
+              border: '1px solid var(--vscode-button-border)',
+              borderRadius: 4,
+              cursor: 'pointer',
+              fontSize: 13,
+              fontWeight: 600,
+              whiteSpace: 'nowrap'
+            }}
+          >
+            🔗 Link Issue
+          </button>
+        </div>
       </div>
 
       {/* Priority */}
@@ -497,6 +608,294 @@ ${editedData.additionalContext}
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* GitHub Issue Picker Modal */}
+      {showGitHubPicker && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'var(--vscode-editor-background)',
+            border: '1px solid var(--vscode-panel-border)',
+            borderRadius: 6,
+            width: '90%',
+            maxWidth: 800,
+            maxHeight: '80vh',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: 16,
+              borderBottom: '1px solid var(--vscode-panel-border)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <h3 style={{ margin: 0 }}>Link GitHub Issue</h3>
+              <button 
+                onClick={() => {
+                  setShowGitHubPicker(false);
+                  setGithubError(null);
+                  setSelectedGithubIssue(null);
+                }}
+                style={{
+                  padding: '4px 12px',
+                  background: 'var(--vscode-button-secondaryBackground)',
+                  color: 'var(--vscode-button-secondaryForeground)',
+                  border: '1px solid var(--vscode-button-border)',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  fontSize: 13
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Tabs */}
+            <div style={{
+              display: 'flex',
+              borderBottom: '1px solid var(--vscode-panel-border)'
+            }}>
+              <button
+                onClick={() => setGithubActiveTab('browse')}
+                style={{
+                  flex: 1,
+                  padding: 12,
+                  border: 'none',
+                  background: githubActiveTab === 'browse' ? 'var(--vscode-editor-background)' : 'transparent',
+                  color: 'var(--vscode-foreground)',
+                  borderBottom: githubActiveTab === 'browse' ? '2px solid var(--vscode-focusBorder)' : '2px solid transparent',
+                  cursor: 'pointer',
+                  fontWeight: githubActiveTab === 'browse' ? 600 : 400
+                }}
+              >
+                Browse Issues {githubRepoInfo && `(${githubRepoInfo.owner}/${githubRepoInfo.repo})`}
+              </button>
+              <button
+                onClick={() => setGithubActiveTab('input')}
+                style={{
+                  flex: 1,
+                  padding: 12,
+                  border: 'none',
+                  background: githubActiveTab === 'input' ? 'var(--vscode-editor-background)' : 'transparent',
+                  color: 'var(--vscode-foreground)',
+                  borderBottom: githubActiveTab === 'input' ? '2px solid var(--vscode-focusBorder)' : '2px solid transparent',
+                  cursor: 'pointer',
+                  fontWeight: githubActiveTab === 'input' ? 600 : 400
+                }}
+              >
+                Enter URL or Number
+              </button>
+            </div>
+
+            {/* Content */}
+            <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
+              {githubError && (
+                <div style={{
+                  padding: 12,
+                  marginBottom: 16,
+                  background: 'var(--vscode-inputValidation-errorBackground)',
+                  border: '1px solid var(--vscode-inputValidation-errorBorder)',
+                  borderRadius: 4,
+                  fontSize: 13
+                }}>
+                  {githubError}
+                </div>
+              )}
+
+              {githubActiveTab === 'browse' && (
+                <div>
+                  {githubLoading ? (
+                    <div style={{ textAlign: 'center', padding: 32, opacity: 0.7 }}>
+                      Loading issues...
+                    </div>
+                  ) : githubIssues.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {githubIssues.map((issue) => (
+                        <div
+                          key={issue.number}
+                          onClick={() => setSelectedGithubIssue(issue)}
+                          style={{
+                            padding: 12,
+                            border: `1px solid ${selectedGithubIssue?.number === issue.number ? 'var(--vscode-focusBorder)' : 'var(--vscode-panel-border)'}`,
+                            borderRadius: 4,
+                            cursor: 'pointer',
+                            background: selectedGithubIssue?.number === issue.number ? 'var(--vscode-list-activeSelectionBackground)' : 'transparent',
+                            transition: 'all 0.1s'
+                          }}
+                        >
+                          <div style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'center' }}>
+                            <span style={{ fontWeight: 600, fontSize: 13 }}>#{issue.number}</span>
+                            <span style={{ fontSize: 13 }}>{issue.title}</span>
+                          </div>
+                          {issue.labels && issue.labels.length > 0 && (
+                            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                              {issue.labels.map((label) => (
+                                <span
+                                  key={label.name}
+                                  style={{
+                                    padding: '2px 8px',
+                                    borderRadius: 10,
+                                    fontSize: 11,
+                                    background: `#${label.color}40`,
+                                    color: 'var(--vscode-foreground)'
+                                  }}
+                                >
+                                  {label.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : githubRepoInfo ? (
+                    <div style={{ textAlign: 'center', padding: 32, opacity: 0.7 }}>
+                      No open issues found
+                    </div>
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: 32, opacity: 0.7 }}>
+                      No GitHub repository detected
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {githubActiveTab === 'input' && (
+                <div>
+                  <div style={{ marginBottom: 16 }}>
+                    <label style={{ display: 'block', marginBottom: 8, fontSize: 13, fontWeight: 600 }}>
+                      GitHub Issue URL or Number
+                    </label>
+                    <input
+                      type="text"
+                      value={githubIssueInput}
+                      onChange={(e) => setGithubIssueInput(e.target.value)}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          handleFetchGitHubIssue();
+                        }
+                      }}
+                      placeholder="https://github.com/owner/repo/issues/123 or 123"
+                      style={{
+                        width: '100%',
+                        padding: '8px 12px',
+                        fontSize: 13,
+                        background: 'var(--vscode-input-background)',
+                        color: 'var(--vscode-input-foreground)',
+                        border: '1px solid var(--vscode-input-border)',
+                        borderRadius: 4,
+                        fontFamily: 'inherit'
+                      }}
+                    />
+                    <button
+                      onClick={handleFetchGitHubIssue}
+                      disabled={githubLoading}
+                      style={{
+                        marginTop: 8,
+                        padding: '8px 16px',
+                        background: 'var(--vscode-button-secondaryBackground)',
+                        color: 'var(--vscode-button-secondaryForeground)',
+                        border: '1px solid var(--vscode-button-border)',
+                        borderRadius: 4,
+                        cursor: githubLoading ? 'not-allowed' : 'pointer',
+                        fontSize: 13,
+                        fontWeight: 600
+                      }}
+                    >
+                      {githubLoading ? 'Loading...' : 'Fetch Issue'}
+                    </button>
+                  </div>
+
+                  {selectedGithubIssue && (
+                    <div style={{
+                      marginTop: 16,
+                      padding: 12,
+                      border: '1px solid var(--vscode-panel-border)',
+                      borderRadius: 4
+                    }}>
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                        <span style={{ fontWeight: 600 }}>#{selectedGithubIssue.number}</span>
+                        <span>{selectedGithubIssue.title}</span>
+                      </div>
+                      {selectedGithubIssue.body && (
+                        <div style={{
+                          fontSize: 13,
+                          opacity: 0.85,
+                          marginTop: 8,
+                          maxHeight: 200,
+                          overflow: 'auto',
+                          whiteSpace: 'pre-wrap'
+                        }}>
+                          {selectedGithubIssue.body.length > 300
+                            ? selectedGithubIssue.body.substring(0, 300) + '...'
+                            : selectedGithubIssue.body}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              padding: 16,
+              borderTop: '1px solid var(--vscode-panel-border)',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              gap: 8
+            }}>
+              <button 
+                onClick={() => {
+                  setShowGitHubPicker(false);
+                  setGithubError(null);
+                  setSelectedGithubIssue(null);
+                }}
+                style={{
+                  padding: '8px 16px',
+                  background: 'var(--vscode-button-secondaryBackground)',
+                  color: 'var(--vscode-button-secondaryForeground)',
+                  border: '1px solid var(--vscode-button-border)',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 600
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleLinkGitHubIssue}
+                disabled={!selectedGithubIssue || githubLoading}
+                style={{
+                  padding: '8px 16px',
+                  background: selectedGithubIssue && !githubLoading ? 'var(--vscode-button-background)' : 'var(--vscode-input-background)',
+                  color: selectedGithubIssue && !githubLoading ? 'var(--vscode-button-foreground)' : 'var(--vscode-disabledForeground)',
+                  border: 'none',
+                  borderRadius: 4,
+                  cursor: selectedGithubIssue && !githubLoading ? 'pointer' : 'not-allowed',
+                  fontSize: 13,
+                  fontWeight: 600
+                }}
+              >
+                {githubLoading ? 'Linking...' : 'Link Issue'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

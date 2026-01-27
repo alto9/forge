@@ -6,6 +6,7 @@ import { GitUtils } from '../utils/GitUtils';
 import { CommandFileWriter } from '../utils/CommandFileWriter';
 import { GherkinParser } from '../utils/GherkinParser';
 import { FeatureChangeEntry } from '../types/FeatureChangeEntry';
+import { Octokit } from '@octokit/rest';
 
 interface ActiveSession {
     sessionId: string;
@@ -165,6 +166,52 @@ export class ForgeStudioPanel {
                 case 'getActors': {
                     const actors = await this._listActors();
                     this._panel.webview.postMessage({ type: 'actors', data: actors });
+                    break;
+                }
+                case 'getGitHubRepoInfo': {
+                    const repoInfo = await this._getGitHubRepoInfo();
+                    this._panel.webview.postMessage({ type: 'githubRepoInfo', data: repoInfo });
+                    break;
+                }
+                case 'getGitHubIssues': {
+                    try {
+                        const issues = await this._getGitHubIssues(message.perPage, message.after);
+                        this._panel.webview.postMessage({ type: 'githubIssuesResponse', data: issues });
+                    } catch (error) {
+                        this._panel.webview.postMessage({ 
+                            type: 'githubIssuesError', 
+                            error: String(error) 
+                        });
+                    }
+                    break;
+                }
+                case 'getGitHubIssue': {
+                    try {
+                        const issue = await this._getGitHubIssue(message.issueIdentifier);
+                        this._panel.webview.postMessage({ type: 'githubIssueResponse', data: issue });
+                    } catch (error) {
+                        this._panel.webview.postMessage({ 
+                            type: 'githubIssueError', 
+                            error: String(error) 
+                        });
+                    }
+                    break;
+                }
+                case 'linkGitHubIssue': {
+                    try {
+                        await this._linkGitHubIssue(message.sessionPath, message.issueData);
+                        this._panel.webview.postMessage({ 
+                            type: 'githubIssueLinkSuccess',
+                            sessionPath: message.sessionPath
+                        });
+                        vscode.window.showInformationMessage('GitHub issue linked successfully!');
+                    } catch (error) {
+                        this._panel.webview.postMessage({ 
+                            type: 'githubIssueLinkError', 
+                            error: String(error) 
+                        });
+                        vscode.window.showErrorMessage(`Failed to link GitHub issue: ${error}`);
+                    }
                     break;
                 }
                 default:
@@ -1948,6 +1995,267 @@ Scenario: (Describe a scenario)
             return true;
         } catch {
             return false;
+        }
+    }
+
+    /**
+     * Extract GitHub repository information from git remote
+     */
+    private async _getGitHubRepoInfo(): Promise<{ owner: string; repo: string } | null> {
+        try {
+            const isGitRepo = await GitUtils.isGitRepository(this._projectUri.fsPath);
+            if (!isGitRepo) {
+                return null;
+            }
+
+            // Get git remote URL
+            const result = await GitUtils.executeGitCommand(this._projectUri.fsPath, ['remote', 'get-url', 'origin']);
+            const remoteUrl = result.trim();
+
+            // Parse GitHub URL (supports both HTTPS and SSH)
+            const repoInfo = this._parseGitHubUrl(remoteUrl);
+            return repoInfo;
+        } catch (error) {
+            console.error('Failed to get GitHub repo info:', error);
+            return null;
+        }
+    }
+
+    /**
+     * Parse GitHub URL to extract owner and repo
+     * Supports: https://github.com/owner/repo.git, git@github.com:owner/repo.git
+     */
+    private _parseGitHubUrl(url: string): { owner: string; repo: string } | null {
+        // HTTPS format: https://github.com/owner/repo.git
+        const httpsMatch = url.match(/https:\/\/github\.com\/([^\/]+)\/([^\/]+?)(\.git)?$/);
+        if (httpsMatch) {
+            return {
+                owner: httpsMatch[1],
+                repo: httpsMatch[2]
+            };
+        }
+
+        // SSH format: git@github.com:owner/repo.git
+        const sshMatch = url.match(/git@github\.com:([^\/]+)\/([^\/]+?)(\.git)?$/);
+        if (sshMatch) {
+            return {
+                owner: sshMatch[1],
+                repo: sshMatch[2]
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * Parse GitHub issue URL or number to extract owner, repo, and issue number
+     */
+    private _parseGitHubIssueUrl(issueIdentifier: string): { owner: string; repo: string; issueNumber: number } | null {
+        // If it's just a number, we need to get the repo info from git remote
+        if (/^\d+$/.test(issueIdentifier)) {
+            return null; // Will be handled in _getGitHubIssue
+        }
+
+        // Parse full URL: https://github.com/owner/repo/issues/123
+        const urlMatch = issueIdentifier.match(/https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/issues\/(\d+)/);
+        if (urlMatch) {
+            return {
+                owner: urlMatch[1],
+                repo: urlMatch[2],
+                issueNumber: parseInt(urlMatch[3], 10)
+            };
+        }
+
+        // Parse short format: owner/repo#123
+        const shortMatch = issueIdentifier.match(/^([^\/]+)\/([^#]+)#(\d+)$/);
+        if (shortMatch) {
+            return {
+                owner: shortMatch[1],
+                repo: shortMatch[2],
+                issueNumber: parseInt(shortMatch[3], 10)
+            };
+        }
+
+        return null;
+    }
+
+    /**
+     * Get list of open GitHub issues for the repository
+     */
+    private async _getGitHubIssues(perPage: number = 20, after?: string): Promise<any> {
+        const repoInfo = await this._getGitHubRepoInfo();
+        if (!repoInfo) {
+            throw new Error('No GitHub repository detected. Ensure this project has a GitHub remote configured.');
+        }
+
+        try {
+            // Try to get GitHub authentication from VSCode
+            let auth: string | undefined;
+            try {
+                const session = await vscode.authentication.getSession('github', ['repo'], { createIfNone: false });
+                if (session) {
+                    auth = session.accessToken;
+                }
+            } catch (error) {
+                // No auth available, continue without it
+                console.log('No GitHub authentication available');
+            }
+
+            const octokit = new Octokit({
+                baseUrl: 'https://api.github.com',
+                auth
+            });
+            
+            const { data } = await octokit.rest.issues.listForRepo({
+                owner: repoInfo.owner,
+                repo: repoInfo.repo,
+                state: 'open',
+                sort: 'updated',
+                direction: 'desc',
+                per_page: perPage
+            });
+
+            return {
+                issues: data.map((issue) => ({
+                    number: issue.number,
+                    title: issue.title,
+                    body: issue.body || '',
+                    html_url: issue.html_url,
+                    state: issue.state,
+                    labels: issue.labels.map((label: any) => ({
+                        name: typeof label === 'string' ? label : label.name,
+                        color: typeof label === 'object' && label.color ? label.color : '000000'
+                    }))
+                }))
+            };
+        } catch (error: any) {
+            console.error('Failed to fetch GitHub issues:', error);
+            throw new Error(`Failed to fetch GitHub issues: ${error.message || error}`);
+        }
+    }
+
+    /**
+     * Get a specific GitHub issue by URL or number
+     */
+    private async _getGitHubIssue(issueIdentifier: string): Promise<any> {
+        // Try parsing as URL first
+        let issueInfo = this._parseGitHubIssueUrl(issueIdentifier);
+
+        // If not a URL, assume it's a number and get repo info from git remote
+        if (!issueInfo) {
+            const issueNumber = parseInt(issueIdentifier, 10);
+            if (isNaN(issueNumber)) {
+                throw new Error('Invalid issue identifier. Provide a GitHub issue URL or issue number.');
+            }
+
+            const repoInfo = await this._getGitHubRepoInfo();
+            if (!repoInfo) {
+                throw new Error('No GitHub repository detected. Ensure this project has a GitHub remote configured.');
+            }
+
+            issueInfo = {
+                owner: repoInfo.owner,
+                repo: repoInfo.repo,
+                issueNumber: issueNumber
+            };
+        }
+
+        try {
+            // Try to get GitHub authentication from VSCode
+            let auth: string | undefined;
+            try {
+                const session = await vscode.authentication.getSession('github', ['repo'], { createIfNone: false });
+                if (session) {
+                    auth = session.accessToken;
+                }
+            } catch (error) {
+                // No auth available, continue without it
+                console.log('No GitHub authentication available');
+            }
+
+            const octokit = new Octokit({
+                baseUrl: 'https://api.github.com',
+                auth
+            });
+            
+            const { data } = await octokit.rest.issues.get({
+                owner: issueInfo.owner,
+                repo: issueInfo.repo,
+                issue_number: issueInfo.issueNumber
+            });
+
+            return {
+                number: data.number,
+                title: data.title,
+                body: data.body || '',
+                html_url: data.html_url,
+                state: data.state,
+                labels: data.labels.map((label: any) => ({
+                    name: typeof label === 'string' ? label : label.name,
+                    color: typeof label === 'object' && label.color ? label.color : '000000'
+                }))
+            };
+        } catch (error: any) {
+            console.error('Failed to fetch GitHub issue:', error);
+            throw new Error(`Failed to fetch GitHub issue: ${error.message || error}`);
+        }
+    }
+
+    /**
+     * Link a GitHub issue to a session by updating the session file
+     */
+    private async _linkGitHubIssue(sessionPath: string, issueData: any): Promise<void> {
+        try {
+            const sessionFile = vscode.Uri.file(sessionPath);
+            const content = await FileParser.readFile(sessionFile.fsPath);
+            const parsed = FileParser.parseFrontmatter(content);
+
+            // Extract issue data
+            const { number, title, body, html_url } = issueData;
+
+            // Update frontmatter with GitHub issue reference
+            parsed.frontmatter.github_issue = {
+                url: html_url,
+                number: number,
+                title: title
+            };
+
+            // Merge issue details into problem statement
+            let updatedContent = parsed.content;
+
+            // Check if problem statement section exists
+            if (updatedContent.includes('## Problem Statement')) {
+                // Append issue details to existing problem statement
+                const problemSection = updatedContent.split('## Problem Statement')[1].split('##')[0];
+                const issueDetails = `\n\n### GitHub Issue #${number}: ${title}\n\n${body || '(No description provided)'}`;
+                
+                // Insert after problem statement section, before next section
+                updatedContent = updatedContent.replace(
+                    /## Problem Statement([\s\S]*?)(?=##|$)/,
+                    `## Problem Statement$1${issueDetails}\n\n`
+                );
+            } else {
+                // Add problem statement section with issue details
+                const issueDetails = `## Problem Statement\n\n### GitHub Issue #${number}: ${title}\n\n${body || '(No description provided)'}\n\n`;
+                updatedContent = issueDetails + updatedContent;
+            }
+
+            // Save updated session file
+            const text = FileParser.stringifyFrontmatter(parsed.frontmatter, updatedContent);
+            await vscode.workspace.fs.writeFile(sessionFile, Buffer.from(text, 'utf-8'));
+
+            // Update in-memory active session if this is the active session
+            if (this._activeSession) {
+                const sessionId = parsed.frontmatter.session_id || path.basename(sessionPath, '.session.md');
+                if (this._activeSession.sessionId === sessionId) {
+                    // Reload active session from disk
+                    await this._loadActiveSessionFromDisk();
+                    this._panel.webview.postMessage({ type: 'activeSession', data: this._activeSession });
+                }
+            }
+        } catch (error) {
+            console.error('Failed to link GitHub issue:', error);
+            throw error;
         }
     }
 }

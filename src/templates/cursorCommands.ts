@@ -525,6 +525,96 @@ This diagram shows the complete flow of user authentication from login request t
 4. Token returned to client
 \`\`\`
 
+### Session Schema (*.session.md)
+
+**Purpose**: Track design work and changes over time
+
+**File Naming**: \`<session-id>.session.md\` (kebab-case)
+
+**Location**: \`ai/sessions/<session-id>/\` (nested structure)
+
+**Frontmatter**:
+\`\`\`yaml
+---
+session_id: unique-session-id  # kebab-case, matches filename
+start_time: 2024-01-15T10:30:00Z  # ISO 8601 timestamp
+end_time: 2024-01-15T14:00:00Z | null  # ISO 8601 timestamp or null if active
+status: design | scribe | development | completed  # Session status
+problem_statement: Brief description of what we're solving
+changed_files: []  # Array of FeatureChangeEntry objects (feature files only)
+github_issue:  # Optional GitHub issue reference
+  url: "https://github.com/owner/repo/issues/123"
+  number: 123
+  title: "Issue title"
+---
+\`\`\`
+
+**Content Structure**:
+\`\`\`markdown
+# Session Title
+
+## Problem Statement
+
+(Description of what we're solving)
+
+## Goals
+
+(What we aim to achieve)
+
+## Approach
+
+(How we're tackling the problem)
+
+## Key Decisions
+
+(Important decisions made during the session)
+
+## Notes
+
+(Additional context, concerns, or considerations)
+\`\`\`
+
+**Example**:
+\`\`\`markdown
+---
+session_id: add-user-authentication
+start_time: 2024-01-15T10:30:00Z
+end_time: null
+status: design
+problem_statement: Add secure user authentication to the application
+changed_files: []
+github_issue:
+  url: "https://github.com/owner/repo/issues/42"
+  number: 42
+  title: "Implement user authentication system"
+---
+
+# Add User Authentication
+
+## Problem Statement
+
+Users need a secure way to authenticate and access protected resources.
+
+## Goals
+
+- Implement JWT-based authentication
+- Support email/password login
+- Add session management
+
+## Approach
+
+Using JWT tokens with 24-hour expiration, bcrypt for password hashing.
+
+## Key Decisions
+
+- Chose JWT over session-based auth for stateless API
+- 24-hour token expiration for security
+
+## Notes
+
+Will need to add refresh token support in future iteration.
+\`\`\`
+
 ## File Type Guidance
 
 When working in design sessions, use the correct file type for each purpose:

@@ -2126,6 +2126,361 @@ function SessionsPage({ sessions, activeSession, showNewSessionForm, onShowNewSe
   );
 }
 
+interface GitHubIssue {
+  number: number;
+  title: string;
+  body: string;
+  html_url: string;
+  labels: Array<{ name: string; color: string }>;
+  state: string;
+}
+
+function GitHubIssuePicker({
+  sessionPath,
+  onClose,
+  onLinked
+}: {
+  sessionPath: string;
+  onClose: () => void;
+  onLinked: () => void;
+}) {
+  const [activeTab, setActiveTab] = React.useState<'browse' | 'input'>('browse');
+  const [issues, setIssues] = React.useState<GitHubIssue[]>([]);
+  const [selectedIssue, setSelectedIssue] = React.useState<GitHubIssue | null>(null);
+  const [loading, setLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [issueInput, setIssueInput] = React.useState('');
+  const [repoInfo, setRepoInfo] = React.useState<{ owner: string; repo: string } | null>(null);
+
+  // Get repo info on mount
+  React.useEffect(() => {
+    vscode?.postMessage({ type: 'getGitHubRepoInfo' });
+  }, []);
+
+  // Load issues when switching to browse tab
+  React.useEffect(() => {
+    if (activeTab === 'browse' && issues.length === 0 && repoInfo) {
+      loadIssues();
+    }
+  }, [activeTab, repoInfo]);
+
+  // Listen for messages
+  React.useEffect(() => {
+    function handleMessage(event: MessageEvent) {
+      const msg = event.data;
+      
+      if (msg?.type === 'githubRepoInfo') {
+        setRepoInfo(msg.data);
+        if (!msg.data) {
+          setError('No GitHub repository detected. Ensure this project has a GitHub remote configured.');
+        }
+      }
+      
+      if (msg?.type === 'githubIssuesResponse') {
+        setLoading(false);
+        setIssues(msg.data?.issues || []);
+      }
+      
+      if (msg?.type === 'githubIssuesError') {
+        setLoading(false);
+        setError(msg.error);
+      }
+      
+      if (msg?.type === 'githubIssueResponse') {
+        setLoading(false);
+        setSelectedIssue(msg.data);
+      }
+      
+      if (msg?.type === 'githubIssueError') {
+        setLoading(false);
+        setError(msg.error);
+      }
+      
+      if (msg?.type === 'githubIssueLinkSuccess') {
+        setLoading(false);
+        onLinked();
+        onClose();
+      }
+      
+      if (msg?.type === 'githubIssueLinkError') {
+        setLoading(false);
+        setError(msg.error);
+      }
+    }
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [onClose, onLinked]);
+
+  const loadIssues = () => {
+    setLoading(true);
+    setError(null);
+    vscode?.postMessage({ type: 'getGitHubIssues', perPage: 20 });
+  };
+
+  const handleFetchIssue = () => {
+    if (!issueInput.trim()) {
+      setError('Please enter a GitHub issue URL or issue number');
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    vscode?.postMessage({ type: 'getGitHubIssue', issueIdentifier: issueInput.trim() });
+  };
+
+  const handleLinkIssue = () => {
+    if (!selectedIssue) {
+      setError('Please select an issue');
+      return;
+    }
+    
+    setLoading(true);
+    setError(null);
+    vscode?.postMessage({ 
+      type: 'linkGitHubIssue', 
+      sessionPath: sessionPath,
+      issueData: selectedIssue
+    });
+  };
+
+  return (
+    <div style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000
+    }}>
+      <div style={{
+        background: 'var(--vscode-editor-background)',
+        border: '1px solid var(--vscode-panel-border)',
+        borderRadius: 6,
+        width: '90%',
+        maxWidth: 800,
+        maxHeight: '80vh',
+        display: 'flex',
+        flexDirection: 'column'
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: 16,
+          borderBottom: '1px solid var(--vscode-panel-border)',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center'
+        }}>
+          <h3 style={{ margin: 0 }}>Link GitHub Issue</h3>
+          <button 
+            className="btn btn-secondary"
+            onClick={onClose}
+            style={{ padding: '4px 12px' }}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Tabs */}
+        <div style={{
+          display: 'flex',
+          borderBottom: '1px solid var(--vscode-panel-border)'
+        }}>
+          <button
+            onClick={() => setActiveTab('browse')}
+            style={{
+              flex: 1,
+              padding: 12,
+              border: 'none',
+              background: activeTab === 'browse' ? 'var(--vscode-editor-background)' : 'transparent',
+              color: 'var(--vscode-foreground)',
+              borderBottom: activeTab === 'browse' ? '2px solid var(--vscode-focusBorder)' : '2px solid transparent',
+              cursor: 'pointer',
+              fontWeight: activeTab === 'browse' ? 600 : 400
+            }}
+          >
+            Browse Issues {repoInfo && `(${repoInfo.owner}/${repoInfo.repo})`}
+          </button>
+          <button
+            onClick={() => setActiveTab('input')}
+            style={{
+              flex: 1,
+              padding: 12,
+              border: 'none',
+              background: activeTab === 'input' ? 'var(--vscode-editor-background)' : 'transparent',
+              color: 'var(--vscode-foreground)',
+              borderBottom: activeTab === 'input' ? '2px solid var(--vscode-focusBorder)' : '2px solid transparent',
+              cursor: 'pointer',
+              fontWeight: activeTab === 'input' ? 600 : 400
+            }}
+          >
+            Enter URL or Number
+          </button>
+        </div>
+
+        {/* Content */}
+        <div style={{ flex: 1, overflow: 'auto', padding: 16 }}>
+          {error && (
+            <div style={{
+              padding: 12,
+              marginBottom: 16,
+              background: 'var(--vscode-inputValidation-errorBackground)',
+              border: '1px solid var(--vscode-inputValidation-errorBorder)',
+              borderRadius: 4,
+              fontSize: 13
+            }}>
+              {error}
+            </div>
+          )}
+
+          {activeTab === 'browse' && (
+            <div>
+              {loading ? (
+                <div style={{ textAlign: 'center', padding: 32, opacity: 0.7 }}>
+                  Loading issues...
+                </div>
+              ) : issues.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  {issues.map((issue) => (
+                    <div
+                      key={issue.number}
+                      onClick={() => setSelectedIssue(issue)}
+                      style={{
+                        padding: 12,
+                        border: `1px solid ${selectedIssue?.number === issue.number ? 'var(--vscode-focusBorder)' : 'var(--vscode-panel-border)'}`,
+                        borderRadius: 4,
+                        cursor: 'pointer',
+                        background: selectedIssue?.number === issue.number ? 'var(--vscode-list-activeSelectionBackground)' : 'transparent',
+                        transition: 'all 0.1s'
+                      }}
+                    >
+                      <div style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'center' }}>
+                        <span style={{ fontWeight: 600, fontSize: 13 }}>#{issue.number}</span>
+                        <span style={{ fontSize: 13 }}>{issue.title}</span>
+                      </div>
+                      {issue.labels && issue.labels.length > 0 && (
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                          {issue.labels.map((label) => (
+                            <span
+                              key={label.name}
+                              style={{
+                                padding: '2px 8px',
+                                borderRadius: 10,
+                                fontSize: 11,
+                                background: `#${label.color}40`,
+                                color: 'var(--vscode-foreground)'
+                              }}
+                            >
+                              {label.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : repoInfo ? (
+                <div style={{ textAlign: 'center', padding: 32, opacity: 0.7 }}>
+                  No open issues found
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: 32, opacity: 0.7 }}>
+                  No GitHub repository detected
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'input' && (
+            <div>
+              <div className="form-group">
+                <label className="form-label">
+                  GitHub Issue URL or Number
+                </label>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="https://github.com/owner/repo/issues/123 or 123"
+                  value={issueInput}
+                  onChange={(e) => setIssueInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      handleFetchIssue();
+                    }
+                  }}
+                />
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleFetchIssue}
+                  disabled={loading}
+                  style={{ marginTop: 8 }}
+                >
+                  {loading ? 'Loading...' : 'Fetch Issue'}
+                </button>
+              </div>
+
+              {selectedIssue && (
+                <div style={{
+                  marginTop: 16,
+                  padding: 12,
+                  border: '1px solid var(--vscode-panel-border)',
+                  borderRadius: 4
+                }}>
+                  <div style={{ display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' }}>
+                    <span style={{ fontWeight: 600 }}>#{selectedIssue.number}</span>
+                    <span>{selectedIssue.title}</span>
+                  </div>
+                  {selectedIssue.body && (
+                    <div style={{
+                      fontSize: 13,
+                      opacity: 0.85,
+                      marginTop: 8,
+                      maxHeight: 200,
+                      overflow: 'auto',
+                      whiteSpace: 'pre-wrap'
+                    }}>
+                      {selectedIssue.body.length > 300
+                        ? selectedIssue.body.substring(0, 300) + '...'
+                        : selectedIssue.body}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div style={{
+          padding: 16,
+          borderTop: '1px solid var(--vscode-panel-border)',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          gap: 8
+        }}>
+          <button 
+            className="btn btn-secondary"
+            onClick={onClose}
+          >
+            Cancel
+          </button>
+          <button 
+            className="btn btn-primary"
+            onClick={handleLinkIssue}
+            disabled={!selectedIssue || loading}
+          >
+            {loading ? 'Linking...' : 'Link Issue'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SessionDetail({
   session,
   onClose
@@ -2140,6 +2495,7 @@ function SessionDetail({
     keyDecisions: string;
     notes: string;
   } | null>(null);
+  const [showGitHubPicker, setShowGitHubPicker] = React.useState(false);
 
   // Function to load session file content
   const loadSessionContent = React.useCallback(() => {
@@ -2242,8 +2598,33 @@ function SessionDetail({
             }}>
               {status}
             </div>
+            
+            {/* GitHub issue badge */}
+            {sessionData.frontmatter?.github_issue && (
+              <div style={{
+                display: 'inline-block',
+                padding: '4px 12px',
+                borderRadius: 4,
+                fontSize: 11,
+                background: 'var(--vscode-badge-background)',
+                color: 'var(--vscode-badge-foreground)',
+                marginLeft: 8
+              }}>
+                🔗 #{sessionData.frontmatter.github_issue.number}
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
+            {/* Link GitHub Issue button - show for design and scribe status */}
+            {(status === 'design' || status === 'scribe') && (
+              <button 
+                className="btn btn-secondary"
+                onClick={() => setShowGitHubPicker(true)}
+              >
+                {sessionData.frontmatter?.github_issue ? 'Update' : 'Link'} GitHub Issue
+              </button>
+            )}
+            
             {/* Development status: Show "Mark Complete" button */}
             {status === 'development' && (
               <button 
@@ -2460,6 +2841,17 @@ function SessionDetail({
       {/* Changed Features */}
       {changedFiles.length > 0 && (
         <ChangedFilesSection files={changedFiles} />
+      )}
+      
+      {/* GitHub Issue Picker Modal */}
+      {showGitHubPicker && (
+        <GitHubIssuePicker
+          sessionPath={sessionData.filePath}
+          onClose={() => setShowGitHubPicker(false)}
+          onLinked={() => {
+            loadSessionContent();
+          }}
+        />
       )}
     </div>
   );
