@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
+import { Octokit } from '@octokit/rest';
 import { DistillSessionCommand } from './commands/DistillSessionCommand';
 import { BuildStoryCommand } from './commands/BuildStoryCommand';
 import { WelcomePanel } from './panels/WelcomePanel';
@@ -11,6 +12,7 @@ import { ProjectPicker } from './utils/ProjectPicker';
 import { checkProjectReadiness } from './utils/projectReadiness';
 import { ForgeStudioTreeProvider, ForgeTreeItem } from './providers/ForgeStudioTreeProvider';
 import { ForgeChatParticipant } from './chatParticipant';
+import { GitUtils } from './utils/GitUtils';
 import {
     generateDiagramTemplate,
     generateSpecTemplate,
@@ -28,8 +30,8 @@ export function activate(context: vscode.ExtensionContext) {
     outputChannel = vscode.window.createOutputChannel('Forge');
     context.subscriptions.push(outputChannel);
 
-    // Register Forge Chat Participant for VSCode Chat
-    ForgeChatParticipant.register(context);
+    // Register Forge Chat Participants for VSCode Chat
+    ForgeChatParticipant.registerAll(context);
 
     // Register TreeView provider
     treeProvider = new ForgeStudioTreeProvider(context);
@@ -38,6 +40,31 @@ export function activate(context: vscode.ExtensionContext) {
         showCollapseAll: true
     });
     context.subscriptions.push(treeView);
+
+    // Track if we've done the initial readiness check
+    let hasCheckedReadiness = false;
+
+    // Check project readiness when TreeView becomes visible for the first time
+    treeView.onDidChangeVisibility(async (e) => {
+        if (e.visible && !hasCheckedReadiness && treeProvider) {
+            hasCheckedReadiness = true;
+            
+            // Get the current project URI
+            const projectUri = treeProvider.getProjectUri();
+            if (!projectUri) {
+                // No project set, nothing to check
+                return;
+            }
+
+            // Check if project is Forge-ready
+            const isReady = await checkProjectReadiness(projectUri);
+            
+            if (!isReady) {
+                // Project is not ready, show Welcome screen
+                WelcomePanel.render(context.extensionUri, projectUri, outputChannel);
+            }
+        }
+    });
 
     // Initialize with workspace folder if available
     if (vscode.workspace.workspaceFolders && vscode.workspace.workspaceFolders.length > 0) {
@@ -218,7 +245,7 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            await createFile(item, fileName, 'diagram', generateDiagramTemplate(fileName));
+            await createFile(context, item, fileName, 'diagram', generateDiagramTemplate(fileName));
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to create diagram: ${error}`);
         }
@@ -243,7 +270,7 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            await createFile(item, fileName, 'spec', generateSpecTemplate(fileName));
+            await createFile(context, item, fileName, 'spec', generateSpecTemplate(fileName));
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to create specification: ${error}`);
         }
@@ -277,7 +304,7 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            await createFile(item, fileName, 'actor', generateActorTemplate(fileName, actorType as 'human' | 'system' | 'external'));
+            await createFile(context, item, fileName, 'actor', generateActorTemplate(fileName, actorType as 'human' | 'system' | 'external'));
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to create actor: ${error}`);
         }
@@ -302,37 +329,55 @@ export function activate(context: vscode.ExtensionContext) {
                 return;
             }
 
-            const githubIssue = await vscode.window.showInputBox({
-                prompt: 'Enter GitHub issue (e.g., owner/repo#123)',
-                placeHolder: 'owner/repo#123 (optional)',
+            const githubIssueUrl = await vscode.window.showInputBox({
+                prompt: 'Enter GitHub issue URL (optional)',
+                placeHolder: 'https://github.com/owner/repo/issues/123',
                 validateInput: (value) => {
-                    // Allow empty or valid format
                     if (value && value.trim().length > 0) {
-                        const issuePattern = /^[\w-]+\/[\w-]+#\d+$/;
-                        if (!issuePattern.test(value.trim())) {
-                            return 'Invalid format. Use: owner/repo#123';
+                        // Accept full URLs or owner/repo#number format
+                        const urlPattern = /github\.com\/[\w-]+\/[\w-]+\/issues\/\d+/;
+                        const shortPattern = /^[\w-]+\/[\w-]+#\d+$/;
+                        if (!urlPattern.test(value.trim()) && !shortPattern.test(value.trim())) {
+                            return 'Invalid format. Use full URL or owner/repo#123';
                         }
                     }
                     return undefined;
                 }
             });
 
-            const problemStatement = await vscode.window.showInputBox({
-                prompt: 'Enter problem statement',
-                placeHolder: 'Describe the problem to solve...',
-                validateInput: (value) => {
-                    if (!value || value.trim().length === 0) {
-                        return 'Problem statement cannot be empty';
-                    }
-                    return undefined;
-                }
-            });
+            let issueData: any = null;
+            let issueRef: string | undefined;
 
-            if (!problemStatement) {
-                return;
+            if (githubIssueUrl && githubIssueUrl.trim().length > 0) {
+                // Fetch issue data from GitHub
+                try {
+                    await vscode.window.withProgress({
+                        location: vscode.ProgressLocation.Notification,
+                        title: 'Fetching GitHub issue...',
+                        cancellable: false
+                    }, async () => {
+                        issueData = await fetchGitHubIssue(githubIssueUrl.trim());
+                        // Format as owner/repo#number
+                        issueRef = issueData.issueRef;
+                    });
+                } catch (error: any) {
+                    vscode.window.showErrorMessage(`Failed to fetch GitHub issue: ${error.message}`);
+                    return;
+                }
             }
 
-            await createFile(item, sessionName, 'session', generateSessionTemplate(sessionName, problemStatement, githubIssue?.trim()));
+            await createFile(
+                context,
+                item,
+                sessionName,
+                'session',
+                generateSessionTemplate(
+                    sessionName,
+                    issueData?.body || '',
+                    issueRef,
+                    issueData?.title || ''
+                )
+            );
         } catch (error) {
             vscode.window.showErrorMessage(`Failed to create session: ${error}`);
         }
@@ -350,9 +395,73 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 /**
+ * Helper function to fetch GitHub issue data
+ */
+async function fetchGitHubIssue(issueIdentifier: string): Promise<{ title: string; body: string; issueRef: string; number: number; owner: string; repo: string }> {
+    // Parse the issue identifier
+    let owner: string;
+    let repo: string;
+    let issueNumber: number;
+
+    // Try to parse as URL first
+    const urlMatch = issueIdentifier.match(/github\.com\/([\w-]+)\/([\w-]+)\/issues\/(\d+)/);
+    if (urlMatch) {
+        owner = urlMatch[1];
+        repo = urlMatch[2];
+        issueNumber = parseInt(urlMatch[3], 10);
+    } else {
+        // Try to parse as owner/repo#number
+        const shortMatch = issueIdentifier.match(/^([\w-]+)\/([\w-]+)#(\d+)$/);
+        if (shortMatch) {
+            owner = shortMatch[1];
+            repo = shortMatch[2];
+            issueNumber = parseInt(shortMatch[3], 10);
+        } else {
+            throw new Error('Invalid GitHub issue format');
+        }
+    }
+
+    // Get GitHub authentication
+    let auth: string | undefined;
+    try {
+        const session = await vscode.authentication.getSession('github', ['repo'], { createIfNone: true });
+        if (session) {
+            auth = session.accessToken;
+        }
+    } catch (error) {
+        throw new Error('GitHub authentication required. Please sign in to GitHub in VSCode (Cmd/Ctrl+Shift+P → "GitHub: Sign In")');
+    }
+
+    if (!auth) {
+        throw new Error('GitHub authentication required. Please sign in to GitHub in VSCode (Cmd/Ctrl+Shift+P → "GitHub: Sign In")');
+    }
+
+    // Fetch issue from GitHub API
+    const octokit = new Octokit({
+        baseUrl: 'https://api.github.com',
+        auth
+    });
+
+    const { data } = await octokit.rest.issues.get({
+        owner,
+        repo,
+        issue_number: issueNumber
+    });
+
+    return {
+        title: data.title,
+        body: data.body || '',
+        issueRef: `${owner}/${repo}#${issueNumber}`,
+        number: issueNumber,
+        owner,
+        repo
+    };
+}
+
+/**
  * Helper function to create a new file with template content
  */
-async function createFile(item: ForgeTreeItem, fileName: string, fileType: 'diagram' | 'spec' | 'actor' | 'session', content: string) {
+async function createFile(context: vscode.ExtensionContext, item: ForgeTreeItem, fileName: string, fileType: 'diagram' | 'spec' | 'actor' | 'session', content: string) {
     // Determine parent path
     let parentPath: string;
     if (item.itemType === 'category' && item.category) {
@@ -386,10 +495,20 @@ async function createFile(item: ForgeTreeItem, fileName: string, fileType: 'diag
         treeProvider.refresh();
     }
 
-    // Open file in editor
+    // Open file in appropriate viewer
     const fileUri = vscode.Uri.file(filePath);
-    const document = await vscode.workspace.openTextDocument(fileUri);
-    await vscode.window.showTextDocument(document);
+    
+    if (fileType === 'session') {
+        // Open session in custom viewer
+        SessionViewerPanel.render(context.extensionUri, fileUri);
+    } else if (fileType === 'diagram') {
+        // Open diagram in custom viewer
+        DiagramViewerPanel.render(context.extensionUri, fileUri);
+    } else if (fileType === 'spec' || fileType === 'actor') {
+        // Open in text editor
+        const document = await vscode.workspace.openTextDocument(fileUri);
+        await vscode.window.showTextDocument(document);
+    }
 
     vscode.window.showInformationMessage(`Created ${fileType}: ${fileName}${extension}`);
 }

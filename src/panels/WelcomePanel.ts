@@ -1,5 +1,4 @@
 import * as vscode from 'vscode';
-import { ForgeStudioPanel } from './ForgeStudioPanel';
 import { getManagedCommandPaths } from '../templates/cursorCommands';
 import { validateCommandFileHash, generateCommandFile } from '../utils/commandValidation';
 import { checkProjectReadiness } from '../utils/projectReadiness';
@@ -71,8 +70,8 @@ export class WelcomePanel {
                     await this._handleInitializeProject();
                     break;
                 }
-                case 'openForgeStudio': {
-                    this._openForgeStudio();
+                case 'setupComplete': {
+                    this._handleSetupComplete();
                     break;
                 }
                 default:
@@ -96,8 +95,8 @@ export class WelcomePanel {
         }
 
         const panel = vscode.window.createWebviewPanel(
-            'forgeWelcome',
-            'Welcome to Forge',
+            'forgeSetup',
+            'Forge Setup',
             vscode.ViewColumn.One,
             {
                 enableScripts: true,
@@ -108,8 +107,7 @@ export class WelcomePanel {
             }
         );
 
-        // Hide the primary sidebar when Welcome panel opens
-        vscode.commands.executeCommand('workbench.action.closeSidebar');
+        // Keep sidebar visible so user can see Forge TreeView after setup completes
 
         WelcomePanel.currentPanel = new WelcomePanel(panel, extensionUri, projectUri, output);
     }
@@ -290,7 +288,7 @@ export class WelcomePanel {
   <meta charset="UTF-8" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource} blob: data:; script-src 'nonce-${nonce}'; style-src 'unsafe-inline' ${webview.cspSource}; font-src ${webview.cspSource};" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to Forge</title>
+  <title>Forge Setup</title>
   <style>
     /* Base styles */
     html, body, #root { height: 100%; margin: 0; padding: 0; }
@@ -801,14 +799,19 @@ export class WelcomePanel {
                 failed
             });
 
-            // If successful, transition to Studio
+            // If successful, close setup panel and focus TreeView
             if (failed === 0) {
                 // Recheck readiness to ensure all folders and commands were created
                 const isReady = await this._checkProjectReadiness();
                 if (isReady) {
-                    // Wait a brief moment for UI to update
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    this._openForgeStudio();
+                    // Notify webview that setup is complete
+                    this._panel.webview.postMessage({
+                        type: 'setupComplete'
+                    });
+                    
+                    // Wait a brief moment for UI to show success message
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    this._handleSetupComplete();
                 } else {
                     // Refresh status
                     this._panel.webview.postMessage({
@@ -834,16 +837,15 @@ export class WelcomePanel {
         }
     }
 
-    private _openForgeStudio(): void {
-        // Close welcome panel
+    private _handleSetupComplete(): void {
+        // Close setup panel
         this.dispose();
         
-        // Open Forge Studio with same project
-        ForgeStudioPanel.render(
-            this._extensionUri,
-            this._projectUri,
-            this._output
-        );
+        // Focus the Forge TreeView
+        vscode.commands.executeCommand('forgeStudioExplorer.focus');
+        
+        // Show success message
+        vscode.window.showInformationMessage('✅ Forge setup complete! Your project is ready.');
     }
 }
 

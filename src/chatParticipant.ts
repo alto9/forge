@@ -1,24 +1,50 @@
 import * as vscode from 'vscode';
+import * as fs from 'fs';
+import * as path from 'path';
+import { FORGE_DESIGN_INSTRUCTIONS } from './personas/forge-design';
+import { FORGE_BUILD_INSTRUCTIONS } from './personas/forge-build';
 
 /**
- * Chat participant for Forge that enables direct interaction with Forge
- * through the VSCode Chat interface using @forge
+ * Chat participants for Forge that enable direct interaction with Forge
+ * through the VSCode Chat interface
  */
 export class ForgeChatParticipant {
-    static register(context: vscode.ExtensionContext): vscode.ChatParticipant {
-        const participant = vscode.chat.createChatParticipant(
+    /**
+     * Register all Forge personas as chat participants
+     */
+    static registerAll(context: vscode.ExtensionContext): void {
+        // Main @forge participant (helper/guide)
+        const forgeParticipant = vscode.chat.createChatParticipant(
             'forge.participant',
-            this.handleChatRequest
+            this.handleForgeRequest
         );
+        forgeParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
+        context.subscriptions.push(forgeParticipant);
 
-        participant.iconPath = vscode.Uri.joinPath(
-            context.extensionUri,
-            'media',
-            'forge-icon.svg'
+        // @forge-design participant (design sessions)
+        const designParticipant = vscode.chat.createChatParticipant(
+            'forge-design.participant',
+            this.handleDesignRequest
         );
+        designParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
+        context.subscriptions.push(designParticipant);
 
-        context.subscriptions.push(participant);
-        return participant;
+        // @forge-build participant (implement stories)
+        const buildParticipant = vscode.chat.createChatParticipant(
+            'forge-build.participant',
+            this.handleBuildRequest
+        );
+        buildParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
+        context.subscriptions.push(buildParticipant);
+    }
+
+    /**
+     * Legacy method for backward compatibility
+     */
+    static register(context: vscode.ExtensionContext): vscode.ChatParticipant {
+        this.registerAll(context);
+        // Return the main participant for backward compatibility
+        return vscode.chat.createChatParticipant('forge.participant', this.handleForgeRequest);
     }
 
     /**
@@ -40,67 +66,89 @@ export class ForgeChatParticipant {
         return vscode.workspace.workspaceFolders?.[0]?.uri;
     }
 
-    private static async handleChatRequest(
+    /**
+     * Handle @forge requests (main helper)
+     */
+    private static async handleForgeRequest(
         request: vscode.ChatRequest,
         context: vscode.ChatContext,
         stream: vscode.ChatResponseStream,
         token: vscode.CancellationToken
     ): Promise<void> {
         const prompt = request.prompt.toLowerCase();
-        const projectUri = this.getProjectUri();
 
-        if (!projectUri) {
-            stream.markdown('❌ No workspace folder found. Please open a Forge project.');
-            return;
-        }
-
-        // Hello world: respond to basic queries
-        if (prompt.includes('hello') || prompt.includes('hi')) {
+        if (prompt.includes('hello') || prompt.includes('hi') || prompt.includes('help') || !prompt) {
             stream.markdown(
-                '👋 Hello! I\'m the **Forge Agent**. I help you work with Forge files and sessions.\n\n' +
-                'Try asking me:\n' +
-                '- "distill the active session"\n' +
-                '- "build a story"\n' +
-                '- "check session status"\n' +
-                '- "help"\n'
+                '# 🔨 Forge - Session-Driven Context Engineering\n\n' +
+                'I help you build Forge documentation and implement stories.\n\n' +
+                '## Available Personas\n\n' +
+                '### @forge-design 📐\n' +
+                'Use when **designing** features, diagrams, specs, or actors during a design session.\n' +
+                '- Creates/modifies AI documentation in `ai/` folder\n' +
+                '- Tracks changes in active session\n' +
+                '- Provides complete schema guidance\n\n' +
+                '### @forge-build 🛠️\n' +
+                'Use when **implementing** stories from `ai/tickets/`.\n' +
+                '- Reads story files and linked documentation\n' +
+                '- Implements code changes\n' +
+                '- Writes tests\n' +
+                '- Marks stories as completed\n\n' +
+                '## Quick Start\n\n' +
+                '**For Cursor Users**: Use custom commands like `/forge-design` or `/forge-build`\n\n' +
+                '**For VSCode Users**: Use chat personas `@forge-design` or `@forge-build`\n\n' +
+                '## Examples\n' +
+                '- `@forge-design` "Create a user-login feature with Gherkin scenarios"\n' +
+                '- `@forge-build` "Implement the authentication-api.story.md"\n\n' +
+                '**Need more help?** Check the Forge documentation or ask me specific questions!'
             );
             return;
         }
 
-        if (prompt.includes('help')) {
-            stream.markdown(
-                '# Forge Agent Help\n\n' +
-                'I can help you manage Forge sessions and stories.\n\n' +
-                '## Commands\n' +
-                '- **distill** - Distill the active design session into stories and tasks\n' +
-                '- **build** - Build a specific story file\n' +
-                '- **status** - Check the current session status\n' +
-                '- **help** - Show this help message\n\n' +
-                '## Example\n' +
-                'Try saying: "distill the active session"'
-            );
-            return;
-        }
-
-        if (prompt.includes('status')) {
-            stream.markdown(
-                '📊 **Session Status**\n\n' +
-                `Working with: \`${vscode.workspace.getWorkspaceFolder(projectUri)?.name || 'default'}\`\n\n` +
-                'To properly check session status, I need access to workspace files.\n\n' +
-                'For now, you can:\n' +
-                '1. Open Forge Studio to see active sessions\n' +
-                '2. Check `ai/sessions/` folder directly\n\n' +
-                '*Full session status integration coming soon!*'
-            );
-            return;
-        }
-
-        // Default: unknown command
         stream.markdown(
-            'I didn\'t understand that command. Try:\n' +
-            '- "hello" - Introduce myself\n' +
-            '- "help" - Show available commands\n' +
-            '- "status" - Check session status\n'
+            'I\'m the main Forge helper. Use the specialized personas for specific tasks:\n\n' +
+            '- **@forge-design** - Design features, diagrams, specs\n' +
+            '- **@forge-build** - Implement stories and write code\n\n' +
+            'Try `@forge help` to see more information.'
         );
+    }
+
+    /**
+     * Handle @forge-design requests (design sessions)
+     */
+    private static async handleDesignRequest(
+        request: vscode.ChatRequest,
+        context: vscode.ChatContext,
+        stream: vscode.ChatResponseStream,
+        token: vscode.CancellationToken
+    ): Promise<void> {
+        // Provide the design instructions upfront
+        stream.markdown(
+            '# 📐 Forge Design Session\n\n' +
+            'I\'ll help you design Forge documentation. Here are my instructions:\n\n'
+        );
+        
+        stream.markdown(FORGE_DESIGN_INSTRUCTIONS);
+        
+        stream.markdown('\n\n---\n\n**Now, what would you like me to help you design?**');
+    }
+
+    /**
+     * Handle @forge-build requests (implement stories)
+     */
+    private static async handleBuildRequest(
+        request: vscode.ChatRequest,
+        context: vscode.ChatContext,
+        stream: vscode.ChatResponseStream,
+        token: vscode.CancellationToken
+    ): Promise<void> {
+        // Provide the build instructions upfront
+        stream.markdown(
+            '# 🛠️ Forge Build Story\n\n' +
+            'I\'ll help you implement a Forge story. Here are my instructions:\n\n'
+        );
+        
+        stream.markdown(FORGE_BUILD_INSTRUCTIONS);
+        
+        stream.markdown('\n\n---\n\n**Please provide the story file you\'d like me to implement.**');
     }
 }

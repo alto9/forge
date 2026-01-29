@@ -139,6 +139,10 @@ export class ForgeStudioTreeProvider implements vscode.TreeDataProvider<ForgeTre
         this.refresh();
     }
 
+    public getProjectUri(): vscode.Uri | undefined {
+        return this._projectUri;
+    }
+
     public refresh(): void {
         this._folderCache.clear();
         // Fire event with undefined to refresh entire tree

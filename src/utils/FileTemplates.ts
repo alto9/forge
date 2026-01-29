@@ -129,38 +129,87 @@ Add additional context about this actor.
 }
 
 /**
+ * Parse GitHub issue body to extract structured fields
+ */
+function parseGitHubIssueBody(body: string): {
+    problemStatement: string;
+    proposedSolution: string;
+    alternativesConsidered: string;
+    useCases: string;
+    priority: string;
+    additionalContext: string;
+} {
+    const problemMatch = body.match(/### Problem Statement\s*\n([\s\S]*?)(?=\n### |\Z)/i);
+    const solutionMatch = body.match(/### Proposed Solution\s*\n([\s\S]*?)(?=\n### |\Z)/i);
+    const alternativesMatch = body.match(/### Alternatives Considered\s*\n([\s\S]*?)(?=\n### |\Z)/i);
+    const useCasesMatch = body.match(/### Use Cases\s*\n([\s\S]*?)(?=\n### |\Z)/i);
+    const priorityMatch = body.match(/### Priority\s*\n([\s\S]*?)(?=\n### |\Z)/i);
+    const contextMatch = body.match(/### Additional Context\s*\n([\s\S]*?)(?=\n### |\Z)/i);
+    
+    let priority = 'Medium - Would be helpful';
+    if (priorityMatch) {
+        const priorityText = priorityMatch[1].trim();
+        if (priorityText.includes('Low')) priority = 'Low - Nice to have';
+        else if (priorityText.includes('High')) priority = 'High - Important for my workflow';
+        else if (priorityText.includes('Critical')) priority = 'Critical - Blocking my use of Forge';
+    }
+    
+    return {
+        problemStatement: problemMatch ? problemMatch[1].trim() : '',
+        proposedSolution: solutionMatch ? solutionMatch[1].trim() : 'Add your proposed solution here.',
+        alternativesConsidered: alternativesMatch ? alternativesMatch[1].trim() : '- Add alternatives you\'ve considered',
+        useCases: useCasesMatch ? useCasesMatch[1].trim() : '- Add specific use cases where this would be useful',
+        priority,
+        additionalContext: contextMatch ? contextMatch[1].trim() : 'Add any additional notes, mockups, or context here.'
+    };
+}
+
+/**
  * Generate session file template
  */
-export function generateSessionTemplate(name: string, problemStatement: string, githubIssue?: string): string {
+export function generateSessionTemplate(name: string, issueBody: string, githubIssue?: string, issueTitle?: string): string {
     const id = nameToId(name);
     const startTime = new Date().toISOString();
     const githubIssueField = githubIssue ? `github_issue: '${githubIssue}'` : `github_issue: ''`;
+    const issueTitleField = issueTitle ? `issue_title: '${issueTitle.replace(/'/g, "''")}'` : `issue_title: ''`;
+    
+    // Parse issue body to extract fields
+    const parsed = issueBody ? parseGitHubIssueBody(issueBody) : {
+        problemStatement: 'Describe the problem to solve...',
+        proposedSolution: 'Add your proposed solution here.',
+        alternativesConsidered: '- Add alternatives you\'ve considered',
+        useCases: '- Add specific use cases where this would be useful',
+        priority: 'Medium - Would be helpful',
+        additionalContext: 'Add any additional notes, mockups, or context here.'
+    };
+    
     return `---
 session_id: ${id}
 ${githubIssueField}
+${issueTitleField}
 start_time: '${startTime}'
 status: planning
-problem_statement: ${problemStatement}
-priority: Medium - Would be helpful
+problem_statement: ${parsed.problemStatement || 'Describe the problem to solve...'}
+priority: ${parsed.priority}
 changed_files: []
 ---
 
 # ${name} Session
 
 ## Problem Statement
-${problemStatement}
+${parsed.problemStatement}
 
 ## Proposed Solution
-Add your proposed solution here.
+${parsed.proposedSolution}
 
 ## Alternatives Considered
-- Add alternatives you've considered
+${parsed.alternativesConsidered}
 
 ## Use Cases
-- Add specific use cases where this would be useful
+${parsed.useCases}
 
 ## Additional Context
-Add any additional notes, mockups, or context here.
+${parsed.additionalContext}
 `;
 }
 

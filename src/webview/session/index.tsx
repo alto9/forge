@@ -18,6 +18,11 @@ interface SessionData {
   frontmatter: {
     session_id: string;
     github_issue?: string;
+    issue_title?: string;
+    github_labels?: Array<{ name: string; color: string }>;
+    github_milestone?: string;
+    github_assignees?: string[];
+    github_state?: string;
     start_time: string;
     end_time?: string;
     status: string;
@@ -34,6 +39,8 @@ interface GitHubIssue {
   body: string;
   html_url: string;
   labels: Array<{ name: string; color: string }>;
+  milestone?: { title: string; number: number };
+  assignees: Array<{ login: string }>;
   state: string;
 }
 
@@ -41,6 +48,11 @@ function App() {
   const [sessionData, setSessionData] = React.useState<SessionData | null>(null);
   const [editedData, setEditedData] = React.useState<{
     githubIssue: string;
+    issueTitle: string;
+    githubLabels: Array<{ name: string; color: string }>;
+    githubMilestone: string;
+    githubAssignees: string[];
+    githubState: string;
     problemStatement: string;
     proposedSolution: string;
     alternativesConsidered: string;
@@ -57,6 +69,11 @@ function App() {
   const [githubError, setGithubError] = React.useState<string | null>(null);
   const [githubActiveTab, setGithubActiveTab] = React.useState<'browse' | 'input'>('browse');
   const [githubIssueInput, setGithubIssueInput] = React.useState('');
+  const [showConfirmDialog, setShowConfirmDialog] = React.useState<{
+    type: 'pull' | 'push';
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   React.useEffect(() => {
     // Request initial data
@@ -79,6 +96,11 @@ function App() {
         
         setEditedData({
           githubIssue: msg.data.frontmatter.github_issue || '',
+          issueTitle: msg.data.frontmatter.issue_title || '',
+          githubLabels: msg.data.frontmatter.github_labels || [],
+          githubMilestone: msg.data.frontmatter.github_milestone || '',
+          githubAssignees: msg.data.frontmatter.github_assignees || [],
+          githubState: msg.data.frontmatter.github_state || 'open',
           problemStatement: msg.data.frontmatter.problem_statement || '',
           proposedSolution: proposedSolutionMatch ? proposedSolutionMatch[1].trim() : '',
           alternativesConsidered: alternativesMatch ? alternativesMatch[1].trim() : '',
@@ -108,10 +130,41 @@ function App() {
       
       if (msg?.type === 'githubIssueResponse') {
         setGithubLoading(false);
-        setSelectedGithubIssue(msg.data);
+        
+        // If this is a pull operation (not picker), populate the fields
+        if (editedData?.githubIssue && !showGitHubPicker) {
+          const parsedData = parseGitHubIssueBody(msg.data.body);
+          setEditedData({
+            ...editedData,
+            issueTitle: msg.data.title,
+            githubLabels: msg.data.labels || [],
+            githubMilestone: msg.data.milestone?.title || '',
+            githubAssignees: msg.data.assignees?.map((a: any) => a.login) || [],
+            githubState: msg.data.state || 'open',
+            problemStatement: parsedData.problemStatement || msg.data.title,
+            proposedSolution: parsedData.proposedSolution || editedData.proposedSolution,
+            alternativesConsidered: parsedData.alternativesConsidered || editedData.alternativesConsidered,
+            useCases: parsedData.useCases || editedData.useCases,
+            priority: parsedData.priority || editedData.priority,
+            additionalContext: parsedData.additionalContext || editedData.additionalContext
+          });
+        } else {
+          // This is for the picker
+          setSelectedGithubIssue(msg.data);
+        }
       }
       
       if (msg?.type === 'githubIssueError') {
+        setGithubLoading(false);
+        setGithubError(msg.error);
+      }
+      
+      if (msg?.type === 'pushIssueSuccess') {
+        setGithubLoading(false);
+        alert('Successfully pushed session data to GitHub issue!');
+      }
+      
+      if (msg?.type === 'pushIssueError') {
         setGithubLoading(false);
         setGithubError(msg.error);
       }
@@ -169,6 +222,11 @@ ${editedData.additionalContext}
     const updatedFrontmatter = {
       ...sessionData.frontmatter,
       github_issue: editedData.githubIssue,
+      issue_title: editedData.issueTitle,
+      github_labels: editedData.githubLabels,
+      github_milestone: editedData.githubMilestone,
+      github_assignees: editedData.githubAssignees,
+      github_state: editedData.githubState,
       problem_statement: editedData.problemStatement,
       priority: editedData.priority,
       status: editedData.status
@@ -199,6 +257,143 @@ ${editedData.additionalContext}
     vscode?.postMessage({ type: 'getGitHubIssue', issueIdentifier: githubIssueInput.trim() });
   };
 
+  const parseGitHubIssueBody = (body: string): Partial<typeof editedData> => {
+    const parsed: any = {};
+    
+    // Parse Problem Statement
+    const problemMatch = body.match(/### Problem Statement\s*\n([\s\S]*?)(?=\n### |\Z)/i);
+    if (problemMatch) {
+      parsed.problemStatement = problemMatch[1].trim();
+    }
+    
+    // Parse Proposed Solution
+    const solutionMatch = body.match(/### Proposed Solution\s*\n([\s\S]*?)(?=\n### |\Z)/i);
+    if (solutionMatch) {
+      parsed.proposedSolution = solutionMatch[1].trim();
+    }
+    
+    // Parse Alternatives Considered
+    const alternativesMatch = body.match(/### Alternatives Considered\s*\n([\s\S]*?)(?=\n### |\Z)/i);
+    if (alternativesMatch) {
+      parsed.alternativesConsidered = alternativesMatch[1].trim();
+    }
+    
+    // Parse Priority
+    const priorityMatch = body.match(/### Priority\s*\n([\s\S]*?)(?=\n### |\Z)/i);
+    if (priorityMatch) {
+      const priorityText = priorityMatch[1].trim();
+      // Match to our priority options
+      if (priorityText.includes('Low')) parsed.priority = 'Low - Nice to have';
+      else if (priorityText.includes('High')) parsed.priority = 'High - Important for my workflow';
+      else if (priorityText.includes('Critical')) parsed.priority = 'Critical - Blocking my use of Forge';
+      else parsed.priority = 'Medium - Would be helpful';
+    }
+    
+    // Parse Use Cases
+    const useCasesMatch = body.match(/### Use Cases\s*\n([\s\S]*?)(?=\n### |\Z)/i);
+    if (useCasesMatch) {
+      parsed.useCases = useCasesMatch[1].trim();
+    }
+    
+    // Parse Additional Context
+    const contextMatch = body.match(/### Additional Context\s*\n([\s\S]*?)(?=\n### |\Z)/i);
+    if (contextMatch) {
+      parsed.additionalContext = contextMatch[1].trim();
+    }
+    
+    return parsed;
+  };
+
+  const handlePullFromGitHub = () => {
+    if (!editedData?.githubIssue) {
+      setGithubError('No GitHub issue linked');
+      return;
+    }
+    
+    setShowConfirmDialog({
+      type: 'pull',
+      message: 'This will overwrite your current session data with data from the GitHub issue. Continue?',
+      onConfirm: () => {
+        setGithubLoading(true);
+        setGithubError(null);
+        vscode?.postMessage({ 
+          type: 'getGitHubIssue', 
+          issueIdentifier: editedData.githubIssue 
+        });
+        setShowConfirmDialog(null);
+      }
+    });
+  };
+
+  const handlePushToGitHub = () => {
+    if (!editedData?.githubIssue || !githubRepoInfo) {
+      setGithubError('No GitHub issue linked');
+      return;
+    }
+    
+    setShowConfirmDialog({
+      type: 'push',
+      message: 'This will overwrite the GitHub issue with your current session data. Continue?',
+      onConfirm: () => {
+        // Format session data for GitHub issue body
+        const issueBody = formatSessionDataForGitHub();
+        
+        // Extract issue number from githubIssue (format: owner/repo#123)
+        const match = editedData.githubIssue.match(/#(\d+)$/);
+        if (!match) {
+          setGithubError('Invalid GitHub issue format');
+          return;
+        }
+        
+        const issueNumber = parseInt(match[1], 10);
+        
+        setGithubLoading(true);
+        setGithubError(null);
+        vscode?.postMessage({
+          type: 'pushToGitHub',
+          owner: githubRepoInfo.owner,
+          repo: githubRepoInfo.repo,
+          issueNumber,
+          title: editedData.issueTitle || editedData.problemStatement.substring(0, 100),
+          body: issueBody,
+          labels: editedData.githubLabels.map(l => l.name),
+          milestone: editedData.githubMilestone,
+          assignees: editedData.githubAssignees,
+          state: editedData.githubState
+        });
+        setShowConfirmDialog(null);
+      }
+    });
+  };
+
+  const formatSessionDataForGitHub = (): string => {
+    if (!editedData) return '';
+    
+    return `### Problem Statement
+
+${editedData.problemStatement}
+
+### Proposed Solution
+
+${editedData.proposedSolution}
+
+### Alternatives Considered
+
+${editedData.alternativesConsidered}
+
+### Priority
+
+${editedData.priority}
+
+### Use Cases
+
+${editedData.useCases}
+
+### Additional Context
+
+${editedData.additionalContext}`;
+  };
+
   const handleLinkGitHubIssue = () => {
     if (!selectedGithubIssue) {
       setGithubError('Please select an issue');
@@ -208,10 +403,23 @@ ${editedData.additionalContext}
     // Format as owner/repo#number
     const issueRef = `${githubRepoInfo?.owner || ''}/${githubRepoInfo?.repo || ''}#${selectedGithubIssue.number}`;
     
+    // Parse issue body and auto-pull data
+    const parsedData = parseGitHubIssueBody(selectedGithubIssue.body);
+    
     setEditedData({
       ...editedData!,
       githubIssue: issueRef,
-      problemStatement: editedData!.problemStatement || selectedGithubIssue.title
+      issueTitle: selectedGithubIssue.title,
+      githubLabels: selectedGithubIssue.labels || [],
+      githubMilestone: selectedGithubIssue.milestone?.title || '',
+      githubAssignees: selectedGithubIssue.assignees?.map((a) => a.login) || [],
+      githubState: selectedGithubIssue.state || 'open',
+      problemStatement: parsedData.problemStatement || selectedGithubIssue.title,
+      proposedSolution: parsedData.proposedSolution || editedData!.proposedSolution,
+      alternativesConsidered: parsedData.alternativesConsidered || editedData!.alternativesConsidered,
+      useCases: parsedData.useCases || editedData!.useCases,
+      priority: parsedData.priority || editedData!.priority,
+      additionalContext: parsedData.additionalContext || editedData!.additionalContext
     });
     
     setShowGitHubPicker(false);
@@ -356,6 +564,35 @@ ${editedData.additionalContext}
         </div>
       </div>
 
+      {/* Issue Title */}
+      {editedData.issueTitle && (
+        <div style={{ 
+          marginBottom: 16,
+          padding: 16,
+          background: 'var(--vscode-editor-inactiveSelectionBackground)',
+          borderRadius: 4,
+          border: '2px solid var(--vscode-focusBorder)'
+        }}>
+          <h3 style={{ marginTop: 0, marginBottom: 8, fontSize: 11, textTransform: 'uppercase', opacity: 0.7 }}>Issue Title</h3>
+          <input
+            type="text"
+            value={editedData.issueTitle}
+            onChange={(e) => setEditedData({ ...editedData, issueTitle: e.target.value })}
+            placeholder="Issue title"
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              fontSize: 18,
+              fontWeight: 600,
+              background: 'var(--vscode-input-background)',
+              color: 'var(--vscode-input-foreground)',
+              border: '1px solid var(--vscode-input-border)',
+              borderRadius: 4
+            }}
+          />
+        </div>
+      )}
+
       {/* GitHub Issue */}
       <div style={{ 
         marginBottom: 16,
@@ -364,7 +601,7 @@ ${editedData.additionalContext}
         borderRadius: 4
       }}>
         <h3 style={{ marginTop: 0, marginBottom: 8 }}>GitHub Issue</h3>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'stretch' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'stretch', marginBottom: 8 }}>
           <input
             type="text"
             value={editedData.githubIssue}
@@ -400,6 +637,192 @@ ${editedData.additionalContext}
             🔗 Link Issue
           </button>
         </div>
+        {editedData.githubIssue && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button
+              onClick={handlePullFromGitHub}
+              disabled={githubLoading}
+              style={{
+                flex: 1,
+                padding: '8px 16px',
+                background: 'var(--vscode-button-secondaryBackground)',
+                color: 'var(--vscode-button-secondaryForeground)',
+                border: '1px solid var(--vscode-button-border)',
+                borderRadius: 4,
+                cursor: githubLoading ? 'not-allowed' : 'pointer',
+                fontSize: 13,
+                fontWeight: 600
+              }}
+            >
+              ⬇️ Pull from GitHub
+            </button>
+            <button
+              onClick={handlePushToGitHub}
+              disabled={githubLoading}
+              style={{
+                flex: 1,
+                padding: '8px 16px',
+                background: 'var(--vscode-button-secondaryBackground)',
+                color: 'var(--vscode-button-secondaryForeground)',
+                border: '1px solid var(--vscode-button-border)',
+                borderRadius: 4,
+                cursor: githubLoading ? 'not-allowed' : 'pointer',
+                fontSize: 13,
+                fontWeight: 600
+              }}
+            >
+              ⬆️ Push to GitHub
+            </button>
+          </div>
+        )}
+        
+        {/* GitHub Metadata */}
+        {editedData.githubIssue && (
+          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {/* Labels */}
+            <div>
+              <label style={{ display: 'block', marginBottom: 4, fontSize: 11, textTransform: 'uppercase', opacity: 0.7 }}>
+                Labels
+              </label>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                {editedData.githubLabels.length > 0 ? (
+                  editedData.githubLabels.map((label) => (
+                    <div
+                      key={label.name}
+                      style={{
+                        padding: '4px 12px',
+                        borderRadius: 12,
+                        fontSize: 12,
+                        background: `#${label.color}`,
+                        color: '#fff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6
+                      }}
+                    >
+                      <span>{label.name}</span>
+                      <button
+                        onClick={() => {
+                          setEditedData({
+                            ...editedData,
+                            githubLabels: editedData.githubLabels.filter(l => l.name !== label.name)
+                          });
+                        }}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: '#fff',
+                          cursor: 'pointer',
+                          padding: 0,
+                          fontSize: 14,
+                          lineHeight: 1
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <span style={{ fontSize: 12, opacity: 0.6 }}>No labels</span>
+                )}
+              </div>
+            </div>
+
+            {/* Milestone */}
+            <div>
+              <label style={{ display: 'block', marginBottom: 4, fontSize: 11, textTransform: 'uppercase', opacity: 0.7 }}>
+                Milestone
+              </label>
+              <input
+                type="text"
+                value={editedData.githubMilestone}
+                onChange={(e) => setEditedData({ ...editedData, githubMilestone: e.target.value })}
+                placeholder="No milestone"
+                style={{
+                  padding: '6px 10px',
+                  fontSize: 12,
+                  background: 'var(--vscode-input-background)',
+                  color: 'var(--vscode-input-foreground)',
+                  border: '1px solid var(--vscode-input-border)',
+                  borderRadius: 4,
+                  width: '100%'
+                }}
+              />
+            </div>
+
+            {/* Assignees */}
+            <div>
+              <label style={{ display: 'block', marginBottom: 4, fontSize: 11, textTransform: 'uppercase', opacity: 0.7 }}>
+                Assignees
+              </label>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                {editedData.githubAssignees.length > 0 ? (
+                  editedData.githubAssignees.map((assignee) => (
+                    <div
+                      key={assignee}
+                      style={{
+                        padding: '4px 12px',
+                        borderRadius: 12,
+                        fontSize: 12,
+                        background: 'var(--vscode-badge-background)',
+                        color: 'var(--vscode-badge-foreground)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6
+                      }}
+                    >
+                      <span>@{assignee}</span>
+                      <button
+                        onClick={() => {
+                          setEditedData({
+                            ...editedData,
+                            githubAssignees: editedData.githubAssignees.filter(a => a !== assignee)
+                          });
+                        }}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'var(--vscode-badge-foreground)',
+                          cursor: 'pointer',
+                          padding: 0,
+                          fontSize: 14,
+                          lineHeight: 1
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))
+                ) : (
+                  <span style={{ fontSize: 12, opacity: 0.6 }}>No assignees</span>
+                )}
+              </div>
+            </div>
+
+            {/* State */}
+            <div>
+              <label style={{ display: 'block', marginBottom: 4, fontSize: 11, textTransform: 'uppercase', opacity: 0.7 }}>
+                State
+              </label>
+              <select
+                value={editedData.githubState}
+                onChange={(e) => setEditedData({ ...editedData, githubState: e.target.value })}
+                style={{
+                  padding: '6px 10px',
+                  fontSize: 12,
+                  background: 'var(--vscode-input-background)',
+                  color: 'var(--vscode-input-foreground)',
+                  border: '1px solid var(--vscode-input-border)',
+                  borderRadius: 4,
+                  width: '100%'
+                }}
+              >
+                <option value="open">Open</option>
+                <option value="closed">Closed</option>
+              </select>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Priority */}
@@ -893,6 +1316,70 @@ ${editedData.additionalContext}
                 }}
               >
                 {githubLoading ? 'Linking...' : 'Link Issue'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog */}
+      {showConfirmDialog && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 2000
+        }}>
+          <div style={{
+            background: 'var(--vscode-editor-background)',
+            border: '1px solid var(--vscode-panel-border)',
+            borderRadius: 6,
+            width: '90%',
+            maxWidth: 500,
+            padding: 24
+          }}>
+            <h3 style={{ marginTop: 0, marginBottom: 16 }}>
+              {showConfirmDialog.type === 'pull' ? '⬇️ Pull from GitHub' : '⬆️ Push to GitHub'}
+            </h3>
+            <p style={{ marginBottom: 24, opacity: 0.9 }}>
+              {showConfirmDialog.message}
+            </p>
+            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowConfirmDialog(null)}
+                style={{
+                  padding: '8px 16px',
+                  background: 'var(--vscode-button-secondaryBackground)',
+                  color: 'var(--vscode-button-secondaryForeground)',
+                  border: '1px solid var(--vscode-button-border)',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 600
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={showConfirmDialog.onConfirm}
+                style={{
+                  padding: '8px 16px',
+                  background: 'var(--vscode-button-background)',
+                  color: 'var(--vscode-button-foreground)',
+                  border: 'none',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                  fontSize: 13,
+                  fontWeight: 600
+                }}
+              >
+                Continue
               </button>
             </div>
           </div>

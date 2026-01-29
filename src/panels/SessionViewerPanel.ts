@@ -57,6 +57,9 @@ export class SessionViewerPanel {
                     case 'getGitHubIssue':
                         await this._handleGetGitHubIssue(message.issueIdentifier);
                         break;
+                    case 'pushToGitHub':
+                        await this._handlePushToGitHub(message.owner, message.repo, message.issueNumber, message.title, message.body, message.labels, message.milestone, message.assignees, message.state);
+                        break;
                 }
             },
             null,
@@ -340,14 +343,20 @@ export class SessionViewerPanel {
             // Try to get GitHub authentication from VSCode
             let auth: string | undefined;
             try {
-                const session = await vscode.authentication.getSession('github', ['repo'], { createIfNone: false });
+                const session = await vscode.authentication.getSession('github', ['repo'], { createIfNone: true });
                 if (session) {
                     auth = session.accessToken;
                 }
             } catch (error) {
-                // No auth available, continue without it
-                console.log('No GitHub authentication available');
+                console.log('GitHub authentication failed:', error);
+                throw new Error('GitHub authentication required. Please sign in to GitHub in VSCode (Cmd/Ctrl+Shift+P → "GitHub: Sign In")');
             }
+
+            if (!auth) {
+                throw new Error('GitHub authentication required. Please sign in to GitHub in VSCode (Cmd/Ctrl+Shift+P → "GitHub: Sign In")');
+            }
+
+            console.log(`Fetching issues for ${owner}/${repo}`);
 
             const octokit = new Octokit({
                 baseUrl: 'https://api.github.com',
@@ -363,7 +372,7 @@ export class SessionViewerPanel {
                 per_page: perPage
             });
 
-            return data.map((issue) => ({
+            return data.map((issue: any) => ({
                 number: issue.number,
                 title: issue.title,
                 body: issue.body || '',
@@ -385,14 +394,20 @@ export class SessionViewerPanel {
             // Try to get GitHub authentication from VSCode
             let auth: string | undefined;
             try {
-                const session = await vscode.authentication.getSession('github', ['repo'], { createIfNone: false });
+                const session = await vscode.authentication.getSession('github', ['repo'], { createIfNone: true });
                 if (session) {
                     auth = session.accessToken;
                 }
             } catch (error) {
-                // No auth available, continue without it
-                console.log('No GitHub authentication available');
+                console.log('GitHub authentication failed:', error);
+                throw new Error('GitHub authentication required. Please sign in to GitHub in VSCode (Cmd/Ctrl+Shift+P → "GitHub: Sign In")');
             }
+
+            if (!auth) {
+                throw new Error('GitHub authentication required. Please sign in to GitHub in VSCode (Cmd/Ctrl+Shift+P → "GitHub: Sign In")');
+            }
+
+            console.log(`Fetching issue #${issueNumber} for ${owner}/${repo}`);
 
             const octokit = new Octokit({
                 baseUrl: 'https://api.github.com',
@@ -414,11 +429,105 @@ export class SessionViewerPanel {
                 labels: data.labels.map((label: any) => ({
                     name: typeof label === 'string' ? label : label.name,
                     color: typeof label === 'object' && label.color ? label.color : '000000'
-                }))
+                })),
+                milestone: data.milestone ? { title: data.milestone.title, number: data.milestone.number } : undefined,
+                assignees: data.assignees?.map((a: any) => ({ login: a.login })) || []
             };
         } catch (error: any) {
             console.error('GitHub API call failed:', error);
             throw new Error(`Failed to fetch GitHub issue #${issueNumber}: ${error.message || error}`);
+        }
+    }
+
+    private async _handlePushToGitHub(
+        owner: string, 
+        repo: string, 
+        issueNumber: number, 
+        title: string, 
+        body: string,
+        labels?: string[],
+        milestone?: string,
+        assignees?: string[],
+        state?: string
+    ) {
+        try {
+            // Try to get GitHub authentication from VSCode
+            let auth: string | undefined;
+            try {
+                const session = await vscode.authentication.getSession('github', ['repo'], { createIfNone: false });
+                if (session) {
+                    auth = session.accessToken;
+                }
+            } catch (error) {
+                // No auth available
+                console.log('No GitHub authentication available');
+            }
+
+            if (!auth) {
+                this._panel.webview.postMessage({
+                    type: 'pushIssueError',
+                    error: 'GitHub authentication required. Please sign in to GitHub in VSCode.'
+                });
+                return;
+            }
+
+            const octokit = new Octokit({
+                baseUrl: 'https://api.github.com',
+                auth
+            });
+            
+            // Build update payload
+            const updatePayload: any = {
+                owner,
+                repo,
+                issue_number: issueNumber,
+                title,
+                body
+            };
+
+            // Add labels if provided
+            if (labels && labels.length > 0) {
+                updatePayload.labels = labels;
+            }
+
+            // Add milestone if provided (need to look up milestone number by title)
+            if (milestone && milestone.trim()) {
+                try {
+                    const { data: milestones } = await octokit.rest.issues.listMilestones({
+                        owner,
+                        repo,
+                        state: 'all'
+                    });
+                    const matchingMilestone = milestones.find((m: any) => m.title === milestone);
+                    if (matchingMilestone) {
+                        updatePayload.milestone = matchingMilestone.number;
+                    }
+                } catch (error) {
+                    console.log('Failed to set milestone:', error);
+                }
+            }
+
+            // Add assignees if provided
+            if (assignees && assignees.length > 0) {
+                updatePayload.assignees = assignees;
+            }
+
+            // Add state if provided
+            if (state) {
+                updatePayload.state = state;
+            }
+            
+            await octokit.rest.issues.update(updatePayload);
+
+            this._panel.webview.postMessage({
+                type: 'pushIssueSuccess'
+            });
+        } catch (error: any) {
+            console.error('GitHub API push failed:', error);
+            this._panel.webview.postMessage({
+                type: 'pushIssueError',
+                error: error.message || 'Failed to push to GitHub issue'
+            });
         }
     }
 
