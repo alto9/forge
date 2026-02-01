@@ -76,7 +76,7 @@ describe('Project Readiness - Command File Integration', () => {
 
         it('should check all command files sequentially', () => {
             const commands = [
-                { path: '.cursor/commands/forge-design.md', exists: true, valid: true },
+                { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
                 { path: '.cursor/commands/forge-build.md', exists: true, valid: true }
             ];
 
@@ -87,7 +87,7 @@ describe('Project Readiness - Command File Integration', () => {
 
         it('should fail if any command is missing', () => {
             const commands = [
-                { path: '.cursor/commands/forge-design.md', exists: true, valid: true },
+                { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
                 { path: '.cursor/commands/forge-build.md', exists: false, valid: false }
             ];
 
@@ -98,7 +98,7 @@ describe('Project Readiness - Command File Integration', () => {
 
         it('should fail if any command exists but is invalid', () => {
             const commands = [
-                { path: '.cursor/commands/forge-design.md', exists: true, valid: true },
+                { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
                 { path: '.cursor/commands/forge-build.md', exists: true, valid: false }
             ];
 
@@ -134,7 +134,7 @@ describe('Project Readiness - Command File Integration', () => {
         });
 
         it('should handle command file validation with real templates', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             const generated = generateCommandFile(commandPath);
             const isValid = validateCommandFileHash(generated, commandPath);
 
@@ -142,7 +142,7 @@ describe('Project Readiness - Command File Integration', () => {
         });
 
         it('should detect tampered command file', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             const generated = generateCommandFile(commandPath);
             const tampered = generated + '\n// User added this';
             const isValid = validateCommandFileHash(tampered, commandPath);
@@ -159,7 +159,7 @@ describe('Project Readiness - Command File Integration', () => {
             ];
 
             const commands = [
-                { path: '.cursor/commands/forge-design.md', exists: true, valid: true, description: 'Design command', type: 'command' as const },
+                { path: '.cursor/commands/forge-refine.md', exists: true, valid: true, description: 'Design command', type: 'command' as const },
                 { path: '.cursor/commands/forge-build.md', exists: true, valid: true, description: 'Build command', type: 'command' as const }
             ];
 
@@ -178,7 +178,7 @@ describe('Project Readiness - Command File Integration', () => {
 
         it('should include exists and valid flags for commands', () => {
             const command = { 
-                path: '.cursor/commands/forge-design.md', 
+                path: '.cursor/commands/forge-refine.md', 
                 exists: true, 
                 valid: true, 
                 description: 'Design command',
@@ -194,7 +194,7 @@ describe('Project Readiness - Command File Integration', () => {
         it('should use type discriminator for folders and commands', () => {
             const folder = { path: 'ai', exists: true, description: 'Root', type: 'folder' as const };
             const command = { 
-                path: '.cursor/commands/forge-design.md', 
+                path: '.cursor/commands/forge-refine.md', 
                 exists: true, 
                 valid: true, 
                 description: 'Design command',
@@ -222,7 +222,7 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: 'ai/actors', exists: true }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-design.md', exists: true, valid: true },
+                    { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
                     { path: '.cursor/commands/forge-build.md', exists: true, valid: true }
                 ],
                 expectedReady: true
@@ -234,7 +234,7 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: 'ai/actors', exists: false }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-design.md', exists: true, valid: true },
+                    { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
                     { path: '.cursor/commands/forge-build.md', exists: true, valid: true }
                 ],
                 expectedReady: false
@@ -246,7 +246,7 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: 'ai/actors', exists: true }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-design.md', exists: false, valid: false },
+                    { path: '.cursor/commands/forge-refine.md', exists: false, valid: false },
                     { path: '.cursor/commands/forge-build.md', exists: false, valid: false }
                 ],
                 expectedReady: false
@@ -258,7 +258,7 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: 'ai/actors', exists: true }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-design.md', exists: true, valid: false },
+                    { path: '.cursor/commands/forge-refine.md', exists: true, valid: false },
                     { path: '.cursor/commands/forge-build.md', exists: true, valid: false }
                 ],
                 expectedReady: false
@@ -270,7 +270,7 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: 'ai/actors', exists: true }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-design.md', exists: true, valid: true },
+                    { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
                     { path: '.cursor/commands/forge-build.md', exists: true, valid: false }
                 ],
                 expectedReady: false
@@ -282,7 +282,7 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: 'ai/actors', exists: true }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-design.md', exists: true, valid: true },
+                    { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
                     { path: '.cursor/commands/forge-build.md', exists: false, valid: false }
                 ],
                 expectedReady: false
@@ -294,7 +294,7 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: 'ai/actors', exists: false }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-design.md', exists: true, valid: true },
+                    { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
                     { path: '.cursor/commands/forge-build.md', exists: true, valid: true }
                 ],
                 expectedReady: false
@@ -306,7 +306,7 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: 'ai/actors', exists: false }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-design.md', exists: false, valid: false },
+                    { path: '.cursor/commands/forge-refine.md', exists: false, valid: false },
                     { path: '.cursor/commands/forge-build.md', exists: false, valid: false }
                 ],
                 expectedReady: false
@@ -327,7 +327,7 @@ describe('Project Readiness - Command File Integration', () => {
     describe('Command file validation during readiness check', () => {
         it('should call validation for each command file', () => {
             const commandPaths = [
-                '.cursor/commands/forge-design.md',
+                '.cursor/commands/forge-refine.md',
                 '.cursor/commands/forge-build.md'
             ];
 
@@ -355,7 +355,7 @@ describe('Project Readiness - Command File Integration', () => {
         });
 
         it('should validate content using hash checking', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             
             // Generate valid file
             const validFile = generateCommandFile(commandPath);
@@ -365,10 +365,10 @@ describe('Project Readiness - Command File Integration', () => {
         });
 
         it('should detect invalid content using hash checking', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             
             // Create invalid file (no hash comment)
-            const invalidFile = '# Forge Design\n\nSome content';
+            const invalidFile = '# Forge Refine\n\nSome content';
             const isValid = validateCommandFileHash(invalidFile, commandPath);
             
             expect(isValid).toBe(false);
@@ -391,7 +391,7 @@ describe('Project Readiness - Command File Integration', () => {
 
         it('should recalculate status after command creation', () => {
             const beforeCommands = [
-                { path: '.cursor/commands/forge-design.md', exists: false, valid: false },
+                { path: '.cursor/commands/forge-refine.md', exists: false, valid: false },
                 { path: '.cursor/commands/forge-build.md', exists: false, valid: false }
             ];
 
@@ -425,12 +425,12 @@ describe('Project Readiness - Command File Integration', () => {
     });
 
     describe('Integration with command templates', () => {
-        it('should validate forge-design.md template', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+        it('should validate forge-refine.md template', () => {
+            const commandPath = '.cursor/commands/forge-refine.md';
             const generated = generateCommandFile(commandPath);
             
             expect(generated).toContain('<!-- forge-hash:');
-            expect(generated).toContain('# Forge Design');
+            expect(generated).toContain('# Forge Refine');
             expect(generated).toContain('Prerequisites');
         });
 
@@ -443,10 +443,11 @@ describe('Project Readiness - Command File Integration', () => {
             expect(generated).toContain('Prerequisites');
         });
 
-        it('should validate both command templates successfully', () => {
+        it('should validate all command templates successfully', () => {
             const paths = [
-                '.cursor/commands/forge-design.md',
-                '.cursor/commands/forge-build.md'
+                '.cursor/commands/forge-refine.md',
+                '.cursor/commands/forge-build.md',
+                '.cursor/commands/forge-scribe.md'
             ];
 
             paths.forEach(path => {
@@ -459,12 +460,13 @@ describe('Project Readiness - Command File Integration', () => {
 
     describe('Required commands structure', () => {
         const REQUIRED_COMMANDS = [
-            { path: '.cursor/commands/forge-design.md', description: 'Cursor command for design session workflow' },
-            { path: '.cursor/commands/forge-build.md', description: 'Cursor command for building from tickets' }
+            { path: '.cursor/commands/forge-refine.md', description: 'Cursor command for refining GitHub issues' },
+            { path: '.cursor/commands/forge-build.md', description: 'Cursor command for building from tickets' },
+            { path: '.cursor/commands/forge-scribe.md', description: 'Cursor command for creating sub-issues' }
         ];
 
-        it('should have 2 required commands', () => {
-            expect(REQUIRED_COMMANDS).toHaveLength(2);
+        it('should have 3 required commands', () => {
+            expect(REQUIRED_COMMANDS).toHaveLength(3);
         });
 
         it('should have commands in .cursor/commands/ directory', () => {
@@ -481,13 +483,14 @@ describe('Project Readiness - Command File Integration', () => {
             });
         });
 
-        it('should have forge-design and forge-build commands', () => {
+        it('should have forge-refine, forge-build, and forge-scribe commands', () => {
             const commandNames = REQUIRED_COMMANDS.map(c => 
                 c.path.replace('.cursor/commands/', '').replace('.md', '')
             );
 
-            expect(commandNames).toContain('forge-design');
+            expect(commandNames).toContain('forge-refine');
             expect(commandNames).toContain('forge-build');
+            expect(commandNames).toContain('forge-scribe');
         });
     });
 });

@@ -30,10 +30,9 @@ const REQUIRED_FOLDERS: Omit<FolderStatus, 'exists'>[] = [
 ];
 
 const REQUIRED_COMMANDS: Omit<CommandStatus, 'exists' | 'valid'>[] = [
-    { path: '.cursor/commands/forge-design.md', description: 'Cursor command for design session workflow', type: 'command' },
+    { path: '.cursor/commands/forge-refine.md', description: 'Cursor command for refining GitHub issues', type: 'command' },
     { path: '.cursor/commands/forge-build.md', description: 'Cursor command for building from tickets', type: 'command' },
-    { path: '.cursor/commands/forge-scribe.md', description: 'Cursor command for distilling sessions into stories', type: 'command' },
-    { path: '.cursor/commands/forge-sync.md', description: 'Cursor command for syncing AI docs with codebase', type: 'command' }
+    { path: '.cursor/commands/forge-scribe.md', description: 'Cursor command for creating sub-issues', type: 'command' }
 ];
 
 export class WelcomePanel {
@@ -840,9 +839,6 @@ export class WelcomePanel {
     private _handleSetupComplete(): void {
         // Close setup panel
         this.dispose();
-        
-        // Focus the Forge TreeView
-        vscode.commands.executeCommand('forgeStudioExplorer.focus');
         
         // Show success message
         vscode.window.showInformationMessage('✅ Forge setup complete! Your project is ready.');

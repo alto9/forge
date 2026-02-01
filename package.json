@@ -46,142 +46,34 @@
         "description": "Main Forge helper for guidance and general questions"
       },
       {
-        "id": "forge-design.participant",
-        "name": "forge-design",
-        "fullName": "Forge Design",
-        "description": "Design features, diagrams, specs, and actors during Forge sessions"
+        "id": "forge-refine.participant",
+        "name": "forge-refine",
+        "fullName": "Forge Refine",
+        "description": "Refine GitHub issues to clarify business value and requirements"
+      },
+      {
+        "id": "forge-scribe.participant",
+        "name": "forge-scribe",
+        "fullName": "Forge Scribe",
+        "description": "Create technical sub-issues from refined parent issues"
       },
       {
         "id": "forge-build.participant",
         "name": "forge-build",
         "fullName": "Forge Build",
-        "description": "Implement Forge stories by analyzing code and documentation"
+        "description": "Implement GitHub issues by analyzing code and running tests"
       }
     ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "forgeStudio",
-          "title": "Forge Studio",
-          "icon": "$(file-code)"
-        }
-      ]
-    },
-    "views": {
-      "forgeStudio": [
-        {
-          "id": "forgeStudioExplorer",
-          "name": "Forge Studio",
-          "when": "true"
-        }
-      ]
-    },
     "commands": [
       {
-        "command": "forge.distillSession",
-        "title": "Forge: Distill Session into Stories and Tasks"
+        "command": "forge.refineIssue",
+        "title": "Forge: Refine Issue"
       },
       {
-        "command": "forge.buildStory",
-        "title": "Forge: Build Story Implementation"
-      },
-      {
-        "command": "forge.openStudio",
-        "title": "Forge: Open Forge Studio"
-      },
-      {
-        "command": "forgeStudio.openDashboard",
-        "title": "Open Dashboard",
-        "icon": "$(dashboard)"
-      },
-      {
-        "command": "forgeStudio.openFile",
-        "title": "Open File"
-      },
-      {
-        "command": "forgeStudio.refresh",
-        "title": "Refresh",
-        "icon": "$(refresh)"
-      },
-      {
-        "command": "forgeStudio.newFolder",
-        "title": "New Folder",
-        "icon": "$(new-folder)"
-      },
-      {
-        "command": "forgeStudio.newDiagram",
-        "title": "New Diagram",
-        "icon": "$(file-add)"
-      },
-      {
-        "command": "forgeStudio.newSpec",
-        "title": "New Specification",
-        "icon": "$(file-add)"
-      },
-      {
-        "command": "forgeStudio.newActor",
-        "title": "New Actor",
-        "icon": "$(file-add)"
-      },
-      {
-        "command": "forgeStudio.newSession",
-        "title": "New Session",
-        "icon": "$(file-add)"
+        "command": "forge.initializeCursorCommands",
+        "title": "Forge: Initialize Cursor Commands"
       }
-    ],
-    "menus": {
-      "explorer/context": [
-        {
-          "when": "resourceExtname == .md && resourcePath =~ /.*\\.session\\.md$/",
-          "command": "forge.distillSession",
-          "group": "forge@1"
-        },
-        {
-          "when": "resourceExtname == .md && resourcePath =~ /.*\\.story\\.md$/",
-          "command": "forge.buildStory",
-          "group": "forge@1"
-        }
-      ],
-      "view/title": [
-        {
-          "command": "forgeStudio.refresh",
-          "when": "view == forgeStudioExplorer",
-          "group": "navigation"
-        }
-      ],
-      "view/item/context": [
-        {
-          "command": "forgeStudio.openFile",
-          "when": "view == forgeStudioExplorer && viewItem == forgeFile",
-          "group": "inline"
-        },
-        {
-          "command": "forgeStudio.newFolder",
-          "when": "view == forgeStudioExplorer && viewItem =~ /^forgeCategory|^forgeFolder/",
-          "group": "1_new@1"
-        },
-        {
-          "command": "forgeStudio.newDiagram",
-          "when": "view == forgeStudioExplorer && viewItem =~ /diagrams/",
-          "group": "1_new@2"
-        },
-        {
-          "command": "forgeStudio.newSpec",
-          "when": "view == forgeStudioExplorer && viewItem =~ /specs/",
-          "group": "1_new@3"
-        },
-        {
-          "command": "forgeStudio.newActor",
-          "when": "view == forgeStudioExplorer && viewItem =~ /actors/",
-          "group": "1_new@4"
-        },
-        {
-          "command": "forgeStudio.newSession",
-          "when": "view == forgeStudioExplorer && viewItem =~ /sessions/",
-          "group": "1_new@5"
-        }
-      ]
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "webpack --mode production --devtool hidden-source-map && npm run build:webview",
@@ -189,8 +81,8 @@
     "build": "webpack && npm run build:webview",
     "watch": "concurrently \"webpack --watch\" \"npm run dev:webview\"",
     "package": "npx @vscode/vsce package --no-dependencies",
-    "build:webview": "esbuild src/webview/welcome/index.tsx --bundle --outfile=media/welcome/main.js --format=iife --platform=browser --minify && esbuild src/webview/diagram/index.tsx --bundle --outfile=media/diagram/main.js --format=iife --platform=browser --minify --external:fs --external:path && esbuild src/webview/feature/index.tsx --bundle --outfile=media/feature/main.js --format=iife --platform=browser --minify --external:fs --external:path && esbuild src/webview/session/index.tsx --bundle --outfile=media/session/main.js --format=iife --platform=browser --minify --external:fs --external:path && cp node_modules/reactflow/dist/style.css media/diagram/reactflow.css",
-    "dev:webview": "concurrently \"esbuild src/webview/welcome/index.tsx --bundle --outfile=media/welcome/main.js --format=iife --platform=browser --watch\" \"esbuild src/webview/diagram/index.tsx --bundle --outfile=media/diagram/main.js --format=iife --platform=browser --watch --external:fs --external:path\" \"esbuild src/webview/feature/index.tsx --bundle --outfile=media/feature/main.js --format=iife --platform=browser --watch --external:fs --external:path\" \"esbuild src/webview/session/index.tsx --bundle --outfile=media/session/main.js --format=iife --platform=browser --watch --external:fs --external:path\" \"npm run copy:reactflow:watch\"",
+    "build:webview": "esbuild src/webview/welcome/index.tsx --bundle --outfile=media/welcome/main.js --format=iife --platform=browser --minify && esbuild src/webview/diagram/index.tsx --bundle --outfile=media/diagram/main.js --format=iife --platform=browser --minify --external:fs --external:path && esbuild src/webview/feature/index.tsx --bundle --outfile=media/feature/main.js --format=iife --platform=browser --minify --external:fs --external:path && esbuild src/webview/session/index.tsx --bundle --outfile=media/session/main.js --format=iife --platform=browser --minify --external:fs --external:path && esbuild src/webview/refinement/index.tsx --bundle --outfile=media/refinement/main.js --format=iife --platform=browser --minify && esbuild src/webview/scribe/index.tsx --bundle --outfile=media/scribe/main.js --format=iife --platform=browser --minify && cp node_modules/reactflow/dist/style.css media/diagram/reactflow.css",
+    "dev:webview": "concurrently \"esbuild src/webview/welcome/index.tsx --bundle --outfile=media/welcome/main.js --format=iife --platform=browser --watch\" \"esbuild src/webview/diagram/index.tsx --bundle --outfile=media/diagram/main.js --format=iife --platform=browser --watch --external:fs --external:path\" \"esbuild src/webview/feature/index.tsx --bundle --outfile=media/feature/main.js --format=iife --platform=browser --watch --external:fs --external:path\" \"esbuild src/webview/session/index.tsx --bundle --outfile=media/session/main.js --format=iife --platform=browser --watch --external:fs --external:path\" \"esbuild src/webview/refinement/index.tsx --bundle --outfile=media/refinement/main.js --format=iife --platform=browser --watch\" \"esbuild src/webview/scribe/index.tsx --bundle --outfile=media/scribe/main.js --format=iife --platform=browser --watch\" \"npm run copy:reactflow:watch\"",
     "copy:reactflow:watch": "nodemon --watch node_modules/reactflow/dist/style.css --exec \"cp node_modules/reactflow/dist/style.css media/diagram/reactflow.css\"",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",

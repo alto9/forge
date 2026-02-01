@@ -1,7 +1,6 @@
 import * as vscode from 'vscode';
-import * as fs from 'fs';
-import * as path from 'path';
-import { FORGE_DESIGN_INSTRUCTIONS } from './personas/forge-design';
+import { FORGE_REFINE_INSTRUCTIONS } from './personas/forge-refine';
+import { FORGE_SCRIBE_INSTRUCTIONS } from './personas/forge-scribe';
 import { FORGE_BUILD_INSTRUCTIONS } from './personas/forge-build';
 
 /**
@@ -13,23 +12,23 @@ export class ForgeChatParticipant {
      * Register all Forge personas as chat participants
      */
     static registerAll(context: vscode.ExtensionContext): void {
-        // Main @forge participant (helper/guide)
-        const forgeParticipant = vscode.chat.createChatParticipant(
-            'forge.participant',
-            this.handleForgeRequest
+        // @forge-refine participant (refine GitHub issues)
+        const refineParticipant = vscode.chat.createChatParticipant(
+            'forge-refine.participant',
+            this.handleRefineRequest
         );
-        forgeParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
-        context.subscriptions.push(forgeParticipant);
+        refineParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
+        context.subscriptions.push(refineParticipant);
 
-        // @forge-design participant (design sessions)
-        const designParticipant = vscode.chat.createChatParticipant(
-            'forge-design.participant',
-            this.handleDesignRequest
+        // @forge-scribe participant (create sub-issues)
+        const scribeParticipant = vscode.chat.createChatParticipant(
+            'forge-scribe.participant',
+            this.handleScribeRequest
         );
-        designParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
-        context.subscriptions.push(designParticipant);
+        scribeParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
+        context.subscriptions.push(scribeParticipant);
 
-        // @forge-build participant (implement stories)
+        // @forge-build participant (implement GitHub issues)
         const buildParticipant = vscode.chat.createChatParticipant(
             'forge-build.participant',
             this.handleBuildRequest
@@ -41,10 +40,8 @@ export class ForgeChatParticipant {
     /**
      * Legacy method for backward compatibility
      */
-    static register(context: vscode.ExtensionContext): vscode.ChatParticipant {
+    static register(context: vscode.ExtensionContext): void {
         this.registerAll(context);
-        // Return the main participant for backward compatibility
-        return vscode.chat.createChatParticipant('forge.participant', this.handleForgeRequest);
     }
 
     /**
@@ -67,73 +64,47 @@ export class ForgeChatParticipant {
     }
 
     /**
-     * Handle @forge requests (main helper)
+     * Handle @forge-refine requests (refine GitHub issues)
      */
-    private static async handleForgeRequest(
+    private static async handleRefineRequest(
         request: vscode.ChatRequest,
         context: vscode.ChatContext,
         stream: vscode.ChatResponseStream,
         token: vscode.CancellationToken
     ): Promise<void> {
-        const prompt = request.prompt.toLowerCase();
-
-        if (prompt.includes('hello') || prompt.includes('hi') || prompt.includes('help') || !prompt) {
-            stream.markdown(
-                '# 🔨 Forge - Session-Driven Context Engineering\n\n' +
-                'I help you build Forge documentation and implement stories.\n\n' +
-                '## Available Personas\n\n' +
-                '### @forge-design 📐\n' +
-                'Use when **designing** features, diagrams, specs, or actors during a design session.\n' +
-                '- Creates/modifies AI documentation in `ai/` folder\n' +
-                '- Tracks changes in active session\n' +
-                '- Provides complete schema guidance\n\n' +
-                '### @forge-build 🛠️\n' +
-                'Use when **implementing** stories from `ai/tickets/`.\n' +
-                '- Reads story files and linked documentation\n' +
-                '- Implements code changes\n' +
-                '- Writes tests\n' +
-                '- Marks stories as completed\n\n' +
-                '## Quick Start\n\n' +
-                '**For Cursor Users**: Use custom commands like `/forge-design` or `/forge-build`\n\n' +
-                '**For VSCode Users**: Use chat personas `@forge-design` or `@forge-build`\n\n' +
-                '## Examples\n' +
-                '- `@forge-design` "Create a user-login feature with Gherkin scenarios"\n' +
-                '- `@forge-build` "Implement the authentication-api.story.md"\n\n' +
-                '**Need more help?** Check the Forge documentation or ask me specific questions!'
-            );
-            return;
-        }
-
+        // Provide the refine instructions upfront
         stream.markdown(
-            'I\'m the main Forge helper. Use the specialized personas for specific tasks:\n\n' +
-            '- **@forge-design** - Design features, diagrams, specs\n' +
-            '- **@forge-build** - Implement stories and write code\n\n' +
-            'Try `@forge help` to see more information.'
+            '# 📝 Forge Refine\n\n' +
+            'I\'ll help you refine GitHub issues. Here are my instructions:\n\n'
         );
+        
+        stream.markdown(FORGE_REFINE_INSTRUCTIONS);
+        
+        stream.markdown('\n\n---\n\n**Please provide the GitHub issue link you\'d like me to help refine.**');
     }
 
     /**
-     * Handle @forge-design requests (design sessions)
+     * Handle @forge-scribe requests (create sub-issues)
      */
-    private static async handleDesignRequest(
+    private static async handleScribeRequest(
         request: vscode.ChatRequest,
         context: vscode.ChatContext,
         stream: vscode.ChatResponseStream,
         token: vscode.CancellationToken
     ): Promise<void> {
-        // Provide the design instructions upfront
+        // Provide the scribe instructions upfront
         stream.markdown(
-            '# 📐 Forge Design Session\n\n' +
-            'I\'ll help you design Forge documentation. Here are my instructions:\n\n'
+            '# 📋 Forge Scribe\n\n' +
+            'I\'ll help you create sub-issues from a refined parent issue. Here are my instructions:\n\n'
         );
         
-        stream.markdown(FORGE_DESIGN_INSTRUCTIONS);
+        stream.markdown(FORGE_SCRIBE_INSTRUCTIONS);
         
-        stream.markdown('\n\n---\n\n**Now, what would you like me to help you design?**');
+        stream.markdown('\n\n---\n\n**Please provide the GitHub issue link for the parent issue you\'d like me to create sub-issues for.**');
     }
 
     /**
-     * Handle @forge-build requests (implement stories)
+     * Handle @forge-build requests (implement GitHub issues)
      */
     private static async handleBuildRequest(
         request: vscode.ChatRequest,
@@ -143,12 +114,12 @@ export class ForgeChatParticipant {
     ): Promise<void> {
         // Provide the build instructions upfront
         stream.markdown(
-            '# 🛠️ Forge Build Story\n\n' +
-            'I\'ll help you implement a Forge story. Here are my instructions:\n\n'
+            '# 🛠️ Forge Build\n\n' +
+            'I\'ll help you implement a GitHub issue. Here are my instructions:\n\n'
         );
         
         stream.markdown(FORGE_BUILD_INSTRUCTIONS);
         
-        stream.markdown('\n\n---\n\n**Please provide the story file you\'d like me to implement.**');
+        stream.markdown('\n\n---\n\n**Please provide the GitHub issue link you\'d like me to implement.**');
     }
 }

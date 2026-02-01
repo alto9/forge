@@ -1,51 +1,53 @@
-<!-- forge-hash: 885953da8dc45d7114907764bb0ea726d1f3bbb20c67d770861453c867543a72 -->
+<!-- forge-hash: 809cc75ec6d1e1bf499c8e34bb47d9a4e039abea99c67fb4739bc24012fdb2cf -->
 
 # Forge Build
 
-This command helps you implement a Forge story by analyzing both the codebase and AI documentation.
+This command helps you implement a GitHub issue by analyzing the codebase, issue content, and ensuring all tests pass.
 
 ## Prerequisites
 
-If you're not familiar with Forge, run `/forge` first to understand the documentation system.
-
-You must provide a story file (*.story.md) when running this command.
+You must provide a GitHub issue link when using this command. The issue should be a sub-issue ready for implementation.
 
 ## What This Command Does
 
-1. **Reads the story file**: Understands what needs to be implemented
-2. **Reads all linked AI documentation**: Follows linkages to gather complete context:
-   - Features (expected behavior with Gherkin scenarios)
-   - Specs (technical implementation details with diagram references)
-   - Diagrams (visual architecture)
-   - Actors (system personas)
-3. **Reads the session**: Understands the session context from `ai/sessions/<session-id>/<session-id>.session.md`
-4. **Analyzes the existing codebase**: Understands current implementation patterns and structure
-5. **Implements the changes**: Writes actual code as described in the story
-6. **Runs linting**: Seeks out and runs lint packages after each change
-7. **Runs tests**: Seeks out and runs test packages after each change
-8. **Marks story complete**: Updates story status to 'completed' when all work is done and tests pass
+1. **Reads the GitHub issue**: Understands what needs to be implemented from the issue content
+2. **Analyzes the existing codebase**: Understands current implementation patterns and structure
+3. **Analyzes GitHub Actions**: Reviews GitHub Actions workflows for lint/test/validation scripts
+4. **Analyzes package scripts**: Reviews package.json scripts for lint/test/validation commands
+5. **Implements the changes**: Writes actual code as described in the issue
+6. **Writes tests**: Creates unit tests based on the test procedures in the issue
+7. **Runs validation**: Executes lint, test, and validation scripts before considering the task complete
+8. **Marks issue as complete**: Updates the GitHub issue status to 'closed' when all work is done and tests pass
 
 ## Important Guidelines
 
-- **Follow the story**: Implement exactly what the story describes (< 30 minutes of work)
-- **Read all linked documentation**: Follow `feature_id` and `spec_id` linkages to gather complete context
-- **Read the session**: Understand the problem statement and session context
-- **Use AI documentation as reference**: Features and specs define the intended behavior
+- **Follow the issue**: Implement exactly what the issue describes
+- **Review test procedures**: Pay special attention to the "Testing Procedures" section in the issue
 - **Match existing patterns**: Follow the codebase's existing architecture and conventions
-- **Write tests**: Include unit tests as specified in the story
-- **Run linting**: After each change, seek out lint packages (ESLint, Prettier, etc.) and run them
-- **Run tests**: After each change, seek out test packages (Jest, Vitest, etc.) and run them
-- **Stay focused**: If the story is too large, break it into smaller stories
-- **Mark story as completed**: Update the story file's status field to 'completed' when all work is done and all tests pass
+- **Run all checks**: Before marking complete, ensure:
+  - All lint checks pass (`npm run lint` or equivalent)
+  - All tests pass (`npm run test` or equivalent)
+  - All validation scripts pass (`npm run validate` or equivalent)
+- **Use Plan mode**: When using in Cursor, use Plan mode to review the implementation plan before executing
+- **Stay focused**: If the issue is too large, suggest breaking it into smaller sub-issues
+- **Mark as complete**: Update the GitHub issue status to 'closed' when all work is done and all checks pass
 
 ## Usage
 
-1. Select a story file from `ai/sessions/<session-id>/tickets/`
-2. Run this command
-3. The AI will read the story, linked documentation, and session
-4. The AI will implement the changes with tests
-5. The AI will run linting and tests after each change
-6. The AI will mark the story as completed when done
+1. Use the `forge-build` command in Cursor
+2. Provide the GitHub issue link: `https://github.com/owner/repo/issues/123`
+3. Use **Plan mode** in Cursor to review the implementation plan before executing
+4. The AI will analyze the issue and codebase
+5. The AI will implement the changes with tests
+6. The AI will run lint/test/validation scripts
 7. Review and commit the implementation
+8. Mark the issue as complete in GitHub
 
-The implementation will be consistent with your documented design and existing codebase patterns.
+## Testing Requirements
+
+- **Analyze GitHub Actions**: Check `.github/workflows/` for CI/CD test and lint scripts
+- **Analyze package.json**: Check `package.json` for `lint`, `test`, `validate` scripts
+- **Run all checks**: Execute all relevant lint/test/validation commands before completion
+- **All must pass**: The task is not considered complete until all tests and lint checks pass
+
+The implementation will be consistent with your codebase patterns and all validation checks will pass.
