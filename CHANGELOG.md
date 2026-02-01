@@ -1,3 +1,12 @@
+## 3.0.0 (2026-02-01)
+
+* feat!: release v2.0.0 - GitHub issue workflow migration ([21c84a9](https://github.com/alto9/forge/commit/21c84a9))
+
+
+### BREAKING CHANGE
+
+* This release migrates from design session workflow to GitHub issue workflow. Removed Forge Studio UI, design session commands, and forge-design command. Added forge-refine and forge-scribe commands for GitHub issue workflow.
+
 ## 2.0.0 (2026-02-01)
 
 * chore: latest changes ([2c40403](https://github.com/alto9/forge/commit/2c40403))
