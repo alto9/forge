@@ -1,42 +1,53 @@
-<!-- forge-hash: 398fb80129158999d50478466d27e6dfa45dddbe6f28bc07201964673cb13cc7 -->
+<!-- forge-hash: 809cc75ec6d1e1bf499c8e34bb47d9a4e039abea99c67fb4739bc24012fdb2cf -->
 
 # Forge Build
 
-This command helps you implement a Forge story by analyzing both the codebase and AI documentation.
+This command helps you implement a GitHub issue by analyzing the codebase, issue content, and ensuring all tests pass.
 
 ## Prerequisites
 
-You must provide a story file (*.story.md) when running this command.
+You must provide a GitHub issue link when using this command. The issue should be a sub-issue ready for implementation.
 
 ## What This Command Does
 
-1. **Reads the story file**: Understands what needs to be implemented
+1. **Reads the GitHub issue**: Understands what needs to be implemented from the issue content
 2. **Analyzes the existing codebase**: Understands current implementation patterns and structure
-3. **Reads AI documentation**: Understands intended behavior from linked files:
-   - Features (expected behavior with Gherkin scenarios)
-   - Specs (technical implementation details with diagram references)
-   - Models (data structures)
-   - Contexts (technology-specific guidance)
-4. **Implements the changes**: Writes actual code as described in the story
-5. **Writes tests**: Creates unit tests for the implementation
-6. **Ensures consistency**: Implementation matches the documented design
+3. **Analyzes GitHub Actions**: Reviews GitHub Actions workflows for lint/test/validation scripts
+4. **Analyzes package scripts**: Reviews package.json scripts for lint/test/validation commands
+5. **Implements the changes**: Writes actual code as described in the issue
+6. **Writes tests**: Creates unit tests based on the test procedures in the issue
+7. **Runs validation**: Executes lint, test, and validation scripts before considering the task complete
+8. **Marks issue as complete**: Updates the GitHub issue status to 'closed' when all work is done and tests pass
 
 ## Important Guidelines
 
-- **Follow the story**: Implement exactly what the story describes (< 30 minutes of work)
-- **Use AI documentation as reference**: Features and specs define the intended behavior
+- **Follow the issue**: Implement exactly what the issue describes
+- **Review test procedures**: Pay special attention to the "Testing Procedures" section in the issue
 - **Match existing patterns**: Follow the codebase's existing architecture and conventions
-- **Write tests**: Include unit tests as specified in the story
-- **Stay focused**: If the story is too large, break it into smaller stories
-- **Run tests**: After implementing changes, always run the test suite to verify the implementation works correctly
-- **Mark story as completed**: Update the story file's status field to 'completed' when all work is done and tests pass
+- **Run all checks**: Before marking complete, ensure:
+  - All lint checks pass (`npm run lint` or equivalent)
+  - All tests pass (`npm run test` or equivalent)
+  - All validation scripts pass (`npm run validate` or equivalent)
+- **Use Plan mode**: When using in Cursor, use Plan mode to review the implementation plan before executing
+- **Stay focused**: If the issue is too large, suggest breaking it into smaller sub-issues
+- **Mark as complete**: Update the GitHub issue status to 'closed' when all work is done and all checks pass
 
 ## Usage
 
-1. Select a story file from ai/tickets/
-2. Run this command
-3. The AI will analyze the story and linked documentation
-4. The AI will implement the changes with tests
-5. Review and commit the implementation
+1. Use the `forge-build` command in Cursor
+2. Provide the GitHub issue link: `https://github.com/owner/repo/issues/123`
+3. Use **Plan mode** in Cursor to review the implementation plan before executing
+4. The AI will analyze the issue and codebase
+5. The AI will implement the changes with tests
+6. The AI will run lint/test/validation scripts
+7. Review and commit the implementation
+8. Mark the issue as complete in GitHub
 
-The implementation will be consistent with your documented design and existing codebase patterns.
+## Testing Requirements
+
+- **Analyze GitHub Actions**: Check `.github/workflows/` for CI/CD test and lint scripts
+- **Analyze package.json**: Check `package.json` for `lint`, `test`, `validate` scripts
+- **Run all checks**: Execute all relevant lint/test/validation commands before completion
+- **All must pass**: The task is not considered complete until all tests and lint checks pass
+
+The implementation will be consistent with your codebase patterns and all validation checks will pass.

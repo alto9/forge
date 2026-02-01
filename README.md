@@ -45,6 +45,22 @@ code --install-extension forge-0.1.0.vsix
 
 ## Usage
 
+### 🤖 Using AI Agents with Forge
+
+Forge provides specialized AI personas/commands to help you design and build:
+
+- **For Cursor Users**: Use `/forge-design` and `/forge-build` custom commands
+- **For VSCode Users**: Use `@forge-design` and `@forge-build` chat participants
+
+📖 **[Complete Guide: Using AI Agents with Forge](docs/USING-AI-AGENTS.md)**
+
+This guide explains how to use AI agents to:
+- Design features, diagrams, specs, and actors (`@forge-design` or `/forge-design`)
+- Implement stories with full context (`@forge-build` or `/forge-build`)
+- Workflow examples and best practices
+
+---
+
 ### Start a Design Session
 
 1. Open Command Palette (`Cmd/Ctrl+Shift+P`)

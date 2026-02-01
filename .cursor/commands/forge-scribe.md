@@ -1,187 +1,53 @@
-<!-- forge-hash: a6e7a25e3e9ad4816cf3c37bd7f393d83410739e4f4de981b2e9ce6651104a6e -->
+<!-- forge-hash: 2ea45d83da60bf074a1269db6633dd955765086f0caaa8dacf2a2d36024ef89a -->
 
 # Forge Scribe
 
-This command distills a completed design session into actionable Stories and Tasks.
+This command helps you create sub-issues on a parent GitHub issue that are populated with accurate technical implementation steps and test procedures.
 
 ## Prerequisites
 
-You must have a session in 'scribe' status before running this command.
+You must provide a GitHub issue link when using this command. The parent issue should be in "Scribe" status and have completed refinement.
 
 ## What This Command Does
 
-1. **Analyzes session changes**: Reviews all changed files and their scenario-level modifications
-2. **Creates Stories**: Generates implementation stories (< 30 minutes each) for code changes
-3. **Creates Tasks**: Generates manual work items for non-code activities
-4. **Updates session status**: Transitions session from 'scribe' to 'development'
+1. **Reads the refined parent issue**: Understands the business value, requirements, and testing procedures
+2. **Breaks down into technical steps**: Analyzes the refined issue and breaks it down into technical implementation steps
+3. **Creates sub-issues**: Creates sub-issues via GitHub API, automatically linking them to the parent issue
+4. **Includes test procedures**: Each sub-issue includes test procedures based on the parent issue's testing requirements
+5. **Links sub-issues**: Automatically links sub-issues to the parent issue
 
-## When to Use This Command
+## Important Guidelines
 
-Run `forge-scribe` after:
-- Ending a design session (status: 'scribe')
-- All design changes have been committed and reviewed
-- You're ready to break the design down into implementable work items
+- **Technical focus**: Sub-issues should contain technical implementation details, not business value
+- **Small, focused work**: Each sub-issue should represent a focused piece of work (< 30 minutes ideally)
+- **Test procedures**: Include test procedures in each sub-issue based on the parent issue's testing requirements
+- **Automatic linking**: Sub-issues are automatically linked to the parent issue
+- **Use GitHub API**: Create sub-issues directly via GitHub API, not local files
 
-## How It Works
+## Sub-issue Structure
 
-The command will:
-1. Read the session file at `ai/sessions/<session-id>/<session-id>.session.md`
-2. Analyze the `changed_files` array with scenario-level granularity
-3. Review git diffs (if available) to understand precise changes
-4. Follow context linkages to gather implementation guidance
-5. Create story/task files in `ai/sessions/<session-id>/tickets/`
-6. Update session status to 'development'
+Each sub-issue should contain:
 
-## Intelligent Context Building
+```markdown
+## Implementation Steps
+[Detailed technical steps to implement this sub-issue]
 
-**CRITICAL**: Before creating any tickets, you must systematically gather complete context through the following methodical procedure. This ensures tickets are informed by all relevant design artifacts, technical guidance, and architectural understanding.
+## Test Procedures
+[How to test this specific implementation, based on parent issue testing requirements]
 
-### Phase 1: Feature and Spec Discovery
-1. **Read all changed features and specs**
-   - Read each file listed in the session's `changed_files` array
-   - Pay special attention to `*.feature.md` and `*.spec.md` files
-
-### Phase 2: Spec Linkage Discovery
-1. **Follow feature-to-spec relationships**
-   - For each modified `*.feature.md` file, examine the `spec_id` property
-   - Read all specs referenced in the `spec_id` array
-   - This ensures you understand the technical implementation behind each feature
-   
-2. **Cross-reference bidirectionally**
-   - Also check if any specs reference the modified features in their `feature_id` property
-   - Capture the complete bidirectional relationship graph
-
-### Phase 3: Architectural Understanding
-1. **Read all diagram files**
-   - Examine every diagram file referenced in modified specs
-   - Understand:
-     - System architecture
-     - Component relationships
-     - Data flow
-     - Integration points
-     - Sequence diagrams for complex interactions
-   
-2. **Synthesize architectural context**
-   - Build a mental model of how components interact
-   - Identify integration boundaries
-   - Understand dependencies between stories
-
-### Phase 4: Synthesis and Validation
-1. **Build complete context map**
-   - Combine all gathered context into a comprehensive understanding
-   - Map relationships between features and specs
-   - Identify potential story dependencies
-   
-2. **Validate coverage**
-   - Ensure every changed file has been analyzed
-   - Confirm all `spec_id` linkages have been followed
-   - Verify all diagram files have been analyzed
-
-### Context Building Checklist
-
-Before creating tickets, verify:
-- [ ] All `spec_id` linkages followed
-- [ ] All diagram files analyzed
-- [ ] Complete architectural understanding achieved
-- [ ] Context map synthesized
-
-**Only after completing this methodical context gathering should you proceed to create tickets.** This ensures every story and task is informed by complete, accurate context and technical guidance.
-
-## Story vs Task Decision
-
-**Create Stories (*.story.md)** for:
-- Code implementations
-- New features or feature modifications
-- Technical debt improvements
-- Refactoring work
-- API changes
-- Database migrations
-
-**Create Tasks (*.task.md)** for:
-- Manual configuration in external systems
-- Third-party service setup (AWS, Stripe, etc.)
-- Documentation updates outside code
-- Manual testing procedures
-- DevOps configuration
-
-## Critical Requirements
-
-### 1. Keep Stories Minimal
-Each story should take **< 30 minutes** to implement. Break large changes into multiple small stories.
-
-### 2. Complete Context
-Each story must include:
-- Clear objective
-- Acceptance criteria
-- File paths involved
-- Links to feature_id, spec_id
-- Link to session_id
-
-### 3. Sequential Numbering
-All stories and tasks must use sequential numbering in their filenames to indicate implementation order:
-
-- **Format**: Use three-digit numbers with leading zeros (001-, 002-, 003-, etc.)
-- **Sequential dependencies**: Tickets that must be done in order get sequential numbers
-- **Parallel work**: Tickets that can be done synchronously (no dependencies) share the same number
-- **Example**: 
-  - `001-implement-user-login.story.md` (must be done first)
-  - `002-add-jwt-validation.story.md` (depends on 001)
-  - `003-setup-auth0-integration.task.md` (can be done in parallel with next two)
-  - `003-add-error-handling.story.md` (can be done in parallel with previous)
-  - `003-update-documentation.task.md` (can be done in parallel with previous two)
-  - `004-add-logging.story.md` (depends on 003 tickets being complete)
-
-This numbering system helps track implementation order and identifies opportunities for parallel work.
-
-### 4. Proper File Structure
-All tickets go in: `ai/sessions/<session-id>/tickets/`
-
-Example structure:
-```
-ai/sessions/
-  └── session-123/
-      ├── session-123.session.md
-      └── tickets/
-          ├── 001-implement-user-login.story.md
-          ├── 002-setup-auth0-integration.task.md
-          ├── 003-add-jwt-validation.story.md
-          └── ...
+## Acceptance Criteria
+[What must be completed for this sub-issue to be considered done]
 ```
 
-### 5. Follow Schemas
-All files must adhere to:
-- Story schema (see `/forge-design` command for complete schema)
-- Task schema (see `/forge-design` command for complete schema)
+## Usage
 
-### 6. Link Everything
-Every story/task MUST include:
-```yaml
-session_id: '<session-id>'
-feature_id: [] # From changed files
-spec_id: [] # From changed files
-```
+1. Use the `forge-scribe` command in Cursor
+2. Provide the GitHub issue link: `https://github.com/owner/repo/issues/123`
+3. The AI will analyze the refined parent issue
+4. The AI will create sub-issues with technical implementation steps
+5. Review the created sub-issues
+6. Once satisfied, close the session and move the parent issue to 'Ready' status
 
-## Output Format
+## Goal
 
-After distillation, provide a summary:
-
-### Stories Created
-- List of story files with brief description
-
-### Tasks Created
-- List of task files with brief description
-
-### Coverage Report
-- Which changed files are covered by which stories/tasks
-- Ensure 100% coverage (every changed file accounted for)
-
-## Example Usage
-
-1. User ends design session → status changes to 'scribe'
-2. User runs `@forge-scribe`
-3. AI reads session file and changed files
-4. AI creates 5-10 small stories in `ai/sessions/<session-id>/tickets/`
-6. AI updates session status to 'development'
-7. User can now implement stories using `@forge-build`
-
-This command ensures clean, minimal, implementable work items with complete context.
+The goal of Scribe mode is to create sub-issues on the issue being refined that are populated with accurate technical implementation steps and test procedures. Each sub-issue should be ready for a developer to implement.

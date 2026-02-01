@@ -38,34 +38,42 @@
   },
   "main": "./dist/extension.js",
   "contributes": {
-    "commands": [
+    "chatParticipants": [
       {
-        "command": "forge.distillSession",
-        "title": "Forge: Distill Session into Stories and Tasks"
+        "id": "forge.participant",
+        "name": "forge",
+        "fullName": "Forge",
+        "description": "Main Forge helper for guidance and general questions"
       },
       {
-        "command": "forge.buildStory",
-        "title": "Forge: Build Story Implementation"
+        "id": "forge-refine.participant",
+        "name": "forge-refine",
+        "fullName": "Forge Refine",
+        "description": "Refine GitHub issues to clarify business value and requirements"
       },
       {
-        "command": "forge.openStudio",
-        "title": "Forge: Open Forge Studio"
+        "id": "forge-scribe.participant",
+        "name": "forge-scribe",
+        "fullName": "Forge Scribe",
+        "description": "Create technical sub-issues from refined parent issues"
+      },
+      {
+        "id": "forge-build.participant",
+        "name": "forge-build",
+        "fullName": "Forge Build",
+        "description": "Implement GitHub issues by analyzing code and running tests"
       }
     ],
-    "menus": {
-      "explorer/context": [
-        {
-          "when": "resourceExtname == .md && resourcePath =~ /.*\\.session\\.md$/",
-          "command": "forge.distillSession",
-          "group": "forge@1"
-        },
-        {
-          "when": "resourceExtname == .md && resourcePath =~ /.*\\.story\\.md$/",
-          "command": "forge.buildStory",
-          "group": "forge@1"
-        }
-      ]
-    }
+    "commands": [
+      {
+        "command": "forge.refineIssue",
+        "title": "Forge: Refine Issue"
+      },
+      {
+        "command": "forge.initializeCursorCommands",
+        "title": "Forge: Initialize Cursor Commands"
+      }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "webpack --mode production --devtool hidden-source-map && npm run build:webview",
@@ -73,8 +81,9 @@
     "build": "webpack && npm run build:webview",
     "watch": "concurrently \"webpack --watch\" \"npm run dev:webview\"",
     "package": "npx @vscode/vsce package --no-dependencies",
-    "build:webview": "esbuild src/webview/studio/index.tsx --bundle --outfile=media/studio/main.js --format=iife --platform=browser --minify --external:fs --external:path && esbuild src/webview/welcome/index.tsx --bundle --outfile=media/welcome/main.js --format=iife --platform=browser --minify",
-    "dev:webview": "concurrently \"esbuild src/webview/studio/index.tsx --bundle --outfile=media/studio/main.js --format=iife --platform=browser --watch --external:fs --external:path\" \"esbuild src/webview/welcome/index.tsx --bundle --outfile=media/welcome/main.js --format=iife --platform=browser --watch\"",
+    "build:webview": "esbuild src/webview/welcome/index.tsx --bundle --outfile=media/welcome/main.js --format=iife --platform=browser --minify && esbuild src/webview/diagram/index.tsx --bundle --outfile=media/diagram/main.js --format=iife --platform=browser --minify --external:fs --external:path && esbuild src/webview/feature/index.tsx --bundle --outfile=media/feature/main.js --format=iife --platform=browser --minify --external:fs --external:path && esbuild src/webview/session/index.tsx --bundle --outfile=media/session/main.js --format=iife --platform=browser --minify --external:fs --external:path && esbuild src/webview/refinement/index.tsx --bundle --outfile=media/refinement/main.js --format=iife --platform=browser --minify && esbuild src/webview/scribe/index.tsx --bundle --outfile=media/scribe/main.js --format=iife --platform=browser --minify && cp node_modules/reactflow/dist/style.css media/diagram/reactflow.css",
+    "dev:webview": "concurrently \"esbuild src/webview/welcome/index.tsx --bundle --outfile=media/welcome/main.js --format=iife --platform=browser --watch\" \"esbuild src/webview/diagram/index.tsx --bundle --outfile=media/diagram/main.js --format=iife --platform=browser --watch --external:fs --external:path\" \"esbuild src/webview/feature/index.tsx --bundle --outfile=media/feature/main.js --format=iife --platform=browser --watch --external:fs --external:path\" \"esbuild src/webview/session/index.tsx --bundle --outfile=media/session/main.js --format=iife --platform=browser --watch --external:fs --external:path\" \"esbuild src/webview/refinement/index.tsx --bundle --outfile=media/refinement/main.js --format=iife --platform=browser --watch\" \"esbuild src/webview/scribe/index.tsx --bundle --outfile=media/scribe/main.js --format=iife --platform=browser --watch\" \"npm run copy:reactflow:watch\"",
+    "copy:reactflow:watch": "nodemon --watch node_modules/reactflow/dist/style.css --exec \"cp node_modules/reactflow/dist/style.css media/diagram/reactflow.css\"",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
@@ -122,6 +131,7 @@
     "webpack-cli": "^6.0.1"
   },
   "dependencies": {
+    "@octokit/rest": "^22.0.1",
     "gray-matter": "^4.0.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",

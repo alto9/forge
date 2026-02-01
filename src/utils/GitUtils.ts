@@ -144,5 +144,46 @@ export class GitUtils {
             return false;
         }
     }
+
+    /**
+     * Execute a git command with arguments
+     */
+    static async executeGitCommand(workspacePath: string, args: string[]): Promise<string> {
+        try {
+            const command = `git ${args.join(' ')}`;
+            const { stdout } = await execAsync(command, { cwd: workspacePath });
+            return stdout;
+        } catch (error: any) {
+            throw new Error(`Git command failed: ${error.message || error}`);
+        }
+    }
+
+    /**
+     * Get the current git branch name
+     */
+    static async getCurrentBranch(workspacePath: string): Promise<string | null> {
+        try {
+            const { stdout } = await execAsync('git rev-parse --abbrev-ref HEAD', { cwd: workspacePath });
+            return stdout.trim();
+        } catch {
+            return null;
+        }
+    }
+
+    /**
+     * Check if the current branch is a main/master branch
+     * Returns true if on main/master/mainline, false otherwise
+     */
+    static async isMainBranch(workspacePath: string): Promise<boolean> {
+        try {
+            const branch = await this.getCurrentBranch(workspacePath);
+            if (!branch) return false;
+            
+            const mainBranchNames = ['main', 'master', 'mainline', 'trunk', 'develop', 'development'];
+            return mainBranchNames.includes(branch.toLowerCase());
+        } catch {
+            return false;
+        }
+    }
 }
 

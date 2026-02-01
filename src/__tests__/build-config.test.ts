@@ -18,12 +18,20 @@ describe('Webview Build Configuration', () => {
             expect(buildScript).toContain('esbuild');
         });
 
-        it('should build studio bundle', () => {
+        it('should build refinement bundle', () => {
             const packageJson = require('../../package.json');
             const buildScript = packageJson.scripts['build:webview'];
 
-            expect(buildScript).toContain('src/webview/studio/index.tsx');
-            expect(buildScript).toContain('media/studio/main.js');
+            expect(buildScript).toContain('src/webview/refinement/index.tsx');
+            expect(buildScript).toContain('media/refinement/main.js');
+        });
+
+        it('should build scribe bundle', () => {
+            const packageJson = require('../../package.json');
+            const buildScript = packageJson.scripts['build:webview'];
+
+            expect(buildScript).toContain('src/webview/scribe/index.tsx');
+            expect(buildScript).toContain('media/scribe/main.js');
         });
 
         it('should build welcome bundle', () => {
@@ -72,11 +80,12 @@ describe('Webview Build Configuration', () => {
             expect(devScript).toContain('esbuild');
         });
 
-        it('should watch both studio and welcome bundles', () => {
+        it('should watch all webview bundles', () => {
             const packageJson = require('../../package.json');
             const devScript = packageJson.scripts['dev:webview'];
 
-            expect(devScript).toContain('src/webview/studio/index.tsx');
+            expect(devScript).toContain('src/webview/refinement/index.tsx');
+            expect(devScript).toContain('src/webview/scribe/index.tsx');
             expect(devScript).toContain('src/webview/welcome/index.tsx');
             expect(devScript).toContain('--watch');
         });
@@ -90,9 +99,16 @@ describe('Webview Build Configuration', () => {
     });
 
     describe('Build outputs', () => {
-        it('should create media/studio/main.js', () => {
-            const studioBundle = path.join(__dirname, '../../media/studio/main.js');
-            const exists = fs.existsSync(studioBundle);
+        it('should create media/refinement/main.js', () => {
+            const refinementBundle = path.join(__dirname, '../../media/refinement/main.js');
+            const exists = fs.existsSync(refinementBundle);
+
+            expect(exists).toBe(true);
+        });
+
+        it('should create media/scribe/main.js', () => {
+            const scribeBundle = path.join(__dirname, '../../media/scribe/main.js');
+            const exists = fs.existsSync(scribeBundle);
 
             expect(exists).toBe(true);
         });
@@ -104,13 +120,23 @@ describe('Webview Build Configuration', () => {
             expect(exists).toBe(true);
         });
 
-        it('should have reasonable studio bundle size', () => {
-            const studioBundle = path.join(__dirname, '../../media/studio/main.js');
-            const stats = fs.statSync(studioBundle);
+        it('should have reasonable refinement bundle size', () => {
+            const refinementBundle = path.join(__dirname, '../../media/refinement/main.js');
+            const stats = fs.statSync(refinementBundle);
             const sizeKB = stats.size / 1024;
 
-            // Should be less than 1000KB (react-flow adds ~600KB)
-            expect(sizeKB).toBeLessThan(1000);
+            // Should be less than 200KB
+            expect(sizeKB).toBeLessThan(200);
+            expect(sizeKB).toBeGreaterThan(0);
+        });
+
+        it('should have reasonable scribe bundle size', () => {
+            const scribeBundle = path.join(__dirname, '../../media/scribe/main.js');
+            const stats = fs.statSync(scribeBundle);
+            const sizeKB = stats.size / 1024;
+
+            // Should be less than 200KB
+            expect(sizeKB).toBeLessThan(200);
             expect(sizeKB).toBeGreaterThan(0);
         });
 
@@ -230,9 +256,16 @@ describe('Webview Build Configuration', () => {
     });
 
     describe('Entry points', () => {
-        it('should have studio entry point', () => {
-            const studioEntry = path.join(__dirname, '../webview/studio/index.tsx');
-            const exists = fs.existsSync(studioEntry);
+        it('should have refinement entry point', () => {
+            const refinementEntry = path.join(__dirname, '../webview/refinement/index.tsx');
+            const exists = fs.existsSync(refinementEntry);
+
+            expect(exists).toBe(true);
+        });
+
+        it('should have scribe entry point', () => {
+            const scribeEntry = path.join(__dirname, '../webview/scribe/index.tsx');
+            const exists = fs.existsSync(scribeEntry);
 
             expect(exists).toBe(true);
         });
@@ -253,9 +286,16 @@ describe('Webview Build Configuration', () => {
             expect(exists).toBe(true);
         });
 
-        it('should have media/studio directory', () => {
-            const studioDir = path.join(__dirname, '../../media/studio');
-            const exists = fs.existsSync(studioDir);
+        it('should have media/refinement directory', () => {
+            const refinementDir = path.join(__dirname, '../../media/refinement');
+            const exists = fs.existsSync(refinementDir);
+
+            expect(exists).toBe(true);
+        });
+
+        it('should have media/scribe directory', () => {
+            const scribeDir = path.join(__dirname, '../../media/scribe');
+            const exists = fs.existsSync(scribeDir);
 
             expect(exists).toBe(true);
         });

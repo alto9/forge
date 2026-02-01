@@ -27,7 +27,7 @@ describe('Initialization Integration - Command Files', () => {
         });
 
         it('should generate files with proper hash comments', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             const generated = generateCommandFile(commandPath);
 
             expect(generated).toContain('<!-- forge-hash:');
@@ -35,17 +35,18 @@ describe('Initialization Integration - Command Files', () => {
         });
 
         it('should generate files that validate successfully', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             const generated = generateCommandFile(commandPath);
             const isValid = validateCommandFileHash(generated, commandPath);
 
             expect(isValid).toBe(true);
         });
 
-        it('should create both forge-design and forge-build files', () => {
+        it('should create all three command files', () => {
             const commandPaths = [
-                '.cursor/commands/forge-design.md',
-                '.cursor/commands/forge-build.md'
+                '.cursor/commands/forge-refine.md',
+                '.cursor/commands/forge-build.md',
+                '.cursor/commands/forge-scribe.md'
             ];
 
             commandPaths.forEach(path => {
@@ -79,7 +80,7 @@ describe('Initialization Integration - Command Files', () => {
 
     describe('Command file updates', () => {
         it('should update files with invalid hashes', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             
             // Simulate file with invalid hash
             const existingFile = '<!-- forge-hash: 0000000000000000000000000000000000000000000000000000000000000000 -->\n\n# Content';
@@ -95,7 +96,7 @@ describe('Initialization Integration - Command Files', () => {
         });
 
         it('should preserve files with valid hashes', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             const validFile = generateCommandFile(commandPath);
             const isValid = validateCommandFileHash(validFile, commandPath);
 
@@ -107,7 +108,7 @@ describe('Initialization Integration - Command Files', () => {
         });
 
         it('should overwrite files without hash comments', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             
             // Simulate file without hash comment
             const existingFile = '# Forge Design\n\nSome content';
@@ -134,7 +135,7 @@ describe('Initialization Integration - Command Files', () => {
 
         it('should track update vs create counts separately in status', () => {
             const actions = [
-                { path: '.cursor/commands/forge-design.md', exists: false, action: 'created' },
+                { path: '.cursor/commands/forge-refine.md', exists: false, action: 'created' },
                 { path: '.cursor/commands/forge-build.md', exists: true, action: 'updated' }
             ];
 
@@ -154,7 +155,7 @@ describe('Initialization Integration - Command Files', () => {
             ];
             
             const commands = [
-                { path: '.cursor/commands/forge-design.md', exists: false, valid: false },
+                { path: '.cursor/commands/forge-refine.md', exists: false, valid: false },
                 { path: '.cursor/commands/forge-build.md', exists: true, valid: true }
             ];
 
@@ -167,14 +168,14 @@ describe('Initialization Integration - Command Files', () => {
 
         it('should handle some commands valid, some invalid', () => {
             const commands = [
-                { path: '.cursor/commands/forge-design.md', exists: true, valid: false },
+                { path: '.cursor/commands/forge-refine.md', exists: true, valid: false },
                 { path: '.cursor/commands/forge-build.md', exists: true, valid: true }
             ];
 
             const invalidCommands = commands.filter(c => !c.valid);
 
             expect(invalidCommands).toHaveLength(1);
-            expect(invalidCommands[0].path).toBe('.cursor/commands/forge-design.md');
+            expect(invalidCommands[0].path).toBe('.cursor/commands/forge-refine.md');
         });
 
         it('should handle all folders exist but all commands missing', () => {
@@ -184,7 +185,7 @@ describe('Initialization Integration - Command Files', () => {
             ];
             
             const commands = [
-                { path: '.cursor/commands/forge-design.md', exists: false, valid: false },
+                { path: '.cursor/commands/forge-refine.md', exists: false, valid: false },
                 { path: '.cursor/commands/forge-build.md', exists: false, valid: false }
             ];
 
@@ -199,7 +200,7 @@ describe('Initialization Integration - Command Files', () => {
             const items = [
                 { name: 'ai', type: 'folder', needsAction: false },
                 { name: 'ai/actors', type: 'folder', needsAction: true },
-                { name: 'forge-design.md', type: 'file', needsAction: true },
+                { name: 'forge-refine.md', type: 'file', needsAction: true },
                 { name: 'forge-build.md', type: 'file', needsAction: false }
             ];
 
@@ -223,7 +224,7 @@ describe('Initialization Integration - Command Files', () => {
         it('should send progress message before creating file', () => {
             const progressMessage = {
                 type: 'initializationProgress',
-                item: '.cursor/commands/forge-design.md',
+                item: '.cursor/commands/forge-refine.md',
                 itemType: 'file' as const,
                 status: 'creating' as const
             };
@@ -236,7 +237,7 @@ describe('Initialization Integration - Command Files', () => {
         it('should send progress message after creating file', () => {
             const progressMessage = {
                 type: 'initializationProgress',
-                item: '.cursor/commands/forge-design.md',
+                item: '.cursor/commands/forge-refine.md',
                 itemType: 'file' as const,
                 status: 'created' as const
             };
@@ -247,7 +248,7 @@ describe('Initialization Integration - Command Files', () => {
         it('should send progress message after updating file', () => {
             const progressMessage = {
                 type: 'initializationProgress',
-                item: '.cursor/commands/forge-design.md',
+                item: '.cursor/commands/forge-refine.md',
                 itemType: 'file' as const,
                 status: 'updated' as const
             };
@@ -257,15 +258,15 @@ describe('Initialization Integration - Command Files', () => {
 
         it('should send separate progress for each file', () => {
             const messages = [
-                { item: '.cursor/commands/forge-design.md', status: 'creating' },
-                { item: '.cursor/commands/forge-design.md', status: 'created' },
+                { item: '.cursor/commands/forge-refine.md', status: 'creating' },
+                { item: '.cursor/commands/forge-refine.md', status: 'created' },
                 { item: '.cursor/commands/forge-build.md', status: 'creating' },
                 { item: '.cursor/commands/forge-build.md', status: 'created' }
             ];
 
             expect(messages).toHaveLength(4);
             
-            const designMessages = messages.filter(m => m.item.includes('forge-design'));
+            const designMessages = messages.filter(m => m.item.includes('forge-refine'));
             const buildMessages = messages.filter(m => m.item.includes('forge-build'));
 
             expect(designMessages).toHaveLength(2);
@@ -282,7 +283,7 @@ describe('Initialization Integration - Command Files', () => {
 
             const fileMessage = {
                 type: 'initializationProgress',
-                item: '.cursor/commands/forge-design.md',
+                item: '.cursor/commands/forge-refine.md',
                 itemType: 'file' as const,
                 status: 'created' as const
             };
@@ -294,7 +295,7 @@ describe('Initialization Integration - Command Files', () => {
 
     describe('Hash comment embedding', () => {
         it('should embed hash at the start of file', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             const generated = generateCommandFile(commandPath);
             const firstLine = generated.split('\n')[0];
 
@@ -302,7 +303,7 @@ describe('Initialization Integration - Command Files', () => {
         });
 
         it('should separate hash from content with blank line', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             const generated = generateCommandFile(commandPath);
             const lines = generated.split('\n');
 
@@ -312,7 +313,7 @@ describe('Initialization Integration - Command Files', () => {
         });
 
         it('should use SHA-256 hash format', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             const generated = generateCommandFile(commandPath);
             const hashMatch = generated.match(/<!-- forge-hash: ([a-f0-9]{64}) -->/);
 
@@ -322,7 +323,7 @@ describe('Initialization Integration - Command Files', () => {
         });
 
         it('should generate consistent hashes for same template', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             const generated1 = generateCommandFile(commandPath);
             const generated2 = generateCommandFile(commandPath);
 
@@ -333,7 +334,7 @@ describe('Initialization Integration - Command Files', () => {
         });
 
         it('should generate different hashes for different templates', () => {
-            const designFile = generateCommandFile('.cursor/commands/forge-design.md');
+            const designFile = generateCommandFile('.cursor/commands/forge-refine.md');
             const buildFile = generateCommandFile('.cursor/commands/forge-build.md');
 
             const designHash = designFile.match(/<!-- forge-hash: ([a-f0-9]{64}) -->/)![1];
@@ -360,7 +361,7 @@ describe('Initialization Integration - Command Files', () => {
 
         it('should continue processing after file write failure', () => {
             const files = [
-                { path: '.cursor/commands/forge-design.md', willFail: true },
+                { path: '.cursor/commands/forge-refine.md', willFail: true },
                 { path: '.cursor/commands/forge-build.md', willFail: false }
             ];
 
@@ -384,7 +385,7 @@ describe('Initialization Integration - Command Files', () => {
         it('should send error progress message on failure', () => {
             const errorMessage = {
                 type: 'initializationProgress',
-                item: '.cursor/commands/forge-design.md',
+                item: '.cursor/commands/forge-refine.md',
                 itemType: 'file' as const,
                 status: 'error' as const,
                 error: 'Permission denied: Cannot create command file'
@@ -474,7 +475,7 @@ describe('Initialization Integration - Command Files', () => {
 
     describe('File preservation logic', () => {
         it('should not modify valid files', () => {
-            const commandPath = '.cursor/commands/forge-design.md';
+            const commandPath = '.cursor/commands/forge-refine.md';
             const validFile = generateCommandFile(commandPath);
             const isValid = validateCommandFileHash(validFile, commandPath);
 
@@ -485,7 +486,7 @@ describe('Initialization Integration - Command Files', () => {
 
         it('should identify which files need updating', () => {
             const commandStatuses = [
-                { path: '.cursor/commands/forge-design.md', exists: true, valid: true },
+                { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
                 { path: '.cursor/commands/forge-build.md', exists: true, valid: false }
             ];
 
@@ -530,7 +531,7 @@ describe('Initialization Integration - Command Files', () => {
 
         it('should create directory before each file write', () => {
             const files = [
-                '.cursor/commands/forge-design.md',
+                '.cursor/commands/forge-refine.md',
                 '.cursor/commands/forge-build.md'
             ];
 
@@ -542,8 +543,8 @@ describe('Initialization Integration - Command Files', () => {
 
     describe('Test independence', () => {
         it('should generate fresh files for each test', () => {
-            const file1 = generateCommandFile('.cursor/commands/forge-design.md');
-            const file2 = generateCommandFile('.cursor/commands/forge-design.md');
+            const file1 = generateCommandFile('.cursor/commands/forge-refine.md');
+            const file2 = generateCommandFile('.cursor/commands/forge-refine.md');
 
             // Files should be identical (deterministic)
             expect(file1).toBe(file2);
@@ -552,7 +553,7 @@ describe('Initialization Integration - Command Files', () => {
         it('should not depend on execution order', () => {
             // These tests can run in any order
             const testA = () => {
-                const file = generateCommandFile('.cursor/commands/forge-design.md');
+                const file = generateCommandFile('.cursor/commands/forge-refine.md');
                 expect(file).toContain('<!-- forge-hash:');
             };
 
