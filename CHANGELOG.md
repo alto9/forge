@@ -1,3 +1,29 @@
+## 2.0.0 (2026-02-01)
+
+* chore: latest changes ([2c40403](https://github.com/alto9/forge/commit/2c40403))
+* chore: latest code ([32c45ec](https://github.com/alto9/forge/commit/32c45ec))
+* chore: remove old webview ([50e9d80](https://github.com/alto9/forge/commit/50e9d80))
+* chore: stage all v2 changes so far ([bae9808](https://github.com/alto9/forge/commit/bae9808))
+* chore: trigger release workflow ([2175868](https://github.com/alto9/forge/commit/2175868))
+* chore: v2 latest updates ([589f1b7](https://github.com/alto9/forge/commit/589f1b7))
+* feat!: migrate to GitHub issue workflow ([e8404b4](https://github.com/alto9/forge/commit/e8404b4))
+* Merge pull request #7 from alto9/v2poc ([f807a7a](https://github.com/alto9/forge/commit/f807a7a)), closes [#7](https://github.com/alto9/forge/issues/7)
+
+
+### BREAKING CHANGE
+
+* Removed Forge Studio UI and design session workflow.
+Replaced with GitHub issue-based workflow using forge-refine and forge-scribe commands.
+
+- Remove Forge Studio tree provider and webview
+- Remove design session commands (BuildStoryCommand, DistillSessionCommand)
+- Remove forge-design command
+- Add forge-refine command for issue refinement
+- Add forge-scribe command for technical breakdown
+- Remove Work Issue command and webview
+- Simplify extension architecture
+- Update workflow documentation
+
 ## <small>1.1.3 (2025-12-10)</small>
 
 * fix: adjust cursor commands ([734970e](https://github.com/alto9/forge/commit/734970e))
