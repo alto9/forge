@@ -76,9 +76,9 @@
         "description": "Safely push code to remote with validation, rebase handling, and pre-push hooks"
       },
       {
-        "id": "forge-pull.participant",
-        "name": "forge-pull",
-        "fullName": "Forge Pull",
+        "id": "forge-pullrequest.participant",
+        "name": "forge-pullrequest",
+        "fullName": "Forge Pull Request",
         "description": "Create pull request with conventional commit validation and GitHub integration"
       }
     ],
