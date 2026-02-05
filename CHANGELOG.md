@@ -1,3 +1,8 @@
+## <small>3.2.3 (2026-02-05)</small>
+
+* Merge branch 'main' of github.com:alto9/forge ([3643fd8](https://github.com/alto9/forge/commit/3643fd8))
+* chore: refine refinement commands ([b464220](https://github.com/alto9/forge/commit/b464220))
+
 ## <small>3.2.2 (2026-02-05)</small>
 
 * Merge pull request #11 from alto9/forgePullRename ([4add1d8](https://github.com/alto9/forge/commit/4add1d8)), closes [#11](https://github.com/alto9/forge/issues/11)
