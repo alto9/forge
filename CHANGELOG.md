@@ -1,3 +1,9 @@
+## 3.1.0 (2026-02-05)
+
+* Merge pull request #8 from alto9/forgeCommit ([e831554](https://github.com/alto9/forge/commit/e831554)), closes [#8](https://github.com/alto9/forge/issues/8)
+* test: update projectReadiness tests for 5 commands ([abb92e5](https://github.com/alto9/forge/commit/abb92e5))
+* feat: commit and push commands ([4056153](https://github.com/alto9/forge/commit/4056153))
+
 ## 3.0.0 (2026-02-01)
 
 * feat!: release v2.0.0 - GitHub issue workflow migration ([21c84a9](https://github.com/alto9/forge/commit/21c84a9))
