@@ -4,7 +4,7 @@ import { FORGE_SCRIBE_INSTRUCTIONS } from './personas/forge-scribe';
 import { FORGE_BUILD_INSTRUCTIONS } from './personas/forge-build';
 import { FORGE_COMMIT_INSTRUCTIONS } from './personas/forge-commit';
 import { FORGE_PUSH_INSTRUCTIONS } from './personas/forge-push';
-import { FORGE_PULL_INSTRUCTIONS } from './personas/forge-pull';
+import { FORGE_PULLREQUEST_INSTRUCTIONS } from './personas/forge-pullrequest';
 
 /**
  * Chat participants for Forge that enable direct interaction with Forge
@@ -55,13 +55,13 @@ export class ForgeChatParticipant {
         pushParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
         context.subscriptions.push(pushParticipant);
 
-        // @forge-pull participant (create pull request with conventional commit validation)
-        const pullParticipant = vscode.chat.createChatParticipant(
-            'forge-pull.participant',
+        // @forge-pullrequest participant (create pull request with conventional commit validation)
+        const pullrequestParticipant = vscode.chat.createChatParticipant(
+            'forge-pullrequest.participant',
             this.handlePullRequest
         );
-        pullParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
-        context.subscriptions.push(pullParticipant);
+        pullrequestParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
+        context.subscriptions.push(pullrequestParticipant);
     }
 
     /**
@@ -191,7 +191,7 @@ export class ForgeChatParticipant {
     }
 
     /**
-     * Handle @forge-pull requests (create pull request with conventional commit validation)
+     * Handle @forge-pullrequest requests (create pull request with conventional commit validation)
      */
     private static async handlePullRequest(
         request: vscode.ChatRequest,
@@ -199,13 +199,13 @@ export class ForgeChatParticipant {
         stream: vscode.ChatResponseStream,
         token: vscode.CancellationToken
     ): Promise<void> {
-        // Provide the pull instructions upfront
+        // Provide the pull request instructions upfront
         stream.markdown(
-            '# 🔀 Forge Pull\n\n' +
+            '# 🔀 Forge Pull Request\n\n' +
             'I\'ll help you create a pull request with conventional commit validation. Here are my instructions:\n\n'
         );
         
-        stream.markdown(FORGE_PULL_INSTRUCTIONS);
+        stream.markdown(FORGE_PULLREQUEST_INSTRUCTIONS);
         
         stream.markdown('\n\n---\n\n**I\'m ready to help you create a pull request. Should I proceed with validating your commits and creating the PR?**');
     }

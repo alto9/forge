@@ -5,7 +5,7 @@ Thank you for your interest in contributing to Forge! This document provides gui
 ## Getting Started
 
 1. Fork the repository
-2. Clone your fork: `git clone https://github.com/alto9/cursor-context-engineering.git`
+2. Clone your fork: `git clone https://github.com/alto9/forge.git`
 3. Install dependencies: `npm install`
 4. Make your changes
 5. Test your changes by pressing F5 in VSCode

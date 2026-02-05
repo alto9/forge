@@ -11,10 +11,34 @@ You must provide a GitHub issue link when using this command. The issue should b
 ## What This Command Does
 
 1. **Reads the GitHub issue**: Understands the current state of the issue
-2. **Clarifies business value**: Ensures the business value is clearly spelled out and accurate
-3. **Defines testing procedures**: Fills out testing procedures from a BAU (Business As Usual) perspective
-4. **Defines success and failure**: Ensures clear definitions of success and failure criteria
-5. **Updates the issue**: Saves refined content back to the GitHub issue
+2. **Determines issue type**: Identifies whether this is a bug report or feature request
+3. **Loads appropriate template**: Reads the corresponding template file (bug_report.yml or feature_request.yml) to understand required fields
+4. **Clarifies business value**: Ensures the business value is clearly spelled out and accurate
+5. **Defines testing procedures**: Fills out testing procedures from a BAU (Business As Usual) perspective
+6. **Defines success and failure**: Ensures clear definitions of success and failure criteria
+7. **Updates the issue**: Saves refined content back to the GitHub issue
+
+## Issue Type Detection
+
+**CRITICAL**: Before refining the issue, you MUST determine the issue type:
+
+1. **Read the GitHub issue** using the GitHub MCP tools to get:
+   - Issue labels (check for "bug" or "enhancement" labels)
+   - Issue title (check for "[Bug]" or "[Feature]" prefixes)
+   - Issue body structure
+
+2. **Determine issue type**:
+   - If the issue has a "bug" label OR title starts with "[Bug]" → **Bug Report**
+   - If the issue has an "enhancement" label OR title starts with "[Feature]" → **Feature Request**
+
+3. **Load the appropriate template**:
+   - **Bug Report**: Read `.github/ISSUE_TEMPLATE/bug_report.yml`
+   - **Feature Request**: Read `.github/ISSUE_TEMPLATE/feature_request.yml`
+
+4. **Extract required fields** from the template file:
+   - Parse the YAML structure to identify all form fields
+   - Note which fields are marked as `required: true` in the validations
+   - Map template field IDs to the sections that need to be refined
 
 ## Important Guidelines
 
@@ -22,42 +46,30 @@ You must provide a GitHub issue link when using this command. The issue should b
 - **BAU perspective**: Testing procedures should be written from a business-as-usual perspective, not technical testing
 - **Clear definitions**: Success and failure criteria must be unambiguous
 - **Work with GitHub issues directly**: All changes are made to the GitHub issue, not local files
-- **Required fields**: The following fields must be filled out before progressing to Scribe mode:
-  - Problem Statement
-  - Business Value
-  - Testing Procedures (BAU perspective)
-  - Definition of Success
-  - Definition of Failure
+- **Use template fields**: Required fields are determined dynamically from the template file, not hardcoded
+- **Template enforcement**: The rule enforces project-specific templates - fields come from the template files
 
 ## Issue Structure
 
-The GitHub issue body should contain the following sections:
+The GitHub issue body structure depends on the issue type and is defined by the template file:
 
-```markdown
-### Problem Statement
-[What problem does this feature solve?]
+- **Bug Reports**: Fields from `bug_report.yml` (e.g., Bug Description, Steps to Reproduce, Expected Behavior, Actual Behavior, etc.)
+- **Feature Requests**: Fields from `feature_request.yml` (e.g., Problem Statement, Proposed Solution, Alternatives Considered, Use Cases, etc.)
 
-### Business Value
-[What is the business value of this feature?]
-
-### Testing Procedures
-[How should this be tested from a BAU perspective?]
-
-### Definition of Success
-[What defines success for this feature?]
-
-### Definition of Failure
-[What defines failure for this feature?]
-```
+**Required fields** are determined by the template file's `validations.required: true` settings.
 
 ## Usage
 
 1. Use the `forge-refine` command in Cursor
 2. Provide the GitHub issue link: `https://github.com/owner/repo/issues/123`
-3. The AI will help refine each section of the issue
+3. The AI will:
+   - Read the issue to determine its type
+   - Load the appropriate template file
+   - Extract required fields from the template
+   - Help refine each required section of the issue
 4. Review and save changes back to GitHub
 5. Once all required fields are complete, progress to Scribe mode
 
 ## Goal
 
-The goal of Refinement mode is to get the original ticket in the most informed state possible, excluding technical implementation details. The business value must be clearly spelled out and accurate at the end of the refinement phase.
+The goal of Refinement mode is to get the original ticket in the most informed state possible, excluding technical implementation details. The business value must be clearly spelled out and accurate at the end of the refinement phase. The refinement process uses project-specific templates to ensure consistency and completeness.

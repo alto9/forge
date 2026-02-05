@@ -320,26 +320,51 @@ The goal of Scribe mode is to validate and manage GitHub sub-issues so they form
  */
 export const FORGE_COMMIT_TEMPLATE = `# Forge Commit
 
-This command helps you properly commit code changes for the current branch with proper validation and commit message formatting.
+This command helps you properly commit code changes for the current branch with proper validation and commit message formatting, following project-specific contribution guidelines.
 
 ## Prerequisites
 
 - You must be on a feature branch (not main/master/develop)
 - You must have changes to commit (staged or unstaged)
+- CONTRIBUTING.md and README.md files must be accessible in the repository root
 
 ## What This Command Does
 
-1. **Branch Validation**: Ensures you're not on a main branch (main/master/develop)
-2. **Pre-commit Checks**: Runs all pre-commit hooks and validation
-3. **Status Review**: Shows current git status with all changes
-4. **Change Analysis**: Reviews all staged and unstaged changes
-5. **Commit Message Generation**: Creates a clear, descriptive commit message following conventional commits format
-6. **Commit Execution**: Commits the changes with the generated message
-7. **Post-commit Validation**: Verifies the commit was successful
+1. **Read Contribution Guidelines**: Loads CONTRIBUTING.md and README.md to understand project-specific commit conventions
+2. **Branch Validation**: Ensures you're not on a main branch (main/master/develop)
+3. **Pre-commit Checks**: Runs all pre-commit hooks and validation
+4. **Status Review**: Shows current git status with all changes
+5. **Change Analysis**: Reviews all staged and unstaged changes
+6. **Commit Message Generation**: Creates a clear, descriptive commit message following project-specific conventional commits format
+7. **Commit Execution**: Commits the changes with the generated message
+8. **Post-commit Validation**: Verifies the commit was successful
+
+## Reading Contribution Guidelines
+
+**CRITICAL**: Before creating any commit, you MUST read the project's contribution guidelines:
+
+1. **Read CONTRIBUTING.md**:
+   - Read the file at \`CONTRIBUTING.md\` in the repository root
+   - Pay special attention to the "Commit Message Conventions" section
+   - Note any project-specific commit types, scopes, or formatting requirements
+   - Understand version bump implications for different commit types
+   - Note any breaking change conventions
+
+2. **Read README.md**:
+   - Read the file at \`README.md\` in the repository root
+   - Understand project structure and conventions
+   - Note any project-specific guidelines or requirements
+   - Understand the project's purpose and context
+
+3. **Apply Guidelines**:
+   - Use the commit message format specified in CONTRIBUTING.md
+   - Follow project-specific type definitions and scopes
+   - Respect version bump rules (if documented)
+   - Follow any project-specific examples or patterns
 
 ## Commit Message Format
 
-Uses Conventional Commits specification:
+Uses Conventional Commits specification (as defined in CONTRIBUTING.md):
 
 \`\`\`
 <type>(<scope>): <subject>
@@ -349,17 +374,17 @@ Uses Conventional Commits specification:
 <footer>
 \`\`\`
 
-**Types:**
-- \`feat\`: New feature
-- \`fix\`: Bug fix
-- \`docs\`: Documentation changes
-- \`style\`: Code style changes (formatting, missing semicolons, etc.)
-- \`refactor\`: Code refactoring without changing functionality
-- \`perf\`: Performance improvements
-- \`test\`: Adding or updating tests
-- \`build\`: Changes to build system or dependencies
-- \`ci\`: Changes to CI/CD configuration
-- \`chore\`: Other changes that don't modify src or test files
+**Standard Types** (verify against CONTRIBUTING.md for project-specific types):
+- \`feat\`: New feature (typically increments minor version)
+- \`fix\`: Bug fix (typically increments patch version)
+- \`docs\`: Documentation changes (no version bump)
+- \`style\`: Code style changes (no version bump)
+- \`refactor\`: Code refactoring (no version bump)
+- \`perf\`: Performance improvements (typically increments patch version)
+- \`test\`: Adding or updating tests (no version bump)
+- \`build\`: Build system changes (no version bump)
+- \`ci\`: CI/CD changes (no version bump)
+- \`chore\`: Maintenance tasks (no version bump)
 
 **Subject Guidelines:**
 - Use imperative mood ("add" not "added" or "adds")
@@ -371,46 +396,61 @@ Uses Conventional Commits specification:
 - Wrap at 72 characters
 - Explain what and why, not how
 - Separate from subject with blank line
+- Use bullet points for multiple changes
+
+**Breaking Changes:**
+- Add \`!\` after type/scope: \`feat!: remove deprecated API\`
+- OR include \`BREAKING CHANGE:\` in footer
+- Breaking changes typically increment major version
 
 ## Workflow
 
-### Step 1: Branch Safety Check
+### Step 1: Read Contribution Guidelines
+- Read \`CONTRIBUTING.md\` file from repository root
+- Read \`README.md\` file from repository root
+- Extract commit message conventions and project-specific requirements
+- Note any project-specific scopes, types, or formatting rules
+
+### Step 2: Branch Safety Check
 - Check current branch with \`git rev-parse --abbrev-ref HEAD\`
 - If on main/master/develop, **STOP** and warn the user
 - Only proceed on feature branches
 
-### Step 2: Pre-commit Validation
+### Step 3: Pre-commit Validation
 - Run \`git status\` to see all changes
 - Run \`npm run lint\` (or equivalent) if available
 - Run \`npm run test\` (or equivalent) if available
 - Run any pre-commit hooks configured in the repository
 - If any checks fail, **STOP** and fix issues before committing
 
-### Step 3: Stage Changes
+### Step 4: Stage Changes
 - Review unstaged changes with \`git diff\`
 - Review staged changes with \`git diff --cached\`
 - Stage relevant files with \`git add\` as needed
 - Confirm all intended changes are staged
 
-### Step 4: Generate Commit Message
+### Step 5: Generate Commit Message
 - Analyze the nature of changes (feat/fix/docs/etc.)
-- Determine appropriate scope based on files changed
-- Generate clear, descriptive subject line
+- Determine appropriate scope based on files changed (use project-specific scopes from CONTRIBUTING.md if documented)
+- Generate clear, descriptive subject line following project conventions
 - Add body if changes need explanation
-- Follow Conventional Commits format
+- Follow Conventional Commits format as specified in CONTRIBUTING.md
+- Include breaking change indicators if applicable
 
-### Step 5: Commit Changes
-- Execute \`git commit -m "message"\` with generated message
+### Step 6: Commit Changes
+- Execute \`git commit -m "message"\` with generated message (or use \`-m\` for subject and \`-m\` for body)
 - Verify commit succeeded with \`git log -1\`
 - Show commit hash and summary
 
-### Step 6: Post-commit Verification
+### Step 7: Post-commit Verification
 - Verify working directory is clean with \`git status\`
 - Show recent commit with \`git log -1 --stat\`
 - Confirm commit is ready to push
 
 ## Important Guidelines
 
+- **Read Guidelines First**: ALWAYS read CONTRIBUTING.md and README.md before committing
+- **Follow Project Conventions**: Use project-specific commit types, scopes, and formats from CONTRIBUTING.md
 - **Branch Safety**: NEVER commit to main/master/develop branches
 - **Pre-commit Hooks**: Always run pre-commit hooks before committing
 - **Clear Messages**: Write clear, descriptive commit messages that explain the "why"
@@ -418,6 +458,7 @@ Uses Conventional Commits specification:
 - **Test Before Commit**: All tests must pass before committing
 - **Review Changes**: Always review what you're committing before executing
 - **No Secrets**: Never commit sensitive information (API keys, passwords, etc.)
+- **Version Awareness**: Understand how commit types affect version bumps (if documented in CONTRIBUTING.md)
 
 ## Special Cases
 
@@ -436,6 +477,12 @@ If you need to fix the last commit:
 - Use \`git commit --amend\` only if commit hasn't been pushed
 - Run forge-commit again for a new commit if already pushed
 
+### Breaking Changes
+If your commit introduces a breaking change:
+- Add \`!\` after type/scope: \`feat!: remove deprecated API\`
+- OR include \`BREAKING CHANGE:\` in footer with explanation
+- Follow project-specific breaking change conventions from CONTRIBUTING.md
+
 ### Skipping Hooks
 **AVOID** skipping hooks with \`--no-verify\`:
 - Only skip if absolutely necessary and you understand the implications
@@ -445,10 +492,11 @@ If you need to fix the last commit:
 
 1. Use the \`forge-commit\` command in Cursor
 2. The AI will:
+   - Read CONTRIBUTING.md and README.md to understand project conventions
    - Verify you're on a feature branch
    - Run pre-commit validation
    - Review all changes
-   - Generate a proper commit message
+   - Generate a proper commit message following project conventions
    - Commit the changes
    - Verify the commit succeeded
 3. Review the commit details
@@ -467,7 +515,7 @@ Never commit these files/patterns:
 
 ## Goal
 
-The goal of forge-commit is to ensure every commit is clean, properly validated, and has a clear, descriptive message following industry standards. This makes the git history readable and useful for the entire team.`;
+The goal of forge-commit is to ensure every commit is clean, properly validated, and follows project-specific contribution guidelines. By reading CONTRIBUTING.md and README.md, commits will align with the project's conventions, making the git history readable, consistent, and useful for the entire team.`;
 
 /**
  * Template for forge-push.md Cursor command
@@ -694,9 +742,9 @@ git push --force-with-lease origin HEAD
 The goal of forge-push is to safely push code to the remote repository following industry best practices, handling common scenarios intelligently, and protecting against common mistakes like force-pushing to protected branches or skipping important validation hooks.`;
 
 /**
- * Template for forge-pull.md Cursor command
+ * Template for forge-pullrequest.md Cursor command
  */
-export const FORGE_PULL_TEMPLATE = `# Forge Pull
+export const FORGE_PULLREQUEST_TEMPLATE = `# Forge Pull Request
 
 This command helps you create a pull request for the current branch with conventional commit validation and GitHub integration.
 
@@ -868,7 +916,7 @@ This command helps you create a pull request for the current branch with convent
 
 ## Usage
 
-1. Use the \`forge-pull\` command in Cursor
+1. Use the \`forge-pullrequest\` command in Cursor
 2. The AI will:
    - Verify you're on a feature branch
    - Check that branch is pushed to remote
@@ -899,7 +947,7 @@ Error: Branch 'feature/xyz' is not pushed to remote.
 
 Please push the branch first:
 1. Use \`forge-push\` command to push safely
-2. Then run \`forge-pull\` again
+2. Then run \`forge-pullrequest\` again
 \`\`\`
 
 ### On Main Branch
@@ -909,7 +957,7 @@ Error: Cannot create PR from main branch.
 Please switch to a feature branch:
 1. Create a feature branch: \`git checkout -b feature/your-feature\`
 2. Push your changes: \`forge-push\`
-3. Create PR: \`forge-pull\`
+3. Create PR: \`forge-pullrequest\`
 \`\`\`
 
 ### GitHub MCP Not Available
@@ -931,7 +979,7 @@ Please create PR manually:
 
 ## Goal
 
-The goal of forge-pull is to create pull requests with proper conventional commit validation, ensuring all commits follow industry standards before creating a PR. This maintains clean git history and makes PRs easier to review and understand.`;
+The goal of forge-pullrequest is to create pull requests with proper conventional commit validation, ensuring all commits follow industry standards before creating a PR. This maintains clean git history and makes PRs easier to review and understand.`;
 
 /**
  * Map of command paths to their templates
@@ -942,7 +990,7 @@ export const COMMAND_TEMPLATES: Record<string, string> = {
   '.cursor/commands/forge-scribe.md': FORGE_SCRIBE_TEMPLATE,
   '.cursor/commands/forge-commit.md': FORGE_COMMIT_TEMPLATE,
   '.cursor/commands/forge-push.md': FORGE_PUSH_TEMPLATE,
-  '.cursor/commands/forge-pull.md': FORGE_PULL_TEMPLATE
+  '.cursor/commands/forge-pullrequest.md': FORGE_PULLREQUEST_TEMPLATE
 };
 
 /**
