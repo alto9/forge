@@ -67,8 +67,8 @@ describe('projectReadiness', () => {
     });
 
     describe('REQUIRED_COMMANDS constant', () => {
-        it('should have exactly 3 required commands', () => {
-            expect(REQUIRED_COMMANDS).toHaveLength(3);
+        it('should have exactly 5 required commands', () => {
+            expect(REQUIRED_COMMANDS).toHaveLength(5);
         });
 
         it('should include forge-refine.md command', () => {
@@ -81,6 +81,14 @@ describe('projectReadiness', () => {
 
         it('should include forge-scribe.md command', () => {
             expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-scribe.md');
+        });
+
+        it('should include forge-commit.md command', () => {
+            expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-commit.md');
+        });
+
+        it('should include forge-push.md command', () => {
+            expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-push.md');
         });
 
         it('should be a string array', () => {
@@ -114,14 +122,14 @@ describe('projectReadiness', () => {
             // Project would not be ready with only 5 folders
         });
 
-        it('requires all 3 commands to be present', () => {
+        it('requires all 5 commands to be present', () => {
             // A project missing any command should NOT be ready
             const allCommands = [...REQUIRED_COMMANDS];
             const missingOneCommand = allCommands.slice(0, -1); // Remove last command
             
-            expect(allCommands.length).toBe(3);
-            expect(missingOneCommand.length).toBe(2);
-            // Project would not be ready with only 2 commands
+            expect(allCommands.length).toBe(5);
+            expect(missingOneCommand.length).toBe(4);
+            // Project would not be ready with only 4 commands
         });
 
         it('requires command files to have valid content (hash validation)', () => {
@@ -143,9 +151,9 @@ describe('projectReadiness', () => {
             // This ensures no component checks wrong number of folders
         });
 
-        it('all components must check the same 3 commands', () => {
+        it('all components must check the same 5 commands', () => {
             // ProjectPicker, extension.ts, and WelcomePanel must all use REQUIRED_COMMANDS
-            const expectedCommandCount = 3;
+            const expectedCommandCount = 5;
             
             expect(REQUIRED_COMMANDS.length).toBe(expectedCommandCount);
         });
@@ -215,10 +223,14 @@ describe('projectReadiness', () => {
             const refineCommand = '.cursor/commands/forge-refine.md';
             const buildCommand = '.cursor/commands/forge-build.md';
             const scribeCommand = '.cursor/commands/forge-scribe.md';
+            const commitCommand = '.cursor/commands/forge-commit.md';
+            const pushCommand = '.cursor/commands/forge-push.md';
             
             expect(REQUIRED_COMMANDS).toContain(refineCommand);
             expect(REQUIRED_COMMANDS).toContain(buildCommand);
             expect(REQUIRED_COMMANDS).toContain(scribeCommand);
+            expect(REQUIRED_COMMANDS).toContain(commitCommand);
+            expect(REQUIRED_COMMANDS).toContain(pushCommand);
         });
     });
 
@@ -271,7 +283,7 @@ describe('projectReadiness', () => {
             copy.push('.cursor/commands/invalid.md');
             
             expect(REQUIRED_COMMANDS.length).toBe(originalLength);
-            expect(REQUIRED_COMMANDS.length).toBe(3);
+            expect(REQUIRED_COMMANDS.length).toBe(5);
         });
     });
 
@@ -295,8 +307,8 @@ describe('projectReadiness', () => {
         });
 
         it('missing any command file should fail readiness', () => {
-            // All 3 command files must exist
-            expect(REQUIRED_COMMANDS.length).toBe(3);
+            // All 5 command files must exist
+            expect(REQUIRED_COMMANDS.length).toBe(5);
             
             REQUIRED_COMMANDS.forEach(command => {
                 expect(command).toBeTruthy();
@@ -320,8 +332,8 @@ describe('projectReadiness', () => {
         });
 
         it('matches documented required commands count', () => {
-            // 3 cursor commands (forge-refine, forge-build, forge-scribe)
-            expect(REQUIRED_COMMANDS.length).toBe(3);
+            // 5 cursor commands (forge-refine, forge-build, forge-scribe, forge-commit, forge-push)
+            expect(REQUIRED_COMMANDS.length).toBe(5);
         });
 
         it('aligns with forge-ready-status-accuracy session intent', () => {
@@ -346,6 +358,8 @@ describe('projectReadiness', () => {
             expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-refine.md');
             expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-build.md');
             expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-scribe.md');
+            expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-commit.md');
+            expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-push.md');
         });
     });
 });
