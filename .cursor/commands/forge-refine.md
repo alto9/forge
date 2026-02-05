@@ -11,12 +11,14 @@ You must provide a GitHub issue link when using this command. The issue should b
 ## What This Command Does
 
 1. **Reads the GitHub issue**: Understands the current state of the issue
-2. **Determines issue type**: Identifies whether this is a bug report or feature request
-3. **Loads appropriate template**: Reads the corresponding template file (bug_report.yml or feature_request.yml) to understand required fields
-4. **Clarifies business value**: Ensures the business value is clearly spelled out and accurate
-5. **Defines testing procedures**: Fills out testing procedures from a BAU (Business As Usual) perspective
-6. **Defines success and failure**: Ensures clear definitions of success and failure criteria
-7. **Updates the issue**: Saves refined content back to the GitHub issue
+2. **Assesses issue complexity**: Examines the issue to determine if it's a simple fix or requires breakdown into sub-issues
+3. **Determines issue type**: Identifies whether this is a bug report or feature request
+4. **Loads appropriate template**: Reads the corresponding template file (bug_report.yml or feature_request.yml) to understand required fields
+5. **Clarifies business value**: Ensures the business value is clearly spelled out and accurate
+6. **Defines testing procedures**: Fills out testing procedures from a BAU (Business As Usual) perspective
+7. **Defines success and failure**: Ensures clear definitions of success and failure criteria
+8. **Updates the issue**: Saves refined content back to the GitHub issue
+9. **Handles sub-issues if needed**: If the issue is complex, creates and refines sub-issues as part of the refinement process
 
 ## Issue Type Detection
 
@@ -58,18 +60,44 @@ The GitHub issue body structure depends on the issue type and is defined by the 
 
 **Required fields** are determined by the template file's `validations.required: true` settings.
 
+## Complexity Assessment and Sub-Issue Handling
+
+**CRITICAL**: Before refining, you MUST assess the issue complexity:
+
+1. **Examine the issue**: Read the issue content to understand its scope and complexity
+2. **Determine if sub-issues are needed**:
+   - **Simple fixes**: If the issue is straightforward and can be implemented as a single unit of work, refine the parent issue directly. Do NOT create sub-issues for simple fixes.
+   - **Complex issues**: If the issue requires multiple independent, potentially shippable pieces of work, create sub-issues as part of the refinement process.
+
+3. **Sub-issue creation criteria**: Only create sub-issues when:
+   - The work can be logically broken into multiple independent, potentially shippable pieces
+   - Each sub-issue represents a complete, working increment of value
+   - The breakdown improves clarity and parallelization
+   - Each sub-issue results in a working, testable state (no broken states between sub-issues)
+
+4. **Refinement scope**:
+   - **Parent issues**: Always refine the parent issue. If sub-issues are needed, create and refine them as part of refining the parent issue.
+   - **Sub-issues**: Sub-issues are NEVER refined individually. They are only created and refined as part of refining their parent issue.
+
+5. **Decision flow**:
+   - Assess complexity → If simple → Refine parent issue only → Skip Scribe mode
+   - Assess complexity → If complex → Refine parent issue AND create/refine sub-issues → Progress to Scribe mode
+
 ## Usage
 
 1. Use the `forge-refine` command in Cursor
 2. Provide the GitHub issue link: `https://github.com/owner/repo/issues/123`
 3. The AI will:
-   - Read the issue to determine its type
+   - Read the issue to assess its complexity
+   - Determine issue type (bug or feature)
    - Load the appropriate template file
    - Extract required fields from the template
    - Help refine each required section of the issue
+   - If complex, create and refine sub-issues as part of the refinement process
 4. Review and save changes back to GitHub
-5. Once all required fields are complete, progress to Scribe mode
+5. **If simple fix**: Refinement is complete, skip Scribe mode
+6. **If complex with sub-issues**: Once all required fields are complete, progress to Scribe mode
 
 ## Goal
 
-The goal of Refinement mode is to get the original ticket in the most informed state possible, excluding technical implementation details. The business value must be clearly spelled out and accurate at the end of the refinement phase. The refinement process uses project-specific templates to ensure consistency and completeness.
+The goal of Refinement mode is to get the original ticket in the most informed state possible, excluding technical implementation details. The business value must be clearly spelled out and accurate at the end of the refinement phase. Simple fixes are refined directly without sub-issues. Complex issues are refined along with their sub-issues, ensuring both parent and children are properly refined together. The refinement process uses project-specific templates to ensure consistency and completeness.
