@@ -1,3 +1,8 @@
+## <small>3.2.1 (2026-02-05)</small>
+
+* Merge pull request #10 from alto9/forgeRefinement ([21a3d0f](https://github.com/alto9/forge/commit/21a3d0f)), closes [#10](https://github.com/alto9/forge/issues/10)
+* fix: refinement instructions ([a96dbc3](https://github.com/alto9/forge/commit/a96dbc3))
+
 ## 3.2.0 (2026-02-05)
 
 * Merge pull request #9 from alto9/forgePullRequest ([be9d27e](https://github.com/alto9/forge/commit/be9d27e)), closes [#9](https://github.com/alto9/forge/issues/9)
