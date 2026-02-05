@@ -1,3 +1,8 @@
+## 3.2.0 (2026-02-05)
+
+* Merge pull request #9 from alto9/forgePullRequest ([be9d27e](https://github.com/alto9/forge/commit/be9d27e)), closes [#9](https://github.com/alto9/forge/issues/9)
+* feat(commands): add forge-pull command for PR creation with conventional commit validation ([3e77b81](https://github.com/alto9/forge/commit/3e77b81))
+
 ## 3.1.0 (2026-02-05)
 
 * Merge pull request #8 from alto9/forgeCommit ([e831554](https://github.com/alto9/forge/commit/e831554)), closes [#8](https://github.com/alto9/forge/issues/8)
