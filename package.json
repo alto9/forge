@@ -74,6 +74,12 @@
         "name": "forge-push",
         "fullName": "Forge Push",
         "description": "Safely push code to remote with validation, rebase handling, and pre-push hooks"
+      },
+      {
+        "id": "forge-pull.participant",
+        "name": "forge-pull",
+        "fullName": "Forge Pull",
+        "description": "Create pull request with conventional commit validation and GitHub integration"
       }
     ],
     "commands": [
