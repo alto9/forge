@@ -62,6 +62,18 @@
         "name": "forge-build",
         "fullName": "Forge Build",
         "description": "Implement GitHub issues by analyzing code and running tests"
+      },
+      {
+        "id": "forge-commit.participant",
+        "name": "forge-commit",
+        "fullName": "Forge Commit",
+        "description": "Properly commit code changes with validation and conventional commit messages"
+      },
+      {
+        "id": "forge-push.participant",
+        "name": "forge-push",
+        "fullName": "Forge Push",
+        "description": "Safely push code to remote with validation, rebase handling, and pre-push hooks"
       }
     ],
     "commands": [

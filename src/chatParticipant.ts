@@ -2,6 +2,8 @@ import * as vscode from 'vscode';
 import { FORGE_REFINE_INSTRUCTIONS } from './personas/forge-refine';
 import { FORGE_SCRIBE_INSTRUCTIONS } from './personas/forge-scribe';
 import { FORGE_BUILD_INSTRUCTIONS } from './personas/forge-build';
+import { FORGE_COMMIT_INSTRUCTIONS } from './personas/forge-commit';
+import { FORGE_PUSH_INSTRUCTIONS } from './personas/forge-push';
 
 /**
  * Chat participants for Forge that enable direct interaction with Forge
@@ -35,6 +37,22 @@ export class ForgeChatParticipant {
         );
         buildParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
         context.subscriptions.push(buildParticipant);
+
+        // @forge-commit participant (commit changes with proper validation)
+        const commitParticipant = vscode.chat.createChatParticipant(
+            'forge-commit.participant',
+            this.handleCommitRequest
+        );
+        commitParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
+        context.subscriptions.push(commitParticipant);
+
+        // @forge-push participant (push changes safely to remote)
+        const pushParticipant = vscode.chat.createChatParticipant(
+            'forge-push.participant',
+            this.handlePushRequest
+        );
+        pushParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
+        context.subscriptions.push(pushParticipant);
     }
 
     /**
@@ -121,5 +139,45 @@ export class ForgeChatParticipant {
         stream.markdown(FORGE_BUILD_INSTRUCTIONS);
         
         stream.markdown('\n\n---\n\n**Please provide the GitHub issue link you\'d like me to implement.**');
+    }
+
+    /**
+     * Handle @forge-commit requests (commit changes with validation)
+     */
+    private static async handleCommitRequest(
+        request: vscode.ChatRequest,
+        context: vscode.ChatContext,
+        stream: vscode.ChatResponseStream,
+        token: vscode.CancellationToken
+    ): Promise<void> {
+        // Provide the commit instructions upfront
+        stream.markdown(
+            '# 📝 Forge Commit\n\n' +
+            'I\'ll help you commit your changes with proper validation and conventional commit messages. Here are my instructions:\n\n'
+        );
+        
+        stream.markdown(FORGE_COMMIT_INSTRUCTIONS);
+        
+        stream.markdown('\n\n---\n\n**I\'m ready to help you commit your changes. What would you like to commit?**');
+    }
+
+    /**
+     * Handle @forge-push requests (push changes safely)
+     */
+    private static async handlePushRequest(
+        request: vscode.ChatRequest,
+        context: vscode.ChatContext,
+        stream: vscode.ChatResponseStream,
+        token: vscode.CancellationToken
+    ): Promise<void> {
+        // Provide the push instructions upfront
+        stream.markdown(
+            '# 🚀 Forge Push\n\n' +
+            'I\'ll help you safely push your changes to the remote repository. Here are my instructions:\n\n'
+        );
+        
+        stream.markdown(FORGE_PUSH_INSTRUCTIONS);
+        
+        stream.markdown('\n\n---\n\n**I\'m ready to help you push your changes. Should I proceed with checking the current branch and remote status?**');
     }
 }

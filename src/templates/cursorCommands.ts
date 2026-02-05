@@ -316,12 +316,392 @@ When running in Plan mode:
 The goal of Scribe mode is to validate and manage GitHub sub-issues so they form a coherent, complete, and logical breakdown of the parent issue. This is a planning/validation phase - implementation happens later using forge-build.`;
 
 /**
+ * Template for forge-commit.md Cursor command
+ */
+export const FORGE_COMMIT_TEMPLATE = `# Forge Commit
+
+This command helps you properly commit code changes for the current branch with proper validation and commit message formatting.
+
+## Prerequisites
+
+- You must be on a feature branch (not main/master/develop)
+- You must have changes to commit (staged or unstaged)
+
+## What This Command Does
+
+1. **Branch Validation**: Ensures you're not on a main branch (main/master/develop)
+2. **Pre-commit Checks**: Runs all pre-commit hooks and validation
+3. **Status Review**: Shows current git status with all changes
+4. **Change Analysis**: Reviews all staged and unstaged changes
+5. **Commit Message Generation**: Creates a clear, descriptive commit message following conventional commits format
+6. **Commit Execution**: Commits the changes with the generated message
+7. **Post-commit Validation**: Verifies the commit was successful
+
+## Commit Message Format
+
+Uses Conventional Commits specification:
+
+\`\`\`
+<type>(<scope>): <subject>
+
+<body>
+
+<footer>
+\`\`\`
+
+**Types:**
+- \`feat\`: New feature
+- \`fix\`: Bug fix
+- \`docs\`: Documentation changes
+- \`style\`: Code style changes (formatting, missing semicolons, etc.)
+- \`refactor\`: Code refactoring without changing functionality
+- \`perf\`: Performance improvements
+- \`test\`: Adding or updating tests
+- \`build\`: Changes to build system or dependencies
+- \`ci\`: Changes to CI/CD configuration
+- \`chore\`: Other changes that don't modify src or test files
+
+**Subject Guidelines:**
+- Use imperative mood ("add" not "added" or "adds")
+- Don't capitalize first letter
+- No period at the end
+- Maximum 72 characters
+
+**Body Guidelines:**
+- Wrap at 72 characters
+- Explain what and why, not how
+- Separate from subject with blank line
+
+## Workflow
+
+### Step 1: Branch Safety Check
+- Check current branch with \`git rev-parse --abbrev-ref HEAD\`
+- If on main/master/develop, **STOP** and warn the user
+- Only proceed on feature branches
+
+### Step 2: Pre-commit Validation
+- Run \`git status\` to see all changes
+- Run \`npm run lint\` (or equivalent) if available
+- Run \`npm run test\` (or equivalent) if available
+- Run any pre-commit hooks configured in the repository
+- If any checks fail, **STOP** and fix issues before committing
+
+### Step 3: Stage Changes
+- Review unstaged changes with \`git diff\`
+- Review staged changes with \`git diff --cached\`
+- Stage relevant files with \`git add\` as needed
+- Confirm all intended changes are staged
+
+### Step 4: Generate Commit Message
+- Analyze the nature of changes (feat/fix/docs/etc.)
+- Determine appropriate scope based on files changed
+- Generate clear, descriptive subject line
+- Add body if changes need explanation
+- Follow Conventional Commits format
+
+### Step 5: Commit Changes
+- Execute \`git commit -m "message"\` with generated message
+- Verify commit succeeded with \`git log -1\`
+- Show commit hash and summary
+
+### Step 6: Post-commit Verification
+- Verify working directory is clean with \`git status\`
+- Show recent commit with \`git log -1 --stat\`
+- Confirm commit is ready to push
+
+## Important Guidelines
+
+- **Branch Safety**: NEVER commit to main/master/develop branches
+- **Pre-commit Hooks**: Always run pre-commit hooks before committing
+- **Clear Messages**: Write clear, descriptive commit messages that explain the "why"
+- **Atomic Commits**: Each commit should represent a single logical change
+- **Test Before Commit**: All tests must pass before committing
+- **Review Changes**: Always review what you're committing before executing
+- **No Secrets**: Never commit sensitive information (API keys, passwords, etc.)
+
+## Special Cases
+
+### Multiple Logical Changes
+If changes represent multiple logical units:
+- Create separate commits for each logical unit
+- Run forge-commit multiple times with different staged files
+
+### Large Commits
+If commit is very large:
+- Consider breaking into smaller, logical commits
+- Use \`git add -p\` for interactive staging
+
+### Fixing Previous Commit
+If you need to fix the last commit:
+- Use \`git commit --amend\` only if commit hasn't been pushed
+- Run forge-commit again for a new commit if already pushed
+
+### Skipping Hooks
+**AVOID** skipping hooks with \`--no-verify\`:
+- Only skip if absolutely necessary and you understand the implications
+- Pre-commit hooks exist for a reason (linting, testing, security)
+
+## Usage
+
+1. Use the \`forge-commit\` command in Cursor
+2. The AI will:
+   - Verify you're on a feature branch
+   - Run pre-commit validation
+   - Review all changes
+   - Generate a proper commit message
+   - Commit the changes
+   - Verify the commit succeeded
+3. Review the commit details
+4. Use \`forge-push\` when ready to push to remote
+
+## Files to Exclude
+
+Never commit these files/patterns:
+- \`.env\`, \`.env.local\`, \`.env.*\` (environment variables)
+- \`node_modules/\` (dependencies)
+- \`dist/\`, \`build/\`, \`out/\` (build artifacts)
+- \`*.log\` (log files)
+- \`.DS_Store\` (macOS files)
+- IDE-specific files not in \`.gitignore\`
+- Credentials, keys, or sensitive data
+
+## Goal
+
+The goal of forge-commit is to ensure every commit is clean, properly validated, and has a clear, descriptive message following industry standards. This makes the git history readable and useful for the entire team.`;
+
+/**
+ * Template for forge-push.md Cursor command
+ */
+export const FORGE_PUSH_TEMPLATE = `# Forge Push
+
+This command helps you safely push code to the remote repository with proper validation, handling common scenarios, and ensuring all pre-push hooks pass.
+
+## Prerequisites
+
+- You must be on a feature branch (not main/master/develop directly)
+- You must have commits to push
+- Pre-push hooks must be configured (if applicable)
+
+## What This Command Does
+
+1. **Branch Validation**: Ensures you're not force-pushing to protected branches
+2. **Pre-push Hooks**: Runs all pre-push hooks and validation
+3. **Remote Status Check**: Checks if remote branch exists and its status
+4. **Rebase Check**: Determines if rebase is needed
+5. **Push Execution**: Pushes commits to remote with proper flags
+6. **Response Handling**: Interprets git push responses and takes appropriate action
+7. **Post-push Verification**: Verifies push succeeded and remote is up to date
+
+## Workflow
+
+### Step 1: Branch Safety Check
+- Check current branch with \`git rev-parse --abbrev-ref HEAD\`
+- Identify if pushing to protected branches (main/master/develop)
+- Warn if pushing to protected branch without PR workflow
+- Verify branch name follows conventions
+
+### Step 2: Pre-push Validation
+- Run \`npm run lint\` (or equivalent) if available
+- Run \`npm run test\` (or equivalent) if available
+- Run \`npm run build\` (or equivalent) if available
+- Run any pre-push hooks configured in the repository
+- If any checks fail, **STOP** and fix issues before pushing
+
+### Step 3: Fetch Remote Status
+- Execute \`git fetch origin\` to get latest remote state
+- Check if remote branch exists with \`git ls-remote --heads origin <branch>\`
+- Compare local and remote branches
+
+### Step 4: Handle Remote Branch State
+
+#### Case A: Remote Branch Doesn't Exist (First Push)
+- Use \`git push -u origin HEAD\` to create remote branch
+- Set upstream tracking automatically
+
+#### Case B: Remote Branch Exists and Is Behind
+- Local is ahead of remote
+- Use \`git push origin HEAD\` to push changes
+- No rebase needed
+
+#### Case C: Remote Branch Has Diverged
+- Remote has commits local doesn't have
+- Check divergence with \`git rev-list --left-right --count origin/<branch>...HEAD\`
+- **Recommend rebase**: Run \`git pull --rebase origin <branch>\`
+- After successful rebase, push with \`git push origin HEAD\`
+
+#### Case D: Remote Branch Is Ahead
+- Remote has commits local doesn't have
+- **Require rebase**: Must run \`git pull --rebase origin <branch>\` first
+- **DO NOT push** until local is up to date
+
+### Step 5: Execute Push
+- Use \`git push origin HEAD\` for normal push
+- Use \`git push -u origin HEAD\` for first-time push
+- Use \`git push --force-with-lease origin HEAD\` ONLY if user explicitly requests and:
+  - Not pushing to main/master/develop
+  - User understands the implications
+  - Team workflow allows it
+
+### Step 6: Handle Push Responses
+
+#### Success Response
+\`\`\`
+To <repository>
+   abc1234..def5678  feature-branch -> feature-branch
+\`\`\`
+- Push succeeded
+- Show success message with commit range
+
+#### Rejected - Non-fast-forward
+\`\`\`
+! [rejected]        feature-branch -> feature-branch (non-fast-forward)
+error: failed to push some refs to '<repository>'
+hint: Updates were rejected because the tip of your current branch is behind
+\`\`\`
+- Remote has diverged
+- Run \`git pull --rebase origin <branch>\`
+- Resolve any conflicts
+- Run \`git push origin HEAD\` again
+
+#### Rejected - Pre-push Hook Failed
+\`\`\`
+error: failed to push some refs to '<repository>'
+To <repository>
+ ! [remote rejected] feature-branch -> feature-branch (pre-receive hook declined)
+\`\`\`
+- Pre-push hook validation failed
+- Review hook output for specific errors
+- Fix issues locally
+- Try pushing again
+
+#### Protected Branch
+\`\`\`
+remote: error: GH006: Protected branch update failed
+\`\`\`
+- Branch is protected on remote
+- Cannot push directly to protected branch
+- Must use Pull Request workflow
+
+### Step 7: Post-push Verification
+- Run \`git status\` to verify working directory state
+- Run \`git log origin/<branch>..HEAD\` to verify all commits pushed
+- Should show no commits (empty output means everything is pushed)
+- Show remote branch URL for creating PR if needed
+
+## Important Guidelines
+
+### Branch Protection
+- **NEVER force push to main/master/develop**
+- Force push only to feature branches and only when necessary
+- Use \`--force-with-lease\` instead of \`--force\` (safer)
+- Always verify remote state before force pushing
+
+### Rebase Best Practices
+- Always rebase when remote has diverged
+- Use \`git pull --rebase origin <branch>\` not \`git pull\`
+- Resolve conflicts carefully
+- Test after rebasing before pushing
+- Use \`git rebase --abort\` if rebase goes wrong
+
+### Pre-push Hook Compliance
+- **NEVER skip pre-push hooks** with \`--no-verify\`
+- If hooks fail, fix the issues
+- Pre-push hooks protect code quality and team standards
+- Only skip in extreme emergencies with team approval
+
+### Common Scenarios
+
+#### Scenario 1: First Push to New Branch
+\`\`\`bash
+git push -u origin HEAD
+\`\`\`
+
+#### Scenario 2: Normal Push (Remote Is Behind)
+\`\`\`bash
+git push origin HEAD
+\`\`\`
+
+#### Scenario 3: Remote Has Diverged
+\`\`\`bash
+git fetch origin
+git rebase origin/<branch>
+# Resolve any conflicts
+git push origin HEAD
+\`\`\`
+
+#### Scenario 4: Need to Force Push (Feature Branch Only)
+\`\`\`bash
+# After rewriting history (rebase, amend, etc.)
+git push --force-with-lease origin HEAD
+\`\`\`
+
+#### Scenario 5: Protected Branch Push Rejected
+- Don't push directly
+- Create Pull Request instead
+- Use GitHub/GitLab/Bitbucket UI
+
+## Error Handling
+
+### Network Errors
+- Retry the push command
+- Check internet connection
+- Verify remote URL with \`git remote -v\`
+
+### Authentication Errors
+- Verify credentials are configured
+- Use SSH keys or Personal Access Token
+- Check \`git config --list\` for user.name and user.email
+
+### Repository Access Errors
+- Verify you have push access to the repository
+- Check with repository administrator
+
+## Usage
+
+1. Use the \`forge-push\` command in Cursor
+2. The AI will:
+   - Verify you're on a feature branch
+   - Run pre-push validation
+   - Check remote branch status
+   - Determine if rebase is needed
+   - Execute the appropriate push command
+   - Handle any errors or rejections
+   - Verify push succeeded
+3. Review the push results
+4. Create Pull Request if pushing to feature branch
+
+## Force Push Warning
+
+**🚨 CRITICAL**: Force pushing is dangerous and should be avoided unless absolutely necessary.
+
+**When force push is acceptable:**
+- Feature branch you own and no one else is using
+- After rebasing or amending commits
+- With team agreement and communication
+
+**When force push is NEVER acceptable:**
+- Main/master/develop branches
+- Shared feature branches with multiple developers
+- Any branch with active Pull Requests from others
+- Without understanding the consequences
+
+**Always use \`--force-with-lease\` instead of \`--force\`**:
+- \`--force-with-lease\` verifies remote hasn't changed since last fetch
+- \`--force\` blindly overwrites remote (dangerous)
+
+## Goal
+
+The goal of forge-push is to safely push code to the remote repository following industry best practices, handling common scenarios intelligently, and protecting against common mistakes like force-pushing to protected branches or skipping important validation hooks.`;
+
+/**
  * Map of command paths to their templates
  */
 export const COMMAND_TEMPLATES: Record<string, string> = {
   '.cursor/commands/forge-refine.md': FORGE_REFINE_TEMPLATE,
   '.cursor/commands/forge-build.md': FORGE_BUILD_TEMPLATE,
-  '.cursor/commands/forge-scribe.md': FORGE_SCRIBE_TEMPLATE
+  '.cursor/commands/forge-scribe.md': FORGE_SCRIBE_TEMPLATE,
+  '.cursor/commands/forge-commit.md': FORGE_COMMIT_TEMPLATE,
+  '.cursor/commands/forge-push.md': FORGE_PUSH_TEMPLATE
 };
 
 /**
