@@ -4,6 +4,7 @@ import { FORGE_SCRIBE_INSTRUCTIONS } from './personas/forge-scribe';
 import { FORGE_BUILD_INSTRUCTIONS } from './personas/forge-build';
 import { FORGE_COMMIT_INSTRUCTIONS } from './personas/forge-commit';
 import { FORGE_PUSH_INSTRUCTIONS } from './personas/forge-push';
+import { FORGE_PULL_INSTRUCTIONS } from './personas/forge-pull';
 
 /**
  * Chat participants for Forge that enable direct interaction with Forge
@@ -53,6 +54,14 @@ export class ForgeChatParticipant {
         );
         pushParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
         context.subscriptions.push(pushParticipant);
+
+        // @forge-pull participant (create pull request with conventional commit validation)
+        const pullParticipant = vscode.chat.createChatParticipant(
+            'forge-pull.participant',
+            this.handlePullRequest
+        );
+        pullParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
+        context.subscriptions.push(pullParticipant);
     }
 
     /**
@@ -179,5 +188,25 @@ export class ForgeChatParticipant {
         stream.markdown(FORGE_PUSH_INSTRUCTIONS);
         
         stream.markdown('\n\n---\n\n**I\'m ready to help you push your changes. Should I proceed with checking the current branch and remote status?**');
+    }
+
+    /**
+     * Handle @forge-pull requests (create pull request with conventional commit validation)
+     */
+    private static async handlePullRequest(
+        request: vscode.ChatRequest,
+        context: vscode.ChatContext,
+        stream: vscode.ChatResponseStream,
+        token: vscode.CancellationToken
+    ): Promise<void> {
+        // Provide the pull instructions upfront
+        stream.markdown(
+            '# 🔀 Forge Pull\n\n' +
+            'I\'ll help you create a pull request with conventional commit validation. Here are my instructions:\n\n'
+        );
+        
+        stream.markdown(FORGE_PULL_INSTRUCTIONS);
+        
+        stream.markdown('\n\n---\n\n**I\'m ready to help you create a pull request. Should I proceed with validating your commits and creating the PR?**');
     }
 }

@@ -281,7 +281,10 @@ ${validTemplate}`;
             const paths = [
                 '.cursor/commands/forge-refine.md',
                 '.cursor/commands/forge-build.md',
-                '.cursor/commands/forge-scribe.md'
+                '.cursor/commands/forge-scribe.md',
+                '.cursor/commands/forge-commit.md',
+                '.cursor/commands/forge-push.md',
+                '.cursor/commands/forge-pull.md'
             ];
             
             paths.forEach(path => {
