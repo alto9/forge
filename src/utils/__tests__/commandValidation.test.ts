@@ -284,7 +284,7 @@ ${validTemplate}`;
                 '.cursor/commands/forge-scribe.md',
                 '.cursor/commands/forge-commit.md',
                 '.cursor/commands/forge-push.md',
-                '.cursor/commands/forge-pull.md'
+                '.cursor/commands/forge-pullrequest.md'
             ];
             
             paths.forEach(path => {

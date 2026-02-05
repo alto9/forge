@@ -91,8 +91,8 @@ describe('projectReadiness', () => {
             expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-push.md');
         });
 
-        it('should include forge-pull.md command', () => {
-            expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-pull.md');
+        it('should include forge-pullrequest.md command', () => {
+            expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-pullrequest.md');
         });
 
         it('should be a string array', () => {
@@ -229,14 +229,14 @@ describe('projectReadiness', () => {
             const scribeCommand = '.cursor/commands/forge-scribe.md';
             const commitCommand = '.cursor/commands/forge-commit.md';
             const pushCommand = '.cursor/commands/forge-push.md';
-            const pullCommand = '.cursor/commands/forge-pull.md';
+            const pullrequestCommand = '.cursor/commands/forge-pullrequest.md';
             
             expect(REQUIRED_COMMANDS).toContain(refineCommand);
             expect(REQUIRED_COMMANDS).toContain(buildCommand);
             expect(REQUIRED_COMMANDS).toContain(scribeCommand);
             expect(REQUIRED_COMMANDS).toContain(commitCommand);
             expect(REQUIRED_COMMANDS).toContain(pushCommand);
-            expect(REQUIRED_COMMANDS).toContain(pullCommand);
+            expect(REQUIRED_COMMANDS).toContain(pullrequestCommand);
         });
     });
 
@@ -338,7 +338,7 @@ describe('projectReadiness', () => {
         });
 
         it('matches documented required commands count', () => {
-            // 6 cursor commands (forge-refine, forge-build, forge-scribe, forge-commit, forge-push, forge-pull)
+            // 6 cursor commands (forge-refine, forge-build, forge-scribe, forge-commit, forge-push, forge-pullrequest)
             expect(REQUIRED_COMMANDS.length).toBe(6);
         });
 
@@ -366,7 +366,7 @@ describe('projectReadiness', () => {
             expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-scribe.md');
             expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-commit.md');
             expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-push.md');
-            expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-pull.md');
+            expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-pullrequest.md');
         });
     });
 });

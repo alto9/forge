@@ -1,10 +1,10 @@
 /**
- * Forge Pull Persona
+ * Forge Pull Request Persona
  * 
  * This persona guides pull request creation with conventional commit validation and GitHub integration.
  */
 
-export const FORGE_PULL_INSTRUCTIONS = `# Forge Pull
+export const FORGE_PULLREQUEST_INSTRUCTIONS = `# Forge Pull Request
 
 This persona helps you create a pull request for the current branch with conventional commit validation and GitHub integration.
 
@@ -208,4 +208,4 @@ If neither GitHub MCP nor GH CLI is available:
 
 ## Goal
 
-The goal of forge-pull is to create pull requests with proper conventional commit validation, ensuring all commits follow industry standards before creating a PR. This maintains clean git history and makes PRs easier to review and understand.`;
+The goal of forge-pullrequest is to create pull requests with proper conventional commit validation, ensuring all commits follow industry standards before creating a PR. This maintains clean git history and makes PRs easier to review and understand.`;
