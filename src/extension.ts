@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { RefineIssueCommand } from './commands/RefineIssueCommand';
 import { InitializeCursorCommandsCommand } from './commands/InitializeCursorCommandsCommand';
 import { ForgeChatParticipant } from './chatParticipant';
+import { RoadmapPanel } from './panels/RoadmapPanel';
 
 let outputChannel: vscode.OutputChannel;
 
@@ -32,6 +33,15 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
     context.subscriptions.push(initializeCursorCommandsCommand);
+
+    // Register the Roadmap command
+    const roadmapCommand = vscode.commands.registerCommand(
+        'forge.roadmap',
+        async () => {
+            await RoadmapPanel.render(context.extensionUri, outputChannel, context);
+        }
+    );
+    context.subscriptions.push(roadmapCommand);
 }
 
 export function deactivate() {}
