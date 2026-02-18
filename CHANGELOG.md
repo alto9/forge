@@ -1,3 +1,9 @@
+## 3.3.0 (2026-02-18)
+
+* Merge pull request #12 from alto9/milestoneManager ([ae5f78d](https://github.com/alto9/forge/commit/ae5f78d)), closes [#12](https://github.com/alto9/forge/issues/12)
+* feat(milestonemanager): addition ([a70b696](https://github.com/alto9/forge/commit/a70b696))
+* chore: milestone manager in progress ([24b851c](https://github.com/alto9/forge/commit/24b851c))
+
 ## <small>3.2.3 (2026-02-05)</small>
 
 * Merge branch 'main' of github.com:alto9/forge ([3643fd8](https://github.com/alto9/forge/commit/3643fd8))
