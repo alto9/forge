@@ -150,8 +150,7 @@ describe('Initialization Integration - Command Files', () => {
     describe('Mixed initialization scenarios', () => {
         it('should handle some folders missing, some commands missing', () => {
             const folders = [
-                { path: 'ai', exists: true },
-                { path: 'ai/actors', exists: false }
+                { path: '.forge', exists: false }
             ];
             
             const commands = [
@@ -180,8 +179,7 @@ describe('Initialization Integration - Command Files', () => {
 
         it('should handle all folders exist but all commands missing', () => {
             const folders = [
-                { path: 'ai', exists: true },
-                { path: 'ai/actors', exists: true }
+                { path: '.forge', exists: true }
             ];
             
             const commands = [
@@ -198,8 +196,7 @@ describe('Initialization Integration - Command Files', () => {
 
         it('should process all items even with mixed states', () => {
             const items = [
-                { name: 'ai', type: 'folder', needsAction: false },
-                { name: 'ai/actors', type: 'folder', needsAction: true },
+                { name: '.forge', type: 'folder', needsAction: true },
                 { name: 'forge-refine.md', type: 'file', needsAction: true },
                 { name: 'forge-build.md', type: 'file', needsAction: false }
             ];
@@ -207,7 +204,7 @@ describe('Initialization Integration - Command Files', () => {
             const itemsToProcess = items.filter(i => i.needsAction);
             const totalItems = items.length;
 
-            expect(totalItems).toBe(4);
+            expect(totalItems).toBe(3);
             expect(itemsToProcess).toHaveLength(2);
         });
 
@@ -276,7 +273,7 @@ describe('Initialization Integration - Command Files', () => {
         it('should include itemType in all progress messages', () => {
             const folderMessage = {
                 type: 'initializationProgress',
-                item: 'ai/actors',
+                item: '.forge',
                 itemType: 'folder' as const,
                 status: 'created' as const
             };

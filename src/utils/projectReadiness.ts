@@ -5,19 +5,6 @@ import { getManagedCommandPaths } from '../templates/cursorCommands';
 import { validateCommandFileHash } from './commandValidation';
 
 /**
- * Required folders for a Forge-ready project.
- * NOTE: ai/models is LEGACY and NOT included.
- */
-export const REQUIRED_FOLDERS = [
-  'ai',
-  'ai/actors',
-  'ai/features',
-  'ai/diagrams',
-  'ai/sessions',
-  'ai/specs'
-];
-
-/**
  * Required Cursor command files for a Forge-ready project.
  * Dynamically retrieved from command templates.
  */
@@ -26,27 +13,26 @@ export const REQUIRED_COMMANDS = getManagedCommandPaths();
 /**
  * THE authoritative check for project readiness.
  * All components MUST use this function to ensure consistency.
- * 
+ *
  * A project is "Forge-ready" when:
- * 1. All REQUIRED_FOLDERS exist (6 folders, excluding legacy ai/models)
+ * 1. .forge directory exists
  * 2. All REQUIRED_COMMANDS exist with valid content (hash validation passes)
- * 
+ *
  * @param projectUri - The URI of the project to check
  * @returns Promise<boolean> - true if project is ready, false otherwise
  */
 export async function checkProjectReadiness(projectUri: vscode.Uri): Promise<boolean> {
-  // Check all required folders exist
-  for (const folder of REQUIRED_FOLDERS) {
-    const folderUri = vscode.Uri.joinPath(projectUri, folder);
-    try {
-      await vscode.workspace.fs.stat(folderUri);
-      // Folder exists, continue checking
-    } catch {
-      // Folder does not exist
+  // Check .forge directory exists
+  const forgeUri = vscode.Uri.joinPath(projectUri, '.forge');
+  try {
+    const stat = await vscode.workspace.fs.stat(forgeUri);
+    if (stat.type !== vscode.FileType.Directory) {
       return false;
     }
+  } catch {
+    return false;
   }
-  
+
   // Check all required Cursor commands exist and have valid content
   for (const commandPath of REQUIRED_COMMANDS) {
     const commandUri = vscode.Uri.joinPath(projectUri, commandPath);
@@ -66,7 +52,7 @@ export async function checkProjectReadiness(projectUri: vscode.Uri): Promise<boo
     }
   }
   
-  // All folders and commands exist with valid content
+  // .forge and all commands exist with valid content
   return true;
 }
 

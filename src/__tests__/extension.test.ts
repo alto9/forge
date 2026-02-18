@@ -150,37 +150,30 @@ describe('forge.openStudio command', () => {
     });
 
     describe('checkProjectReadiness function', () => {
-        const REQUIRED_FOLDERS = [
-            'ai',
-            'ai/actors',
-            'ai/diagrams',
-            'ai/features',
-            'ai/sessions',
-            'ai/specs'
-        ];
+        const FORGE_FOLDER = '.forge';
 
-        it('should check all required folders exist', () => {
-            expect(REQUIRED_FOLDERS).toHaveLength(6);
+        it('should check .forge directory exists', () => {
+            expect(FORGE_FOLDER).toBe('.forge');
         });
 
-        it('should return true when all folders exist', async () => {
-            const allFoldersExist = true;
-            
-            expect(allFoldersExist).toBe(true);
+        it('should return true when .forge and commands exist', async () => {
+            const forgeExists = true;
+            const commandsValid = true;
+
+            expect(forgeExists && commandsValid).toBe(true);
         });
 
-        it('should return false when any folder is missing', async () => {
-            const someFolderMissing = true;
-            const allFoldersExist = !someFolderMissing;
-            
-            expect(allFoldersExist).toBe(false);
+        it('should return false when .forge is missing', async () => {
+            const forgeExists = false;
+            const commandsValid = true;
+
+            expect(forgeExists && commandsValid).toBe(false);
         });
 
-        it('should check folders using workspace.fs.stat', () => {
+        it('should check .forge using workspace.fs.stat', () => {
             const method = 'workspace.fs.stat';
-            
+
             expect(method).toBe('workspace.fs.stat');
-            // Should use VSCode filesystem API
         });
 
         it('should handle filesystem errors gracefully', () => {
