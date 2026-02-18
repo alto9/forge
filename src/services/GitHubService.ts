@@ -24,7 +24,8 @@ export class GitHubService {
     private static async getOctokit(): Promise<Octokit> {
         let auth: string | undefined;
         try {
-            const session = await vscode.authentication.getSession('github', ['repo'], { createIfNone: true });
+            // Request both 'repo' and 'read:project' scopes for full GitHub Projects API access
+            const session = await vscode.authentication.getSession('github', ['repo', 'read:project'], { createIfNone: true });
             if (session) {
                 auth = session.accessToken;
             }
@@ -472,15 +473,16 @@ export class GitHubService {
     }
 
     /**
-     * Get all projects for a repository (GitHub Projects v2)
-     * Includes both repository-level and organization-level projects
+     * Get all available projects (GitHub Projects v2)
+     * Queries repository-level, organization-level, and user-level projects
+     * This allows selecting projects that span multiple repositories
      */
     static async getProjects(owner: string, repo: string): Promise<Array<{
         id: string;
         number: number;
         title: string;
         state: string;
-        scope: 'repository' | 'organization';
+        scope: 'repository' | 'organization' | 'user';
     }>> {
         const octokit = await this.getOctokit();
 
@@ -489,46 +491,49 @@ export class GitHubService {
             number: number;
             title: string;
             state: string;
-            scope: 'repository' | 'organization';
+            scope: 'repository' | 'organization' | 'user';
         }> = [];
 
         try {
             // First, try to get repository-level projects
-            const repoQuery = `
-                query($owner: String!, $repo: String!) {
-                    repository(owner: $owner, name: $repo) {
-                        projectsV2(first: 20) {
-                            nodes {
-                                id
-                                number
-                                title
-                                closed
+            try {
+                const repoQuery = `
+                    query($owner: String!, $repo: String!) {
+                        repository(owner: $owner, name: $repo) {
+                            projectsV2(first: 20) {
+                                nodes {
+                                    id
+                                    number
+                                    title
+                                    closed
+                                }
                             }
                         }
                     }
+                `;
+
+                const repoResult = await octokit.graphql(repoQuery, {
+                    owner,
+                    repo
+                }) as any;
+
+                if (repoResult?.repository?.projectsV2?.nodes) {
+                    const repoProjects = repoResult.repository.projectsV2.nodes
+                        .filter((project: any) => !project.closed)
+                        .map((project: any) => ({
+                            id: project.id,
+                            number: project.number,
+                            title: project.title,
+                            state: project.closed ? 'closed' : 'open',
+                            scope: 'repository' as const
+                        }));
+                    projects.push(...repoProjects);
                 }
-            `;
-
-            const repoResult = await octokit.graphql(repoQuery, {
-                owner,
-                repo
-            }) as any;
-
-            if (repoResult?.repository?.projectsV2?.nodes) {
-                const repoProjects = repoResult.repository.projectsV2.nodes
-                    .filter((project: any) => !project.closed)
-                    .map((project: any) => ({
-                        id: project.id,
-                        number: project.number,
-                        title: project.title,
-                        state: project.closed ? 'closed' : 'open',
-                        scope: 'repository' as const
-                    }));
-                projects.push(...repoProjects);
+            } catch (repoError: any) {
+                console.log('Failed to fetch repository projects:', repoError.message);
             }
 
-            // Also try to get organization-level projects
-            // Check if owner is an organization (not a user)
+            // Try to get organization-level projects
             try {
                 const orgQuery = `
                     query($owner: String!) {
@@ -562,12 +567,50 @@ export class GitHubService {
                     projects.push(...orgProjects);
                 }
             } catch (orgError: any) {
-                // If owner is not an organization (it's a user), this will fail - that's okay
-                // We'll just use repository-level projects
-                console.log('Owner is not an organization, skipping organization-level projects');
+                // If owner is not an organization, try as a user
+                try {
+                    const userQuery = `
+                        query($owner: String!) {
+                            user(login: $owner) {
+                                projectsV2(first: 20) {
+                                    nodes {
+                                        id
+                                        number
+                                        title
+                                        closed
+                                    }
+                                }
+                            }
+                        }
+                    `;
+
+                    const userResult = await octokit.graphql(userQuery, {
+                        owner
+                    }) as any;
+
+                    if (userResult?.user?.projectsV2?.nodes) {
+                        const userProjects = userResult.user.projectsV2.nodes
+                            .filter((project: any) => !project.closed)
+                            .map((project: any) => ({
+                                id: project.id,
+                                number: project.number,
+                                title: project.title,
+                                state: project.closed ? 'closed' : 'open',
+                                scope: 'user' as const
+                            }));
+                        projects.push(...userProjects);
+                    }
+                } catch (userError: any) {
+                    console.log('Failed to fetch user projects:', userError.message);
+                }
             }
 
-            return projects;
+            // Remove duplicates (same project ID might appear in multiple scopes)
+            const uniqueProjects = Array.from(
+                new Map(projects.map(p => [p.id, p])).values()
+            );
+
+            return uniqueProjects;
         } catch (error: any) {
             console.log('Failed to fetch projects:', error.message);
             if (error.errors) {
@@ -579,6 +622,7 @@ export class GitHubService {
 
     /**
      * Get iterations (sprints) from a GitHub Project v2
+     * Uses the GitHub Projects API approach: query all fields and find the iteration field
      */
     static async getIterations(projectId: string): Promise<Array<{
         id: string;
@@ -589,19 +633,23 @@ export class GitHubService {
         const octokit = await this.getOctokit();
 
         try {
-            // Use GraphQL API for Projects v2 iterations
+            // Query all fields and find the iteration field (following GitHub API docs approach)
             const query = `
                 query($projectId: ID!) {
                     node(id: $projectId) {
                         ... on ProjectV2 {
-                            field(name: "Iteration") {
-                                ... on ProjectV2IterationField {
-                                    configuration {
-                                        iterations {
-                                            id
-                                            title
-                                            startDate
-                                            duration
+                            fields(first: 20) {
+                                nodes {
+                                    ... on ProjectV2IterationField {
+                                        id
+                                        name
+                                        configuration {
+                                            iterations {
+                                                id
+                                                title
+                                                startDate
+                                                duration
+                                            }
                                         }
                                     }
                                 }
@@ -620,17 +668,22 @@ export class GitHubService {
                 return [];
             }
 
-            if (!node.field) {
+            if (!node.fields || !node.fields.nodes) {
+                console.log('Fields not found in project');
+                return [];
+            }
+
+            // Find the iteration field
+            const iterationField = node.fields.nodes.find((field: any) => 
+                field && field.configuration && field.configuration.iterations
+            );
+
+            if (!iterationField) {
                 console.log('Iteration field not found in project. The project may not have an Iteration field configured.');
                 return [];
             }
 
-            if (!node.field.configuration) {
-                console.log('Iteration field configuration not found');
-                return [];
-            }
-
-            const iterations = node.field.configuration.iterations || [];
+            const iterations = iterationField.configuration.iterations || [];
             console.log(`Found ${iterations.length} iterations in project`);
             return iterations;
         } catch (error: any) {
@@ -643,23 +696,66 @@ export class GitHubService {
     }
 
     /**
-     * Get issues assigned to a specific iteration in a project
-     * Works with both repository-level and organization-level projects
+     * Get issues assigned to a specific iteration in a project, filtered by repository
+     * Works with repository-level, organization-level, and user-level projects
+     * Uses the GitHub Projects API approach: query all field values and filter by iteration
+     * Only returns issues from the specified repository
      */
     static async getIssuesForIteration(
         projectId: string,
-        iterationId: string
+        iterationId: string,
+        owner: string,
+        repo: string
     ): Promise<GitHubIssue[]> {
         const octokit = await this.getOctokit();
 
         try {
-            // Query project items directly by project ID (works for both repo and org projects)
+            // First, find the iteration field ID
+            const fieldsQuery = `
+                query($projectId: ID!) {
+                    node(id: $projectId) {
+                        ... on ProjectV2 {
+                            fields(first: 20) {
+                                nodes {
+                                    ... on ProjectV2IterationField {
+                                        id
+                                        name
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            `;
+
+            const fieldsResult = await octokit.graphql(fieldsQuery, {
+                projectId
+            }) as any;
+
+            if (!fieldsResult?.node?.fields?.nodes) {
+                console.log(`Fields not found for project ${projectId}`);
+                return [];
+            }
+
+            const iterationField = fieldsResult.node.fields.nodes.find((field: any) => 
+                field && field.id
+            );
+
+            if (!iterationField) {
+                console.log('Iteration field not found in project');
+                return [];
+            }
+
+            const iterationFieldId = iterationField.id;
+
+            // Query project items with field values (following GitHub API docs approach)
             const query = `
                 query($projectId: ID!) {
                     node(id: $projectId) {
                         ... on ProjectV2 {
                             items(first: 100) {
                                 nodes {
+                                    id
                                     content {
                                         ... on Issue {
                                             number
@@ -667,6 +763,12 @@ export class GitHubService {
                                             body
                                             url
                                             state
+                                            repository {
+                                                name
+                                                owner {
+                                                    login
+                                                }
+                                            }
                                             labels(first: 20) {
                                                 nodes {
                                                     name
@@ -686,10 +788,17 @@ export class GitHubService {
                                             updatedAt
                                         }
                                     }
-                                    fieldValueByName(name: "Iteration") {
-                                        ... on ProjectV2ItemFieldIterationValue {
-                                            iterationId
-                                            title
+                                    fieldValues(first: 8) {
+                                        nodes {
+                                            ... on ProjectV2ItemFieldIterationValue {
+                                                iterationId
+                                                title
+                                                field {
+                                                    ... on ProjectV2FieldCommon {
+                                                        id
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -711,13 +820,20 @@ export class GitHubService {
             const items = node.items.nodes || [];
             console.log(`Found ${items.length} total items in project`);
             
+            // Filter items by iteration ID
             const filteredItems = items
                 .filter((item: any) => {
-                    const iterationValue = item.fieldValueByName;
-                    if (!iterationValue) {
+                    if (!item.fieldValues || !item.fieldValues.nodes) {
                         return false;
                     }
-                    const matches = iterationValue.iterationId === iterationId;
+                    
+                    // Check if any field value matches the iteration ID
+                    const matches = item.fieldValues.nodes.some((fieldValue: any) => 
+                        fieldValue && 
+                        fieldValue.iterationId === iterationId &&
+                        fieldValue.field?.id === iterationFieldId
+                    );
+                    
                     if (matches) {
                         console.log(`Item matches iteration ${iterationId}: ${item.content?.title || 'unknown'}`);
                     }
@@ -730,7 +846,18 @@ export class GitHubService {
                 .map((item: any) => {
                     const issue = item.content;
                     if (!issue) {
-                        console.log('Item has no content (might be a PR or other type)');
+                        // Skip non-issue items (PRs, draft issues, etc.)
+                        return null;
+                    }
+
+                    // Filter by repository - only include issues from the specified repo
+                    const issueOwner = issue.repository?.owner?.login?.toLowerCase();
+                    const issueRepo = issue.repository?.name?.toLowerCase();
+                    const targetOwner = owner.toLowerCase();
+                    const targetRepo = repo.toLowerCase();
+
+                    if (issueOwner !== targetOwner || issueRepo !== targetRepo) {
+                        // Skip issues from other repositories
                         return null;
                     }
 

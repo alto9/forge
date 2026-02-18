@@ -145,7 +145,7 @@ export class RoadmapPanel {
             // Show picker to select project
             const projectItems = projects.map(project => ({
                 label: project.title,
-                description: `Project #${project.number} (${project.scope})`,
+                description: `Project #${project.number} (${project.scope === 'organization' ? 'org' : project.scope === 'repository' ? 'repo' : 'user'})`,
                 project: project
             }));
 
@@ -210,7 +210,7 @@ export class RoadmapPanel {
             ]);
 
             // Select project for iterations (sprints)
-            let selectedProject: { id: string; number: number; title: string; scope: 'repository' | 'organization' } | null = null;
+            let selectedProject: { id: string; number: number; title: string; scope: 'repository' | 'organization' | 'user' } | null = null;
             
             if (projects.length === 0) {
                 this._output.appendLine('No GitHub Projects found. Sprints will not be available.');
@@ -230,7 +230,7 @@ export class RoadmapPanel {
             // Show picker to select project
             const projectItems = projects.map(project => ({
                 label: project.title,
-                description: `Project #${project.number} (${project.scope})`,
+                description: `Project #${project.number} (${project.scope === 'organization' ? 'org' : project.scope === 'repository' ? 'repo' : 'user'})`,
                 project: project
             }));
 
@@ -311,10 +311,12 @@ export class RoadmapPanel {
                     } else {
                         for (const iteration of iterations) {
                             try {
-                                // Fetch issues for this iteration
+                                // Fetch issues for this iteration, filtered to current repository
                                 const iterationIssues = await GitHubService.getIssuesForIteration(
                                     selectedProject.id,
-                                    iteration.id
+                                    iteration.id,
+                                    this._repoInfo.owner,
+                                    this._repoInfo.repo
                                 );
 
                                 this._output.appendLine(`Iteration "${iteration.title}": ${iterationIssues.length} issues`);
