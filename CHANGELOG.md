@@ -1,3 +1,8 @@
+## 3.4.0 (2026-02-19)
+
+* Merge pull request #13 from alto9/cursorProjects ([75dca1c](https://github.com/alto9/forge/commit/75dca1c)), closes [#13](https://github.com/alto9/forge/issues/13)
+* feat(skills): add new skills and metadata ([0b0edfa](https://github.com/alto9/forge/commit/0b0edfa))
+
 ## 3.3.0 (2026-02-18)
 
 * Merge pull request #12 from alto9/milestoneManager ([ae5f78d](https://github.com/alto9/forge/commit/ae5f78d)), closes [#12](https://github.com/alto9/forge/issues/12)
