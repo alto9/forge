@@ -4,7 +4,7 @@ import { validateCommandFileHash, generateCommandFile } from '../utils/commandVa
 import { checkProjectReadiness } from '../utils/projectReadiness';
 
 interface FolderStatus {
-    path: string;        // Relative path (e.g., "ai/actors")
+    path: string;        // Relative path (e.g., ".forge")
     exists: boolean;     // Whether folder currently exists
     description: string; // Human-readable description
     type: 'folder';      // Discriminator for union type
@@ -21,18 +21,16 @@ interface CommandStatus {
 type ProjectItemStatus = FolderStatus | CommandStatus;
 
 const REQUIRED_FOLDERS: Omit<FolderStatus, 'exists'>[] = [
-    { path: 'ai', description: 'Root directory for all Forge files', type: 'folder' },
-    { path: 'ai/actors', description: 'Actor definitions and personas', type: 'folder' },
-    { path: 'ai/features', description: 'Feature definitions with Gherkin', type: 'folder' },
-    { path: 'ai/diagrams', description: 'Visual architecture diagrams', type: 'folder' },
-    { path: 'ai/sessions', description: 'Design session tracking', type: 'folder' },
-    { path: 'ai/specs', description: 'Technical specifications', type: 'folder' }
+    { path: '.forge', description: 'Forge metadata (vision, roadmap, features, technical_concepts)', type: 'folder' }
 ];
 
 const REQUIRED_COMMANDS: Omit<CommandStatus, 'exists' | 'valid'>[] = [
-    { path: '.cursor/commands/forge-refine.md', description: 'Cursor command for refining GitHub issues', type: 'command' },
+    { path: '.cursor/commands/forge-refine.md', description: 'Cursor command for refining tickets for implementation', type: 'command' },
     { path: '.cursor/commands/forge-build.md', description: 'Cursor command for building from tickets', type: 'command' },
-    { path: '.cursor/commands/forge-scribe.md', description: 'Cursor command for creating sub-issues', type: 'command' }
+    { path: '.cursor/commands/forge-scribe.md', description: 'Cursor command for breaking milestones into tickets', type: 'command' },
+    { path: '.cursor/commands/forge-commit.md', description: 'Cursor command for committing with validation', type: 'command' },
+    { path: '.cursor/commands/forge-push.md', description: 'Cursor command for pushing safely', type: 'command' },
+    { path: '.cursor/commands/forge-pullrequest.md', description: 'Cursor command for creating pull requests', type: 'command' }
 ];
 
 export class WelcomePanel {

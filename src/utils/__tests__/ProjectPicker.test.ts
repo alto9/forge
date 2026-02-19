@@ -124,51 +124,33 @@ describe('ProjectPicker', () => {
     });
 
     describe('checkProjectReadiness logic', () => {
-        const REQUIRED_FOLDERS = [
-            'ai',
-            'ai/actors',
-            'ai/features',
-            'ai/diagrams',
-            'ai/sessions',
-            'ai/specs'
-        ];
+        const FORGE_FOLDER = '.forge';
 
-        it('should check all required folders', () => {
-            expect(REQUIRED_FOLDERS).toHaveLength(6);
-            expect(REQUIRED_FOLDERS[0]).toBe('ai');
+        it('should check .forge directory exists', () => {
+            expect(FORGE_FOLDER).toBe('.forge');
         });
 
-        it('should require root ai folder', () => {
-            expect(REQUIRED_FOLDERS).toContain('ai');
+        it('should require .forge folder', () => {
+            expect(FORGE_FOLDER).toBe('.forge');
         });
 
-        it('should require all subdirectories', () => {
-            const subdirs = REQUIRED_FOLDERS.filter(f => f.startsWith('ai/'));
-            expect(subdirs).toHaveLength(5);
+        it('should return true when .forge exists and commands are valid', () => {
+            const forgeExists = true;
+            const commandsValid = true;
+
+            expect(forgeExists && commandsValid).toBe(true);
         });
 
-        it('should return true when all folders exist', () => {
-            const existingFolders = new Set(REQUIRED_FOLDERS);
-            const allExist = REQUIRED_FOLDERS.every(f => existingFolders.has(f));
+        it('should return false when .forge is missing', () => {
+            const forgeExists = false;
+            const commandsValid = true;
 
-            expect(allExist).toBe(true);
+            expect(forgeExists && commandsValid).toBe(false);
         });
 
-        it('should return false when any folder is missing', () => {
-            const existingFolders = new Set(['ai', 'ai/actors', 'ai/models']);
-            const allExist = REQUIRED_FOLDERS.every(f => existingFolders.has(f));
-
-            expect(allExist).toBe(false);
-        });
-
-        it('should check folders in order', () => {
-            // Root folder should be checked first
-            expect(REQUIRED_FOLDERS[0]).toBe('ai');
-            
-            // All other folders should be subfolders
-            for (let i = 1; i < REQUIRED_FOLDERS.length; i++) {
-                expect(REQUIRED_FOLDERS[i].startsWith('ai/')).toBe(true);
-            }
+        it('should check .forge before commands', () => {
+            // .forge is checked first, then commands
+            expect(FORGE_FOLDER).toBe('.forge');
         });
     });
 

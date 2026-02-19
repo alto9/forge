@@ -11,39 +11,19 @@ describe('WelcomePanel - Folder Creation Logic', () => {
     describe('_handleInitializeProject behavior', () => {
         it('should identify missing folders from folder status', () => {
             const folderStatus = [
-                { path: 'ai', exists: false, description: 'Root' },
-                { path: 'ai/actors', exists: false, description: 'Actors' },
-                { path: 'ai/models', exists: true, description: 'Models' },
-                { path: 'ai/specs', exists: false, description: 'Specs' }
+                { path: '.forge', exists: false, description: 'Forge metadata' }
             ];
 
             const missingFolders = folderStatus.filter(f => !f.exists);
 
-            expect(missingFolders).toHaveLength(3);
-            expect(missingFolders.map(f => f.path)).toEqual([
-                'ai',
-                'ai/actors',
-                'ai/specs'
-            ]);
+            expect(missingFolders).toHaveLength(1);
+            expect(missingFolders.map(f => f.path)).toEqual(['.forge']);
         });
 
-        it('should create folders in sequential order', () => {
-            // This test verifies that folders are processed sequentially
-            // to ensure parent folders are created before children
-            const requiredFolders = [
-                'ai',
-                'ai/actors',
-                'ai/features',
-                'ai/diagrams',
-                'ai/sessions',
-                'ai/specs'
-            ];
+        it('should create .forge folder when missing', () => {
+            const requiredFolders = ['.forge'];
 
-            // The order matters: 'ai' must come before 'ai/actors', etc.
-            expect(requiredFolders[0]).toBe('ai');
-            for (let i = 1; i < requiredFolders.length; i++) {
-                expect(requiredFolders[i].startsWith('ai/')).toBe(true);
-            }
+            expect(requiredFolders[0]).toBe('.forge');
         });
 
         it('should track created and failed folder counts', () => {
@@ -89,7 +69,7 @@ describe('WelcomePanel - Folder Creation Logic', () => {
         it('should define correct progress message structure for creating', () => {
             const progressMessage = {
                 type: 'initializationProgress',
-                folder: 'ai/actors',
+                folder: '.forge',
                 status: 'creating'
             };
 
@@ -101,7 +81,7 @@ describe('WelcomePanel - Folder Creation Logic', () => {
         it('should define correct progress message structure for created', () => {
             const progressMessage = {
                 type: 'initializationProgress',
-                folder: 'ai/actors',
+                folder: '.forge',
                 status: 'created'
             };
 
@@ -112,7 +92,7 @@ describe('WelcomePanel - Folder Creation Logic', () => {
         it('should define correct progress message structure for error', () => {
             const progressMessage = {
                 type: 'initializationProgress',
-                folder: 'ai/actors',
+                folder: '.forge',
                 status: 'error',
                 error: 'Permission denied'
             };
@@ -126,7 +106,7 @@ describe('WelcomePanel - Folder Creation Logic', () => {
             const completionMessage = {
                 type: 'initializationComplete',
                 success: true,
-                created: 5,
+                created: 1,
                 failed: 0
             };
 
@@ -139,27 +119,15 @@ describe('WelcomePanel - Folder Creation Logic', () => {
 
     describe('Required folders structure', () => {
         const REQUIRED_FOLDERS = [
-            { path: 'ai', description: 'Root directory for all Forge files' },
-            { path: 'ai/actors', description: 'Actor definitions and personas' },
-            { path: 'ai/features', description: 'Feature definitions with Gherkin' },
-            { path: 'ai/diagrams', description: 'Visual architecture diagrams' },
-            { path: 'ai/sessions', description: 'Design session tracking' },
-            { path: 'ai/specs', description: 'Technical specifications' }
+            { path: '.forge', description: 'Forge metadata (vision, roadmap, features, technical_concepts)' }
         ];
 
-        it('should have 6 required folders', () => {
-            expect(REQUIRED_FOLDERS).toHaveLength(6);
+        it('should have 1 required folder (.forge)', () => {
+            expect(REQUIRED_FOLDERS).toHaveLength(1);
         });
 
-        it('should have root ai folder first', () => {
-            expect(REQUIRED_FOLDERS[0].path).toBe('ai');
-        });
-
-        it('should have all subfolders under ai/', () => {
-            const subfolders = REQUIRED_FOLDERS.slice(1);
-            subfolders.forEach(folder => {
-                expect(folder.path.startsWith('ai/')).toBe(true);
-            });
+        it('should have .forge folder', () => {
+            expect(REQUIRED_FOLDERS[0].path).toBe('.forge');
         });
 
         it('should have descriptions for all folders', () => {
@@ -178,23 +146,22 @@ describe('WelcomePanel - Folder Creation Logic', () => {
             try {
                 throw mockError;
             } catch (error: any) {
-                errorMessage = `Failed to create folder "ai/actors": ${error.message}`;
+                errorMessage = `Failed to create folder ".forge": ${error.message}`;
             }
 
             expect(errorMessage).toContain('Failed to create folder');
-            expect(errorMessage).toContain('ai/actors');
+            expect(errorMessage).toContain('.forge');
             expect(errorMessage).toContain('permission denied');
         });
 
         it('should continue processing remaining folders after error', () => {
-            const folders = ['ai', 'ai/actors', 'ai/models', 'ai/specs'];
+            const folders = ['.forge'];
             const results = { created: 0, failed: 0 };
 
-            // Simulate processing with one failure
+            // Simulate processing with failure on first folder
             folders.forEach((folder, index) => {
                 try {
-                    if (index === 1) {
-                        // Simulate failure on second folder
+                    if (index === 0) {
                         throw new Error('Failed');
                     }
                     results.created++;
@@ -203,10 +170,7 @@ describe('WelcomePanel - Folder Creation Logic', () => {
                 }
             });
 
-            // Should have processed all folders
             expect(results.created + results.failed).toBe(folders.length);
-            // Should have 3 successes and 1 failure
-            expect(results.created).toBe(3);
             expect(results.failed).toBe(1);
         });
     });
@@ -214,43 +178,23 @@ describe('WelcomePanel - Folder Creation Logic', () => {
     describe('Edge cases', () => {
         it('should handle empty missing folders list', () => {
             const folderStatus = [
-                { path: 'ai', exists: true, description: 'Root' },
-                { path: 'ai/actors', exists: true, description: 'Actors' }
+                { path: '.forge', exists: true, description: 'Forge metadata' }
             ];
 
             const missingFolders = folderStatus.filter(f => !f.exists);
 
             expect(missingFolders).toHaveLength(0);
-            // When no folders are missing, should skip creation
         });
 
         it('should handle all folders missing', () => {
             const folderStatus = [
-                { path: 'ai', exists: false, description: 'Root' },
-                { path: 'ai/actors', exists: false, description: 'Actors' }
+                { path: '.forge', exists: false, description: 'Forge metadata' }
             ];
 
             const missingFolders = folderStatus.filter(f => !f.exists);
 
-            expect(missingFolders).toHaveLength(2);
+            expect(missingFolders).toHaveLength(1);
             expect(missingFolders).toEqual(folderStatus);
-        });
-
-        it('should handle partial completion scenario', () => {
-            const folderStatus = [
-                { path: 'ai', exists: true, description: 'Root' },
-                { path: 'ai/actors', exists: false, description: 'Actors' },
-                { path: 'ai/models', exists: true, description: 'Models' },
-                { path: 'ai/specs', exists: false, description: 'Specs' }
-            ];
-
-            const missingFolders = folderStatus.filter(f => !f.exists);
-
-            expect(missingFolders).toHaveLength(2);
-            expect(missingFolders.map(f => f.path)).toEqual([
-                'ai/actors',
-                'ai/specs'
-            ]);
         });
     });
 
@@ -267,15 +211,13 @@ describe('WelcomePanel - Folder Creation Logic', () => {
             }
         });
 
-        it('should open studio when all folders already exist', () => {
+        it('should open studio when .forge folder already exists', () => {
             const folderStatus = [
-                { path: 'ai', exists: true, description: 'Root' },
-                { path: 'ai/actors', exists: true, description: 'Actors' }
+                { path: '.forge', exists: true, description: 'Forge metadata' }
             ];
 
             const missingFolders = folderStatus.filter(f => !f.exists);
 
-            // When no folders are missing, should open studio immediately
             expect(missingFolders).toHaveLength(0);
         });
 
@@ -347,15 +289,8 @@ describe('WelcomePanel - Folder Creation Logic', () => {
                 return true;
             };
 
-            const allExist = [
-                { path: 'ai', exists: true },
-                { path: 'ai/actors', exists: true }
-            ];
-
-            const someExist = [
-                { path: 'ai', exists: true },
-                { path: 'ai/actors', exists: false }
-            ];
+            const allExist = [{ path: '.forge', exists: true }];
+            const someExist = [{ path: '.forge', exists: false }];
 
             await expect(checkReadiness(allExist)).resolves.toBe(true);
             await expect(checkReadiness(someExist)).resolves.toBe(false);

@@ -92,6 +92,14 @@
         "title": "Forge: Initialize Cursor Commands"
       },
       {
+        "command": "forge.setupCursor",
+        "title": "Forge: Setup Project for Cursor"
+      },
+      {
+        "command": "forge.setupVSCode",
+        "title": "Forge: Setup Project for VSCode"
+      },
+      {
         "command": "forge.roadmap",
         "title": "Forge: Roadmap"
       }

@@ -19,59 +19,43 @@ describe('Project Readiness - Command File Integration', () => {
             expect(isReady).toBe(true);
         });
 
-        it('should not be ready when folders are missing', () => {
-            const foldersReady = false;
+        it('should not be ready when .forge is missing', () => {
+            const forgeReady = false;
             const commandsValid = true;
             
-            const isReady = foldersReady && commandsValid;
+            const isReady = forgeReady && commandsValid;
             
             expect(isReady).toBe(false);
         });
 
         it('should not be ready when commands are missing', () => {
-            const foldersReady = true;
+            const forgeReady = true;
             const commandsValid = false;
             
-            const isReady = foldersReady && commandsValid;
+            const isReady = forgeReady && commandsValid;
             
             expect(isReady).toBe(false);
         });
 
-        it('should not be ready when both folders and commands are missing', () => {
-            const foldersReady = false;
+        it('should not be ready when both .forge and commands are missing', () => {
+            const forgeReady = false;
             const commandsValid = false;
             
-            const isReady = foldersReady && commandsValid;
+            const isReady = forgeReady && commandsValid;
             
             expect(isReady).toBe(false);
         });
 
-        it('should check all folders sequentially', () => {
-            const folders = [
-                { path: 'ai', exists: true },
-                { path: 'ai/actors', exists: true },
-                { path: 'ai/features', exists: true },
-                { path: 'ai/diagrams', exists: true },
-                { path: 'ai/sessions', exists: true },
-                { path: 'ai/specs', exists: true }
-            ];
+        it('should check .forge directory exists', () => {
+            const forge = { path: '.forge', exists: true };
 
-            const allFoldersExist = folders.every(f => f.exists);
-            
-            expect(allFoldersExist).toBe(true);
+            expect(forge.exists).toBe(true);
         });
 
-        it('should fail if any folder is missing', () => {
-            const folders = [
-                { path: 'ai', exists: true },
-                { path: 'ai/actors', exists: true },
-                { path: 'ai/features', exists: false }, // Missing
-                { path: 'ai/diagrams', exists: true }
-            ];
+        it('should fail if .forge is missing', () => {
+            const forge = { path: '.forge', exists: false };
 
-            const allFoldersExist = folders.every(f => f.exists);
-            
-            expect(allFoldersExist).toBe(false);
+            expect(forge.exists).toBe(false);
         });
 
         it('should check all command files sequentially', () => {
@@ -154,8 +138,7 @@ describe('Project Readiness - Command File Integration', () => {
     describe('getProjectStatus logic', () => {
         it('should return both folders and commands in status', () => {
             const folders = [
-                { path: 'ai', exists: true, description: 'Root', type: 'folder' as const },
-                { path: 'ai/actors', exists: true, description: 'Actors', type: 'folder' as const }
+                { path: '.forge', exists: true, description: 'Forge metadata', type: 'folder' as const }
             ];
 
             const commands = [
@@ -165,12 +148,12 @@ describe('Project Readiness - Command File Integration', () => {
 
             const status = { folders, commands };
 
-            expect(status.folders).toHaveLength(2);
+            expect(status.folders).toHaveLength(1);
             expect(status.commands).toHaveLength(2);
         });
 
         it('should include exists flag for folders', () => {
-            const folder = { path: 'ai', exists: true, description: 'Root', type: 'folder' as const };
+            const folder = { path: '.forge', exists: true, description: 'Forge metadata', type: 'folder' as const };
 
             expect(folder.exists).toBeDefined();
             expect(typeof folder.exists).toBe('boolean');
@@ -192,7 +175,7 @@ describe('Project Readiness - Command File Integration', () => {
         });
 
         it('should use type discriminator for folders and commands', () => {
-            const folder = { path: 'ai', exists: true, description: 'Root', type: 'folder' as const };
+            const folder = { path: '.forge', exists: true, description: 'Forge metadata', type: 'folder' as const };
             const command = { 
                 path: '.cursor/commands/forge-refine.md', 
                 exists: true, 
@@ -218,8 +201,7 @@ describe('Project Readiness - Command File Integration', () => {
             {
                 name: 'all ready',
                 folders: [
-                    { path: 'ai', exists: true },
-                    { path: 'ai/actors', exists: true }
+                    { path: '.forge', exists: true }
                 ],
                 commands: [
                     { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
@@ -228,10 +210,9 @@ describe('Project Readiness - Command File Integration', () => {
                 expectedReady: true
             },
             {
-                name: 'folders missing',
+                name: '.forge missing',
                 folders: [
-                    { path: 'ai', exists: false },
-                    { path: 'ai/actors', exists: false }
+                    { path: '.forge', exists: false }
                 ],
                 commands: [
                     { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
@@ -242,8 +223,7 @@ describe('Project Readiness - Command File Integration', () => {
             {
                 name: 'commands missing',
                 folders: [
-                    { path: 'ai', exists: true },
-                    { path: 'ai/actors', exists: true }
+                    { path: '.forge', exists: true }
                 ],
                 commands: [
                     { path: '.cursor/commands/forge-refine.md', exists: false, valid: false },
@@ -254,8 +234,7 @@ describe('Project Readiness - Command File Integration', () => {
             {
                 name: 'commands exist but invalid',
                 folders: [
-                    { path: 'ai', exists: true },
-                    { path: 'ai/actors', exists: true }
+                    { path: '.forge', exists: true }
                 ],
                 commands: [
                     { path: '.cursor/commands/forge-refine.md', exists: true, valid: false },
@@ -266,8 +245,7 @@ describe('Project Readiness - Command File Integration', () => {
             {
                 name: 'partial - one command invalid',
                 folders: [
-                    { path: 'ai', exists: true },
-                    { path: 'ai/actors', exists: true }
+                    { path: '.forge', exists: true }
                 ],
                 commands: [
                     { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
@@ -278,8 +256,7 @@ describe('Project Readiness - Command File Integration', () => {
             {
                 name: 'partial - one command missing',
                 folders: [
-                    { path: 'ai', exists: true },
-                    { path: 'ai/actors', exists: true }
+                    { path: '.forge', exists: true }
                 ],
                 commands: [
                     { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
@@ -288,10 +265,9 @@ describe('Project Readiness - Command File Integration', () => {
                 expectedReady: false
             },
             {
-                name: 'partial - one folder missing',
+                name: 'partial - .forge missing',
                 folders: [
-                    { path: 'ai', exists: true },
-                    { path: 'ai/actors', exists: false }
+                    { path: '.forge', exists: false }
                 ],
                 commands: [
                     { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
@@ -302,8 +278,7 @@ describe('Project Readiness - Command File Integration', () => {
             {
                 name: 'everything missing',
                 folders: [
-                    { path: 'ai', exists: false },
-                    { path: 'ai/actors', exists: false }
+                    { path: '.forge', exists: false }
                 ],
                 commands: [
                     { path: '.cursor/commands/forge-refine.md', exists: false, valid: false },
@@ -378,11 +353,9 @@ describe('Project Readiness - Command File Integration', () => {
     describe('Status update after initialization', () => {
         it('should recalculate status after folder creation', () => {
             const beforeFolders = [
-                { path: 'ai', exists: false },
-                { path: 'ai/actors', exists: false }
+                { path: '.forge', exists: false }
             ];
 
-            // Simulate folder creation
             const afterFolders = beforeFolders.map(f => ({ ...f, exists: true }));
 
             expect(beforeFolders.every(f => f.exists)).toBe(false);
@@ -403,7 +376,7 @@ describe('Project Readiness - Command File Integration', () => {
         });
 
         it('should transition to studio when ready after initialization', () => {
-            const foldersCreated = 6;
+            const foldersCreated = 1;
             const commandsCreated = 2;
             const failed = 0;
 
@@ -414,7 +387,7 @@ describe('Project Readiness - Command File Integration', () => {
         });
 
         it('should not transition to studio if initialization failed', () => {
-            const foldersCreated = 5;
+            const foldersCreated = 0;
             const commandsCreated = 1;
             const failed = 2;
 
@@ -460,13 +433,16 @@ describe('Project Readiness - Command File Integration', () => {
 
     describe('Required commands structure', () => {
         const REQUIRED_COMMANDS = [
-            { path: '.cursor/commands/forge-refine.md', description: 'Cursor command for refining GitHub issues' },
+            { path: '.cursor/commands/forge-refine.md', description: 'Cursor command for refining tickets for implementation' },
             { path: '.cursor/commands/forge-build.md', description: 'Cursor command for building from tickets' },
-            { path: '.cursor/commands/forge-scribe.md', description: 'Cursor command for creating sub-issues' }
+            { path: '.cursor/commands/forge-scribe.md', description: 'Cursor command for breaking milestones into tickets' },
+            { path: '.cursor/commands/forge-commit.md', description: 'Cursor command for committing with validation' },
+            { path: '.cursor/commands/forge-push.md', description: 'Cursor command for pushing safely' },
+            { path: '.cursor/commands/forge-pullrequest.md', description: 'Cursor command for creating pull requests' }
         ];
 
-        it('should have 3 required commands', () => {
-            expect(REQUIRED_COMMANDS).toHaveLength(3);
+        it('should have 6 required commands', () => {
+            expect(REQUIRED_COMMANDS).toHaveLength(6);
         });
 
         it('should have commands in .cursor/commands/ directory', () => {
@@ -483,7 +459,7 @@ describe('Project Readiness - Command File Integration', () => {
             });
         });
 
-        it('should have forge-refine, forge-build, and forge-scribe commands', () => {
+        it('should have all forge commands', () => {
             const commandNames = REQUIRED_COMMANDS.map(c => 
                 c.path.replace('.cursor/commands/', '').replace('.md', '')
             );
@@ -491,6 +467,9 @@ describe('Project Readiness - Command File Integration', () => {
             expect(commandNames).toContain('forge-refine');
             expect(commandNames).toContain('forge-build');
             expect(commandNames).toContain('forge-scribe');
+            expect(commandNames).toContain('forge-commit');
+            expect(commandNames).toContain('forge-push');
+            expect(commandNames).toContain('forge-pullrequest');
         });
     });
 });
