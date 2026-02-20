@@ -1,58 +1,6 @@
 // packages/vscode-extension/src/templates/cursorCommands.ts
 
 /**
- * Template for forge-refine.md Cursor command
- */
-export const FORGE_REFINE_TEMPLATE = `# Forge Refine
-
-This command gets a ticket fully ready for development. It runs **after** Scribe (which creates the ticket list from roadmap milestones). Refine takes a ticket and enriches it with implementation-ready content.
-
-## Prerequisites
-
-You must provide a GitHub issue link or a ticket reference from \`.forge/roadmap.json\`. The ticket should have been created by Scribe or exist as a top-level work item.
-
-## What This Command Does
-
-1. **Researches the task**: Understands scope, requirements, constraints, and context
-2. **Researches the codebase**: Identifies relevant modules, patterns, integration points, and existing implementation
-3. **Researches the web**: Looks up docs, APIs, best practices, and libraries as needed
-4. **Writes complete work tickets** with:
-   - Full implementation steps (detailed enough for a developer to implement without further clarification)
-   - Acceptance criteria (testable and observable)
-   - Any other content needed for implementation readiness
-
-## Workflow
-
-1. **Read the ticket**: Understand the current title, description, and milestone context
-2. **Load context**: Read \`.forge/vision.json\`, \`.forge/technical_concepts.json\`, and relevant roadmap milestone
-3. **Research the task**: Clarify scope, constraints, and dependencies
-4. **Research the codebase**: Find relevant files, patterns, and integration points
-5. **Research the web**: Look up documentation, APIs, or best practices when needed
-6. **Write the refined ticket**: Update the GitHub issue (or roadmap ticket) with:
-   - \`## Implementation Steps\`: Detailed technical steps to implement
-   - \`## Test Procedures\`: How to verify the implementation
-   - \`## Acceptance Criteria\`: What must be complete for the ticket to be done
-7. **Save**: Persist changes to the GitHub issue or \`.forge/roadmap.json\`
-
-## Important Guidelines
-
-- **Implementation-ready**: The output must allow a developer to implement without further clarification
-- **Include technical details**: Unlike the old business-value-only refine, this command MUST include full technical implementation steps
-- **Ground in research**: Use codebase analysis and web search to ensure accuracy
-- **Respect technical concepts**: Follow constraints and architecture from \`.forge/technical_concepts.json\`
-
-## Usage
-
-1. Use the \`forge-refine\` command in Cursor
-2. Provide the GitHub issue link or ticket ID from the roadmap
-3. The AI will research and write the complete implementation-ready ticket
-4. After Refine, the ticket is ready for \`forge-build\` (implementation)
-
-## Goal
-
-Get a ticket fully ready for development. After Refine runs, a developer (or forge-build) can implement the ticket without needing additional clarification.`;
-
-/**
  * Template for forge-build.md Cursor command
  */
 export const FORGE_BUILD_TEMPLATE = `# Forge Build
@@ -90,6 +38,10 @@ You must provide a GitHub issue link when using this command. The issue should b
   - **Acceptance Criteria**: What must be completed for this sub-issue to be considered done
 
 ### Step 5: Analyze Development Environment
+- **Project documentation**: When present, load \`CONTRIBUTING.md\` and \`README.md\` from the repository root to understand:
+  - Commit message format and conventions (types, scopes, breaking changes)
+  - Project SDLC: branching strategy, testing requirements, review process
+  - Local development setup and validation steps
 - **Analyze package.json**: Review \`package.json\` scripts for:
   - \`lint\`, \`test\`, \`validate\`, \`build\`, \`dev\`, \`start\` scripts
   - Dependencies and devDependencies
@@ -98,10 +50,6 @@ You must provide a GitHub issue link when using this command. The issue should b
   - CI/CD test and lint scripts
   - Build and validation procedures
   - Test execution patterns
-- **Analyze documentation**: Check for:
-  - README.md for local development setup
-  - CONTRIBUTING.md for development guidelines
-  - Any setup or development documentation
 
 ### Step 6: Implement Changes
 - Perform the implementation steps outlined in the ticket
@@ -167,53 +115,57 @@ The implementation will be consistent with your codebase patterns, aligned with 
  */
 export const FORGE_SCRIBE_TEMPLATE = `# Forge Scribe
 
-This command breaks each roadmap milestone into top-level tickets. It runs **first** in the workflow (before Refine). Scribe produces a list of tickets in \`.forge/roadmap.json\` that, together, accomplish each milestone with respect to technical concepts.
+This command breaks down a **milestone ticket** (a top-level ticket created by the Planner) into actionable sub-issues. The Planner creates the full general roadmap with milestones and top-level tickets; Scribe refines a specific ticket into development-ready sub-issues, respecting vision, features, and technical_concepts.
 
 ## Prerequisites
 
 - \`.forge/vision.json\`, \`.forge/features.json\`, \`.forge/roadmap.json\`, and \`.forge/technical_concepts.json\` must exist
-- You may specify a milestone (by title or index) or process all milestones
+- The Planner must have created milestones with top-level tickets in \`roadmap.milestones[].tickets\`
+- You must specify which ticket to break down (by ticket title, index, or GitHub issue number)
+
+## Project Documentation
+
+When present, read \`CONTRIBUTING.md\` and \`README.md\` to understand project SDLC and conventions. This informs how sub-issues should align with the project's development workflow, testing expectations, and contribution process.
 
 ## What This Command Does
 
-1. **Reads the roadmap**: Loads \`.forge/roadmap.json\` and identifies milestones
+1. **Reads the roadmap**: Loads \`.forge/roadmap.json\` and identifies the target ticket
 2. **Reads context**: Loads vision, features, and technical_concepts for alignment
-3. **Breaks milestones into tickets**: For each milestone, produces a list of top-level tickets
-4. **Persists tickets**: Writes tickets to \`roadmap.milestones[].tickets\` in \`.forge/roadmap.json\`
-5. **Optionally creates GitHub issues**: May create corresponding GitHub issues and link IDs back to roadmap
+3. **Breaks down the ticket**: Refines the ticket into actionable sub-issues with full implementation detail
+4. **Persists sub-issues**: Creates sub-issues (e.g., in GitHub linked to parent, or in roadmap structure)
+5. **Optionally creates GitHub issues**: May create corresponding GitHub sub-issues and link to parent ticket
 
-## Ticket Structure (roadmap.json)
+## Sub-issue Structure
 
-Each ticket in \`roadmap.milestones[].tickets\` has:
-- \`id\`: GitHub issue number (integer) or 0 if not yet created
-- \`title\`: Short ticket title
-- \`description\`: Concise description (will be enriched by Refine)
+Each sub-issue must be development-ready:
+- **Implementation Steps**: Detailed technical steps to implement
+- **Test Procedures**: How to test this specific implementation
+- **Acceptance Criteria**: What must be completed for the sub-issue to be considered done
 
 ## Important Guidelines
 
-- **Top-level only**: Scribe does NOT need full technical implementation detail
-- **Aware of technical concepts**: Ensure tickets respect \`.forge/technical_concepts.json\` constraints
-- **Complete coverage**: Tickets together must accomplish the milestone
-- **Logical ordering**: Order tickets by dependency and execution sequence
+- **Input is a ticket**: You work on a single ticket created by the Planner, not the entire milestone
+- **Respect documentation and technical concepts**: Ensure sub-issues align with \`.forge/technical_concepts.json\` and accomplish the ticket's goals fully
+- **Complete coverage**: Sub-issues together must accomplish the parent ticket
+- **Logical ordering**: Order sub-issues by dependency and execution sequence
 
 ## Workflow
 
 1. **Load roadmap**: Read \`.forge/roadmap.json\`
-2. **Load vision, features, technical_concepts**: For context and alignment
-3. **For each milestone**: Break into tickets that accomplish the milestone
-4. **Write to roadmap.json**: Update \`roadmap.milestones[].tickets\`
-5. **Optionally sync to GitHub**: Create issues and update ticket \`id\` fields
+2. **Identify target ticket**: User specifies which ticket to break down (e.g., "Break down ticket 'Implement auth flow'" or "Process ticket 2 in milestone 1")
+3. **Load vision, features, technical_concepts**: For context and alignment
+4. **Break down ticket**: Produce sub-issues with full implementation steps
+5. **Optionally sync to GitHub**: Create sub-issues and link to parent ticket
 
 ## Usage
 
 1. Use the \`forge-scribe\` command in Cursor
-2. Optionally specify a milestone: "Process milestone 2" or "Process 'Q1 Launch'"
-3. The AI will break milestones into tickets and update \`.forge/roadmap.json\`
-4. After Scribe, run \`forge-refine\` on each ticket to add implementation steps and acceptance criteria
+2. Specify the ticket to break down: "Break down ticket 'Implement authentication'" or "Process ticket 2 in milestone 'Q1 Launch'"
+3. The AI will refine the ticket into development-ready sub-issues
 
 ## Goal
 
-Produce a list of tickets for each milestone that, together, successfully accomplish the roadmap with respect to technical concepts. Refine will then enrich each ticket for development readiness.`;
+Refine a Planner-created ticket into actionable, testable, shippable sub-issues. Each sub-issue must have full technical implementation steps, test procedures, and acceptance criteria.`;
 
 /**
  * Template for forge-commit.md Cursor command
@@ -222,15 +174,18 @@ export const FORGE_COMMIT_TEMPLATE = `# Forge Commit
 
 This command helps you properly commit code changes for the current branch with proper validation and commit message formatting, following project-specific contribution guidelines.
 
+## Skills Used
+
+- **commit**: Run \`.cursor/skills/commit/scripts/commit.sh -m "<conventional-commit-message>"\` to perform the commit with validation. Generate the message from staged changes using CONTRIBUTING.md conventions before calling the skill.
+
 ## Prerequisites
 
 - You must be on a feature branch (not main/master/develop)
 - You must have changes to commit (staged or unstaged)
-- CONTRIBUTING.md and README.md files must be accessible in the repository root
 
 ## What This Command Does
 
-1. **Read Contribution Guidelines**: Loads CONTRIBUTING.md and README.md to understand project-specific commit conventions
+1. **Read Contribution Guidelines**: When present, loads CONTRIBUTING.md and README.md to understand project-specific commit conventions
 2. **Branch Validation**: Ensures you're not on a main branch (main/master/develop)
 3. **Pre-commit Checks**: Runs all pre-commit hooks and validation
 4. **Status Review**: Shows current git status with all changes
@@ -241,22 +196,22 @@ This command helps you properly commit code changes for the current branch with 
 
 ## Reading Contribution Guidelines
 
-**CRITICAL**: Before creating any commit, you MUST read the project's contribution guidelines:
+When present, read \`CONTRIBUTING.md\` and \`README.md\` for project-specific commit conventions:
 
-1. **Read CONTRIBUTING.md**:
+1. **Read CONTRIBUTING.md** (if present):
    - Read the file at \`CONTRIBUTING.md\` in the repository root
    - Pay special attention to the "Commit Message Conventions" section
    - Note any project-specific commit types, scopes, or formatting requirements
    - Understand version bump implications for different commit types
    - Note any breaking change conventions
 
-2. **Read README.md**:
+2. **Read README.md** (if present):
    - Read the file at \`README.md\` in the repository root
    - Understand project structure and conventions
    - Note any project-specific guidelines or requirements
    - Understand the project's purpose and context
 
-3. **Apply Guidelines**:
+3. **Apply Guidelines** (when present):
    - Use the commit message format specified in CONTRIBUTING.md
    - Follow project-specific type definitions and scopes
    - Respect version bump rules (if documented)
@@ -305,9 +260,9 @@ Uses Conventional Commits specification (as defined in CONTRIBUTING.md):
 
 ## Workflow
 
-### Step 1: Read Contribution Guidelines
-- Read \`CONTRIBUTING.md\` file from repository root
-- Read \`README.md\` file from repository root
+### Step 1: Read Contribution Guidelines (when present)
+- Read \`CONTRIBUTING.md\` file from repository root if present
+- Read \`README.md\` file from repository root if present
 - Extract commit message conventions and project-specific requirements
 - Note any project-specific scopes, types, or formatting rules
 
@@ -337,8 +292,9 @@ Uses Conventional Commits specification (as defined in CONTRIBUTING.md):
 - Follow Conventional Commits format as specified in CONTRIBUTING.md
 - Include breaking change indicators if applicable
 
-### Step 6: Commit Changes
-- Execute \`git commit -m "message"\` with generated message (or use \`-m\` for subject and \`-m\` for body)
+### Step 6: Commit Changes (use commit skill)
+- Run the commit skill: \`.cursor/skills/commit/scripts/commit.sh -m "<generated-message>"\`
+- The skill validates and executes the commit
 - Verify commit succeeded with \`git log -1\`
 - Show commit hash and summary
 
@@ -349,8 +305,8 @@ Uses Conventional Commits specification (as defined in CONTRIBUTING.md):
 
 ## Important Guidelines
 
-- **Read Guidelines First**: ALWAYS read CONTRIBUTING.md and README.md before committing
-- **Follow Project Conventions**: Use project-specific commit types, scopes, and formats from CONTRIBUTING.md
+- **Read Guidelines First**: When present, read CONTRIBUTING.md and README.md before committing
+- **Follow Project Conventions**: When present, use project-specific commit types, scopes, and formats from CONTRIBUTING.md
 - **Branch Safety**: NEVER commit to main/master/develop branches
 - **Pre-commit Hooks**: Always run pre-commit hooks before committing
 - **Clear Messages**: Write clear, descriptive commit messages that explain the "why"
@@ -424,11 +380,19 @@ export const FORGE_PUSH_TEMPLATE = `# Forge Push
 
 This command helps you safely push code to the remote repository with proper validation, handling common scenarios, and ensuring all pre-push hooks pass.
 
+## Skills Used
+
+- **push-branch**: Run \`.cursor/skills/push-branch/scripts/push-branch.sh\` to push the current branch. Run pre-push validation (lint, test, build) before calling the skill.
+
 ## Prerequisites
 
 - You must be on a feature branch (not main/master/develop directly)
 - You must have commits to push
 - Pre-push hooks must be configured (if applicable)
+
+## Project Documentation
+
+When present, read \`CONTRIBUTING.md\` and \`README.md\` for project SDLC: pre-push validation (lint, test, build), branch conventions, and review workflow.
 
 ## What This Command Does
 
@@ -482,9 +446,9 @@ This command helps you safely push code to the remote repository with proper val
 - **Require rebase**: Must run \`git pull --rebase origin <branch>\` first
 - **DO NOT push** until local is up to date
 
-### Step 5: Execute Push
-- Use \`git push origin HEAD\` for normal push
-- Use \`git push -u origin HEAD\` for first-time push
+### Step 5: Execute Push (use push-branch skill)
+- Run the push-branch skill: \`.cursor/skills/push-branch/scripts/push-branch.sh\`
+- The skill handles first-time push (\`-u\`), normal push, and remote state
 - Use \`git push --force-with-lease origin HEAD\` ONLY if user explicitly requests and:
   - Not pushing to main/master/develop
   - User understands the implications
@@ -648,12 +612,20 @@ export const FORGE_PULLREQUEST_TEMPLATE = `# Forge Pull Request
 
 This command helps you create a pull request for the current branch with conventional commit validation and GitHub integration.
 
+## Skills Used
+
+- **make-pull-request**: Run \`.cursor/skills/make-pull-request/scripts/make-pull-request.sh [base-branch]\` to create the PR. Validate conventional commits before calling; the skill uses commit messages for PR title and body.
+
 ## Prerequisites
 
 - You must be on a feature branch (not main/master/develop)
 - You must have commits to create a PR for
 - The branch must be pushed to remote (use \`forge-push\` first if needed)
 - GitHub repository must be configured
+
+## Project Documentation
+
+When present, read \`CONTRIBUTING.md\` and \`README.md\` for project-specific commit message format and SDLC. CONTRIBUTING.md may define valid commit types, scopes, and subject rules used to validate commits before creating the PR.
 
 ## What This Command Does
 
@@ -759,9 +731,13 @@ This command helps you create a pull request for the current branch with convent
   - Include any commit bodies if present
   - Format as markdown
 
-### Step 6: Create Pull Request
+### Step 6: Create Pull Request (use make-pull-request skill)
 
-#### Preferred: GitHub MCP
+#### Preferred: make-pull-request skill
+- Run: \`.cursor/skills/make-pull-request/scripts/make-pull-request.sh [base-branch]\` (from project root)
+- The skill pushes if needed, derives title/body from commits, and creates the PR via gh
+
+#### Fallback: GitHub MCP
 1. **Check for GitHub MCP**: Verify \`mcp_github_create_pull_request\` tool is available
 2. **Get repository info**: Extract owner/repo from \`git remote get-url origin\`
 3. **Call MCP tool**: Use \`mcp_github_create_pull_request\` with:
@@ -882,15 +858,180 @@ Please create PR manually:
 The goal of forge-pullrequest is to create pull requests with proper conventional commit validation, ensuring all commits follow industry standards before creating a PR. This maintains clean git history and makes PRs easier to review and understand.`;
 
 /**
+ * Template for forge-setup-issue.md Cursor command
+ */
+export const FORGE_SETUP_ISSUE_TEMPLATE = `# Forge Setup Issue
+
+This command prepares your environment for working on a GitHub issue. It uses gh CLI-based skills for predictable, reliable GitHub operations.
+
+## Prerequisites
+
+You must provide a GitHub issue link. If no issue link is supplied, **STOP** and ask the user for clarification.
+
+## Project Documentation
+
+When present, read \`CONTRIBUTING.md\` and \`README.md\` in the repository root to understand:
+- Commit message format and conventions for when you implement
+- Project SDLC: branching strategy, testing, review process
+
+## Workflow
+
+### Step 1: Require Issue Link
+- If the user has not provided a GitHub issue link, **STOP** and ask: "Please provide a GitHub issue link (e.g. https://github.com/owner/repo/issues/123)"
+- Do not proceed without an issue reference
+
+### Step 2: Skill - get-issue-details
+- Run the get-issue-details skill: \`scripts/get-issue-details.sh <issue-ref>\`
+- Parse the JSON output to determine:
+  - \`is_sub_issue\`: true if this is a sub-issue
+  - \`root_branch\`: main for top-level, or parent's branch (e.g. feature/issue-123) for sub-issues
+  - \`number\`, \`title\`, \`body\` for context
+
+### Step 3: Skill - start-issue-build
+- Run the start-issue-build skill: \`scripts/start-issue-build.sh\`
+- This checks out main, pulls, and runs npm/pnpm/yarn install
+
+### Step 4: Skill - create-feature-branch
+- Determine branch name: \`feature/issue-{number}\` (e.g. feature/issue-123)
+- Run: \`.cursor/skills/create-feature-branch/scripts/create-feature-branch.sh feature/issue-{number} {root_branch}\`
+- For top-level issues, root_branch is main. For sub-issues, use the parent's branch from get-issue-details
+
+## Usage
+
+1. Use the \`forge-setup-issue\` command in Cursor
+2. Provide the GitHub issue link
+3. The AI will run the skills in sequence to prepare your environment
+4. You will be on a feature branch ready to implement
+
+## Goal
+
+Get the repository into a clean state on the correct feature branch, ready for implementation.`;
+
+/**
+ * Template for forge-build-issue.md Cursor command
+ */
+export const FORGE_BUILD_ISSUE_TEMPLATE = `# Forge Build Issue
+
+This command implements a GitHub issue end-to-end as a developer would: get the issue, implement it, commit, push, and create a PR. Uses gh CLI-based skills for predictable GitHub operations.
+
+## Prerequisites
+
+You must provide a GitHub issue link. If no issue link is supplied, **STOP** and ask the user for clarification.
+
+## Project Documentation
+
+When present, read \`CONTRIBUTING.md\` and \`README.md\` in the repository root before implementing. They may define:
+- Commit message format (types, scopes, breaking change notation)
+- Project SDLC: branching, testing requirements, validation steps, review process
+
+## Workflow
+
+### Step 1: Require Issue Link
+- If the user has not provided a GitHub issue link, **STOP** and ask: "Please provide a GitHub issue link"
+- Do not proceed without an issue reference
+
+### Step 2: Skill - get-issue-details
+- Run: \`.cursor/skills/get-issue-details/scripts/get-issue-details.sh <issue-ref>\`
+- Parse the output for implementation context (title, body, parent if sub-issue)
+
+### Step 3: Implement
+- Follow the implementation logic:
+  - Read parent issue if sub-issue
+  - Ensure you are on a feature branch (run forge-setup-issue first if needed)
+  - Parse Implementation Steps, Test Procedures, Acceptance Criteria from the issue body
+  - Implement the changes
+  - Run lint, test, build after each significant change
+  - All checks must pass before proceeding
+
+### Step 4: Skill - commit
+- Run: \`.cursor/skills/commit/scripts/commit.sh -m "<conventional-commit-message>"\`
+- Generate the message from the changes using the format in CONTRIBUTING.md (types, scopes, subject rules)
+
+### Step 5: Skill - push-branch
+- Run: \`.cursor/skills/push-branch/scripts/push-branch.sh\`
+
+### Step 6: Skill - make-pull-request
+- Run: \`.cursor/skills/make-pull-request/scripts/make-pull-request.sh\`
+
+## Usage
+
+1. Use the \`forge-build-issue\` command in Cursor
+2. Provide the GitHub issue link
+3. The AI will implement, commit, push, and create a PR
+4. Optionally run \`forge-setup-issue\` first if not already on a feature branch
+
+## Goal
+
+Complete the issue implementation and open a PR, using skills for reliable GitHub operations.`;
+
+/**
+ * Template for forge-review-pr.md Cursor command
+ */
+export const FORGE_REVIEW_PR_TEMPLATE = `# Forge Review PR
+
+This command pulls a PR branch, reviews the code changes, and posts a review comment on the PR itself. Uses the review-pr skill for checkout and GitHub MCP for posting the review.
+
+## Skills Used
+
+- **review-pr**: Checkout the PR branch locally (run \`.cursor/skills/review-pr/scripts/review-pr.sh <pr-ref>\`)
+- **GitHub MCP**: Post review comments via \`mcp_github_pull_request_review_write\` and \`mcp_github_add_comment_to_pending_review\`
+
+## Prerequisites
+
+You must provide a PR reference: a GitHub PR URL, \`owner/repo#123\`, or just the PR number (if in the current repo).
+
+## Project Documentation
+
+When present, read \`CONTRIBUTING.md\` and \`README.md\` to understand code style, testing expectations, and review criteria.
+
+## Workflow
+
+### Step 1: Require PR Reference
+- If the user has not provided a PR reference, **STOP** and ask: "Please provide a PR link or number (e.g. https://github.com/owner/repo/pull/123 or 123)"
+- Parse the reference to extract owner, repo, and PR number
+
+### Step 2: Skill - review-pr
+- Run: \`.cursor/skills/review-pr/scripts/review-pr.sh <pr-ref>\`
+- This fetches and checks out the PR branch locally
+- Verify checkout succeeded
+
+### Step 3: Review the Code
+- Fetch PR details (title, body, files changed) via GitHub API or MCP
+- Read the diff: \`git diff main...HEAD\` or \`git diff <base>...HEAD\`
+- Review each changed file for:
+  - Correctness and logic
+  - Code style and conventions
+  - Test coverage
+  - Security and performance
+  - Alignment with CONTRIBUTING.md and project standards
+- Note specific line-level feedback where applicable
+
+### Step 4: Post Review
+- Use \`mcp_github_pull_request_review_write\` with method \`create\` to start a pending review
+- Use \`mcp_github_add_comment_to_pending_review\` for line-specific comments
+- Use \`mcp_github_pull_request_review_write\` with method \`submit_pending\` to submit the review
+- Set event to \`COMMENT\` for feedback-only, or \`REQUEST_CHANGES\` / \`APPROVE\` as appropriate
+
+## Usage
+
+1. Use the \`forge-review-pr\` command in Cursor
+2. Provide the PR link or number
+3. The AI will checkout the branch, review the code, and post comments on the PR
+
+## Goal
+
+Provide a thorough, actionable code review on the PR with line-level feedback where helpful.`;
+
+/**
  * Map of command paths to their templates
  */
 export const COMMAND_TEMPLATES: Record<string, string> = {
-  '.cursor/commands/forge-refine.md': FORGE_REFINE_TEMPLATE,
-  '.cursor/commands/forge-build.md': FORGE_BUILD_TEMPLATE,
-  '.cursor/commands/forge-scribe.md': FORGE_SCRIBE_TEMPLATE,
   '.cursor/commands/forge-commit.md': FORGE_COMMIT_TEMPLATE,
   '.cursor/commands/forge-push.md': FORGE_PUSH_TEMPLATE,
-  '.cursor/commands/forge-pullrequest.md': FORGE_PULLREQUEST_TEMPLATE
+  '.cursor/commands/forge-pullrequest.md': FORGE_PULLREQUEST_TEMPLATE,
+  '.cursor/commands/forge-setup-issue.md': FORGE_SETUP_ISSUE_TEMPLATE,
+  '.cursor/commands/forge-build-issue.md': FORGE_BUILD_ISSUE_TEMPLATE,
+  '.cursor/commands/forge-review-pr.md': FORGE_REVIEW_PR_TEMPLATE
 };
 
 /**

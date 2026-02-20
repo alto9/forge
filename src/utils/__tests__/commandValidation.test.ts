@@ -58,13 +58,13 @@ Line 3`;
 
     describe('validateCommandFileHash', () => {
         it('returns true for valid file with matching hash', () => {
-            const validTemplate = getCommandTemplate('.cursor/commands/forge-refine.md')!;
+            const validTemplate = getCommandTemplate('.cursor/commands/forge-commit.md')!;
             const hash = computeContentHash(validTemplate);
             const fileContent = `<!-- forge-hash: ${hash} -->
 
 ${validTemplate}`;
             
-            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-refine.md');
+            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-commit.md');
             
             expect(isValid).toBe(true);
         });
@@ -74,24 +74,24 @@ ${validTemplate}`;
 
 This is a test command template.`;
             
-            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-refine.md');
+            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-commit.md');
             
             expect(isValid).toBe(false);
         });
 
         it('returns false for file with incorrect hash', () => {
-            const validTemplate = getCommandTemplate('.cursor/commands/forge-refine.md')!;
+            const validTemplate = getCommandTemplate('.cursor/commands/forge-commit.md')!;
             const fileContent = `<!-- forge-hash: 0000000000000000000000000000000000000000000000000000000000000000 -->
 
 ${validTemplate}`;
             
-            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-refine.md');
+            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-commit.md');
             
             expect(isValid).toBe(false);
         });
 
         it('returns false for file with tampered content', () => {
-            const validTemplate = getCommandTemplate('.cursor/commands/forge-refine.md')!;
+            const validTemplate = getCommandTemplate('.cursor/commands/forge-commit.md')!;
             const hash = computeContentHash(validTemplate);
             const tamperedContent = `<!-- forge-hash: ${hash} -->
 
@@ -99,13 +99,14 @@ ${validTemplate}
 
 Extra content added by user`;
             
-            const isValid = validateCommandFileHash(tamperedContent, '.cursor/commands/forge-refine.md');
+            const isValid = validateCommandFileHash(tamperedContent, '.cursor/commands/forge-commit.md');
             
             expect(isValid).toBe(false);
         });
 
         it('returns false for unknown command path', () => {
-            const validTemplate = getCommandTemplate('.cursor/commands/forge-refine.md')!;
+            const validTemplate = getCommandTemplate('.cursor/commands/forge-commit.md');
+            if (!validTemplate) throw new Error('template not found');
             const hash = computeContentHash(validTemplate);
             const fileContent = `<!-- forge-hash: ${hash} -->
 
@@ -117,48 +118,48 @@ ${validTemplate}`;
         });
 
         it('returns false for malformed hash comment', () => {
-            const validTemplate = getCommandTemplate('.cursor/commands/forge-refine.md')!;
+            const validTemplate = getCommandTemplate('.cursor/commands/forge-commit.md')!;
             const fileContent = `<!-- forge-hash: invalid-hash -->
 
 ${validTemplate}`;
             
-            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-refine.md');
+            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-commit.md');
             
             expect(isValid).toBe(false);
         });
 
         it('returns false for hash comment with wrong length', () => {
-            const validTemplate = getCommandTemplate('.cursor/commands/forge-refine.md')!;
+            const validTemplate = getCommandTemplate('.cursor/commands/forge-commit.md')!;
             const fileContent = `<!-- forge-hash: abcdef123456 -->
 
 ${validTemplate}`;
             
-            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-refine.md');
+            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-commit.md');
             
             expect(isValid).toBe(false);
         });
 
         it('handles files with extra whitespace', () => {
-            const validTemplate = getCommandTemplate('.cursor/commands/forge-refine.md')!;
+            const validTemplate = getCommandTemplate('.cursor/commands/forge-commit.md')!;
             const hash = computeContentHash(validTemplate);
             const fileContent = `<!-- forge-hash: ${hash} -->
 
 ${validTemplate}
 `;
             
-            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-refine.md');
+            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-commit.md');
             
             expect(isValid).toBe(true);
         });
 
-        it('validates forge-build.md command path', () => {
-            const validTemplate = getCommandTemplate('.cursor/commands/forge-build.md')!;
+        it('validates forge-commit.md command path', () => {
+            const validTemplate = getCommandTemplate('.cursor/commands/forge-commit.md')!;
             const hash = computeContentHash(validTemplate);
             const fileContent = `<!-- forge-hash: ${hash} -->
 
 ${validTemplate}`;
             
-            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-build.md');
+            const isValid = validateCommandFileHash(fileContent, '.cursor/commands/forge-commit.md');
             
             expect(isValid).toBe(true);
         });
@@ -166,21 +167,21 @@ ${validTemplate}`;
 
     describe('generateCommandFile', () => {
         it('generates file with hash comment at top', () => {
-            const generated = generateCommandFile('.cursor/commands/forge-refine.md');
+            const generated = generateCommandFile('.cursor/commands/forge-commit.md');
             
             expect(generated).toMatch(/^<!-- forge-hash: [a-f0-9]{64} -->/);
         });
 
         it('hash comment format is correct', () => {
-            const generated = generateCommandFile('.cursor/commands/forge-refine.md');
+            const generated = generateCommandFile('.cursor/commands/forge-commit.md');
             const firstLine = generated.split('\n')[0];
             
             expect(firstLine).toMatch(/^<!-- forge-hash: [a-f0-9]{64} -->$/);
         });
 
         it('generated file validates successfully', () => {
-            const generated = generateCommandFile('.cursor/commands/forge-refine.md');
-            const isValid = validateCommandFileHash(generated, '.cursor/commands/forge-refine.md');
+            const generated = generateCommandFile('.cursor/commands/forge-commit.md');
+            const isValid = validateCommandFileHash(generated, '.cursor/commands/forge-commit.md');
             
             expect(isValid).toBe(true);
         });
@@ -191,33 +192,33 @@ ${validTemplate}`;
             }).toThrow('Unknown command path');
         });
 
-        it('generates valid file for forge-build.md', () => {
-            const generated = generateCommandFile('.cursor/commands/forge-build.md');
-            const isValid = validateCommandFileHash(generated, '.cursor/commands/forge-build.md');
+        it('generates valid file for forge-commit.md', () => {
+            const generated = generateCommandFile('.cursor/commands/forge-commit.md');
+            const isValid = validateCommandFileHash(generated, '.cursor/commands/forge-commit.md');
             
             expect(isValid).toBe(true);
         });
 
         it('includes template content after hash', () => {
-            const generated = generateCommandFile('.cursor/commands/forge-refine.md');
+            const generated = generateCommandFile('.cursor/commands/forge-commit.md');
             
             expect(generated).toContain('<!-- forge-hash:');
-            expect(generated).toContain('# Forge Refine');
+            expect(generated).toContain('# Forge Commit');
         });
 
         it('preserves template content integrity', () => {
-            const generated = generateCommandFile('.cursor/commands/forge-refine.md');
+            const generated = generateCommandFile('.cursor/commands/forge-commit.md');
             const lines = generated.split('\n');
             
             // Remove hash comment and empty line
             const contentWithoutHash = lines.slice(2).join('\n');
             
-            expect(contentWithoutHash).toContain('# Forge Refine');
+            expect(contentWithoutHash).toContain('# Forge Commit');
             expect(contentWithoutHash).toContain('Prerequisites');
         });
 
         it('generated hash matches template content', () => {
-            const generated = generateCommandFile('.cursor/commands/forge-refine.md');
+            const generated = generateCommandFile('.cursor/commands/forge-commit.md');
             const lines = generated.split('\n');
             
             // Extract hash from comment
@@ -236,15 +237,15 @@ ${validTemplate}`;
         });
 
         it('generates consistent output for same path', () => {
-            const generated1 = generateCommandFile('.cursor/commands/forge-refine.md');
-            const generated2 = generateCommandFile('.cursor/commands/forge-refine.md');
+            const generated1 = generateCommandFile('.cursor/commands/forge-commit.md');
+            const generated2 = generateCommandFile('.cursor/commands/forge-commit.md');
             
             expect(generated1).toBe(generated2);
         });
 
         it('generates different output for different paths', () => {
-            const generated1 = generateCommandFile('.cursor/commands/forge-refine.md');
-            const generated2 = generateCommandFile('.cursor/commands/forge-build.md');
+            const generated1 = generateCommandFile('.cursor/commands/forge-commit.md');
+            const generated2 = generateCommandFile('.cursor/commands/forge-review-pr.md');
             
             expect(generated1).not.toBe(generated2);
         });
@@ -252,7 +253,7 @@ ${validTemplate}`;
 
     describe('integration tests', () => {
         it('validates a file that was just generated', () => {
-            const commandPath = '.cursor/commands/forge-refine.md';
+            const commandPath = '.cursor/commands/forge-commit.md';
             const generated = generateCommandFile(commandPath);
             const isValid = validateCommandFileHash(generated, commandPath);
             
@@ -260,7 +261,7 @@ ${validTemplate}`;
         });
 
         it('detects modification to generated file', () => {
-            const commandPath = '.cursor/commands/forge-refine.md';
+            const commandPath = '.cursor/commands/forge-commit.md';
             const generated = generateCommandFile(commandPath);
             const modified = generated + '\n\n// User added this comment';
             const isValid = validateCommandFileHash(modified, commandPath);
@@ -269,7 +270,7 @@ ${validTemplate}`;
         });
 
         it('detects hash tampering', () => {
-            const commandPath = '.cursor/commands/forge-refine.md';
+            const commandPath = '.cursor/commands/forge-commit.md';
             const generated = generateCommandFile(commandPath);
             const tamperedHash = generated.replace(/[a-f0-9]{64}/, '0'.repeat(64));
             const isValid = validateCommandFileHash(tamperedHash, commandPath);
@@ -279,12 +280,12 @@ ${validTemplate}`;
 
         it('validates all command file types', () => {
             const paths = [
-                '.cursor/commands/forge-refine.md',
-                '.cursor/commands/forge-build.md',
-                '.cursor/commands/forge-scribe.md',
                 '.cursor/commands/forge-commit.md',
                 '.cursor/commands/forge-push.md',
-                '.cursor/commands/forge-pullrequest.md'
+                '.cursor/commands/forge-pullrequest.md',
+                '.cursor/commands/forge-setup-issue.md',
+                '.cursor/commands/forge-build-issue.md',
+                '.cursor/commands/forge-review-pr.md'
             ];
             
             paths.forEach(path => {

@@ -52,34 +52,40 @@
         "description": "Refine GitHub issues to clarify business value and requirements"
       },
       {
-        "id": "forge-scribe.participant",
-        "name": "forge-scribe",
-        "fullName": "Forge Scribe",
-        "description": "Create technical sub-issues from refined parent issues"
-      },
-      {
-        "id": "forge-build.participant",
-        "name": "forge-build",
-        "fullName": "Forge Build",
-        "description": "Implement GitHub issues by analyzing code and running tests"
-      },
-      {
         "id": "forge-commit.participant",
         "name": "forge-commit",
         "fullName": "Forge Commit",
-        "description": "Properly commit code changes with validation and conventional commit messages"
+        "description": "Commit with validation and conventional commit messages (uses commit skill)"
       },
       {
         "id": "forge-push.participant",
         "name": "forge-push",
         "fullName": "Forge Push",
-        "description": "Safely push code to remote with validation, rebase handling, and pre-push hooks"
+        "description": "Safely push to remote (uses push-branch skill)"
       },
       {
         "id": "forge-pullrequest.participant",
         "name": "forge-pullrequest",
         "fullName": "Forge Pull Request",
-        "description": "Create pull request with conventional commit validation and GitHub integration"
+        "description": "Create PR with conventional commit validation (uses make-pull-request skill)"
+      },
+      {
+        "id": "forge-setup-issue.participant",
+        "name": "forge-setup-issue",
+        "fullName": "Forge Setup Issue",
+        "description": "Prepare environment for issue work (uses get-issue-details, start-issue-build, create-feature-branch)"
+      },
+      {
+        "id": "forge-build-issue.participant",
+        "name": "forge-build-issue",
+        "fullName": "Forge Build Issue",
+        "description": "Implement issue end-to-end (uses get-issue-details, commit, push-branch, make-pull-request)"
+      },
+      {
+        "id": "forge-review-pr.participant",
+        "name": "forge-review-pr",
+        "fullName": "Forge Review PR",
+        "description": "Pull PR branch, review code, post review comments (uses review-pr skill)"
       }
     ],
     "commands": [
