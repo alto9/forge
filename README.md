@@ -1,40 +1,86 @@
-# Forge VSCode Extension
+# Forge
 
-VSCode extension that helps engineers use proper context engineering to build and maintain software using Agentic development practices.
+VSCode/Cursor extension for context engineering and agentic development. Forge helps teams maintain product vision, technical concepts, features, and roadmaps—then turns milestones into actionable, implementation-ready issues.
 
-## Features
+## Overview
 
-- **Forge: Start Design Session** - Begin a new design session with a problem statement
-- **Forge: Distill Session into Stories and Tasks** - Convert completed sessions into actionable work items
-- **Forge: Build Story Implementation** - Generate implementation prompts for specific stories
-- **Forge: Open Forge Studio** - Full-featured React-based UI for managing Forge files
-  - **Dashboard**: View session status and object counts
-  - **Sessions**: Create and manage design sessions
-  - **Features**: Browse all features; create/edit requires active session
-  - **Specs**: Browse all specs; create/edit requires active session
-  - **Models**: Browse all models; create/edit requires active session
-  - **Actors**: Document system actors and their responsibilities (always editable)
-  - **Folder Management**: Create nested folders, navigate hierarchies
-  - **File Creation**: Create new files with proper templates
-  - **Context Menus**: Right-click folders to create subfolders
-  - **Session-Aware**: Features/Specs/Models are read-only without session; Actors are always editable
-- **Context Menu Integration** - Right-click on files and folders for quick access
-- **Output Panel** - Clean, formatted prompts ready to copy and paste
+Forge provides:
+
+- **Setup Project for Cursor** – Creates `.forge` metadata, `.cursor/agents`, `.cursor/commands`, `.cursor/skills`, and hooks
+- **Subagents** – Visionary, Architect, Designer, Planner, and Scribe for planning and documentation
+- **Commands** – forge-scribe, forge-commit, forge-push, forge-pullrequest, forge-setup-issue, forge-build-issue
+- **Roadmap view** – View milestones and issues (synced with GitHub when using pull-milestones/push-milestones)
+
+## Quick Start
+
+1. Open a project in Cursor or VSCode
+2. Run **Forge: Setup Project for Cursor** from the Command Palette (`Cmd/Ctrl+Shift+P`)
+3. Forge creates:
+   - `.forge/` – vision.json, features.json, roadmap.json, technical_concepts.json, project.json
+   - `.cursor/agents/` – visionary, designer, planner, architect, scribe
+   - `.cursor/commands/` – forge-scribe, forge-commit, forge-push, forge-pullrequest, forge-setup-issue, forge-build-issue
+   - `.cursor/skills/` – pull-milestones, push-milestones, get-issue-details, start-issue-build, create-feature-branch, commit, push-branch, make-pull-request, and more
+
+## User Flow
+
+### 1. Open the Roadmap
+
+Use **Forge: Roadmap** to view project milestones and issues. The roadmap can sync with GitHub via the pull-milestones and push-milestones skills.
+
+### 2. Engage with Subagents
+
+| Subagent | Purpose |
+|----------|---------|
+| **Visionary** | Top-level product concerns, ideation. Maintains `.forge/vision.json`. Keeps vision current and research-driven. |
+| **Architect** | Technical concepts, 3rd-party API docs, consistency. Maintains `.forge/technical_concepts.json`. Makes decisions based on research; asks when user input is needed. No open questions in the document—only resolved decisions. |
+| **Designer** | Converts Vision + Technical Concepts into logical, nested features. Maintains `.forge/features.json`. |
+| **Planner** | Owns the full general roadmap. Creates milestones and top-level milestone tickets (issues) in `.forge/roadmap.json`. These high-level tickets are later broken down by Scribe. |
+| **Scribe** | Breaks down a **milestone ticket** (created by Planner) into sub-issues. Refines the ticket respecting vision, features, and technical_concepts. Writes full implementation steps, test procedures, and acceptance criteria for each sub-issue. |
+
+### 3. Commands
+
+| Command | Purpose |
+|---------|---------|
+| **forge-scribe** | Break down a milestone ticket (created by Planner) into development-ready sub-issues |
+| **forge-setup-issue** | Prepare environment for an issue (get details, checkout, create branch) |
+| **forge-build-issue** | Implement an issue end-to-end: implement, commit, push, create PR |
+| **forge-commit** | Commit with validation and project-specific conventional commit format |
+| **forge-push** | Push branch safely with pre-push validation |
+| **forge-pullrequest** | Create PR with conventional commit validation |
+
+## Project Structure
+
+After setup:
+
+```
+your-project/
+├── .forge/
+│   ├── vision.json           # Product vision, mission, strategy
+│   ├── features.json         # Nested feature hierarchy
+│   ├── roadmap.json          # Milestones and tickets
+│   ├── technical_concepts.json  # 3rd-party APIs, technical decisions
+│   ├── project.json          # Project config (GitHub URL, paths)
+│   └── schemas/              # JSON schemas for validation
+└── .cursor/
+    ├── agents/               # visionary, designer, planner, architect, scribe
+    ├── commands/             # forge-scribe, forge-commit, etc.
+    ├── skills/               # pull-milestones, commit, push-branch, etc.
+    └── hooks/                # JSON schema validation on edit
+```
 
 ## Installation
 
 ### From Source (Development)
 
 ```bash
-# From the monorepo root
 npm install
 npm run build -w forge
 
-# Package the extension (from root)
+# Package the extension
 npm run vscode:package
 
 # Install
-code --install-extension packages/vscode-extension/forge-0.1.0.vsix
+code --install-extension forge-0.1.0.vsix
 ```
 
 ### From VSIX
@@ -43,148 +89,17 @@ code --install-extension packages/vscode-extension/forge-0.1.0.vsix
 code --install-extension forge-0.1.0.vsix
 ```
 
-## Usage
-
-### 🤖 Using AI Agents with Forge
-
-Forge provides specialized AI personas/commands to help you design and build:
-
-- **For Cursor Users**: Use `/forge-design` and `/forge-build` custom commands
-- **For VSCode Users**: Use `@forge-design` and `@forge-build` chat participants
-
-📖 **[Complete Guide: Using AI Agents with Forge](docs/USING-AI-AGENTS.md)**
-
-This guide explains how to use AI agents to:
-- Design features, diagrams, specs, and actors (`@forge-design` or `/forge-design`)
-- Implement stories with full context (`@forge-build` or `/forge-build`)
-- Workflow examples and best practices
-
----
-
-### Start a Design Session
-
-1. Open Command Palette (`Cmd/Ctrl+Shift+P`)
-2. Type "Forge: Start Design Session"
-3. Enter your problem statement
-4. A new session file is created in `ai/sessions/`
-5. You can now create and edit Forge files in the Studio
-
-### Open Forge Studio
-
-1. Open Command Palette (Cmd/Ctrl+Shift+P)
-2. Type "Forge: Open Forge Studio"
-3. The Studio opens with tabs for Dashboard, Sessions, Features, Specs, Models, and Actors
-
-**Studio Workflows:**
-
-- **Browsing and Reference** (No session required):
-  1. Navigate to any category tab to browse existing files
-  2. View Features, Specs, Models for reference
-  3. Files are read-only without an active session
-
-- **Creating Foundational Elements** (No session required):
-  1. Navigate to Actors tab
-  2. Create and edit at any time
-  3. Define system vocabulary and guidance before design work
-
-- **Creating Design Files** (Requires active session):
-  1. Start a session from Dashboard or Sessions page
-  2. Navigate to Features or Specs tab
-  3. Create and edit during active session
-  4. Changes are automatically tracked in session's changed_files
-
-- **Organizing with Folders**:
-  1. Right-click any folder in the tree (when session active for Features/Specs)
-  2. Enter subfolder name (auto-kebab-cased)
-  3. Navigate by clicking folders in the contents view
-
-- **Editing Files**:
-  1. Click a file in the contents view to open it
-  2. Features/Specs/Models: Visible but read-only without session, editable with active session
-  3. Actors: Always editable
-  4. Edit frontmatter fields and content, then click "Save Changes"
-
-### Distill Session into Stories and Tasks
-
-1. Complete your design work in Studio
-2. Stop the active session from Dashboard or Sessions page
-3. Right-click on the `.session.md` file OR use Command Palette
-4. Select "Forge: Distill Session into Stories and Tasks"
-5. Copy the generated prompt
-6. Paste into Cursor Agent to generate story and task files in `ai/tickets/<session-id>/`
-
-### Build Story Implementation
-
-1. Right-click on a `.story.md` file in `ai/tickets/`
-2. Select "Forge: Build Story Implementation"
-3. Copy the generated prompt (includes all linked features, specs, models, and actors)
-4. Paste into Cursor Agent to implement the story
-
-## Project Structure
-
-Forge works with the following directory structure:
-
-```
-your-project/
-└── ai/
-    ├── sessions/      # Design session tracking (*.session.md)
-    ├── features/      # Feature definitions with Gherkin (*.feature.md, nestable)
-    ├── specs/         # Technical specifications (*.spec.md, nestable)
-    ├── models/        # Data model definitions (*.model.md, nestable)
-    ├── actors/        # Actor/persona definitions (*.actor.md, nestable)
-    ├── tickets/       # Stories and Tasks (*.story.md, *.task.md, organized by session)
-    └── docs/          # Supporting documentation
-```
-
-**Note**: All folders except `docs` and `tickets` are nestable, meaning you can create subfolders to organize your files hierarchically.
-
 ## Development
 
 ```bash
-# From the monorepo root
 npm install
-
-# Build the extension
 npm run build -w forge
-
-# Watch mode (builds extension + webview)
-npm run watch -w forge
-
-# Lint
+npm run watch -w forge   # Watch mode
 npm run lint -w forge
-
-# Package for distribution
-npm run vscode:package
+npm run test -w forge
+npm run vscode:package   # Package for distribution
 ```
-
-## Architecture
-
-```
-src/
-├── extension.ts                    # Extension entry point
-├── commands/                       # Command implementations
-│   ├── StartSessionCommand.ts      # Start design session
-│   ├── DistillSessionCommand.ts    # Distill session to stories/tasks
-│   └── BuildStoryCommand.ts        # Build story implementation
-├── panels/                         # Webview panels
-│   └── ForgeStudioPanel.ts          # Main Studio UI
-├── webview/                        # React-based webview code
-│   └── studio/
-│       └── index.tsx               # Studio React app
-└── utils/                          # Utilities
-    ├── PromptGenerator.ts          # Prompt generation logic
-    ├── FileParser.ts               # Frontmatter parsing
-    └── GitUtils.ts                 # Git integration
-```
-
-**Key Technologies:**
-- **VSCode Extension API** for commands and panels
-- **React** for the Studio UI
-- **WebView API** for embedded web UI
-- **File System Watchers** for real-time updates
-- **Gray Matter** for frontmatter parsing
 
 ## License
 
 MIT
-

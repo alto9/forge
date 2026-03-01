@@ -20,7 +20,27 @@ import {
     PULL_MILESTONES_SKILL_MD,
     PUSH_MILESTONES_SKILL_MD,
     PULL_MILESTONES_SCRIPT,
-    PUSH_MILESTONES_SCRIPT
+    PUSH_MILESTONES_SCRIPT,
+    GET_ISSUE_DETAILS_SKILL_MD,
+    GET_ISSUE_DETAILS_SCRIPT,
+    START_ISSUE_BUILD_SKILL_MD,
+    START_ISSUE_BUILD_SCRIPT,
+    CREATE_FEATURE_BRANCH_SKILL_MD,
+    CREATE_FEATURE_BRANCH_SCRIPT,
+    COMMIT_SKILL_MD,
+    COMMIT_SCRIPT,
+    PUSH_SKILL_MD,
+    PUSH_SCRIPT,
+    MAKE_PULL_REQUEST_SKILL_MD,
+    MAKE_PULL_REQUEST_SCRIPT,
+    MAKE_MILESTONE_SKILL_MD,
+    MAKE_MILESTONE_SCRIPT,
+    MAKE_ISSUE_SKILL_MD,
+    MAKE_ISSUE_SCRIPT,
+    MAKE_SUB_ISSUE_SKILL_MD,
+    MAKE_SUB_ISSUE_SCRIPT,
+    REVIEW_PR_SKILL_MD,
+    REVIEW_PR_SCRIPT
 } from '../templates/skills';
 
 /**
@@ -29,7 +49,8 @@ import {
 export class SetupCursorCommand {
     static async execute(
         context: vscode.ExtensionContext,
-        outputChannel?: vscode.OutputChannel
+        outputChannel?: vscode.OutputChannel,
+        options?: { title?: string }
     ) {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders || workspaceFolders.length === 0) {
@@ -49,10 +70,11 @@ export class SetupCursorCommand {
         const projectPath = projectUri.fsPath;
         const extensionPath = context.extensionPath;
 
+        const progressTitle = options?.title ?? 'Setting up project for Cursor';
         await vscode.window.withProgress(
             {
                 location: vscode.ProgressLocation.Notification,
-                title: 'Setting up project for Cursor',
+                title: progressTitle,
                 cancellable: false
             },
             async (progress) => {
@@ -73,7 +95,7 @@ export class SetupCursorCommand {
                     await ensureCursorHooks(projectPath, extensionPath, outputChannel);
 
                     vscode.window.showInformationMessage(
-                        'Project setup for Cursor complete. .forge and .cursor folders created.'
+                        'Project setup complete. .forge and .cursor folders created.'
                     );
                 } catch (err: unknown) {
                     const msg = err instanceof Error ? err.message : String(err);
@@ -159,18 +181,40 @@ async function ensureCursorAgents(projectPath: string, outputChannel?: vscode.Ou
     }
 }
 
+const SKILL_DEFINITIONS: Array<{ name: string; skillMd: string; script: string }> = [
+    { name: 'pull-milestones', skillMd: PULL_MILESTONES_SKILL_MD, script: PULL_MILESTONES_SCRIPT },
+    { name: 'push-milestones', skillMd: PUSH_MILESTONES_SKILL_MD, script: PUSH_MILESTONES_SCRIPT },
+    { name: 'get-issue-details', skillMd: GET_ISSUE_DETAILS_SKILL_MD, script: GET_ISSUE_DETAILS_SCRIPT },
+    { name: 'start-issue-build', skillMd: START_ISSUE_BUILD_SKILL_MD, script: START_ISSUE_BUILD_SCRIPT },
+    { name: 'create-feature-branch', skillMd: CREATE_FEATURE_BRANCH_SKILL_MD, script: CREATE_FEATURE_BRANCH_SCRIPT },
+    { name: 'commit', skillMd: COMMIT_SKILL_MD, script: COMMIT_SCRIPT },
+    { name: 'push-branch', skillMd: PUSH_SKILL_MD, script: PUSH_SCRIPT },
+    { name: 'make-pull-request', skillMd: MAKE_PULL_REQUEST_SKILL_MD, script: MAKE_PULL_REQUEST_SCRIPT },
+    { name: 'make-milestone', skillMd: MAKE_MILESTONE_SKILL_MD, script: MAKE_MILESTONE_SCRIPT },
+    { name: 'make-issue', skillMd: MAKE_ISSUE_SKILL_MD, script: MAKE_ISSUE_SCRIPT },
+    { name: 'make-sub-issue', skillMd: MAKE_SUB_ISSUE_SKILL_MD, script: MAKE_SUB_ISSUE_SCRIPT },
+    { name: 'review-pr', skillMd: REVIEW_PR_SKILL_MD, script: REVIEW_PR_SCRIPT }
+];
+
 async function ensureCursorSkills(projectPath: string, outputChannel?: vscode.OutputChannel) {
     const skillsDir = path.join(projectPath, '.cursor', 'skills');
-    const pullDir = path.join(skillsDir, 'pull-milestones', 'scripts');
-    const pushDir = path.join(skillsDir, 'push-milestones', 'scripts');
-    if (!fs.existsSync(pullDir)) fs.mkdirSync(pullDir, { recursive: true });
-    if (!fs.existsSync(pushDir)) fs.mkdirSync(pushDir, { recursive: true });
 
-    fs.writeFileSync(path.join(skillsDir, 'pull-milestones', 'SKILL.md'), PULL_MILESTONES_SKILL_MD, 'utf8');
-    fs.writeFileSync(path.join(pullDir, 'pull-milestones.sh'), PULL_MILESTONES_SCRIPT, 'utf8');
-    fs.writeFileSync(path.join(skillsDir, 'push-milestones', 'SKILL.md'), PUSH_MILESTONES_SKILL_MD, 'utf8');
-    fs.writeFileSync(path.join(pushDir, 'push-milestones.sh'), PUSH_MILESTONES_SCRIPT, 'utf8');
-    outputChannel?.appendLine('Created .cursor/skills (pull-milestones, push-milestones)');
+    for (const def of SKILL_DEFINITIONS) {
+        const skillDir = path.join(skillsDir, def.name);
+        const scriptsDir = path.join(skillDir, 'scripts');
+        if (!fs.existsSync(scriptsDir)) fs.mkdirSync(scriptsDir, { recursive: true });
+
+        fs.writeFileSync(path.join(skillDir, 'SKILL.md'), def.skillMd, 'utf8');
+        const scriptPath = path.join(scriptsDir, `${def.name}.sh`);
+        fs.writeFileSync(scriptPath, def.script, 'utf8');
+        try {
+            fs.chmodSync(scriptPath, 0o755);
+        } catch {
+            // chmod may fail on some systems
+        }
+    }
+
+    outputChannel?.appendLine(`Created .cursor/skills (${SKILL_DEFINITIONS.map((d) => d.name).join(', ')})`);
 }
 
 async function ensureCursorHooks(

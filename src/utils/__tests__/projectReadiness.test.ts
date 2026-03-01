@@ -8,16 +8,8 @@ describe('projectReadiness', () => {
       expect(REQUIRED_COMMANDS).toHaveLength(6);
     });
 
-    it('should include forge-refine.md command', () => {
-      expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-refine.md');
-    });
-
-    it('should include forge-build.md command', () => {
-      expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-build.md');
-    });
-
-    it('should include forge-scribe.md command', () => {
-      expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-scribe.md');
+    it('should include forge-review-pr.md command', () => {
+      expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-review-pr.md');
     });
 
     it('should include forge-commit.md command', () => {
@@ -30,6 +22,14 @@ describe('projectReadiness', () => {
 
     it('should include forge-pullrequest.md command', () => {
       expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-pullrequest.md');
+    });
+
+    it('should include forge-setup-issue.md command', () => {
+      expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-setup-issue.md');
+    });
+
+    it('should include forge-build-issue.md command', () => {
+      expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-build-issue.md');
     });
 
     it('should be a string array', () => {
@@ -64,7 +64,7 @@ describe('projectReadiness', () => {
     });
 
     it('requires command files to have valid content (hash validation)', () => {
-      const commandPath = '.cursor/commands/forge-refine.md';
+      const commandPath = '.cursor/commands/forge-review-pr.md';
       expect(commandPath).toMatch(/\.cursor\/commands\/.*\.md$/);
     });
   });
@@ -93,19 +93,19 @@ describe('projectReadiness', () => {
 
   describe('Integration with command validation', () => {
     it('REQUIRED_COMMANDS should match getManagedCommandPaths()', () => {
-      const refineCommand = '.cursor/commands/forge-refine.md';
-      const buildCommand = '.cursor/commands/forge-build.md';
-      const scribeCommand = '.cursor/commands/forge-scribe.md';
+      const reviewPrCommand = '.cursor/commands/forge-review-pr.md';
       const commitCommand = '.cursor/commands/forge-commit.md';
       const pushCommand = '.cursor/commands/forge-push.md';
       const pullrequestCommand = '.cursor/commands/forge-pullrequest.md';
+      const setupIssueCommand = '.cursor/commands/forge-setup-issue.md';
+      const buildIssueCommand = '.cursor/commands/forge-build-issue.md';
 
-      expect(REQUIRED_COMMANDS).toContain(refineCommand);
-      expect(REQUIRED_COMMANDS).toContain(buildCommand);
-      expect(REQUIRED_COMMANDS).toContain(scribeCommand);
+      expect(REQUIRED_COMMANDS).toContain(reviewPrCommand);
       expect(REQUIRED_COMMANDS).toContain(commitCommand);
       expect(REQUIRED_COMMANDS).toContain(pushCommand);
       expect(REQUIRED_COMMANDS).toContain(pullrequestCommand);
+      expect(REQUIRED_COMMANDS).toContain(setupIssueCommand);
+      expect(REQUIRED_COMMANDS).toContain(buildIssueCommand);
     });
   });
 
@@ -128,12 +128,13 @@ describe('projectReadiness', () => {
 
     it('aligns with Forge migration plan - no ai/ folder requirements', () => {
       // Migration removed ai/ folder requirements; only .forge and commands
-      expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-refine.md');
-      expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-build.md');
-      expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-scribe.md');
+      // forge-scribe removed; forge-review-pr added
+      expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-review-pr.md');
       expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-commit.md');
       expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-push.md');
       expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-pullrequest.md');
+      expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-setup-issue.md');
+      expect(REQUIRED_COMMANDS).toContain('.cursor/commands/forge-build-issue.md');
     });
   });
 });

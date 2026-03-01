@@ -1,10 +1,13 @@
 import * as vscode from 'vscode';
 import { FORGE_REFINE_INSTRUCTIONS } from './personas/forge-refine';
-import { FORGE_SCRIBE_INSTRUCTIONS } from './personas/forge-scribe';
-import { FORGE_BUILD_INSTRUCTIONS } from './personas/forge-build';
 import { FORGE_COMMIT_INSTRUCTIONS } from './personas/forge-commit';
 import { FORGE_PUSH_INSTRUCTIONS } from './personas/forge-push';
 import { FORGE_PULLREQUEST_INSTRUCTIONS } from './personas/forge-pullrequest';
+import {
+    FORGE_SETUP_ISSUE_TEMPLATE,
+    FORGE_BUILD_ISSUE_TEMPLATE,
+    FORGE_REVIEW_PR_TEMPLATE
+} from './templates/cursorCommands';
 
 /**
  * Chat participants for Forge that enable direct interaction with Forge
@@ -22,22 +25,6 @@ export class ForgeChatParticipant {
         );
         refineParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
         context.subscriptions.push(refineParticipant);
-
-        // @forge-scribe participant (create sub-issues)
-        const scribeParticipant = vscode.chat.createChatParticipant(
-            'forge-scribe.participant',
-            this.handleScribeRequest
-        );
-        scribeParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
-        context.subscriptions.push(scribeParticipant);
-
-        // @forge-build participant (implement GitHub issues)
-        const buildParticipant = vscode.chat.createChatParticipant(
-            'forge-build.participant',
-            this.handleBuildRequest
-        );
-        buildParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
-        context.subscriptions.push(buildParticipant);
 
         // @forge-commit participant (commit changes with proper validation)
         const commitParticipant = vscode.chat.createChatParticipant(
@@ -62,6 +49,30 @@ export class ForgeChatParticipant {
         );
         pullrequestParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
         context.subscriptions.push(pullrequestParticipant);
+
+        // @forge-setup-issue participant (prepare environment for issue work)
+        const setupIssueParticipant = vscode.chat.createChatParticipant(
+            'forge-setup-issue.participant',
+            this.handleSetupIssueRequest
+        );
+        setupIssueParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
+        context.subscriptions.push(setupIssueParticipant);
+
+        // @forge-build-issue participant (implement issue end-to-end)
+        const buildIssueParticipant = vscode.chat.createChatParticipant(
+            'forge-build-issue.participant',
+            this.handleBuildIssueRequest
+        );
+        buildIssueParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
+        context.subscriptions.push(buildIssueParticipant);
+
+        // @forge-review-pr participant (review PR and post comments)
+        const reviewPrParticipant = vscode.chat.createChatParticipant(
+            'forge-review-pr.participant',
+            this.handleReviewPrRequest
+        );
+        reviewPrParticipant.iconPath = vscode.Uri.joinPath(context.extensionUri, 'media', 'forge-icon.svg');
+        context.subscriptions.push(reviewPrParticipant);
     }
 
     /**
@@ -108,46 +119,6 @@ export class ForgeChatParticipant {
         stream.markdown(FORGE_REFINE_INSTRUCTIONS);
         
         stream.markdown('\n\n---\n\n**Please provide the GitHub issue link you\'d like me to help refine.**');
-    }
-
-    /**
-     * Handle @forge-scribe requests (create sub-issues)
-     */
-    private static async handleScribeRequest(
-        request: vscode.ChatRequest,
-        context: vscode.ChatContext,
-        stream: vscode.ChatResponseStream,
-        token: vscode.CancellationToken
-    ): Promise<void> {
-        // Provide the scribe instructions upfront
-        stream.markdown(
-            '# 📋 Forge Scribe\n\n' +
-            'I\'ll help you create sub-issues from a refined parent issue. Here are my instructions:\n\n'
-        );
-        
-        stream.markdown(FORGE_SCRIBE_INSTRUCTIONS);
-        
-        stream.markdown('\n\n---\n\n**Please provide the GitHub issue link for the parent issue you\'d like me to create sub-issues for.**');
-    }
-
-    /**
-     * Handle @forge-build requests (implement GitHub issues)
-     */
-    private static async handleBuildRequest(
-        request: vscode.ChatRequest,
-        context: vscode.ChatContext,
-        stream: vscode.ChatResponseStream,
-        token: vscode.CancellationToken
-    ): Promise<void> {
-        // Provide the build instructions upfront
-        stream.markdown(
-            '# 🛠️ Forge Build\n\n' +
-            'I\'ll help you implement a GitHub issue. Here are my instructions:\n\n'
-        );
-        
-        stream.markdown(FORGE_BUILD_INSTRUCTIONS);
-        
-        stream.markdown('\n\n---\n\n**Please provide the GitHub issue link you\'d like me to implement.**');
     }
 
     /**
@@ -208,5 +179,47 @@ export class ForgeChatParticipant {
         stream.markdown(FORGE_PULLREQUEST_INSTRUCTIONS);
         
         stream.markdown('\n\n---\n\n**I\'m ready to help you create a pull request. Should I proceed with validating your commits and creating the PR?**');
+    }
+
+    /**
+     * Handle @forge-setup-issue requests (prepare environment for issue work)
+     */
+    private static async handleSetupIssueRequest(
+        request: vscode.ChatRequest,
+        context: vscode.ChatContext,
+        stream: vscode.ChatResponseStream,
+        token: vscode.CancellationToken
+    ): Promise<void> {
+        stream.markdown('# 🔧 Forge Setup Issue\n\n');
+        stream.markdown(FORGE_SETUP_ISSUE_TEMPLATE);
+        stream.markdown('\n\n---\n\n**Please provide the GitHub issue link.**');
+    }
+
+    /**
+     * Handle @forge-build-issue requests (implement issue end-to-end)
+     */
+    private static async handleBuildIssueRequest(
+        request: vscode.ChatRequest,
+        context: vscode.ChatContext,
+        stream: vscode.ChatResponseStream,
+        token: vscode.CancellationToken
+    ): Promise<void> {
+        stream.markdown('# 🛠️ Forge Build Issue\n\n');
+        stream.markdown(FORGE_BUILD_ISSUE_TEMPLATE);
+        stream.markdown('\n\n---\n\n**Please provide the GitHub issue link.**');
+    }
+
+    /**
+     * Handle @forge-review-pr requests (review PR and post comments)
+     */
+    private static async handleReviewPrRequest(
+        request: vscode.ChatRequest,
+        context: vscode.ChatContext,
+        stream: vscode.ChatResponseStream,
+        token: vscode.CancellationToken
+    ): Promise<void> {
+        stream.markdown('# 👀 Forge Review PR\n\n');
+        stream.markdown(FORGE_REVIEW_PR_TEMPLATE);
+        stream.markdown('\n\n---\n\n**Please provide the PR link or number.**');
     }
 }

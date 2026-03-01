@@ -96,13 +96,13 @@ describe('forge-pullrequest command template', () => {
     });
 
     describe('GitHub integration', () => {
-        it('should prioritize GitHub MCP over GH CLI', () => {
-            const mcpSection = FORGE_PULLREQUEST_TEMPLATE.indexOf('#### Preferred: GitHub MCP');
-            const cliSection = FORGE_PULLREQUEST_TEMPLATE.indexOf('#### Fallback: GitHub CLI');
+        it('should prioritize make-pull-request skill over GitHub MCP', () => {
+            const skillSection = FORGE_PULLREQUEST_TEMPLATE.indexOf('#### Preferred: make-pull-request skill');
+            const mcpSection = FORGE_PULLREQUEST_TEMPLATE.indexOf('#### Fallback: GitHub MCP');
             
+            expect(skillSection).toBeGreaterThan(-1);
             expect(mcpSection).toBeGreaterThan(-1);
-            expect(cliSection).toBeGreaterThan(-1);
-            expect(mcpSection).toBeLessThan(cliSection);
+            expect(skillSection).toBeLessThan(mcpSection);
         });
 
         it('should include MCP tool name', () => {

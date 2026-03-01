@@ -60,8 +60,8 @@ describe('Project Readiness - Command File Integration', () => {
 
         it('should check all command files sequentially', () => {
             const commands = [
-                { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
-                { path: '.cursor/commands/forge-build.md', exists: true, valid: true }
+                { path: '.cursor/commands/forge-commit.md', exists: true, valid: true },
+                { path: '.cursor/commands/forge-commit.md', exists: true, valid: true }
             ];
 
             const allCommandsValid = commands.every(c => c.exists && c.valid);
@@ -71,8 +71,8 @@ describe('Project Readiness - Command File Integration', () => {
 
         it('should fail if any command is missing', () => {
             const commands = [
-                { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
-                { path: '.cursor/commands/forge-build.md', exists: false, valid: false }
+                { path: '.cursor/commands/forge-commit.md', exists: true, valid: true },
+                { path: '.cursor/commands/forge-commit.md', exists: false, valid: false }
             ];
 
             const allCommandsValid = commands.every(c => c.exists && c.valid);
@@ -82,8 +82,8 @@ describe('Project Readiness - Command File Integration', () => {
 
         it('should fail if any command exists but is invalid', () => {
             const commands = [
-                { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
-                { path: '.cursor/commands/forge-build.md', exists: true, valid: false }
+                { path: '.cursor/commands/forge-commit.md', exists: true, valid: true },
+                { path: '.cursor/commands/forge-commit.md', exists: true, valid: false }
             ];
 
             const allCommandsValid = commands.every(c => c.exists && c.valid);
@@ -118,7 +118,7 @@ describe('Project Readiness - Command File Integration', () => {
         });
 
         it('should handle command file validation with real templates', () => {
-            const commandPath = '.cursor/commands/forge-refine.md';
+            const commandPath = '.cursor/commands/forge-commit.md';
             const generated = generateCommandFile(commandPath);
             const isValid = validateCommandFileHash(generated, commandPath);
 
@@ -126,7 +126,7 @@ describe('Project Readiness - Command File Integration', () => {
         });
 
         it('should detect tampered command file', () => {
-            const commandPath = '.cursor/commands/forge-refine.md';
+            const commandPath = '.cursor/commands/forge-commit.md';
             const generated = generateCommandFile(commandPath);
             const tampered = generated + '\n// User added this';
             const isValid = validateCommandFileHash(tampered, commandPath);
@@ -142,8 +142,8 @@ describe('Project Readiness - Command File Integration', () => {
             ];
 
             const commands = [
-                { path: '.cursor/commands/forge-refine.md', exists: true, valid: true, description: 'Design command', type: 'command' as const },
-                { path: '.cursor/commands/forge-build.md', exists: true, valid: true, description: 'Build command', type: 'command' as const }
+                { path: '.cursor/commands/forge-commit.md', exists: true, valid: true, description: 'Design command', type: 'command' as const },
+                { path: '.cursor/commands/forge-commit.md', exists: true, valid: true, description: 'Build command', type: 'command' as const }
             ];
 
             const status = { folders, commands };
@@ -161,7 +161,7 @@ describe('Project Readiness - Command File Integration', () => {
 
         it('should include exists and valid flags for commands', () => {
             const command = { 
-                path: '.cursor/commands/forge-refine.md', 
+                path: '.cursor/commands/forge-commit.md', 
                 exists: true, 
                 valid: true, 
                 description: 'Design command',
@@ -177,7 +177,7 @@ describe('Project Readiness - Command File Integration', () => {
         it('should use type discriminator for folders and commands', () => {
             const folder = { path: '.forge', exists: true, description: 'Forge metadata', type: 'folder' as const };
             const command = { 
-                path: '.cursor/commands/forge-refine.md', 
+                path: '.cursor/commands/forge-commit.md', 
                 exists: true, 
                 valid: true, 
                 description: 'Design command',
@@ -204,8 +204,8 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: '.forge', exists: true }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
-                    { path: '.cursor/commands/forge-build.md', exists: true, valid: true }
+                    { path: '.cursor/commands/forge-commit.md', exists: true, valid: true },
+                    { path: '.cursor/commands/forge-commit.md', exists: true, valid: true }
                 ],
                 expectedReady: true
             },
@@ -215,8 +215,8 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: '.forge', exists: false }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
-                    { path: '.cursor/commands/forge-build.md', exists: true, valid: true }
+                    { path: '.cursor/commands/forge-commit.md', exists: true, valid: true },
+                    { path: '.cursor/commands/forge-commit.md', exists: true, valid: true }
                 ],
                 expectedReady: false
             },
@@ -226,8 +226,8 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: '.forge', exists: true }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-refine.md', exists: false, valid: false },
-                    { path: '.cursor/commands/forge-build.md', exists: false, valid: false }
+                    { path: '.cursor/commands/forge-commit.md', exists: false, valid: false },
+                    { path: '.cursor/commands/forge-commit.md', exists: false, valid: false }
                 ],
                 expectedReady: false
             },
@@ -237,8 +237,8 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: '.forge', exists: true }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-refine.md', exists: true, valid: false },
-                    { path: '.cursor/commands/forge-build.md', exists: true, valid: false }
+                    { path: '.cursor/commands/forge-commit.md', exists: true, valid: false },
+                    { path: '.cursor/commands/forge-commit.md', exists: true, valid: false }
                 ],
                 expectedReady: false
             },
@@ -248,8 +248,8 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: '.forge', exists: true }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
-                    { path: '.cursor/commands/forge-build.md', exists: true, valid: false }
+                    { path: '.cursor/commands/forge-commit.md', exists: true, valid: true },
+                    { path: '.cursor/commands/forge-commit.md', exists: true, valid: false }
                 ],
                 expectedReady: false
             },
@@ -259,8 +259,8 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: '.forge', exists: true }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
-                    { path: '.cursor/commands/forge-build.md', exists: false, valid: false }
+                    { path: '.cursor/commands/forge-commit.md', exists: true, valid: true },
+                    { path: '.cursor/commands/forge-commit.md', exists: false, valid: false }
                 ],
                 expectedReady: false
             },
@@ -270,8 +270,8 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: '.forge', exists: false }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-refine.md', exists: true, valid: true },
-                    { path: '.cursor/commands/forge-build.md', exists: true, valid: true }
+                    { path: '.cursor/commands/forge-commit.md', exists: true, valid: true },
+                    { path: '.cursor/commands/forge-commit.md', exists: true, valid: true }
                 ],
                 expectedReady: false
             },
@@ -281,8 +281,8 @@ describe('Project Readiness - Command File Integration', () => {
                     { path: '.forge', exists: false }
                 ],
                 commands: [
-                    { path: '.cursor/commands/forge-refine.md', exists: false, valid: false },
-                    { path: '.cursor/commands/forge-build.md', exists: false, valid: false }
+                    { path: '.cursor/commands/forge-commit.md', exists: false, valid: false },
+                    { path: '.cursor/commands/forge-commit.md', exists: false, valid: false }
                 ],
                 expectedReady: false
             }
@@ -302,8 +302,8 @@ describe('Project Readiness - Command File Integration', () => {
     describe('Command file validation during readiness check', () => {
         it('should call validation for each command file', () => {
             const commandPaths = [
-                '.cursor/commands/forge-refine.md',
-                '.cursor/commands/forge-build.md'
+                '.cursor/commands/forge-commit.md',
+                '.cursor/commands/forge-commit.md'
             ];
 
             let validationCallCount = 0;
@@ -330,7 +330,7 @@ describe('Project Readiness - Command File Integration', () => {
         });
 
         it('should validate content using hash checking', () => {
-            const commandPath = '.cursor/commands/forge-refine.md';
+            const commandPath = '.cursor/commands/forge-commit.md';
             
             // Generate valid file
             const validFile = generateCommandFile(commandPath);
@@ -340,7 +340,7 @@ describe('Project Readiness - Command File Integration', () => {
         });
 
         it('should detect invalid content using hash checking', () => {
-            const commandPath = '.cursor/commands/forge-refine.md';
+            const commandPath = '.cursor/commands/forge-commit.md';
             
             // Create invalid file (no hash comment)
             const invalidFile = '# Forge Refine\n\nSome content';
@@ -364,8 +364,8 @@ describe('Project Readiness - Command File Integration', () => {
 
         it('should recalculate status after command creation', () => {
             const beforeCommands = [
-                { path: '.cursor/commands/forge-refine.md', exists: false, valid: false },
-                { path: '.cursor/commands/forge-build.md', exists: false, valid: false }
+                { path: '.cursor/commands/forge-commit.md', exists: false, valid: false },
+                { path: '.cursor/commands/forge-commit.md', exists: false, valid: false }
             ];
 
             // Simulate command creation
@@ -398,34 +398,37 @@ describe('Project Readiness - Command File Integration', () => {
     });
 
     describe('Integration with command templates', () => {
-        it('should validate forge-refine.md template', () => {
-            const commandPath = '.cursor/commands/forge-refine.md';
+        it('should validate forge-setup-issue.md template', () => {
+            const commandPath = '.cursor/commands/forge-setup-issue.md';
             const generated = generateCommandFile(commandPath);
             
             expect(generated).toContain('<!-- forge-hash:');
-            expect(generated).toContain('# Forge Refine');
+            expect(generated).toContain('# Forge Setup Issue');
             expect(generated).toContain('Prerequisites');
         });
 
-        it('should validate forge-build.md template', () => {
-            const commandPath = '.cursor/commands/forge-build.md';
+        it('should validate forge-commit.md template', () => {
+            const commandPath = '.cursor/commands/forge-commit.md';
             const generated = generateCommandFile(commandPath);
             
             expect(generated).toContain('<!-- forge-hash:');
-            expect(generated).toContain('# Forge Build');
+            expect(generated).toContain('# Forge Commit');
             expect(generated).toContain('Prerequisites');
         });
 
         it('should validate all command templates successfully', () => {
             const paths = [
-                '.cursor/commands/forge-refine.md',
-                '.cursor/commands/forge-build.md',
-                '.cursor/commands/forge-scribe.md'
+                '.cursor/commands/forge-commit.md',
+                '.cursor/commands/forge-push.md',
+                '.cursor/commands/forge-pullrequest.md',
+                '.cursor/commands/forge-setup-issue.md',
+                '.cursor/commands/forge-build-issue.md',
+                '.cursor/commands/forge-review-pr.md'
             ];
 
-            paths.forEach(path => {
-                const generated = generateCommandFile(path);
-                const isValid = validateCommandFileHash(generated, path);
+            paths.forEach((commandPath) => {
+                const generated = generateCommandFile(commandPath);
+                const isValid = validateCommandFileHash(generated, commandPath);
                 expect(isValid).toBe(true);
             });
         });
@@ -433,12 +436,12 @@ describe('Project Readiness - Command File Integration', () => {
 
     describe('Required commands structure', () => {
         const REQUIRED_COMMANDS = [
-            { path: '.cursor/commands/forge-refine.md', description: 'Cursor command for refining tickets for implementation' },
-            { path: '.cursor/commands/forge-build.md', description: 'Cursor command for building from tickets' },
-            { path: '.cursor/commands/forge-scribe.md', description: 'Cursor command for breaking milestones into tickets' },
             { path: '.cursor/commands/forge-commit.md', description: 'Cursor command for committing with validation' },
             { path: '.cursor/commands/forge-push.md', description: 'Cursor command for pushing safely' },
-            { path: '.cursor/commands/forge-pullrequest.md', description: 'Cursor command for creating pull requests' }
+            { path: '.cursor/commands/forge-pullrequest.md', description: 'Cursor command for creating pull requests' },
+            { path: '.cursor/commands/forge-setup-issue.md', description: 'Cursor command for setting up environment for an issue' },
+            { path: '.cursor/commands/forge-build-issue.md', description: 'Cursor command for implementing an issue end-to-end' },
+            { path: '.cursor/commands/forge-review-pr.md', description: 'Cursor command for reviewing PRs and posting comments' }
         ];
 
         it('should have 6 required commands', () => {
@@ -464,12 +467,12 @@ describe('Project Readiness - Command File Integration', () => {
                 c.path.replace('.cursor/commands/', '').replace('.md', '')
             );
 
-            expect(commandNames).toContain('forge-refine');
-            expect(commandNames).toContain('forge-build');
-            expect(commandNames).toContain('forge-scribe');
             expect(commandNames).toContain('forge-commit');
             expect(commandNames).toContain('forge-push');
             expect(commandNames).toContain('forge-pullrequest');
+            expect(commandNames).toContain('forge-setup-issue');
+            expect(commandNames).toContain('forge-build-issue');
+            expect(commandNames).toContain('forge-review-pr');
         });
     });
 });
