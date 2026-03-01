@@ -1,3 +1,8 @@
+## 3.5.0 (2026-03-01)
+
+* Merge pull request #14 from alto9/refineSkills ([7eaee99](https://github.com/alto9/forge/commit/7eaee99)), closes [#14](https://github.com/alto9/forge/issues/14)
+* feat: update skills ([87f6de4](https://github.com/alto9/forge/commit/87f6de4))
+
 ## 3.4.0 (2026-02-19)
 
 * Merge pull request #13 from alto9/cursorProjects ([75dca1c](https://github.com/alto9/forge/commit/75dca1c)), closes [#13](https://github.com/alto9/forge/issues/13)
