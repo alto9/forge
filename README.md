@@ -1,52 +1,70 @@
-# Forge
+# Forge Studio
 
-VSCode/Cursor extension for context engineering and agentic development. Forge helps teams maintain product vision, technical concepts, features, and roadmaps—then turns milestones into actionable, implementation-ready issues.
+VSCode/Cursor extension for context engineering and agentic development. Forge Studio helps teams maintain product vision, technical concepts, and roadmaps—then turns milestones into actionable, implementation-ready issues via a staged agent workflow.
 
 ## Overview
 
-Forge provides:
+Forge Studio provides:
 
-- **Setup Project for Cursor** – Creates `.forge` metadata, `.cursor/agents`, `.cursor/commands`, `.cursor/skills`, and hooks
-- **Subagents** – Visionary, Architect, Designer, Planner, and Scribe for planning and documentation
-- **Commands** – forge-scribe, forge-commit, forge-push, forge-pullrequest, forge-setup-issue, forge-build-issue
-- **Roadmap view** – View milestones and issues (synced with GitHub when using pull-milestones/push-milestones)
+- **Setup Project for Cursor/VSCode** – Creates `.forge` metadata, `.cursor/agents`, `.cursor/commands`, `.cursor/skills`, and hooks from workflow templates
+- **Agent workflow** – Visionary, Architect, Planner, Refine, and domain SMEs (runtime, business_logic, data, interface, integration, operations) for planning and documentation; Build and Review agents for implementation
+- **Commands** – architect-this, plan-roadmap, refine-issue, build-from-github, review-pr
+- **Chat participants** – @forge, @forge-refine, @forge-commit, @forge-push, @forge-pullrequest, @forge-setup-issue, @forge-build-issue, @forge-review-pr
+- **Roadmap view** – View milestones and issues (synced with GitHub)
+- **Refine Issue** – Refine GitHub issues into development-ready sub-issues via webview
 
 ## Quick Start
 
 1. Open a project in Cursor or VSCode
-2. Run **Forge: Setup Project for Cursor** from the Command Palette (`Cmd/Ctrl+Shift+P`)
+2. Run **Forge: Setup Project for Cursor** (or **Forge: Setup Project for VSCode**) from the Command Palette (`Cmd/Ctrl+Shift+P`)
 3. Forge creates:
-   - `.forge/` – vision.json, features.json, roadmap.json, technical_concepts.json, project.json
-   - `.cursor/agents/` – visionary, designer, planner, architect, scribe
-   - `.cursor/commands/` – forge-scribe, forge-commit, forge-push, forge-pullrequest, forge-setup-issue, forge-build-issue
-   - `.cursor/skills/` – pull-milestones, push-milestones, get-issue-details, start-issue-build, create-feature-branch, commit, push-branch, make-pull-request, and more
+   - `.forge/` – vision.json, roadmap.json, project.json, skill_registry.json, knowledge_map.json, schemas/
+   - `.cursor/agents/` – visionary, architect, planner, refine, runtime, business_logic, data, interface, integration, operations, build agents, review agents
+   - `.cursor/commands/` – architect-this, plan-roadmap, refine-issue, build-from-github, review-pr
+   - `.cursor/skills/` – init-forge, fetch-url, create-feature-branch, commit, push-branch, unit-test, lint-test, integration-test
+   - `.cursor/hooks/` – JSON schema validation
+   - `hooks.json` – at project root
 
 ## User Flow
 
-### 1. Open the Roadmap
+### 1. Architect (`/architect-this`)
 
-Use **Forge: Roadmap** to view project milestones and issues. The roadmap can sync with GitHub via the pull-milestones and push-milestones skills.
+Invoke the Architect agent with a prompt. The Architect examines vision.json, delegates to domain SME agents (runtime, business_logic, data, interface, integration, operations) when scope matches, and invokes the Planner with a recap. Updates `.forge` documents.
 
-### 2. Engage with Subagents
+### 2. Plan Roadmap (`/plan-roadmap`)
 
-| Subagent | Purpose |
-|----------|---------|
-| **Visionary** | Top-level product concerns, ideation. Maintains `.forge/vision.json`. Keeps vision current and research-driven. |
-| **Architect** | Technical concepts, 3rd-party API docs, consistency. Maintains `.forge/technical_concepts.json`. Makes decisions based on research; asks when user input is needed. No open questions in the document—only resolved decisions. |
-| **Designer** | Converts Vision + Technical Concepts into logical, nested features. Maintains `.forge/features.json`. |
-| **Planner** | Owns the full general roadmap. Creates milestones and top-level milestone tickets (issues) in `.forge/roadmap.json`. These high-level tickets are later broken down by Scribe. |
-| **Scribe** | Breaks down a **milestone ticket** (created by Planner) into sub-issues. Refines the ticket respecting vision, features, and technical_concepts. Writes full implementation steps, test procedures, and acceptance criteria for each sub-issue. |
+The Planner retrieves vision.json, knowledge_map.json, roadmap.json, and GitHub milestones/issues. Verifies or corrects roadmap.json and syncs with GitHub.
 
-### 3. Commands
+### 3. Refine Issue (`/refine-issue` or **Forge: Refine Issue**)
 
-| Command | Purpose |
-|---------|---------|
-| **forge-scribe** | Break down a milestone ticket (created by Planner) into development-ready sub-issues |
-| **forge-setup-issue** | Prepare environment for an issue (get details, checkout, create branch) |
-| **forge-build-issue** | Implement an issue end-to-end: implement, commit, push, create PR |
-| **forge-commit** | Commit with validation and project-specific conventional commit format |
-| **forge-push** | Push branch safely with pre-push validation |
-| **forge-pullrequest** | Create PR with conventional commit validation |
+Provide a GitHub issue link. The Refine agent retrieves the issue, creates a parent branch, consults SME agents for technical context, updates the issue, creates sub-issues, and creates branches for each sub-issue. You can also use **Forge: Refine Issue** to open a refinement webview.
+
+### 4. Build from GitHub (`/build-from-github`)
+
+Provide a GitHub issue link. Build Development performs code changes and runs unit-test, lint-test, integration-test. Build Security scans for vulnerabilities. Build Wrap commits, pushes, and creates a PR.
+
+### 5. Review PR (`/review-pr`)
+
+Provide a PR link. Review Implementation reviews the code, Review Security checks for vulnerabilities, Review Wrap posts the review to the PR (human performs merge).
+
+### 6. Roadmap
+
+Use **Forge: Roadmap** to view project milestones and issues from GitHub.
+
+## Chat Participants (VSCode)
+
+Type `@` in chat to use Forge personas:
+
+| Participant | Purpose |
+|-------------|---------|
+| **@forge** | Main Forge helper for guidance and general questions |
+| **@forge-refine** | Refine GitHub issues to clarify business value and requirements |
+| **@forge-commit** | Commit with validation and conventional commit messages |
+| **@forge-push** | Safely push to remote |
+| **@forge-pullrequest** | Create PR with conventional commit validation |
+| **@forge-setup-issue** | Prepare environment for issue work (create-feature-branch from parent or main) |
+| **@forge-build-issue** | Implement issue end-to-end via build-from-github workflow |
+| **@forge-review-pr** | Pull PR branch, review code, post review comments |
 
 ## Project Structure
 
@@ -56,17 +74,20 @@ After setup:
 your-project/
 ├── .forge/
 │   ├── vision.json           # Product vision, mission, strategy
-│   ├── features.json         # Nested feature hierarchy
 │   ├── roadmap.json          # Milestones and tickets
-│   ├── technical_concepts.json  # 3rd-party APIs, technical decisions
 │   ├── project.json          # Project config (GitHub URL, paths)
+│   ├── skill_registry.json   # Skill-to-agent assignments
+│   ├── knowledge_map.json    # Domain structure (vision → runtime, business_logic, data, etc.)
 │   └── schemas/              # JSON schemas for validation
-└── .cursor/
-    ├── agents/               # visionary, designer, planner, architect, scribe
-    ├── commands/             # forge-scribe, forge-commit, etc.
-    ├── skills/               # pull-milestones, commit, push-branch, etc.
-    └── hooks/                # JSON schema validation on edit
+├── .cursor/
+│   ├── agents/               # visionary, architect, planner, refine, domain SMEs, build, review
+│   ├── commands/             # architect-this, plan-roadmap, refine-issue, build-from-github, review-pr
+│   ├── skills/               # init-forge, fetch-url, commit, push-branch, unit-test, etc.
+│   └── hooks/                # JSON schema validation on edit
+└── hooks.json                # Cursor hooks config (project root)
 ```
+
+Run the **init-forge** skill to scaffold the full domain structure from knowledge_map (e.g. `.forge/runtime/`, `.forge/business_logic/`, `.forge/data/`, etc.).
 
 ## Installation
 
@@ -74,30 +95,26 @@ your-project/
 
 ```bash
 npm install
-npm run build -w forge
-
-# Package the extension
-npm run vscode:package
-
-# Install
-code --install-extension forge-0.1.0.vsix
+npm run build
+npm run package
+code --install-extension forge-studio-*.vsix
 ```
 
 ### From VSIX
 
 ```bash
-code --install-extension forge-0.1.0.vsix
+code --install-extension forge-studio-*.vsix
 ```
 
 ## Development
 
 ```bash
 npm install
-npm run build -w forge
-npm run watch -w forge   # Watch mode
-npm run lint -w forge
-npm run test -w forge
-npm run vscode:package   # Package for distribution
+npm run build
+npm run watch      # Watch mode
+npm run lint
+npm run test
+npm run package    # Package for distribution
 ```
 
 ## License

@@ -1,6 +1,5 @@
 import * as vscode from 'vscode';
 import { RefineIssueCommand } from './commands/RefineIssueCommand';
-import { InitializeCursorCommandsCommand } from './commands/InitializeCursorCommandsCommand';
 import { SetupCursorCommand } from './commands/SetupCursorCommand';
 import { SetupVSCodeCommand } from './commands/SetupVSCodeCommand';
 import { ForgeChatParticipant } from './chatParticipant';

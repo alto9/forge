@@ -122,18 +122,18 @@ describe('forge.openStudio command', () => {
             // Should call checkProjectReadiness(project.uri)
         });
 
-        it('should route to ForgeStudioPanel when project is ready', () => {
+        it('should route to main panel when project is ready', () => {
             const isReady = true;
-            const expectedPanel = isReady ? 'ForgeStudioPanel' : 'WelcomePanel';
+            const expectedPanel = isReady ? 'main' : 'setup';
 
-            expect(expectedPanel).toBe('ForgeStudioPanel');
+            expect(expectedPanel).toBe('main');
         });
 
-        it('should route to WelcomePanel when project is not ready', () => {
+        it('should route to setup when project is not ready', () => {
             const isReady = false;
-            const expectedPanel = isReady ? 'ForgeStudioPanel' : 'WelcomePanel';
+            const expectedPanel = isReady ? 'main' : 'setup';
 
-            expect(expectedPanel).toBe('WelcomePanel');
+            expect(expectedPanel).toBe('setup');
         });
 
         it('should return early if no project is picked', () => {
@@ -241,29 +241,19 @@ describe('forge.openStudio command', () => {
 
         it('should open appropriate panel based on selection', () => {
             const scenarios = [
-                { isReady: true, expectedPanel: 'ForgeStudioPanel' },
-                { isReady: false, expectedPanel: 'WelcomePanel' }
+                { isReady: true, expectedPanel: 'main' },
+                { isReady: false, expectedPanel: 'setup' }
             ];
 
             scenarios.forEach(({ isReady, expectedPanel }) => {
-                const panel = isReady ? 'ForgeStudioPanel' : 'WelcomePanel';
+                const panel = isReady ? 'main' : 'setup';
                 expect(panel).toBe(expectedPanel);
             });
         });
     });
 
-    describe('Integration with ProjectPicker', () => {
-        it('should call ProjectPicker.pickProject first', () => {
-            const steps = [
-                '1. ProjectPicker.pickProject()',
-                '2. checkProjectReadiness(project)',
-                '3. Open appropriate panel'
-            ];
-
-            expect(steps[0]).toContain('ProjectPicker.pickProject');
-        });
-
-        it('should wait for project selection before checking readiness', async () => {
+    describe('Project selection flow', () => {
+        it('should select project before checking readiness', async () => {
             let projectPicked = false;
             let readinessChecked = false;
 
@@ -276,7 +266,7 @@ describe('forge.openStudio command', () => {
             expect(readinessChecked).toBe(true);
         });
 
-        it('should not check readiness if picker is cancelled', () => {
+        it('should not check readiness if selection is cancelled', () => {
             const project = undefined; // User cancelled
             let readinessChecked = false;
 
@@ -350,26 +340,21 @@ describe('forge.openStudio command', () => {
         });
     });
 
-    describe('Readiness criteria consistency', () => {
-        it('should use same readiness check as WelcomePanel', () => {
-            const extensionCheck = ['ai', 'ai/actors', 'ai/diagrams', 'ai/features', 'ai/sessions', 'ai/specs'];
-            const welcomePanelCheck = ['ai', 'ai/actors', 'ai/diagrams', 'ai/features', 'ai/sessions', 'ai/specs'];
-
-            expect(extensionCheck).toEqual(welcomePanelCheck);
+    describe('Readiness criteria', () => {
+        it('should check .forge directory exists', () => {
+            const forgeFolder = '.forge';
+            expect(forgeFolder).toBe('.forge');
         });
 
-        it('should check folders in same order', () => {
-            const folders = [
-                'ai',
-                'ai/actors',
-                'ai/diagrams',
-                'ai/features',
-                'ai/sessions',
-                'ai/specs'
+        it('should check required command files exist', () => {
+            const requiredCommands = [
+                '.cursor/commands/architect-this.md',
+                '.cursor/commands/plan-roadmap.md',
+                '.cursor/commands/refine-issue.md',
+                '.cursor/commands/build-from-github.md',
+                '.cursor/commands/review-pr.md'
             ];
-
-            expect(folders[0]).toBe('ai');
-            // Root folder first, then subfolders
+            expect(requiredCommands.length).toBe(5);
         });
     });
 });

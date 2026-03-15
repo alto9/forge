@@ -34,12 +34,12 @@ describe('Webview Build Configuration', () => {
             expect(buildScript).toContain('media/scribe/main.js');
         });
 
-        it('should build welcome bundle', () => {
+        it('should build roadmap bundle', () => {
             const packageJson = require('../../package.json');
             const buildScript = packageJson.scripts['build:webview'];
 
-            expect(buildScript).toContain('src/webview/welcome/index.tsx');
-            expect(buildScript).toContain('media/welcome/main.js');
+            expect(buildScript).toContain('src/webview/roadmap/index.tsx');
+            expect(buildScript).toContain('media/roadmap/main.js');
         });
 
         it('should minify bundles for production', () => {
@@ -86,7 +86,7 @@ describe('Webview Build Configuration', () => {
 
             expect(devScript).toContain('src/webview/refinement/index.tsx');
             expect(devScript).toContain('src/webview/scribe/index.tsx');
-            expect(devScript).toContain('src/webview/welcome/index.tsx');
+            expect(devScript).toContain('src/webview/roadmap/index.tsx');
             expect(devScript).toContain('--watch');
         });
 
@@ -113,9 +113,9 @@ describe('Webview Build Configuration', () => {
             expect(exists).toBe(true);
         });
 
-        it('should create media/welcome/main.js', () => {
-            const welcomeBundle = path.join(__dirname, '../../media/welcome/main.js');
-            const exists = fs.existsSync(welcomeBundle);
+        it('should create media/roadmap/main.js', () => {
+            const roadmapBundle = path.join(__dirname, '../../media/roadmap/main.js');
+            const exists = fs.existsSync(roadmapBundle);
 
             expect(exists).toBe(true);
         });
@@ -140,9 +140,9 @@ describe('Webview Build Configuration', () => {
             expect(sizeKB).toBeGreaterThan(0);
         });
 
-        it('should have reasonable welcome bundle size', () => {
-            const welcomeBundle = path.join(__dirname, '../../media/welcome/main.js');
-            const stats = fs.statSync(welcomeBundle);
+        it('should have reasonable roadmap bundle size', () => {
+            const roadmapBundle = path.join(__dirname, '../../media/roadmap/main.js');
+            const stats = fs.statSync(roadmapBundle);
             const sizeKB = stats.size / 1024;
 
             // Should be less than 200KB as per requirement
@@ -211,25 +211,14 @@ describe('Webview Build Configuration', () => {
         });
     });
 
-    describe('WelcomePanel script loading', () => {
-        it('should reference correct welcome bundle path', () => {
-            // This is a documentation test - actual implementation is in WelcomePanel.ts
-            const expectedPath = 'media/welcome/main.js';
-            
-            expect(expectedPath).toBe('media/welcome/main.js');
-        });
-
+    describe('Webview script loading', () => {
         it('should use webview.asWebviewUri for security', () => {
-            // WelcomePanel should use webview.asWebviewUri to get secure URI
             const usesSecureUri = true;
-            
             expect(usesSecureUri).toBe(true);
         });
 
         it('should load script with nonce for CSP', () => {
-            // WelcomePanel should use nonce in script tag for Content Security Policy
             const usesNonce = true;
-            
             expect(usesNonce).toBe(true);
         });
     });
@@ -270,9 +259,9 @@ describe('Webview Build Configuration', () => {
             expect(exists).toBe(true);
         });
 
-        it('should have welcome entry point', () => {
-            const welcomeEntry = path.join(__dirname, '../webview/welcome/index.tsx');
-            const exists = fs.existsSync(welcomeEntry);
+        it('should have roadmap entry point', () => {
+            const roadmapEntry = path.join(__dirname, '../webview/roadmap/index.tsx');
+            const exists = fs.existsSync(roadmapEntry);
 
             expect(exists).toBe(true);
         });
@@ -300,9 +289,9 @@ describe('Webview Build Configuration', () => {
             expect(exists).toBe(true);
         });
 
-        it('should have media/welcome directory', () => {
-            const welcomeDir = path.join(__dirname, '../../media/welcome');
-            const exists = fs.existsSync(welcomeDir);
+        it('should have media/roadmap directory', () => {
+            const roadmapDir = path.join(__dirname, '../../media/roadmap');
+            const exists = fs.existsSync(roadmapDir);
 
             expect(exists).toBe(true);
         });
