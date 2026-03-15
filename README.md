@@ -18,10 +18,10 @@ Forge Studio provides:
 1. Open a project in Cursor or VSCode
 2. Run **Forge: Setup Project for Cursor** (or **Forge: Setup Project for VSCode**) from the Command Palette (`Cmd/Ctrl+Shift+P`)
 3. Forge creates:
-   - `.forge/` – vision.json, roadmap.json, project.json, skill_registry.json, knowledge_map.json, schemas/
+   - `.forge/` – vision.json, project.json, skill_registry.json, knowledge_map.json, schemas/
    - `.cursor/agents/` – visionary, architect, planner, refine, runtime, business_logic, data, interface, integration, operations, build agents, review agents
    - `.cursor/commands/` – architect-this, plan-roadmap, refine-issue, build-from-github, review-pr
-   - `.cursor/skills/` – init-forge, fetch-url, create-feature-branch, commit, push-branch, pull-milestones, pull-milestone-issues, sync-roadmap-to-github, unit-test, lint-test, integration-test
+   - `.cursor/skills/` – init-forge, fetch-url, create-feature-branch, commit, push-branch, pull-milestones, pull-milestone-issues, unit-test, lint-test, integration-test
    - `.cursor/hooks/` – JSON schema validation
    - `hooks.json` – in `~/.cursor/`
 
@@ -33,14 +33,13 @@ Invoke the Architect agent with a prompt. The Architect examines vision.json, de
 
 ### 2. Plan Roadmap (`/plan-roadmap`)
 
-The Planner manages the GitHub roadmap. The roadmap is saved locally in `.forge/roadmap.json`. Before any planning action, the Planner:
+The Planner manages the GitHub roadmap. GitHub is the single source of truth. Before any planning action, the Planner:
 
 1. **pull-milestones** – Retrieves all milestones from GitHub
 2. **pull-milestone-issues** – For each milestone, retrieves its issues
-3. **Update roadmap.json** – Verifies accuracy and corrects drift
-4. **sync-roadmap-to-github** – Pushes local roadmap changes to GitHub
+3. **Create/update via GitHub** – Uses GitHub MCP or `gh` CLI to create milestones, create issues, and assign issues to milestones
 
-Once in sync, the Planner breaks out desired functionality into milestones and issues that work within the existing roadmap (which is likely in flight).
+The Planner breaks out desired functionality into milestones and issues that work within the existing roadmap (which is likely in flight).
 
 ### 3. Refine Issue (`/refine-issue` or **Forge: Refine Issue**)
 
@@ -81,7 +80,6 @@ After setup:
 your-project/
 ├── .forge/
 │   ├── vision.json           # Product vision, mission, strategy
-│   ├── roadmap.json          # Milestones and tickets
 │   ├── project.json          # Project config (GitHub URL, paths)
 │   ├── skill_registry.json   # Skill-to-agent assignments
 │   ├── knowledge_map.json    # Domain structure (vision → runtime, business_logic, data, etc.)
@@ -89,7 +87,7 @@ your-project/
 ├── .cursor/
 │   ├── agents/               # visionary, architect, planner, refine, domain SMEs, build, review
 │   ├── commands/             # architect-this, plan-roadmap, refine-issue, build-from-github, review-pr
-│   ├── skills/               # init-forge, fetch-url, pull-milestones, pull-milestone-issues, sync-roadmap-to-github, etc.
+│   ├── skills/               # init-forge, fetch-url, pull-milestones, pull-milestone-issues, etc.
 │   └── hooks/                # JSON schema validation on edit
 └── hooks.json                # Cursor hooks config (~/.cursor/)
 ```

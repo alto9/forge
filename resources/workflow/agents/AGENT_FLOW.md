@@ -9,7 +9,7 @@ Five canonical commands orchestrate the agent flows:
 | Command | Input | Output |
 |---------|-------|--------|
 | `/architect-this {string}` | User prompt | Updated `.forge` documents |
-| `/plan-roadmap` | `.forge/roadmap.json` | Updated roadmap, synced GitHub milestones/issues |
+| `/plan-roadmap` | `.forge/vision.json`, `.forge/knowledge_map.json` | Synced GitHub milestones/issues |
 | `/refine-issue {link}` | GitHub issue link | Refined tickets ready for development |
 | `/build-from-github` | GitHub issue link | GitHub pull request |
 | `/review-pr {link}` | GitHub PR link | PR with review (human performs merge) |
@@ -61,17 +61,13 @@ User ──► command: /plan-roadmap ──► agent: Planner
                               skill: pull-milestone-issues <milestone-id>
                                             │
                                             ▼
-                    Update roadmap.json and verify accuracy
-                                            │
-                                            ▼
-                              skill: sync-roadmap-to-github [owner/repo]
+                    Create/update milestones and issues via GitHub MCP or gh CLI
 ```
 
 **Steps:**
 1. **pull-milestones** – Retrieve all milestones from GitHub. Resolve owner/repo from `gh repo view` or pass explicitly.
 2. **For each milestone** – Run **pull-milestone-issues** with the milestone number to retrieve issues.
-3. **Update roadmap.json** – Compare pulled data with local `roadmap.json`; verify accuracy and correct any drift.
-4. **sync-roadmap-to-github** – Push local roadmap changes (milestones, ticket associations) to GitHub. Do not update past or in-flight tickets.
+3. **Create/update via GitHub** – Use GitHub MCP or `gh` CLI to create milestones, create issues, and assign issues to milestones. Do not update past or in-flight tickets.
 
 ---
 
@@ -183,7 +179,7 @@ Architect ───────────────────────�
     ├──► Integration    (.forge/integration/)                          │
     └──► Operations     (.forge/operations/)                          │
                                                                       │
-Planner (roadmap.json) ◄────────────────────────────────────────────┘
+Planner (GitHub milestones) ◄───────────────────────────────────────┘
     │
     ▼
 Refine (decomposes tickets)

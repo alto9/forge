@@ -31,21 +31,6 @@ export const DEFAULT_VISION_JSON = `{
 }
 `;
 
-export const DEFAULT_ROADMAP_JSON = `{
-  "roadmap": {
-    "milestones": [
-      {
-        "title": "",
-        "description": "",
-        "due_date": "",
-        "technical_concepts": [],
-        "tickets": []
-      }
-    ]
-  }
-}
-`;
-
 /**
  * Generates default project.json. Caller should pass project name and other values.
  */
@@ -68,6 +53,5 @@ export function getDefaultProjectJson(projectName: string, githubUrl: string, gi
 /** Schema file names to copy from extension to .forge/schemas/ */
 export const SCHEMA_FILES = [
   "vision.schema.json",
-  "roadmap.schema.json",
   "project.schema.json"
 ] as const;

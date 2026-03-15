@@ -115,13 +115,13 @@ The implementation will be consistent with your codebase patterns, aligned with 
  */
 export const FORGE_SCRIBE_TEMPLATE = `# Forge Scribe
 
-This command breaks down a **milestone ticket** (a top-level ticket created by the Planner) into actionable sub-issues. The Planner creates the full general roadmap with milestones and top-level tickets; Scribe refines a specific ticket into development-ready sub-issues, respecting vision, features, and technical_concepts.
+This command breaks down a **milestone ticket** (a top-level ticket created by the Planner) into actionable sub-issues. The Planner creates the full general roadmap with milestones and top-level tickets in GitHub; Scribe refines a specific ticket into development-ready sub-issues, respecting vision and knowledge_map contracts.
 
 ## Prerequisites
 
-- \`.forge/vision.json\`, \`.forge/features.json\`, \`.forge/roadmap.json\`, and \`.forge/technical_concepts.json\` must exist
-- The Planner must have created milestones with top-level tickets in \`roadmap.milestones[].tickets\`
-- You must specify which ticket to break down (by ticket title, index, or GitHub issue number)
+- \`.forge/vision.json\` and \`.forge/knowledge_map.json\` must exist
+- The Planner must have created milestones with top-level issues in GitHub
+- You must specify which ticket to break down (by ticket title, GitHub issue number, or milestone + issue)
 
 ## Project Documentation
 
@@ -129,11 +129,10 @@ When present, read \`CONTRIBUTING.md\` and \`README.md\` to understand project S
 
 ## What This Command Does
 
-1. **Reads the roadmap**: Loads \`.forge/roadmap.json\` and identifies the target ticket
-2. **Reads context**: Loads vision, features, and technical_concepts for alignment
+1. **Loads milestones from GitHub**: Use pull-milestones and pull-milestone-issues (or GitHub MCP) to retrieve current milestones and their issues
+2. **Reads context**: Loads vision and knowledge_map for alignment
 3. **Breaks down the ticket**: Refines the ticket into actionable sub-issues with full implementation detail
-4. **Persists sub-issues**: Creates sub-issues (e.g., in GitHub linked to parent, or in roadmap structure)
-5. **Optionally creates GitHub issues**: May create corresponding GitHub sub-issues and link to parent ticket
+4. **Persists sub-issues**: Creates sub-issues in GitHub linked to parent ticket
 
 ## Sub-issue Structure
 
@@ -145,17 +144,17 @@ Each sub-issue must be development-ready:
 ## Important Guidelines
 
 - **Input is a ticket**: You work on a single ticket created by the Planner, not the entire milestone
-- **Respect documentation and technical concepts**: Ensure sub-issues align with \`.forge/technical_concepts.json\` and accomplish the ticket's goals fully
+- **Respect documentation and knowledge_map**: Ensure sub-issues align with domain contracts and accomplish the ticket's goals fully
 - **Complete coverage**: Sub-issues together must accomplish the parent ticket
 - **Logical ordering**: Order sub-issues by dependency and execution sequence
 
 ## Workflow
 
-1. **Load roadmap**: Read \`.forge/roadmap.json\`
-2. **Identify target ticket**: User specifies which ticket to break down (e.g., "Break down ticket 'Implement auth flow'" or "Process ticket 2 in milestone 1")
-3. **Load vision, features, technical_concepts**: For context and alignment
+1. **Load milestones from GitHub**: Use pull-milestones and pull-milestone-issues to retrieve current state
+2. **Identify target ticket**: User specifies which ticket to break down (e.g., "Break down ticket 'Implement auth flow'" or "Process issue #123 in milestone 'Q1 Launch'")
+3. **Load vision and knowledge_map**: For context and alignment
 4. **Break down ticket**: Produce sub-issues with full implementation steps
-5. **Optionally sync to GitHub**: Create sub-issues and link to parent ticket
+5. **Create sub-issues in GitHub**: Create corresponding GitHub sub-issues and link to parent ticket
 
 ## Usage
 

@@ -57,7 +57,7 @@ function usage() {
   console.log("Usage: init-forge.js [target-project-path]");
   console.log("");
   console.log("Scaffold .forge structure and inject the full Forge workflow:");
-  console.log("  - .forge/ files from knowledge_map.json (vision, roadmap, domain docs)");
+  console.log("  - .forge/ files from knowledge_map.json (vision, domain docs)");
   console.log("  - .cursor/agents, .cursor/commands, .cursor/hooks, .cursor/skills");
   console.log("  - ~/.cursor/hooks.json");
   console.log("If target-project-path is omitted, current working directory is used.");

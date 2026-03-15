@@ -47,8 +47,7 @@ export function inferSchemaPath(repoRoot, targetPath) {
   const base = path.basename(normalizedTarget);
   const schemaMap = {
     "project.json": "project.schema.json",
-    "vision.json": "vision.schema.json",
-    "roadmap.json": "roadmap.schema.json"
+    "vision.json": "vision.schema.json"
   };
   const schemaFile = schemaMap[base];
   if (!schemaFile) return null;

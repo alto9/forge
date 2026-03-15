@@ -4,7 +4,6 @@ import * as os from 'os';
 import * as path from 'path';
 import {
     DEFAULT_VISION_JSON,
-    DEFAULT_ROADMAP_JSON,
     getDefaultProjectJson,
     SCHEMA_FILES
 } from '../templates/forgeAssets';
@@ -110,8 +109,7 @@ async function ensureForgeFolder(
     if (!fs.existsSync(schemasDir)) fs.mkdirSync(schemasDir, { recursive: true });
 
     const forgeFiles: Record<string, string> = {
-        'vision.json': DEFAULT_VISION_JSON,
-        'roadmap.json': DEFAULT_ROADMAP_JSON
+        'vision.json': DEFAULT_VISION_JSON
     };
 
     for (const [name, content] of Object.entries(forgeFiles)) {
