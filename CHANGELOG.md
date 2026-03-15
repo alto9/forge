@@ -1,3 +1,7 @@
+## 3.6.0 (2026-03-15)
+
+* feat(new-agent-flow): new agents and skills ([6379ab5](https://github.com/alto9/forge/commit/6379ab5))
+
 ## 3.5.0 (2026-03-01)
 
 * Merge pull request #14 from alto9/refineSkills ([7eaee99](https://github.com/alto9/forge/commit/7eaee99)), closes [#14](https://github.com/alto9/forge/issues/14)
