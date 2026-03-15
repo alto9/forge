@@ -26,15 +26,6 @@ export function activate(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(refineIssueCommand);
 
-    // Register the Initialize Cursor Commands command (legacy - delegates to Setup Cursor)
-    const initializeCursorCommandsCommand = vscode.commands.registerCommand(
-        'forge.initializeCursorCommands',
-        async () => {
-            await SetupCursorCommand.execute(context, outputChannel);
-        }
-    );
-    context.subscriptions.push(initializeCursorCommandsCommand);
-
     // Register Setup Cursor command
     const setupCursorCommand = vscode.commands.registerCommand(
         'forge.setupCursor',

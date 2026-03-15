@@ -23,7 +23,7 @@ Use the provided script to set up a project for Forge: scaffold the `.forge` str
 
 **2. Inject workflow**
 - Copies `agents/`, `commands/`, `hooks/`, `skills/` from the project's `.cursor/` workflow into `.cursor/` (refresh).
-- Copies `hooks.json` to the project root.
+- Copies `hooks.json` to `~/.cursor/`.
 - All workflow files are overwritten so the project gets the same exact workflow as the plugin.
 
 ## Usage

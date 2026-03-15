@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 
 import { fileURLToPath } from "url";
-import path from "path";
 import fs from "fs";
+import os from "os";
+import path from "path";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -58,7 +59,7 @@ function usage() {
   console.log("Scaffold .forge structure and inject the full Forge workflow:");
   console.log("  - .forge/ files from knowledge_map.json (vision, roadmap, domain docs)");
   console.log("  - .cursor/agents, .cursor/commands, .cursor/hooks, .cursor/skills");
-  console.log("  - hooks.json");
+  console.log("  - ~/.cursor/hooks.json");
   console.log("If target-project-path is omitted, current working directory is used.");
 }
 
@@ -177,11 +178,13 @@ function main() {
     }
   }
 
+  const cursorHome = path.join(os.homedir(), ".cursor");
+  fs.mkdirSync(cursorHome, { recursive: true });
   const hooksJsonSrc = path.join(pluginRoot, "hooks.json");
-  const hooksJsonDest = path.join(targetRoot, "hooks.json");
+  const hooksJsonDest = path.join(cursorHome, "hooks.json");
   if (fs.existsSync(hooksJsonSrc)) {
     fs.copyFileSync(hooksJsonSrc, hooksJsonDest);
-    workflowInjected.push("hooks.json");
+    workflowInjected.push("~/.cursor/hooks.json");
   }
 
   console.log(`Forge init complete in: ${targetRoot}`);

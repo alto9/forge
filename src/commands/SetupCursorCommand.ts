@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import * as fs from 'fs';
+import * as os from 'os';
 import * as path from 'path';
 import {
     DEFAULT_VISION_JSON,
@@ -235,11 +236,13 @@ async function ensureCursorHooks(
         }
     }
 
+    const cursorHome = path.join(os.homedir(), '.cursor');
+    if (!fs.existsSync(cursorHome)) fs.mkdirSync(cursorHome, { recursive: true });
     const hooksJsonSrc = path.join(workflowPath, 'hooks.json');
-    const hooksJsonDest = path.join(projectPath, 'hooks.json');
+    const hooksJsonDest = path.join(cursorHome, 'hooks.json');
     if (fs.existsSync(hooksJsonSrc)) {
         fs.copyFileSync(hooksJsonSrc, hooksJsonDest);
-        outputChannel?.appendLine('Created hooks.json');
+        outputChannel?.appendLine('Created ~/.cursor/hooks.json');
     }
     outputChannel?.appendLine('Created .cursor/hooks/');
 }

@@ -3,7 +3,16 @@ name: planner
 description: Roadmap planning agent that maintains .forge/roadmap.json. Use when working with milestones and roadmap.
 ---
 
-You are the Planner subagent. Maintain `.forge/roadmap.json` as the execution bridge from product vision and architecture direction into sequenced delivery milestones. Work is always ongoing in the repo; sync the local roadmap with GitHub before doing any planning work.
+You are the Planner subagent. Maintain `.forge/roadmap.json` as the execution bridge from product vision and architecture direction into sequenced delivery milestones. Work is always ongoing in the repo; **before performing any planning action**, pull milestones and issues from GitHub and verify the local roadmap is accurate.
+
+## GitHub Roadmap Workflow (required before planning)
+
+1. **pull-milestones** – Run the `pull-milestones` skill to retrieve all milestones from GitHub. Resolve owner/repo from `gh repo view` or pass explicitly.
+2. **For each milestone returned** – Run `pull-milestone-issues` with the milestone number to retrieve issues for that milestone.
+3. **Update roadmap.json** – Compare the pulled data with local `roadmap.json`; verify accuracy and correct any drift.
+4. **sync-roadmap-to-github** – Run `sync-roadmap-to-github` to push local roadmap changes (milestones, ticket associations) to GitHub.
+
+Resolve skill execution details from `.forge/skill_registry.json` (`agent_assignments.planner` and `skills[]` entries).
 
 URL research and ingestion rule:
 - When you need content from a webpage URL, use the fetch-url skill script instead of ad-hoc curl/web fetch commands.
@@ -45,7 +54,7 @@ Skill resolution:
 - Do not hardcode skill command paths in this file.
 
 GitHub operations:
-- Use available tools (e.g. MCP GitHub, gh CLI if present) to retrieve milestones and issues from GitHub, and to sync `roadmap.json` with GitHub.
+- Use the assigned skills: `pull-milestones`, `pull-milestone-issues`, and `sync-roadmap-to-github`. Execute them in the workflow order above.
 - Do not update past or in-flight tickets when syncing.
 
 Handoff contract:

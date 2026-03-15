@@ -21,9 +21,9 @@ Forge Studio provides:
    - `.forge/` – vision.json, roadmap.json, project.json, skill_registry.json, knowledge_map.json, schemas/
    - `.cursor/agents/` – visionary, architect, planner, refine, runtime, business_logic, data, interface, integration, operations, build agents, review agents
    - `.cursor/commands/` – architect-this, plan-roadmap, refine-issue, build-from-github, review-pr
-   - `.cursor/skills/` – init-forge, fetch-url, create-feature-branch, commit, push-branch, unit-test, lint-test, integration-test
+   - `.cursor/skills/` – init-forge, fetch-url, create-feature-branch, commit, push-branch, pull-milestones, pull-milestone-issues, sync-roadmap-to-github, unit-test, lint-test, integration-test
    - `.cursor/hooks/` – JSON schema validation
-   - `hooks.json` – at project root
+   - `hooks.json` – in `~/.cursor/`
 
 ## User Flow
 
@@ -33,7 +33,14 @@ Invoke the Architect agent with a prompt. The Architect examines vision.json, de
 
 ### 2. Plan Roadmap (`/plan-roadmap`)
 
-The Planner retrieves vision.json, knowledge_map.json, roadmap.json, and GitHub milestones/issues. Verifies or corrects roadmap.json and syncs with GitHub.
+The Planner manages the GitHub roadmap. The roadmap is saved locally in `.forge/roadmap.json`. Before any planning action, the Planner:
+
+1. **pull-milestones** – Retrieves all milestones from GitHub
+2. **pull-milestone-issues** – For each milestone, retrieves its issues
+3. **Update roadmap.json** – Verifies accuracy and corrects drift
+4. **sync-roadmap-to-github** – Pushes local roadmap changes to GitHub
+
+Once in sync, the Planner breaks out desired functionality into milestones and issues that work within the existing roadmap (which is likely in flight).
 
 ### 3. Refine Issue (`/refine-issue` or **Forge: Refine Issue**)
 
@@ -82,9 +89,9 @@ your-project/
 ├── .cursor/
 │   ├── agents/               # visionary, architect, planner, refine, domain SMEs, build, review
 │   ├── commands/             # architect-this, plan-roadmap, refine-issue, build-from-github, review-pr
-│   ├── skills/               # init-forge, fetch-url, commit, push-branch, unit-test, etc.
+│   ├── skills/               # init-forge, fetch-url, pull-milestones, pull-milestone-issues, sync-roadmap-to-github, etc.
 │   └── hooks/                # JSON schema validation on edit
-└── hooks.json                # Cursor hooks config (project root)
+└── hooks.json                # Cursor hooks config (~/.cursor/)
 ```
 
 Run the **init-forge** skill to scaffold the full domain structure from knowledge_map (e.g. `.forge/runtime/`, `.forge/business_logic/`, `.forge/data/`, etc.).

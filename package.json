@@ -94,10 +94,6 @@
         "title": "Forge: Refine Issue"
       },
       {
-        "command": "forge.initializeCursorCommands",
-        "title": "Forge: Initialize Cursor Commands"
-      },
-      {
         "command": "forge.setupCursor",
         "title": "Forge: Setup Project for Cursor"
       },

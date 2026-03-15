@@ -49,31 +49,29 @@ User ──► Architect Agent ──► [Clarity check]
 ## 2. Planning Flow (`/plan-roadmap`)
 
 ```
-User ──► Planner Agent ──► Retrieve vision.json, knowledge_map.json, roadmap.json
-                    │
-                    ▼
-         Retrieve milestones and issues from GitHub
-                    │
-                    ▼
-              [Clarity check]
-                    │
-        ┌───────────┴───────────┐
-        │ No                   │ Yes
-        ▼                      ▼
-   Loop to user      Verify/correct roadmap.json
-                              │
-                              ▼
-                    Sync roadmap with GitHub
-                    (avoid past/in-flight tickets)
+User ──► command: /plan-roadmap ──► agent: Planner
+                                            │
+                                            ▼
+                              skill: pull-milestones [owner/repo]
+                                            │
+                                            ▼
+                    For each milestone returned, retrieve issues for the milestone
+                                            │
+                                            ▼
+                              skill: pull-milestone-issues <milestone-id>
+                                            │
+                                            ▼
+                    Update roadmap.json and verify accuracy
+                                            │
+                                            ▼
+                              skill: sync-roadmap-to-github [owner/repo]
 ```
 
 **Steps:**
-1. Retrieve `vision.json` and `knowledge_map.json`.
-2. Retrieve milestones and milestone issues from GitHub (use available tools).
-3. Retrieve `roadmap.json` from code.
-4. **Clarity check:** Have enough clarity to generate roadmap? If no, loop to user.
-5. Verify accuracy of `roadmap.json` or correct.
-6. Sync the roadmap with GitHub; do not update past or in-flight tickets.
+1. **pull-milestones** – Retrieve all milestones from GitHub. Resolve owner/repo from `gh repo view` or pass explicitly.
+2. **For each milestone** – Run **pull-milestone-issues** with the milestone number to retrieve issues.
+3. **Update roadmap.json** – Compare pulled data with local `roadmap.json`; verify accuracy and correct any drift.
+4. **sync-roadmap-to-github** – Push local roadmap changes (milestones, ticket associations) to GitHub. Do not update past or in-flight tickets.
 
 ---
 
