@@ -2,9 +2,11 @@
 
 This command invokes the Architect agent to analyze a prompt and update `.forge` documents through SME subagents and the Planner.
 
+When market need, user feedback, or strategic direction arrives, use the **Product Intake Prompt** format (see AGENT_FLOW.md). In that case, Visionary runs first to update `vision.json`, then Architect receives the prompt and updates knowledge map and domain contracts.
+
 ## Input
 
-- Free-form string describing the architectural change or direction
+- Free-form string describing the architectural change or direction, or a Product Intake Prompt
 
 ## Workflow
 

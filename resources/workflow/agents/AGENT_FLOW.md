@@ -1,6 +1,6 @@
 # Agent Flow and Responsibility Delegation
 
-This document describes the intended flow of responsibility among Forge agents. Use it to understand when to invoke which agent and how work should be delegated.
+This document describes the intended flow of responsibility among Forge agents. Flow: **Market Input → Vision → Knowledge → Roadmap → Implementation → Review**.
 
 ## Commands and Flows
 
@@ -16,7 +16,31 @@ Five canonical commands orchestrate the agent flows:
 
 ---
 
+## Product Intake Prompt
+
+Structured input that kicks off the market → features flow. Use when new market need, user feedback, or strategic direction arrives.
+
+**Template:**
+```
+[Market / User / Strategic Input]
+- Source: [e.g., user research, competitor analysis, support tickets, stakeholder request]
+- Signal: [what we learned or what changed]
+- Implication: [how this affects what we should build]
+- Urgency: [now / next quarter / backlog]
+```
+
+**Flow:**
+1. User provides Product Intake Prompt (or pastes market research content)
+2. Visionary ingests, researches if needed, updates `vision.json`
+3. Architect receives prompt; updates knowledge map and domain contracts if technical scope changed
+4. Planner receives recap; creates/updates milestones if roadmap impact
+5. Downstream: Refine → Build → Review as usual
+
+---
+
 ## 1. Architecting Flow (`/architect-this`)
+
+When Product Intake is provided, Visionary runs first. When technical direction is provided directly, Architect runs first.
 
 ```
 User ──► Architect Agent ──► [Clarity check]
@@ -108,84 +132,73 @@ User (Github Issue Link) ──► Refine Agent
 ## 4. Building Flow (`/build-from-github`)
 
 ```
-User (Github Issue Link) ──► Build Development Agent
+User (Github Issue Link) ──► Build Agent
                                     │
                                     ▼
                          Retrieve sub-issue details
                          Checkout branch (create from parent if missing)
                                     │
                                     ▼
-                         Perform code changes
+                         Implement code changes
                          unit-test, integration-test, lint-test
                                     │
                                     ▼
-              Build Security Agent
-              - Scan for vulnerabilities
-                    │
-                    ▼
-              Build Wrap Agent
-              - commit, push-branch
-              - Create GitHub PR (use available tools)
+                         Build Wrap Agent
+                         - commit, push-branch
+                         - Create GitHub PR (use available tools)
 ```
 
 **Steps:**
-1. Build Development: retrieve sub-issue details; ensure branch exists and checkout (create from parent branch if missing).
-2. Build Development: perform code changes; validate with unit-test, integration-test, lint-test.
-3. Build Security: scan changes for security vulnerabilities.
-4. Build Wrap: commit, push-branch; create GitHub pull request (use available tools). When creating the PR, build_wrap uses `.github/pull_request_template.md` if present, otherwise a standard fallback template.
+1. Build: retrieve sub-issue details; ensure branch exists and checkout (create from parent branch if missing).
+2. Build: implement code changes; validate with unit-test, integration-test, lint-test.
+3. Build Wrap: commit, push-branch; create GitHub pull request (use available tools). When creating the PR, build_wrap uses `.github/pull_request_template.md` if present, otherwise a standard fallback template.
 
 ---
 
 ## 5. Reviewing Flow (`/review-pr`)
 
 ```
-User (Github PR Link) ──► Review Implementation Agent
+User (Github PR Link) ──► Review Agent
                                     │
                                     ▼
                          Retrieve PR details
                          Checkout PR source branch
-                         Review implementation for accuracy
+                         Review for correctness and security
                                     │
                                     ▼
-                         Review Security Agent
-                         - Check for vulnerabilities in changeset
-                                    │
-                                    ▼
-                         Review Wrap Agent
-                         - Add review to PR (do not merge; human performs merge)
+                         Add review comments to PR
+                         (Human performs merge)
 ```
 
 **Steps:**
-1. Review Implementation: retrieve PR details; checkout PR source branch; review implementation for accuracy.
-2. Review Security: check for security vulnerabilities introduced in the changeset.
-3. Review Wrap: add the review to the PR to aid manual human approval. Do not merge; a human will perform the merge.
+1. Review: retrieve PR details; checkout PR source branch.
+2. Review: examine changes for correctness and security.
+3. Review: add review comments to the PR to aid manual human approval. Do not merge; a human will perform the merge.
 
 ---
 
 ## Hierarchy
 
 ```
-Visionary (vision.json)
-    │
-    ▼
-Architect ──────────────────────────────────────────────────────────┐
-    │                                                                 │
-    │  Delegates to subject matter experts when scope matches         │
-    │                                                                 │
-    ├──► Runtime        (.forge/runtime/)                             │
-    ├──► Business Logic (.forge/business_logic/)                       │
-    ├──► Data           (.forge/data/)                                │
-    ├──► Interface      (.forge/interface/)                           │
-    ├──► Integration    (.forge/integration/)                          │
-    └──► Operations     (.forge/operations/)                          │
-                                                                      │
-Planner (GitHub milestones) ◄───────────────────────────────────────┘
-    │
-    ▼
-Refine (decomposes tickets)
-    │
-    ▼
-Build / Review (implementation and validation)
+Market Input / Product Intake
+         │
+         ▼
+   Visionary (vision.json)
+         │
+         ▼
+   Architect ──────────────────────────────────────┐
+         │  knowledge_map + domain contracts       │
+         │  Delegates to: runtime, business_logic,  │
+         │  data, interface, integration, ops       │
+         │                                         │
+         ▼                                         │
+   Planner (GitHub milestones) ◄───────────────────┘
+         │
+         ▼
+   Refine (sub-issues)
+         │
+         ▼
+   Build → Review
 ```
 
 ## Domain Subagents: Subject Matter Experts
