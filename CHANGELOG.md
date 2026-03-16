@@ -1,3 +1,9 @@
+## 3.7.0 (2026-03-16)
+
+* feat: introduce comprehensive vision document and enhance agent workflows ([467e620](https://github.com/alto9/forge/commit/467e620))
+* refactor: remove legacy cursor command and update documentation for new skills ([0324670](https://github.com/alto9/forge/commit/0324670))
+* refactor: update roadmap management to use GitHub as the single source of truth ([1ac5e44](https://github.com/alto9/forge/commit/1ac5e44))
+
 ## 3.6.0 (2026-03-15)
 
 * feat(new-agent-flow): new agents and skills ([6379ab5](https://github.com/alto9/forge/commit/6379ab5))
