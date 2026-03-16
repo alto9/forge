@@ -94,6 +94,10 @@
         "title": "Forge: Refine Issue"
       },
       {
+        "command": "forge.installGlobal",
+        "title": "Forge: Install to ~/.cursor (Global)"
+      },
+      {
         "command": "forge.setupCursor",
         "title": "Forge: Setup Project for Cursor"
       },

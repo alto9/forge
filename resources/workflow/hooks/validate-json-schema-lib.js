@@ -20,6 +20,15 @@ export function getRepoRoot(dirname) {
   return path.resolve(dirname, "..", "..");
 }
 
+/** Derive project root from a .forge file path. Used when hook runs from ~/.cursor/hooks/. */
+export function getRepoRootFromTargetPath(targetPath) {
+  if (!targetPath || typeof targetPath !== "string") return null;
+  const normalized = path.resolve(targetPath);
+  const dir = path.dirname(normalized);
+  if (path.basename(dir) !== ".forge") return null;
+  return path.dirname(dir);
+}
+
 export function resolveTargetPath(payload, repoRoot, argv) {
   const candidates = [
     payload.file_path,

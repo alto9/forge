@@ -133,14 +133,14 @@ async function ensureForgeFolder(
         outputChannel?.appendLine('Created .forge/project.json');
     }
 
-    const skillRegistrySrc = path.join(workflowPath, 'skills', 'init-forge', 'references', 'skill_registry.json');
+    const skillRegistrySrc = path.join(workflowPath, 'references', 'skill_registry.json');
     const skillRegistryDest = path.join(forgeDir, 'skill_registry.json');
     if (fs.existsSync(skillRegistrySrc)) {
         fs.copyFileSync(skillRegistrySrc, skillRegistryDest);
         outputChannel?.appendLine('Created .forge/skill_registry.json');
     }
 
-    const knowledgeMapSrc = path.join(workflowPath, 'skills', 'init-forge', 'references', 'knowledge_map.json');
+    const knowledgeMapSrc = path.join(workflowPath, 'references', 'knowledge_map.json');
     const knowledgeMapDest = path.join(forgeDir, 'knowledge_map.json');
     if (fs.existsSync(knowledgeMapSrc)) {
         fs.copyFileSync(knowledgeMapSrc, knowledgeMapDest);

@@ -6,6 +6,7 @@ import path from "path";
 import {
   parsePayload,
   getRepoRoot,
+  getRepoRootFromTargetPath,
   resolveTargetPath,
   inferSchemaPath,
   relPath,
@@ -27,13 +28,14 @@ function readStdin() {
 }
 
 async function main() {
-  const repoRoot = getRepoRoot(__dirname);
   const payload = parsePayload(await readStdin());
-  const targetPath = resolveTargetPath(payload, repoRoot, process.argv);
+  const fallbackRepoRoot = getRepoRoot(__dirname);
+  const targetPath = resolveTargetPath(payload, fallbackRepoRoot, process.argv);
   if (!targetPath) {
     process.exit(0);
   }
 
+  const repoRoot = getRepoRootFromTargetPath(targetPath) || fallbackRepoRoot;
   const schemaPath = inferSchemaPath(repoRoot, targetPath);
   if (!schemaPath) {
     process.exit(0);

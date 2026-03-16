@@ -1,5 +1,6 @@
 import * as vscode from 'vscode';
 import { RefineIssueCommand } from './commands/RefineIssueCommand';
+import { InstallGlobalCommand } from './commands/InstallGlobalCommand';
 import { SetupCursorCommand } from './commands/SetupCursorCommand';
 import { SetupVSCodeCommand } from './commands/SetupVSCodeCommand';
 import { ForgeChatParticipant } from './chatParticipant';
@@ -25,6 +26,15 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
     context.subscriptions.push(refineIssueCommand);
+
+    // Register Install Global command
+    const installGlobalCommand = vscode.commands.registerCommand(
+        'forge.installGlobal',
+        async () => {
+            await InstallGlobalCommand.execute(context, outputChannel);
+        }
+    );
+    context.subscriptions.push(installGlobalCommand);
 
     // Register Setup Cursor command
     const setupCursorCommand = vscode.commands.registerCommand(

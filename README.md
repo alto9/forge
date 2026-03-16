@@ -15,13 +15,14 @@ Forge Studio provides:
 
 ## Quick Start
 
-1. Open a project in Cursor or VSCode
-2. Run **Forge: Setup Project for Cursor** (or **Forge: Setup Project for VSCode**) from the Command Palette (`Cmd/Ctrl+Shift+P`)
-3. Forge creates:
+1. (Optional) Run **Forge: Install to ~/.cursor (Global)** to install agents, commands, skills, and hooks into your user Cursor directory. This makes Forge available in all projects.
+2. Open a project in Cursor or VSCode
+3. Run **Forge: Setup Project for Cursor** (or **Forge: Setup Project for VSCode**) from the Command Palette (`Cmd/Ctrl+Shift+P`)
+4. Forge creates:
    - `.forge/` – vision.json, project.json, skill_registry.json, knowledge_map.json, schemas/
    - `.cursor/agents/` – visionary, architect, planner, refine, runtime, business_logic, data, interface, integration, operations, build agents, review agents
    - `.cursor/commands/` – architect-this, plan-roadmap, refine-issue, build-from-github, review-pr
-   - `.cursor/skills/` – init-forge, fetch-url, create-feature-branch, commit, push-branch, pull-milestones, pull-milestone-issues, unit-test, lint-test, integration-test
+   - `.cursor/skills/` – fetch-url, create-feature-branch, commit, push-branch, pull-milestones, pull-milestone-issues, unit-test, lint-test, integration-test
    - `.cursor/hooks/` – JSON schema validation
    - `hooks.json` – in `~/.cursor/`
 
@@ -87,12 +88,10 @@ your-project/
 ├── .cursor/
 │   ├── agents/               # visionary, architect, planner, refine, domain SMEs, build, review
 │   ├── commands/             # architect-this, plan-roadmap, refine-issue, build-from-github, review-pr
-│   ├── skills/               # init-forge, fetch-url, pull-milestones, pull-milestone-issues, etc.
+│   ├── skills/               # fetch-url, pull-milestones, pull-milestone-issues, etc.
 │   └── hooks/                # JSON schema validation on edit
 └── hooks.json                # Cursor hooks config (~/.cursor/)
 ```
-
-Run the **init-forge** skill to scaffold the full domain structure from knowledge_map (e.g. `.forge/runtime/`, `.forge/business_logic/`, `.forge/data/`, etc.).
 
 ## Installation
 
