@@ -1,10 +1,6 @@
 import * as vscode from 'vscode';
-import { RefineIssueCommand } from './commands/RefineIssueCommand';
-import { InstallGlobalCommand } from './commands/InstallGlobalCommand';
-import { SetupCursorCommand } from './commands/SetupCursorCommand';
-import { SetupVSCodeCommand } from './commands/SetupVSCodeCommand';
+import { InitializeAgentsCommand } from './commands/InitializeAgentsCommand';
 import { ForgeChatParticipant } from './chatParticipant';
-import { RoadmapPanel } from './panels/RoadmapPanel';
 
 let outputChannel: vscode.OutputChannel;
 
@@ -15,53 +11,17 @@ export function activate(context: vscode.ExtensionContext) {
     outputChannel = vscode.window.createOutputChannel('Forge');
     context.subscriptions.push(outputChannel);
 
-    // Register Forge Chat Participants for VSCode Chat
+    // Register Forge Chat Participants for VSCode Chat (mirror Cursor agents)
     ForgeChatParticipant.registerAll(context);
 
-    // Register the Refine Issue command
-    const refineIssueCommand = vscode.commands.registerCommand(
-        'forge.refineIssue',
+    // Register Initialize Agents command (user-level + project-level setup)
+    const initializeAgentsCommand = vscode.commands.registerCommand(
+        'forge.initializeAgents',
         async () => {
-            await RefineIssueCommand.execute(outputChannel);
+            await InitializeAgentsCommand.execute(context, outputChannel);
         }
     );
-    context.subscriptions.push(refineIssueCommand);
-
-    // Register Install Global command
-    const installGlobalCommand = vscode.commands.registerCommand(
-        'forge.installGlobal',
-        async () => {
-            await InstallGlobalCommand.execute(context, outputChannel);
-        }
-    );
-    context.subscriptions.push(installGlobalCommand);
-
-    // Register Setup Cursor command
-    const setupCursorCommand = vscode.commands.registerCommand(
-        'forge.setupCursor',
-        async () => {
-            await SetupCursorCommand.execute(context, outputChannel);
-        }
-    );
-    context.subscriptions.push(setupCursorCommand);
-
-    // Register Setup VSCode command
-    const setupVSCodeCommand = vscode.commands.registerCommand(
-        'forge.setupVSCode',
-        async () => {
-            await SetupVSCodeCommand.execute(context, outputChannel);
-        }
-    );
-    context.subscriptions.push(setupVSCodeCommand);
-
-    // Register the Roadmap command
-    const roadmapCommand = vscode.commands.registerCommand(
-        'forge.roadmap',
-        async () => {
-            await RoadmapPanel.render(context.extensionUri, outputChannel, context);
-        }
-    );
-    context.subscriptions.push(roadmapCommand);
+    context.subscriptions.push(initializeAgentsCommand);
 }
 
 export function deactivate() {}

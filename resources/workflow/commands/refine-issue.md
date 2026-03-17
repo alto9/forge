@@ -1,19 +1,19 @@
-# Refine Issue
+# Refine Issue (Step 4: Refining)
 
-This command invokes the Refine agent to maintain development-ready GitHub issue(s). It refines issues so they are unambiguous and ready for development.
+This command invokes the Refine Agent. User → Refine Agent → SME consultation → sub-issues and branches.
 
 ## Input
 
 - GitHub issue link (`https://.../issues/123`, `owner/repo#123`, or `123`)
 
-## Workflow
+## Refine Agent Flow
 
 1. Retrieve issue text from GitHub using available tools.
-2. Create parent branch from main.
-3. Consult SME Agents (runtime, business_logic, data, interface, integration, operations) for technical information and implementation guides.
+2. **skill: create-feature-branch {child} main** – Create parent branch: `create-feature-branch feature/issue-{parent-number} main`.
+3. Consult SME Agents (Runtime, BusinessLogic, Data, Interface, Integration, Operations) for technical information and implementation guides.
 4. Update issue based on the issue template; ensure all required details are included.
 5. Create sub-issues on the parent ticket (always at least one).
-6. Create a branch for each sub-issue from the parent branch. Sub-issues merge into the parent branch for a single PR to main.
+6. **skill: create-feature-branch {child} {parent}** – For each sub-issue: `create-feature-branch feature/issue-{child-number} feature/issue-{parent-number}`. Sub-issues merge into the parent branch for a single PR to main.
 
 ## Goal
 

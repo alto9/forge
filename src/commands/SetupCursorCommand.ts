@@ -32,7 +32,7 @@ export class SetupCursorCommand {
     static async execute(
         context: vscode.ExtensionContext,
         outputChannel?: vscode.OutputChannel,
-        options?: { title?: string }
+        options?: { title?: string; forgeOnly?: boolean }
     ) {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders || workspaceFolders.length === 0) {
@@ -72,20 +72,24 @@ export class SetupCursorCommand {
                     progress.report({ message: 'Creating .forge folder...' });
                     await ensureForgeFolder(projectPath, extensionPath, workflowPath, outputChannel);
 
-                    progress.report({ message: 'Creating .cursor agents...' });
-                    await ensureCursorAgents(projectPath, workflowPath, outputChannel);
+                    if (!options?.forgeOnly) {
+                        progress.report({ message: 'Creating .cursor agents...' });
+                        await ensureCursorAgents(projectPath, workflowPath, outputChannel);
 
-                    progress.report({ message: 'Creating .cursor commands...' });
-                    await ensureCursorCommands(projectPath, workflowPath, outputChannel);
+                        progress.report({ message: 'Creating .cursor commands...' });
+                        await ensureCursorCommands(projectPath, workflowPath, outputChannel);
 
-                    progress.report({ message: 'Creating .cursor skills...' });
-                    await ensureCursorSkills(projectPath, workflowPath, outputChannel);
+                        progress.report({ message: 'Creating .cursor skills...' });
+                        await ensureCursorSkills(projectPath, workflowPath, outputChannel);
 
-                    progress.report({ message: 'Creating .cursor hooks...' });
-                    await ensureCursorHooks(projectPath, workflowPath, outputChannel);
+                        progress.report({ message: 'Creating .cursor hooks...' });
+                        await ensureCursorHooks(projectPath, workflowPath, outputChannel);
+                    }
 
                     vscode.window.showInformationMessage(
-                        'Project setup complete. .forge and .cursor folders created.'
+                        options?.forgeOnly
+                            ? 'Project setup complete. .forge folder created.'
+                            : 'Project setup complete. .forge and .cursor folders created.'
                     );
                 } catch (err: unknown) {
                     const msg = err instanceof Error ? err.message : String(err);

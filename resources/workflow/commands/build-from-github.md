@@ -1,24 +1,25 @@
-# Build from GitHub
+# Build from GitHub (Step 5: Building)
 
-This command activates the build workflow from a GitHub issue link. Build implements changes and validates with tests, then Build Wrap commits, pushes, and creates the PR.
+This command activates the Build Development Agent flow. User → Build Development Agent → validate → commit → push → create PR.
 
 ## Input
 
 - GitHub issue link (`https://.../issues/123`, `owner/repo#123`, or `123`)
 
+## Build Development Agent Flow
+
+1. **Perform Code Changes** – Retrieve sub-issue details; ensure branch exists; implement subtask-scoped changes.
+2. **Validate Success** – Run skills: `unit-test`, `integration-test`, `lint-test`.
+3. **Scan changes for security vulnerabilities** – Examine the changeset before proceeding.
+4. **skill: commit-code** – Commit approved changes.
+5. **skill: push-branch** – Push branch state to remote.
+6. **skill: create-pr** – Create GitHub PR for review handoff. Use `.github/pull_request_template.md` if present.
+
 ## Skill Resolution
 
 - Resolve assigned skills from `.forge/skill_registry.json` at `agent_assignments.build` and `agent_assignments.build_wrap`.
 - For each assigned skill ID, execute using the matching `skills[]` entry `script_path` and `usage`.
-- Do not duplicate script command strings in this command document.
-
-## Workflow
-
-1. Parse and validate issue reference.
-2. Retrieve issue details using available tools (e.g. MCP GitHub, gh CLI).
-3. Build agent: implement changes; run unit-test, integration-test, lint-test.
-4. Build Wrap agent: commit, push-branch; create GitHub PR (use available tools).
 
 ## Goal
 
-Produce a GitHub pull request ready for Review. When creating the PR, build_wrap uses `.github/pull_request_template.md` if present, otherwise a standard fallback template.
+Produce a GitHub pull request ready for Review.

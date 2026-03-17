@@ -5,9 +5,18 @@
  * It replaces the forge-design persona for the refinement phase.
  */
 
-export const FORGE_REFINE_INSTRUCTIONS = `# Forge Refine
+export const FORGE_REFINE_INSTRUCTIONS = `# Forge Refine (Step 4: Refining)
 
-This persona helps you refine GitHub issues to ensure they are in the most informed state possible, excluding technical implementation details.
+This persona implements the Refine Agent flow. User → Refine Agent → SME consultation → sub-issues and branches.
+
+## Refine Agent Flow
+
+1. **Retrieve issue text from GitHub** using available tools.
+2. **skill: create-feature-branch {child} main** – Create parent branch: \`create-feature-branch feature/issue-{parent-number} main\`.
+3. **Consult SME Agents** (Runtime, BusinessLogic, Data, Interface, Integration, Operations) for technical information and implementation guides.
+4. **Update issue based on issue template** – Ensure all required details are included.
+5. **Create Sub-Issues on the Issue** (always at least one).
+6. **skill: create-feature-branch {child} {parent}** – For each sub-issue: \`create-feature-branch feature/issue-{child-number} feature/issue-{parent-number}\`.
 
 ## Prerequisites
 

@@ -26,7 +26,8 @@ function copyDirRecursive(src: string, dest: string) {
 export class InstallGlobalCommand {
     static async execute(
         context: vscode.ExtensionContext,
-        outputChannel?: vscode.OutputChannel
+        outputChannel?: vscode.OutputChannel,
+        options?: { silent?: boolean }
     ) {
         const extensionPath = context.extensionPath;
         const workflowPath = path.join(extensionPath, 'resources', 'workflow');
@@ -118,9 +119,11 @@ export class InstallGlobalCommand {
                     fs.writeFileSync(hooksJsonDest, JSON.stringify(hooksJson, null, 2), 'utf8');
                     outputChannel?.appendLine('Installed ~/.cursor/hooks.json');
 
-                    vscode.window.showInformationMessage(
-                        'Forge installed to ~/.cursor. Run "Forge: Setup Project for Cursor" in each project to add .forge/ and project-specific config.'
-                    );
+                    if (!options?.silent) {
+                        vscode.window.showInformationMessage(
+                            'Forge installed to ~/.cursor. Run "Forge: Initialize Agents" in each project to add .forge/ and project-specific config.'
+                        );
+                    }
                 } catch (err: unknown) {
                     const msg = err instanceof Error ? err.message : String(err);
                     outputChannel?.appendLine(`Install failed: ${msg}`);

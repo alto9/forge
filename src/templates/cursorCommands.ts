@@ -1,172 +1,6 @@
 // packages/vscode-extension/src/templates/cursorCommands.ts
 
 /**
- * Template for forge-build.md Cursor command
- */
-export const FORGE_BUILD_TEMPLATE = `# Forge Build
-
-This command helps you implement a GitHub sub-issue by analyzing the codebase, issue content, parent issue context, and ensuring all tests pass.
-
-## Prerequisites
-
-You must provide a GitHub issue link when using this command. The issue should be a sub-issue ready for implementation.
-
-## Workflow
-
-### Step 1: Receive Issue Link
-- Accept a GitHub issue link (e.g., \`https://github.com/owner/repo/issues/123\`)
-- Parse the link to extract owner, repo, and issue number
-
-### Step 2: Read Parent Issue
-- **CRITICAL**: Read the parent issue of the sub-issue that was passed to it
-- Use GitHub API to fetch the parent issue: \`GET /repos/{owner}/{repo}/issues/{issue_number}/parent\`
-- If the issue doesn't have a parent (404), treat it as a standalone issue
-- Understand the parent issue context to ensure the sub-issue implementation aligns with the overall goal
-
-### Step 3: Branch Validation
-- **CRITICAL**: Check that the user is NOT on a main branch (main, master, develop, etc.)
-- Use \`git rev-parse --abbrev-ref HEAD\` to get the current branch name
-- If on a main branch, **STOP** and instruct the user to create a feature branch first
-- Prefer feature branch naming: \`feature/issue-{number}\` or \`feature/{issue-title-slug}\`
-- Example: \`git checkout -b feature/issue-123\` or \`git checkout -b feature/add-user-authentication\`
-
-### Step 4: Read Sub-Issue Content
-- Fetch the sub-issue content (title, body, labels, etc.)
-- Parse the issue body to extract:
-  - **Implementation Steps**: Detailed technical steps to implement
-  - **Test Procedures**: How to test this specific implementation
-  - **Acceptance Criteria**: What must be completed for this sub-issue to be considered done
-
-### Step 5: Analyze Development Environment
-- **Project documentation**: When present, load \`CONTRIBUTING.md\` and \`README.md\` from the repository root to understand:
-  - Commit message format and conventions (types, scopes, breaking changes)
-  - Project SDLC: branching strategy, testing requirements, review process
-  - Local development setup and validation steps
-- **Analyze package.json**: Review \`package.json\` scripts for:
-  - \`lint\`, \`test\`, \`validate\`, \`build\`, \`dev\`, \`start\` scripts
-  - Dependencies and devDependencies
-  - Test frameworks and tools
-- **Analyze GitHub Actions**: Review \`.github/workflows/\` for:
-  - CI/CD test and lint scripts
-  - Build and validation procedures
-  - Test execution patterns
-
-### Step 6: Implement Changes
-- Perform the implementation steps outlined in the ticket
-- Follow existing codebase patterns and conventions
-- Write clean, maintainable code that matches the project's style
-
-### Step 7: Update Automated Testing
-- Update any automated testing required based on the changes made
-- Create or update unit tests based on the test procedures in the issue
-- Ensure test coverage for new functionality
-- Update integration tests if needed
-
-### Step 8: Validate After Each Change
-- **CRITICAL**: After each significant change, run local validation:
-  - Execute \`npm run lint\` (or equivalent) - **must pass**
-  - Execute \`npm run test\` (or equivalent) - **must pass**
-  - Execute \`npm run build\` (if applicable) - **must pass**
-  - Execute any validation scripts found in package.json
-- If any check fails, **fix the issues before proceeding**
-- Do not mark the issue as complete until ALL checks pass
-
-### Step 9: Mark Issue Complete
-- Once all implementation is done and ALL tests pass:
-  - Update the GitHub issue status to 'closed'
-  - Optionally add a comment summarizing what was implemented
-
-## Important Guidelines
-
-- **Branch Safety**: NEVER work on main/master/develop branches - always use a feature branch
-- **Parent Context**: Always read and understand the parent issue to ensure alignment
-- **Test After Each Change**: Run lint/test/build after each significant change, not just at the end
-- **Follow the Issue**: Implement exactly what the issue describes - don't add extra features
-- **Match Patterns**: Follow the codebase's existing architecture and conventions
-- **All Checks Must Pass**: The task is not considered complete until ALL tests, lint, and validation checks pass
-- **Use Plan Mode**: When using in Cursor, use Plan mode to review the implementation plan before executing
-
-## Usage
-
-1. Use the \`forge-build\` command in Cursor
-2. Provide the GitHub issue link: \`https://github.com/owner/repo/issues/123\`
-3. The AI will:
-   - Read the parent issue (if applicable)
-   - Check the current branch (must be a feature branch)
-   - Read the sub-issue content
-   - Analyze package.json and GitHub Actions
-   - Implement the changes
-   - Update tests
-   - Run validation after each change
-   - Mark the issue as complete when all checks pass
-
-## Testing Requirements
-
-- **Analyze GitHub Actions**: Check \`.github/workflows/\` for CI/CD test and lint scripts
-- **Analyze package.json**: Check \`package.json\` for \`lint\`, \`test\`, \`validate\`, \`build\` scripts
-- **Run checks incrementally**: Execute lint/test/build after each significant change
-- **All must pass**: The task is not considered complete until all tests, lint, and build checks pass
-- **Local development**: Ensure local testing procedures from documentation are followed
-
-The implementation will be consistent with your codebase patterns, aligned with the parent issue context, and all validation checks will pass.`;
-
-/**
- * Template for forge-scribe.md Cursor command
- */
-export const FORGE_SCRIBE_TEMPLATE = `# Forge Scribe
-
-This command breaks down a **milestone ticket** (a top-level ticket created by the Planner) into actionable sub-issues. The Planner creates the full general roadmap with milestones and top-level tickets in GitHub; Scribe refines a specific ticket into development-ready sub-issues, respecting vision and knowledge_map contracts.
-
-## Prerequisites
-
-- \`.forge/vision.json\` and \`.forge/knowledge_map.json\` must exist
-- The Planner must have created milestones with top-level issues in GitHub
-- You must specify which ticket to break down (by ticket title, GitHub issue number, or milestone + issue)
-
-## Project Documentation
-
-When present, read \`CONTRIBUTING.md\` and \`README.md\` to understand project SDLC and conventions. This informs how sub-issues should align with the project's development workflow, testing expectations, and contribution process.
-
-## What This Command Does
-
-1. **Loads milestones from GitHub**: Use pull-milestones and pull-milestone-issues (or GitHub MCP) to retrieve current milestones and their issues
-2. **Reads context**: Loads vision and knowledge_map for alignment
-3. **Breaks down the ticket**: Refines the ticket into actionable sub-issues with full implementation detail
-4. **Persists sub-issues**: Creates sub-issues in GitHub linked to parent ticket
-
-## Sub-issue Structure
-
-Each sub-issue must be development-ready:
-- **Implementation Steps**: Detailed technical steps to implement
-- **Test Procedures**: How to test this specific implementation
-- **Acceptance Criteria**: What must be completed for the sub-issue to be considered done
-
-## Important Guidelines
-
-- **Input is a ticket**: You work on a single ticket created by the Planner, not the entire milestone
-- **Respect documentation and knowledge_map**: Ensure sub-issues align with domain contracts and accomplish the ticket's goals fully
-- **Complete coverage**: Sub-issues together must accomplish the parent ticket
-- **Logical ordering**: Order sub-issues by dependency and execution sequence
-
-## Workflow
-
-1. **Load milestones from GitHub**: Use pull-milestones and pull-milestone-issues to retrieve current state
-2. **Identify target ticket**: User specifies which ticket to break down (e.g., "Break down ticket 'Implement auth flow'" or "Process issue #123 in milestone 'Q1 Launch'")
-3. **Load vision and knowledge_map**: For context and alignment
-4. **Break down ticket**: Produce sub-issues with full implementation steps
-5. **Create sub-issues in GitHub**: Create corresponding GitHub sub-issues and link to parent ticket
-
-## Usage
-
-1. Use the \`forge-scribe\` command in Cursor
-2. Specify the ticket to break down: "Break down ticket 'Implement authentication'" or "Process ticket 2 in milestone 'Q1 Launch'"
-3. The AI will refine the ticket into development-ready sub-issues
-
-## Goal
-
-Refine a Planner-created ticket into actionable, testable, shippable sub-issues. Each sub-issue must have full technical implementation steps, test procedures, and acceptance criteria.`;
-
-/**
  * Template for forge-commit.md Cursor command
  */
 export const FORGE_COMMIT_TEMPLATE = `# Forge Commit
@@ -909,9 +743,18 @@ Get the repository into a clean state on the correct feature branch, ready for i
 /**
  * Template for forge-build-issue.md Cursor command
  */
-export const FORGE_BUILD_ISSUE_TEMPLATE = `# Forge Build Issue
+export const FORGE_BUILD_ISSUE_TEMPLATE = `# Forge Build Issue (Step 5: Building)
 
-This command implements a GitHub issue end-to-end as a developer would: get the issue, implement it, commit, push, and create a PR. Uses gh CLI-based skills for predictable GitHub operations.
+This command implements the Build Development Agent flow. User → Build Development Agent → validate → commit → push → create PR.
+
+## Build Development Agent Flow
+
+1. **Perform Code Changes** – Retrieve sub-issue details; ensure branch exists; implement subtask-scoped changes.
+2. **Validate Success** – Run skills: \`unit-test\`, \`integration-test\`, \`lint-test\` (resolve from .forge/skill_registry.json).
+3. **Scan changes for security vulnerabilities** – Examine the changeset before proceeding.
+4. **skill: commit-code** – Commit approved changes.
+5. **skill: push-branch** – Push branch state to remote.
+6. **skill: create-pr** – Create GitHub PR for review handoff.
 
 ## Prerequisites
 
@@ -929,28 +772,34 @@ When present, read \`CONTRIBUTING.md\` and \`README.md\` in the repository root 
 - If the user has not provided a GitHub issue link, **STOP** and ask: "Please provide a GitHub issue link"
 - Do not proceed without an issue reference
 
-### Step 2: Skill - get-issue-details
-- Run: \`.cursor/skills/get-issue-details/scripts/get-issue-details.sh <issue-ref>\`
-- Parse the output for implementation context (title, body, parent if sub-issue)
+### Step 2: Retrieve Issue Details
+- Use available tools (GitHub MCP, gh CLI) to fetch issue content (title, body, parent if sub-issue)
 
-### Step 3: Implement
-- Follow the implementation logic:
-  - Read parent issue if sub-issue
-  - Ensure you are on a feature branch (run forge-setup-issue first if needed)
-  - Parse Implementation Steps, Test Procedures, Acceptance Criteria from the issue body
-  - Implement the changes
-  - Run lint, test, build after each significant change
-  - All checks must pass before proceeding
+### Step 3: Perform Code Changes
+- Read parent issue if sub-issue
+- Ensure you are on a feature branch (run forge-setup-issue first if needed)
+- Parse Implementation Steps, Test Procedures, Acceptance Criteria from the issue body
+- Implement the changes
 
-### Step 4: Skill - commit
-- Run: \`.cursor/skills/commit/scripts/commit.sh -m "<conventional-commit-message>"\`
-- Generate the message from the changes using the format in CONTRIBUTING.md (types, scopes, subject rules)
+### Step 4: Validate Success
+- Run \`unit-test\` skill (resolve from .forge/skill_registry.json)
+- Run \`integration-test\` skill
+- Run \`lint-test\` skill
+- Run lint, test, build after each significant change
+- All checks must pass before proceeding
 
-### Step 5: Skill - push-branch
-- Run: \`.cursor/skills/push-branch/scripts/push-branch.sh\`
+### Step 5: Scan for Security
+- Examine the changeset for security vulnerabilities and unsafe patterns
 
-### Step 6: Skill - make-pull-request
-- Run: \`.cursor/skills/make-pull-request/scripts/make-pull-request.sh\`
+### Step 6: skill: commit-code
+- Run the commit skill: \`.cursor/skills/commit/scripts/commit.js -m "<conventional-commit-message>"\`
+- Generate the message from the changes using the format in CONTRIBUTING.md
+
+### Step 7: skill: push-branch
+- Run: \`.cursor/skills/push-branch/scripts/push-branch.js\`
+
+### Step 8: skill: create-pr
+- Create PR via GitHub MCP or gh CLI. Use .github/pull_request_template.md if present.
 
 ## Usage
 
@@ -966,14 +815,22 @@ Complete the issue implementation and open a PR, using skills for reliable GitHu
 /**
  * Template for forge-review-pr.md Cursor command
  */
-export const FORGE_REVIEW_PR_TEMPLATE = `# Forge Review PR
+export const FORGE_REVIEW_PR_TEMPLATE = `# Forge Review PR (Step 6: Reviewing)
 
-This command pulls a PR branch, reviews the code changes, and posts a review comment on the PR itself. Uses the review-pr skill for checkout and GitHub MCP for posting the review.
+This command implements the Review flow. User → Review Implementation Agent → Review Security Agent → Review Wrap Agent. Human performs merge.
 
-## Skills Used
+## Review Flow
 
-- **review-pr**: Checkout the PR branch locally (run \`.cursor/skills/review-pr/scripts/review-pr.sh <pr-ref>\`)
-- **GitHub MCP**: Post review comments via \`mcp_github_pull_request_review_write\` and \`mcp_github_add_comment_to_pending_review\`
+### Review Implementation Agent
+1. Retrieve Github PR Details
+2. Checkout PR Source Branch
+3. Review Implementation for Accuracy
+
+### Review Security Agent
+1. Check for Security Vulnerabilities introduced in the changeset
+
+### Review Wrap Agent
+1. Add the review to the PR
 
 ## Prerequisites
 
@@ -989,27 +846,27 @@ When present, read \`CONTRIBUTING.md\` and \`README.md\` to understand code styl
 - If the user has not provided a PR reference, **STOP** and ask: "Please provide a PR link or number (e.g. https://github.com/owner/repo/pull/123 or 123)"
 - Parse the reference to extract owner, repo, and PR number
 
-### Step 2: Skill - review-pr
-- Run: \`.cursor/skills/review-pr/scripts/review-pr.sh <pr-ref>\`
-- This fetches and checks out the PR branch locally
+### Step 2: Review Implementation Agent – Retrieve PR Details
+- Fetch PR details (title, body, files changed) via GitHub API or MCP
+
+### Step 3: Review Implementation Agent – Checkout PR Source Branch
+- Run: \`.cursor/skills/review-pr/scripts/review-pr.sh <pr-ref>\` (if available) or use git fetch/checkout
 - Verify checkout succeeded
 
-### Step 3: Review the Code
-- Fetch PR details (title, body, files changed) via GitHub API or MCP
+### Step 4: Review Implementation Agent – Review for Accuracy
 - Read the diff: \`git diff main...HEAD\` or \`git diff <base>...HEAD\`
-- Review each changed file for:
-  - Correctness and logic
-  - Code style and conventions
-  - Test coverage
-  - Security and performance
-  - Alignment with CONTRIBUTING.md and project standards
+- Review each changed file for correctness, logic, alignment with issue intent and acceptance criteria
 - Note specific line-level feedback where applicable
 
-### Step 4: Post Review
+### Step 5: Review Security Agent – Check for Vulnerabilities
+- Examine the changeset for security vulnerabilities and unsafe patterns
+
+### Step 6: Review Wrap Agent – Add the review to the PR
 - Use \`mcp_github_pull_request_review_write\` with method \`create\` to start a pending review
 - Use \`mcp_github_add_comment_to_pending_review\` for line-specific comments
 - Use \`mcp_github_pull_request_review_write\` with method \`submit_pending\` to submit the review
 - Set event to \`COMMENT\` for feedback-only, or \`REQUEST_CHANGES\` / \`APPROVE\` as appropriate
+- Do not merge; a human performs the merge
 
 ## Usage
 

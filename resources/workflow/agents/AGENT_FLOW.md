@@ -2,6 +2,17 @@
 
 This document describes the intended flow of responsibility among Forge agents. Flow: **Market Input → Vision → Knowledge → Roadmap → Implementation → Review**.
 
+## Six-Step Model
+
+| Step | Phase | Agent | Key Actions |
+|------|-------|-------|-------------|
+| 1 | Product Owner | Visionary | Retrieve vision.json and project.json; determine adjustments; hand off to Architect |
+| 2 | Architecting | Architect | Retrieve vision; clarity check; invoke SME subagents (async); Planner recap |
+| 3 | Planning | Planner | pull-milestones; pull-milestone-issues; determine GitHub changes |
+| 4 | Refining | Refine | Retrieve issue; create-feature-branch parent; consult SME; update issue; create sub-issues; create-feature-branch child from parent |
+| 5 | Building | Build Development | Perform code changes; validate (unit-test, integration-test, lint-test); scan security; commit; push; create-pr |
+| 6 | Reviewing | Review Implementation → Review Security → Review Wrap | Retrieve PR; checkout; review accuracy; check vulnerabilities; add review to PR |
+
 ## Commands and Flows
 
 Five canonical commands orchestrate the agent flows:

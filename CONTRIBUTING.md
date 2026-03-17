@@ -188,8 +188,8 @@ To add a new command file:
    `;
    
    export const COMMAND_TEMPLATES: Record<string, string> = {
-     '.cursor/commands/forge-design.md': FORGE_DESIGN_TEMPLATE,
-     '.cursor/commands/forge-build.md': FORGE_BUILD_TEMPLATE,
+     '.cursor/commands/forge-commit.md': FORGE_COMMIT_TEMPLATE,
+     '.cursor/commands/forge-build-issue.md': FORGE_BUILD_ISSUE_TEMPLATE,
      '.cursor/commands/forge-new.md': FORGE_NEW_TEMPLATE  // New!
    };
    ```

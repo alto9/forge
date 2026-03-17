@@ -90,35 +90,19 @@
     ],
     "commands": [
       {
-        "command": "forge.refineIssue",
-        "title": "Forge: Refine Issue"
-      },
-      {
-        "command": "forge.installGlobal",
-        "title": "Forge: Install to ~/.cursor (Global)"
-      },
-      {
-        "command": "forge.setupCursor",
-        "title": "Forge: Setup Project for Cursor"
-      },
-      {
-        "command": "forge.setupVSCode",
-        "title": "Forge: Setup Project for VSCode"
-      },
-      {
-        "command": "forge.roadmap",
-        "title": "Forge: Roadmap"
+        "command": "forge.initializeAgents",
+        "title": "Forge: Initialize Agents"
       }
     ]
   },
   "scripts": {
-    "vscode:prepublish": "webpack --mode production --devtool hidden-source-map && npm run build:webview",
-    "compile": "webpack && npm run build:webview",
-    "build": "webpack && npm run build:webview",
-    "watch": "concurrently \"webpack --watch\" \"npm run dev:webview\"",
+    "vscode:prepublish": "webpack --mode production --devtool hidden-source-map",
+    "compile": "webpack",
+    "build": "webpack",
+    "watch": "webpack --watch",
     "package": "npx @vscode/vsce package --no-dependencies",
-    "build:webview": "esbuild src/webview/refinement/index.tsx --bundle --outfile=media/refinement/main.js --format=iife --platform=browser --minify && esbuild src/webview/scribe/index.tsx --bundle --outfile=media/scribe/main.js --format=iife --platform=browser --minify && esbuild src/webview/roadmap/index.tsx --bundle --outfile=media/roadmap/main.js --format=iife --platform=browser --minify",
-    "dev:webview": "concurrently \"esbuild src/webview/refinement/index.tsx --bundle --outfile=media/refinement/main.js --format=iife --platform=browser --watch\" \"esbuild src/webview/scribe/index.tsx --bundle --outfile=media/scribe/main.js --format=iife --platform=browser --watch\" \"esbuild src/webview/roadmap/index.tsx --bundle --outfile=media/roadmap/main.js --format=iife --platform=browser --watch\"",
+    "build:webview": "echo No webviews",
+    "dev:webview": "echo No webviews",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",

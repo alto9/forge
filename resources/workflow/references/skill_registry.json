@@ -104,7 +104,6 @@
     "refine": ["create-feature-branch", "pull-milestone-issues"],
     "build": ["create-feature-branch", "lint-test", "unit-test", "integration-test", "pull-milestone-issues"],
     "build_development": ["create-feature-branch", "lint-test", "unit-test", "integration-test", "pull-milestone-issues"],
-    "build_security": [],
     "build_wrap": ["commit", "push-branch"],
     "review_implementation": [],
     "review_security": [],
@@ -127,11 +126,6 @@
       "id": "start-issue-build",
       "replaced_by": "manual workspace setup",
       "reason": "Removed per spec; not part of sub-issue/build flow. Users ensure workspace is ready before build-from-github."
-    },
-    {
-      "id": "pull-milestones",
-      "replaced_by": "available tools",
-      "reason": "Removed; agents use available tools (MCP, etc.) for GitHub operations."
     },
     {
       "id": "make-milestone",
