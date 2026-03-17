@@ -1,3 +1,10 @@
+## 3.8.0 (2026-03-17)
+
+* feat(tests): support conditional webview build configuration ([9c4d463](https://github.com/alto9/forge/commit/9c4d463))
+* refactor: update command structure and remove deprecated files ([12b2afe](https://github.com/alto9/forge/commit/12b2afe))
+* refactor: update project setup and enhance workflow documentation ([9adf7b8](https://github.com/alto9/forge/commit/9adf7b8))
+* Merge branch 'main' of github.com:alto9/forge ([79c63b1](https://github.com/alto9/forge/commit/79c63b1))
+
 ## 3.7.0 (2026-03-16)
 
 * feat: introduce comprehensive vision document and enhance agent workflows ([467e620](https://github.com/alto9/forge/commit/467e620))
