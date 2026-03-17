@@ -1,3 +1,7 @@
+## 3.9.0 (2026-03-17)
+
+* feat(tests): support conditional webview build configuration ([60bbd1b](https://github.com/alto9/forge/commit/60bbd1b))
+
 ## 3.8.0 (2026-03-17)
 
 * feat(tests): support conditional webview build configuration ([9c4d463](https://github.com/alto9/forge/commit/9c4d463))
