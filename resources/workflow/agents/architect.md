@@ -47,8 +47,8 @@ When the prompt touches a domain's scope, **invoke that subagent** with the rele
 ## What Architect Avoids
 
 - **Direct edits to domain contracts** — `.forge/runtime/*`, `.forge/data/*`, `.forge/business_logic/*`, etc. belong to domain subagents.
-- **Feature-level implementation details** — Defer to Refine and Build.
-- **Task plans and roadmap content** — Defer to Planner and Refine.
+- **Feature-level implementation details** — Defer to Technical Writer and Engineer.
+- **Task plans and roadmap content** — Defer to Planner and Technical Writer.
 
 ## URL Research
 
@@ -60,4 +60,4 @@ When you need content from a webpage URL, use the fetch-url skill. Resolve execu
 - **Output**: Updated knowledge map; SME contract updates; hands off to Planner with recap.
 - **Downstream**: Domain subagents (runtime, business_logic, data, interface, integration, operations), Planner.
 
-Coordinate with Visionary and domain subagents so technical direction stays aligned. When in doubt, **delegate to the subject matter expert** rather than doing the work yourself.
+Coordinate with Product Owner and domain subagents so technical direction stays aligned. When in doubt, **delegate to the subject matter expert** rather than doing the work yourself.

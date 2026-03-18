@@ -1,27 +1,20 @@
 # Review PR (Step 6: Reviewing)
 
-This command activates the Review flow. User → Review Implementation Agent → Review Security Agent → Review Wrap Agent. Human performs merge.
+This command invokes the Quality Assurance agent to review the PR for implementation accuracy, security, and post review feedback.
 
 ## Input
 
 - GitHub pull request reference (`https://.../pull/123`, `owner/repo#123`, or `123`)
 
-## Review Flow
+## Workflow
 
-### Review Implementation Agent
-1. Retrieve Github PR Details
-2. Checkout PR Source Branch
-3. Review Implementation for Accuracy
-
-### Review Security Agent
-1. Check for Security Vulnerabilities introduced in the changeset
-
-### Review Wrap Agent
-1. Add the review to the PR
+1. Parse and validate PR reference.
+2. Retrieve PR details using available tools (e.g. MCP GitHub, gh CLI).
+3. Handoff to Quality Assurance agent.
 
 ## Skill Resolution
 
-- Resolve assigned skills from `.forge/skill_registry.json` at `command_assignments.review-pr` if present.
+- Resolve assigned skills from `.forge/skill_registry.json` at `agent_assignments.quality_assurance`.
 - For each assigned skill ID, execute using the matching `skills[]` entry `script_path` and `usage`.
 
 ## Goal

@@ -6,12 +6,12 @@ This document describes the intended flow of responsibility among Forge agents. 
 
 | Step | Phase | Agent | Key Actions |
 |------|-------|-------|-------------|
-| 1 | Product Owner | Visionary | Retrieve vision.json and project.json; determine adjustments; hand off to Architect |
+| 1 | Product Owner | Product Owner | Retrieve vision.json and project.json; determine adjustments; hand off to Architect |
 | 2 | Architecting | Architect | Retrieve vision; clarity check; invoke SME subagents (async); Planner recap |
 | 3 | Planning | Planner | pull-milestones; pull-milestone-issues; determine GitHub changes |
-| 4 | Refining | Refine | Retrieve issue; create-feature-branch parent; consult SME; update issue; create sub-issues; create-feature-branch child from parent |
-| 5 | Building | Build Development | Perform code changes; validate (unit-test, integration-test, lint-test); scan security; commit; push; create-pr |
-| 6 | Reviewing | Review Implementation → Review Security → Review Wrap | Retrieve PR; checkout; review accuracy; check vulnerabilities; add review to PR |
+| 4 | Refining | Technical Writer | Retrieve issue; create-feature-branch parent; consult SME; update issue; create sub-issues; create-feature-branch child from parent |
+| 5 | Building | Engineer | Perform code changes; validate (unit-test, integration-test, lint-test); scan security; commit; push; create-pr |
+| 6 | Reviewing | Quality Assurance | Retrieve PR; checkout; review accuracy; check vulnerabilities; add review to PR |
 
 ## Commands and Flows
 
@@ -42,16 +42,16 @@ Structured input that kicks off the market → features flow. Use when new marke
 
 **Flow:**
 1. User provides Product Intake Prompt (or pastes market research content)
-2. Visionary ingests, researches if needed, updates `vision.json`
+2. Product Owner ingests, researches if needed, updates `vision.json`
 3. Architect receives prompt; updates knowledge map and domain contracts if technical scope changed
 4. Planner receives recap; creates/updates milestones if roadmap impact
-5. Downstream: Refine → Build → Review as usual
+5. Downstream: Technical Writer → Engineer → Quality Assurance as usual
 
 ---
 
 ## 1. Architecting Flow (`/architect-this`)
 
-When Product Intake is provided, Visionary runs first. When technical direction is provided directly, Architect runs first.
+When Product Intake is provided, Product Owner runs first. When technical direction is provided directly, Architect runs first.
 
 ```
 User ──► Architect Agent ──► [Clarity check]
@@ -109,7 +109,7 @@ User ──► command: /plan-roadmap ──► agent: Planner
 ## 3. Refining Flow (`/refine-issue`)
 
 ```
-User (Github Issue Link) ──► Refine Agent
+User (Github Issue Link) ──► Technical Writer Agent
                                     │
                                     ▼
                     Retrieve issue text from GitHub
@@ -143,7 +143,7 @@ User (Github Issue Link) ──► Refine Agent
 ## 4. Building Flow (`/build-from-github`)
 
 ```
-User (Github Issue Link) ──► Build Agent
+User (Github Issue Link) ──► Engineer Agent
                                     │
                                     ▼
                          Retrieve sub-issue details
@@ -154,22 +154,25 @@ User (Github Issue Link) ──► Build Agent
                          unit-test, integration-test, lint-test
                                     │
                                     ▼
-                         Build Wrap Agent
-                         - commit, push-branch
-                         - Create GitHub PR (use available tools)
+                         Scan for security vulnerabilities
+                                    │
+                                    ▼
+                         commit, push-branch
+                         Create GitHub PR (use available tools)
 ```
 
 **Steps:**
-1. Build: retrieve sub-issue details; ensure branch exists and checkout (create from parent branch if missing).
-2. Build: implement code changes; validate with unit-test, integration-test, lint-test.
-3. Build Wrap: commit, push-branch; create GitHub pull request (use available tools). When creating the PR, build_wrap uses `.github/pull_request_template.md` if present, otherwise a standard fallback template.
+1. Engineer: retrieve sub-issue details; ensure branch exists and checkout (create from parent branch if missing).
+2. Engineer: implement code changes; validate with unit-test, integration-test, lint-test.
+3. Engineer: scan changeset for security vulnerabilities.
+4. Engineer: commit, push-branch; create GitHub pull request (use available tools). When creating the PR, use `.github/pull_request_template.md` if present, otherwise a standard fallback template.
 
 ---
 
 ## 5. Reviewing Flow (`/review-pr`)
 
 ```
-User (Github PR Link) ──► Review Agent
+User (Github PR Link) ──► Quality Assurance Agent
                                     │
                                     ▼
                          Retrieve PR details
@@ -182,9 +185,9 @@ User (Github PR Link) ──► Review Agent
 ```
 
 **Steps:**
-1. Review: retrieve PR details; checkout PR source branch.
-2. Review: examine changes for correctness and security.
-3. Review: add review comments to the PR to aid manual human approval. Do not merge; a human will perform the merge.
+1. Quality Assurance: retrieve PR details; checkout PR source branch.
+2. Quality Assurance: examine changes for correctness and security.
+3. Quality Assurance: add review comments to the PR to aid manual human approval. Do not merge; a human will perform the merge.
 
 ---
 
@@ -194,7 +197,7 @@ User (Github PR Link) ──► Review Agent
 Market Input / Product Intake
          │
          ▼
-   Visionary (vision.json)
+   Product Owner (vision.json)
          │
          ▼
    Architect ──────────────────────────────────────┐
@@ -206,10 +209,10 @@ Market Input / Product Intake
    Planner (GitHub milestones) ◄───────────────────┘
          │
          ▼
-   Refine (sub-issues)
+   Technical Writer (sub-issues)
          │
          ▼
-   Build → Review
+   Engineer → Quality Assurance
 ```
 
 ## Domain Subagents: Subject Matter Experts
@@ -239,7 +242,7 @@ Domain subagents are **invoked by the Architect** when work falls in their scope
 
 | Prompt concerns | Invoke |
 |------------------|--------|
-| Product vision, strategy, market | Visionary |
+| Product vision, strategy, market | Product Owner |
 | Cross-domain architecture, technical direction, routing | Architect |
 | Architect prompt touching runtime/config/lifecycle | Architect → runtime |
 | Architect prompt touching data/persistence/schema | Architect → data |
@@ -248,6 +251,6 @@ Domain subagents are **invoked by the Architect** when work falls in their scope
 | Architect prompt touching APIs, external systems | Architect → integration |
 | Architect prompt touching build, deploy, security | Architect → operations |
 | Milestones, roadmap sequencing | Planner |
-| Ticket decomposition | Refine |
-| Implementation, tests | Build |
-| Code review, security review | Review |
+| Ticket decomposition | Technical Writer |
+| Implementation, tests | Engineer |
+| Code review, security review | Quality Assurance |

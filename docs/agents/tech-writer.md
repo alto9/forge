@@ -1,6 +1,6 @@
-# 4. Refining
+# 4. Technical Writer (Ticket Refining Subagent)
 
-The Refine Agent maintains development-ready GitHub issues. It retrieves issue text, creates feature branches, consults SME Agents for technical guidance, updates the issue per template, and creates sub-issues with their branches.
+The Technical Writer Agent maintains development-ready GitHub issues. It retrieves issue text, creates feature branches, consults SME Agents for technical guidance, updates the issue per template, and creates sub-issues with their branches.
 
 ## Responsibilities
 
@@ -16,7 +16,7 @@ flowchart TD
         A[User]
     end
 
-    subgraph Refine["Refine Agent"]
+    subgraph Technical Writer["Technical Writer Agent"]
         B[1. Retrieve issue text from GitHub]
         C[skill: create-feature-branch {child} main]
         D[2. Consult SME Agents for technical information and implementation guides]

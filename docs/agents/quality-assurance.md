@@ -1,4 +1,4 @@
-# 6. Reviewing
+# 6. Quality Assurance (Reviewing)
 
 The Review flow uses three sequential subagents: Review Implementation Agent, Review Security Agent, and Review Wrap Agent. Each performs a distinct step before the next. A human performs the merge.
 

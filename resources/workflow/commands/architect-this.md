@@ -2,7 +2,7 @@
 
 This command invokes the Architect Agent. User → Architect Agent → clarity check → SME subagents (async) → Planner recap.
 
-When market need, user feedback, or strategic direction arrives, use the **Product Intake Prompt** format (see AGENT_FLOW.md). In that case, Product Owner (Visionary) runs first to update `vision.json`, then Architect receives the prompt.
+When market need, user feedback, or strategic direction arrives, use the **Product Intake Prompt** format (see AGENT_FLOW.md). In that case, Product Owner runs first to update `vision.json`, then Architect receives the prompt.
 
 ## Input
 

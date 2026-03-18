@@ -1,12 +1,12 @@
 # Refine Issue (Step 4: Refining)
 
-This command invokes the Refine Agent. User → Refine Agent → SME consultation → sub-issues and branches.
+This command invokes the Technical Writer agent to maintain development-ready GitHub issues.
 
 ## Input
 
 - GitHub issue link (`https://.../issues/123`, `owner/repo#123`, or `123`)
 
-## Refine Agent Flow
+## Workflow
 
 1. Retrieve issue text from GitHub using available tools.
 2. **skill: create-feature-branch {child} main** – Create parent branch: `create-feature-branch feature/issue-{parent-number} main`.
