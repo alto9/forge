@@ -1,3 +1,7 @@
+## 3.10.0 (2026-03-18)
+
+* feat: introduce Quality Assurance and Technical Writer agents, update workflow documentation ([16a6845](https://github.com/alto9/forge/commit/16a6845))
+
 ## 3.9.0 (2026-03-17)
 
 * feat(tests): support conditional webview build configuration ([60bbd1b](https://github.com/alto9/forge/commit/60bbd1b))
