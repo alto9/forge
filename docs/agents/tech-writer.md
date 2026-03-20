@@ -1,12 +1,12 @@
-# 4. Refining
+# 4. Technical Writer (Ticket Refining Subagent)
 
-The Refine Agent maintains development-ready GitHub issues. It retrieves issue text, creates the **parent** feature branch, pushes and links it to the parent issue, consults SME Agents, updates the issue per template, and optionally creates sub-issues on GitHub (without creating a git branch per sub-issue).
+The Technical Writer Agent maintains development-ready GitHub issues. It retrieves issue text, creates the **parent** feature branch, pushes and links it to the parent issue, consults SME Agents, updates the issue per template, and optionally creates sub-issues on GitHub (without creating a git branch per sub-issue).
 
 ## Responsibilities
 
 | Owns | Receives | Outputs |
 |------|----------|---------|
-| Issue refinement, optional sub-issues on GitHub, parent branch + link | GitHub issue link, vision, knowledge_map context | Parent branch pushed and linked; refined tickets; handoff to Build |
+| Issue refinement, optional sub-issues on GitHub, parent branch + link | GitHub issue link, vision, knowledge_map context | Parent branch pushed and linked; refined tickets; handoff to Engineer |
 
 ## Behavior Flow
 
@@ -16,7 +16,7 @@ flowchart TD
         A[User]
     end
 
-    subgraph RefineAgent["Refine Agent"]
+    subgraph TechnicalWriterAgent["Technical Writer Agent"]
         B[1. Retrieve issue text from GitHub]
         C[skill: create-feature-branch parent from main]
         P[2. Push branch and link to parent issue]
@@ -55,10 +55,10 @@ flowchart TD
 3. **Push and link** — Push to `origin` (use **push-branch** from skill registry when assigned); link the branch to the parent issue via GitHub Development / `gh issue develop` / MCP.
 4. **Consult SME Agents** — Invoke Runtime, BusinessLogic, Data, Interface, Integration, Operations for technical information and implementation guides.
 5. **Update issue based on issue template** — Ensure all required details are included per the project's issue template.
-6. **Create sub-issues when useful** — Create child issues on GitHub when a breakdown helps (including a single sub-issue). Build creates `feature/issue-{child}` when implementing each issue.
+6. **Create sub-issues when useful** — Create child issues on GitHub when a breakdown helps (including a single sub-issue). The Engineer creates `feature/issue-{child}` when implementing each issue.
 
 ## Handoff Contract
 
 - **Inputs**: Planner ticket, vision, knowledge_map context
-- **Output**: Parent branch pushed and linked; refined parent and optional sub-issues on GitHub; implementation branches are created in Build
-- **Downstream**: Build Agent
+- **Output**: Parent branch pushed and linked; refined parent and optional sub-issues on GitHub; implementation branches are created by the Engineer during Build
+- **Downstream**: Engineer Agent

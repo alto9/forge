@@ -24,4 +24,4 @@ Hard rules:
 Handoff contract:
 - Inputs required: `.forge/vision.json`, `.forge/knowledge_map.json`.
 - Output guaranteed: runtime domain documents under `.forge/runtime/`.
-- Downstream consumers: Planner, Refine, Build, and Review.
+- Downstream consumers: Planner, Technical Writer, Engineer, and Quality Assurance.

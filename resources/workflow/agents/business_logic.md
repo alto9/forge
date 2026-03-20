@@ -24,4 +24,4 @@ Hard rules:
 Handoff contract:
 - Inputs required: `.forge/vision.json`, `.forge/knowledge_map.json`.
 - Output guaranteed: business logic domain documents under `.forge/business_logic/`.
-- Downstream consumers: Planner, Refine, Build, and Review.
+- Downstream consumers: Planner, Technical Writer, Engineer, and Quality Assurance.

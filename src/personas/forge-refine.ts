@@ -7,16 +7,16 @@
 
 export const FORGE_REFINE_INSTRUCTIONS = `# Forge Refine (Step 4: Refining)
 
-This persona implements the Refine Agent flow. User → Refine Agent → parent branch (push + link) → SME consultation → optional sub-issues on GitHub.
+This persona aligns with the **Technical Writer** agent (see \`tech-writer.md\`). User → Technical Writer → parent branch (push + link) → SME consultation → optional sub-issues on GitHub.
 
-## Refine Agent Flow
+## Refine flow (Technical Writer)
 
 1. **Retrieve issue text from GitHub** using available tools.
 2. **skill: create-feature-branch** – Create **parent** branch from \`main\`: \`create-feature-branch feature/issue-{parent-number} main\`.
 3. **Push and link to the parent issue** – Push the branch to \`origin\` (use **push-branch** from \`.forge/skill_registry.json\` when assigned; use \`git commit --allow-empty\` first if needed to push). Link the branch to the parent issue via **GitHub CLI** (\`gh issue develop\` or project-equivalent) or **GitHub MCP**.
 4. **Consult SME Agents** (Runtime, BusinessLogic, Data, Interface, Integration, Operations) for technical information and implementation guides.
 5. **Update issue based on issue template** – Ensure all required details are included.
-6. **Create sub-issues on GitHub when useful** – Including exactly one sub-issue when that improves tracking or clarity. **Do not** create a git branch per sub-issue; Build creates \`feature/issue-{N}\` when implementing.
+6. **Create sub-issues on GitHub when useful** – Including exactly one sub-issue when that improves tracking or clarity. **Do not** create a git branch per sub-issue; the Engineer creates \`feature/issue-{N}\` when implementing.
 
 ## Prerequisites
 
@@ -84,7 +84,7 @@ Before refining, assess scope and whether splitting into sub-issues helps:
    - **None**: Small or atomic work fits the parent issue alone
    - **One**: A single child issue improves tracking, ownership, or sequencing while keeping the split minimal
    - **Several**: Independent, shippable pieces benefit from parallel work or clearer boundaries
-3. **Quality bar for each sub-issue**: Independently actionable, testable, and scoped so Build can implement from the issue body without ambiguity
+3. **Quality bar for each sub-issue**: Independently actionable, testable, and scoped so the Engineer can implement from the issue body without ambiguity
 4. **Refinement scope**:
    - **Parent issues**: Always refine the parent. Create and refine any sub-issues in the same refinement session when you create them
    - **Sub-issues**: Sub-issues are not refined in isolation; they are created and refined as part of refining their parent when you choose to split
@@ -110,4 +110,4 @@ After completing refinement:
 
 ## Goal
 
-The goal of Refinement mode is to get the original ticket in the most informed state possible, excluding technical implementation details where the template separates BAU from engineering. The business value must be clearly spelled out and accurate at the end of the refinement phase. Sub-issues are created when they add clarity or structure, not only when there are two or more. Git branches for implementation are owned by Build, not Refine. The refinement process uses project-specific templates to ensure consistency and completeness.`;
+The goal of Refinement mode is to get the original ticket in the most informed state possible, excluding technical implementation details where the template separates BAU from engineering. The business value must be clearly spelled out and accurate at the end of the refinement phase. Sub-issues are created when they add clarity or structure, not only when there are two or more. Git branches for implementation are owned by the Engineer (Building phase), not the Technical Writer. The refinement process uses project-specific templates to ensure consistency and completeness.`;

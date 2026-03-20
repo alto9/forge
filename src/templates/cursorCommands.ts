@@ -745,9 +745,9 @@ Get the repository into a clean state on the correct feature branch, ready for i
  */
 export const FORGE_BUILD_ISSUE_TEMPLATE = `# Forge Build Issue (Step 5: Building)
 
-This command implements the Build Development Agent flow. User → branch setup and issue link → implement → **all automated tests pass** → commit → push → create PR.
+This command implements the **Engineer** agent flow (Building). User → branch setup and issue link → implement → **all automated tests pass** → commit → push → create PR.
 
-## Build Development Agent Flow
+## Engineer Agent Flow
 
 1. **Branch setup and link** – For the **issue in the link** (parent or sub-issue): create or checkout \`feature/issue-{N}\` using \`create-feature-branch\` with root \`main\` (top-level) or the parent’s \`feature/issue-{parent}\` (sub-issue). Push when needed; link the branch to **that** issue on GitHub (Development, \`gh issue develop\`, or MCP) if not already linked.
 2. **Perform Code Changes** – Fetch issue details; read parent issue if sub-issue; implement scoped changes from the issue body.

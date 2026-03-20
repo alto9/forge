@@ -1,3 +1,18 @@
+## 3.10.0 (2026-03-18)
+
+* feat: introduce Quality Assurance and Technical Writer agents, update workflow documentation ([16a6845](https://github.com/alto9/forge/commit/16a6845))
+
+## 3.9.0 (2026-03-17)
+
+* feat(tests): support conditional webview build configuration ([60bbd1b](https://github.com/alto9/forge/commit/60bbd1b))
+
+## 3.8.0 (2026-03-17)
+
+* feat(tests): support conditional webview build configuration ([9c4d463](https://github.com/alto9/forge/commit/9c4d463))
+* refactor: update command structure and remove deprecated files ([12b2afe](https://github.com/alto9/forge/commit/12b2afe))
+* refactor: update project setup and enhance workflow documentation ([9adf7b8](https://github.com/alto9/forge/commit/9adf7b8))
+* Merge branch 'main' of github.com:alto9/forge ([79c63b1](https://github.com/alto9/forge/commit/79c63b1))
+
 ## 3.7.0 (2026-03-16)
 
 * feat: introduce comprehensive vision document and enhance agent workflows ([467e620](https://github.com/alto9/forge/commit/467e620))

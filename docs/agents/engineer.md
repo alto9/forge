@@ -1,12 +1,12 @@
 # 5. Building
 
-The Build Development Agent owns the implementation branch for the issue being built, implements code changes, runs automated validation until everything passes, scans for security issues, then commits, pushes, and creates a PR.
+The **Engineer** agent owns the implementation branch for the issue being built, implements code changes, runs automated validation until everything passes, scans for security issues, then commits, pushes, and creates a PR.
 
 ## Responsibilities
 
 | Owns | Receives | Outputs |
 |------|----------|---------|
-| Branch creation/link for target issue, implementation, validation, security scan | Refined GitHub issue link (parent or sub-issue) | Pull request; handoff to Review |
+| Branch creation/link for target issue, implementation, validation, security scan | Refined GitHub issue link (parent or sub-issue) | Pull request; handoff to Quality Assurance |
 
 ## Behavior Flow
 
@@ -16,7 +16,7 @@ flowchart TD
         A[User]
     end
 
-    subgraph BuildDev["Build Development Agent"]
+    subgraph EngineerAgent["Engineer Agent"]
         B0[1. Branch setup and link issue]
         B[2. Perform Code Changes]
         C[3. Validate Success all must pass]
@@ -33,7 +33,7 @@ flowchart TD
     end
 
     subgraph Output
-        K[Pull request ready for Review]
+        K[Pull request ready for Quality Assurance]
     end
 
     A --> B0
@@ -63,10 +63,10 @@ flowchart TD
 
 ## Skill Resolution
 
-Resolve assigned skills from `.forge/skill_registry.json` at `agent_assignments.build` and `agent_assignments.build_wrap`.
+Resolve assigned skills from `.forge/skill_registry.json` at `agent_assignments.engineer`.
 
 ## Handoff Contract
 
 - **Inputs**: GitHub issue link (parent or sub-issue), branch context
-- **Output**: Pull request ready for Review
-- **Downstream**: Review Agent (human performs merge)
+- **Output**: Pull request ready for Quality Assurance
+- **Downstream**: Quality Assurance agent (human performs merge)
