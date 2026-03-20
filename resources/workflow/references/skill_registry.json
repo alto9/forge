@@ -1,5 +1,5 @@
 {
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Canonical skill registry for agent and command execution. Agents and commands should resolve skill IDs from assignment maps below, then execute via the skill entry script_path and usage.",
   "canonical_categories": [
     "npm_wrapper",
@@ -78,7 +78,7 @@
       "retag": "branch-push",
       "script_path": ".cursor/skills/push-branch/scripts/push-branch.js",
       "usage": "node .cursor/skills/push-branch/scripts/push-branch.js",
-      "primary_consumers": ["build_wrap"]
+      "primary_consumers": ["build_wrap", "refine"]
     },
     {
       "id": "pull-milestones",
@@ -101,7 +101,7 @@
   ],
   "agent_assignments": {
     "planner": ["fetch-url", "pull-milestones", "pull-milestone-issues"],
-    "refine": ["create-feature-branch", "pull-milestone-issues"],
+    "refine": ["create-feature-branch", "push-branch", "pull-milestone-issues"],
     "build": ["create-feature-branch", "lint-test", "unit-test", "integration-test", "pull-milestone-issues"],
     "build_development": ["create-feature-branch", "lint-test", "unit-test", "integration-test", "pull-milestone-issues"],
     "build_wrap": ["commit", "push-branch"],

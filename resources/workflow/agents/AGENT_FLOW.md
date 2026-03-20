@@ -9,8 +9,8 @@ This document describes the intended flow of responsibility among Forge agents. 
 | 1 | Product Owner | Visionary | Retrieve vision.json and project.json; determine adjustments; hand off to Architect |
 | 2 | Architecting | Architect | Retrieve vision; clarity check; invoke SME subagents (async); Planner recap |
 | 3 | Planning | Planner | pull-milestones; pull-milestone-issues; determine GitHub changes |
-| 4 | Refining | Refine | Retrieve issue; create-feature-branch parent; consult SME; update issue; create sub-issues; create-feature-branch child from parent |
-| 5 | Building | Build Development | Perform code changes; validate (unit-test, integration-test, lint-test); scan security; commit; push; create-pr |
+| 4 | Refining | Refine | Retrieve issue; create-feature-branch parent; push and link branch to parent issue; consult SME; update issue; create sub-issues on GitHub when useful (no per-sub-issue git branches) |
+| 5 | Building | Build Development | Create/link `feature/issue-{N}` for the issue being built; perform code changes; validate (unit-test, integration-test, lint-test) must all pass before commit; scan security; commit; push; create-pr |
 | 6 | Reviewing | Review Implementation → Review Security → Review Wrap | Retrieve PR; checkout; review accuracy; check vulnerabilities; add review to PR |
 
 ## Commands and Flows
@@ -118,25 +118,25 @@ User (Github Issue Link) ──► Refine Agent
                     create-feature-branch parent from main
                                     │
                                     ▼
+                    push parent branch; link branch to parent issue (gh / MCP)
+                                    │
+                                    ▼
               Consult SME Agents for technical info and implementation guides
                                     │
                                     ▼
                     Update issue based on template
                                     │
                                     ▼
-                    Create sub-issues on parent (always at least one)
-                                    │
-                                    ▼
-                    create-feature-branch each sub-issue from parent
+                    Create sub-issues on GitHub when useful (no git branch per sub-issue)
 ```
 
 **Steps:**
 1. Retrieve issue text from GitHub (use available tools).
 2. Create parent branch from main: `create-feature-branch feature/issue-{parent-number} main`.
-3. Consult SME Agents (runtime, business_logic, data, interface, integration, operations) for technical information and implementation guides.
-4. Update the issue based on the issue template; ensure all required details are included.
-5. Create sub-issues on the parent ticket (always at least one).
-6. Create sub-issue branches from the parent branch: `create-feature-branch feature/issue-{child-number} feature/issue-{parent-number}`. Sub-issues merge into the parent branch for a single PR to main.
+3. Push the parent branch to `origin` and link it to the parent issue (GitHub Development / `gh issue develop` / MCP). Use `push-branch` and an empty commit if needed so the remote accepts the branch.
+4. Consult SME Agents (runtime, business_logic, data, interface, integration, operations) for technical information and implementation guides.
+5. Update the issue based on the issue template; ensure all required details are included.
+6. Create sub-issues on GitHub when useful (including a single sub-issue when appropriate). Do **not** create a separate git branch per sub-issue; Build owns implementation branches.
 
 ---
 
@@ -146,12 +146,15 @@ User (Github Issue Link) ──► Refine Agent
 User (Github Issue Link) ──► Build Agent
                                     │
                                     ▼
-                         Retrieve sub-issue details
-                         Checkout branch (create from parent if missing)
+                         Retrieve issue details (parent or sub-issue)
+                         create-feature-branch feature/issue-{N} from main or parent branch
+                         push; link branch to that issue if not already linked
                                     │
                                     ▼
                          Implement code changes
-                         unit-test, integration-test, lint-test
+                                    │
+                                    ▼
+                         unit-test, integration-test, lint-test (all must pass before commit)
                                     │
                                     ▼
                          Build Wrap Agent
@@ -160,9 +163,10 @@ User (Github Issue Link) ──► Build Agent
 ```
 
 **Steps:**
-1. Build: retrieve sub-issue details; ensure branch exists and checkout (create from parent branch if missing).
-2. Build: implement code changes; validate with unit-test, integration-test, lint-test.
-3. Build Wrap: commit, push-branch; create GitHub pull request (use available tools). When creating the PR, build_wrap uses `.github/pull_request_template.md` if present, otherwise a standard fallback template.
+1. Build: fetch the issue in the link; create or checkout `feature/issue-{N}` with root `main` for top-level issues or the parent’s `feature/issue-{parent}` for sub-issues; push and ensure the branch is linked to **that** issue on GitHub when missing.
+2. Build: implement code changes for the issue scope.
+3. Build: run unit-test, integration-test, and lint-test from `.forge/skill_registry.json`; **do not** commit or open a PR until every check passes (fix or stop and report).
+4. Build Wrap: commit, push-branch; create GitHub pull request (use available tools). When creating the PR, build_wrap uses `.github/pull_request_template.md` if present, otherwise a standard fallback template.
 
 ---
 
@@ -206,7 +210,7 @@ Market Input / Product Intake
    Planner (GitHub milestones) ◄───────────────────┘
          │
          ▼
-   Refine (sub-issues)
+   Refine (tickets + parent branch)
          │
          ▼
    Build → Review

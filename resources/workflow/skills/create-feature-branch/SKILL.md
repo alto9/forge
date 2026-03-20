@@ -11,6 +11,9 @@ Use the provided script to create a new branch from the specified root branch.
 
 Run the script: `scripts/create-feature-branch.js <branch-name> [root-branch]`
 
-Default root branch is main. Parent issue: branch from main. Sub-issues: branch from the parent issue branch (e.g. feature/issue-123). All sub-issues merge into the parent branch for a single PR to main.
+Default root branch is `main`.
 
-When present, check CONTRIBUTING.md for project-specific branching conventions (e.g. feature/issue-N, fix/scope).
+- **Refine (parent issue):** `feature/issue-{parent-number}` from `main` only. Refine does **not** create branches for sub-issues.
+- **Build or forge-setup-issue:** `feature/issue-{N}` from `main` when implementing the top-level issue, or from `feature/issue-{parent}` when implementing a **sub-issue** so work stacks on the parent branch.
+
+When present, check CONTRIBUTING.md for project-specific branching conventions (e.g. `feature/issue-N`, `fix/scope`).

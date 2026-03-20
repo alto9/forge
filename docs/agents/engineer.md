@@ -1,12 +1,12 @@
 # 5. Building
 
-The Build Development Agent implements code changes, validates success with tests, scans for security vulnerabilities, then commits, pushes, and creates a PR. It uses explicit skills for each validation and publish step.
+The Build Development Agent owns the implementation branch for the issue being built, implements code changes, runs automated validation until everything passes, scans for security issues, then commits, pushes, and creates a PR.
 
 ## Responsibilities
 
 | Owns | Receives | Outputs |
 |------|----------|---------|
-| Implementation, validation, security scan | Refined sub-issue (GitHub issue link) | Pull request; handoff to Review |
+| Branch creation/link for target issue, implementation, validation, security scan | Refined GitHub issue link (parent or sub-issue) | Pull request; handoff to Review |
 
 ## Behavior Flow
 
@@ -16,10 +16,11 @@ flowchart TD
         A[User]
     end
 
-    subgraph Build["Build Development Agent"]
-        B[1. Perform Code Changes]
-        C[2. Validate Success]
-        D[Scan changes for security vulnerabilities]
+    subgraph BuildDev["Build Development Agent"]
+        B0[1. Branch setup and link issue]
+        B[2. Perform Code Changes]
+        C[3. Validate Success all must pass]
+        D[4. Scan changes for security]
     end
 
     subgraph Skills["Skills"]
@@ -35,7 +36,8 @@ flowchart TD
         K[Pull request ready for Review]
     end
 
-    A --> B
+    A --> B0
+    B0 --> B
     B --> C
     C --> E
     C --> F
@@ -51,15 +53,13 @@ flowchart TD
 
 ## Flow Steps
 
-1. **Perform Code Changes** — Implement subtask-scoped code changes from the refined sub-issue. Ensure branch exists (run `create-feature-branch` from parent if missing).
-2. **Validate Success** — Run validation skills:
-   - **skill: unit-test** — Resolve from `.forge/skill_registry.json`
-   - **skill: integration-test** — Resolve from `.forge/skill_registry.json`
-   - **skill: lint-test** — Resolve from `.forge/skill_registry.json`
-3. **Scan changes for security vulnerabilities** — Examine the changeset for security risks before proceeding.
-4. **skill: commit-code** — Commit approved changes using the commit skill.
-5. **skill: push-branch** — Push branch state to remote.
-6. **skill: create-pr** — Create pull request for review handoff. Use `.github/pull_request_template.md` if present.
+1. **Branch setup and link** — For the issue number in the build link: run `create-feature-branch feature/issue-{N}` with root `main` for a top-level issue or `feature/issue-{parent}` for a sub-issue. Push when needed; associate the branch with **that** issue on GitHub (Development / `gh issue develop` / MCP) if missing.
+2. **Perform Code Changes** — Implement scoped changes from the issue body; read the parent issue when the build target is a sub-issue.
+3. **Validate Success** — Run **all** validation skills from `.forge/skill_registry.json`: **unit-test**, **integration-test**, **lint-test**. Re-run after substantive edits. **Do not** commit or create a PR until each exits successfully.
+4. **Scan changes for security vulnerabilities** — Examine the changeset for security risks before proceeding.
+5. **skill: commit-code** — Commit approved changes using the commit skill.
+6. **skill: push-branch** — Push branch state to remote.
+7. **skill: create-pr** — Create pull request for review handoff. Use `.github/pull_request_template.md` if present.
 
 ## Skill Resolution
 
@@ -67,6 +67,6 @@ Resolve assigned skills from `.forge/skill_registry.json` at `agent_assignments.
 
 ## Handoff Contract
 
-- **Inputs**: Refined sub-issue, branch context
+- **Inputs**: GitHub issue link (parent or sub-issue), branch context
 - **Output**: Pull request ready for Review
 - **Downstream**: Review Agent (human performs merge)

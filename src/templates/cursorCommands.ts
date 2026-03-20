@@ -745,16 +745,17 @@ Get the repository into a clean state on the correct feature branch, ready for i
  */
 export const FORGE_BUILD_ISSUE_TEMPLATE = `# Forge Build Issue (Step 5: Building)
 
-This command implements the Build Development Agent flow. User → Build Development Agent → validate → commit → push → create PR.
+This command implements the Build Development Agent flow. User → branch setup and issue link → implement → **all automated tests pass** → commit → push → create PR.
 
 ## Build Development Agent Flow
 
-1. **Perform Code Changes** – Retrieve sub-issue details; ensure branch exists; implement subtask-scoped changes.
-2. **Validate Success** – Run skills: \`unit-test\`, \`integration-test\`, \`lint-test\` (resolve from .forge/skill_registry.json).
-3. **Scan changes for security vulnerabilities** – Examine the changeset before proceeding.
-4. **skill: commit-code** – Commit approved changes.
-5. **skill: push-branch** – Push branch state to remote.
-6. **skill: create-pr** – Create GitHub PR for review handoff.
+1. **Branch setup and link** – For the **issue in the link** (parent or sub-issue): create or checkout \`feature/issue-{N}\` using \`create-feature-branch\` with root \`main\` (top-level) or the parent’s \`feature/issue-{parent}\` (sub-issue). Push when needed; link the branch to **that** issue on GitHub (Development, \`gh issue develop\`, or MCP) if not already linked.
+2. **Perform Code Changes** – Fetch issue details; read parent issue if sub-issue; implement scoped changes from the issue body.
+3. **Validate Success** – Run \`unit-test\`, \`integration-test\`, and \`lint-test\` (resolve from .forge/skill_registry.json). Re-run after substantive edits. **Do not commit or open a PR until every skill exits successfully**; fix failures or stop and report.
+4. **Scan changes for security vulnerabilities** – Examine the changeset before proceeding.
+5. **skill: commit-code** – Commit approved changes.
+6. **skill: push-branch** – Push branch state to remote.
+7. **skill: create-pr** – Create GitHub PR for review handoff.
 
 ## Prerequisites
 
@@ -775,42 +776,45 @@ When present, read \`CONTRIBUTING.md\` and \`README.md\` in the repository root 
 ### Step 2: Retrieve Issue Details
 - Use available tools (GitHub MCP, gh CLI) to fetch issue content (title, body, parent if sub-issue)
 
-### Step 3: Perform Code Changes
-- Read parent issue if sub-issue
-- Ensure you are on a feature branch (run forge-setup-issue first if needed)
+### Step 3: Branch setup and link
+- Determine issue number \`N\` from the link and whether the issue is a sub-issue (parent relationship)
+- Run \`create-feature-branch\` per .forge/skill_registry.json: \`feature/issue-{N}\` from \`main\` or from \`feature/issue-{parent}\`
+- Push the branch if it is not on the remote; use GitHub CLI or MCP to link the branch to issue \`N\` if the Development association is missing
+
+### Step 4: Perform Code Changes
+- Read parent issue if implementing a sub-issue
 - Parse Implementation Steps, Test Procedures, Acceptance Criteria from the issue body
 - Implement the changes
 
-### Step 4: Validate Success
+### Step 5: Validate Success (mandatory before commit)
 - Run \`unit-test\` skill (resolve from .forge/skill_registry.json)
 - Run \`integration-test\` skill
 - Run \`lint-test\` skill
-- Run lint, test, build after each significant change
-- All checks must pass before proceeding
+- Re-run the full set after substantive edits
+- **Block commit and PR** until all of the above complete with exit code zero
 
-### Step 5: Scan for Security
+### Step 6: Scan for Security
 - Examine the changeset for security vulnerabilities and unsafe patterns
 
-### Step 6: skill: commit-code
+### Step 7: skill: commit-code
 - Run the commit skill: \`.cursor/skills/commit/scripts/commit.js -m "<conventional-commit-message>"\`
 - Generate the message from the changes using the format in CONTRIBUTING.md
 
-### Step 7: skill: push-branch
+### Step 8: skill: push-branch
 - Run: \`.cursor/skills/push-branch/scripts/push-branch.js\`
 
-### Step 8: skill: create-pr
+### Step 9: skill: create-pr
 - Create PR via GitHub MCP or gh CLI. Use .github/pull_request_template.md if present.
 
 ## Usage
 
 1. Use the \`forge-build-issue\` command in Cursor
 2. Provide the GitHub issue link
-3. The AI will implement, commit, push, and create a PR
-4. Optionally run \`forge-setup-issue\` first if not already on a feature branch
+3. The AI will set up the branch, implement, run all validation skills until they pass, then commit, push, and create a PR
 
 ## Goal
 
-Complete the issue implementation and open a PR, using skills for reliable GitHub operations.`;
+Complete the issue implementation and open a PR, with automated tests and lint fully passing before commit, using skills for reliable Git operations.`;
 
 /**
  * Template for forge-review-pr.md Cursor command

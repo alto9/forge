@@ -26,8 +26,8 @@ After running **Forge: Initialize Agents**, use the injected agents and commands
 
 - **Architect** (`/architect-this`) – Examines vision.json, delegates to domain SME agents, invokes Planner
 - **Plan Roadmap** (`/plan-roadmap`) – Manages GitHub milestones and issues via pull-milestones, pull-milestone-issues
-- **Refine Issue** (`/refine-issue`) – Refines GitHub issues with SME context, creates sub-issues and branches
-- **Build from GitHub** (`/build-from-github`) – Implements issues via build agents (lint-test, unit-test, integration-test)
+- **Refine Issue** (`/refine-issue`) – Refines GitHub issues with SME context; creates parent branch (push + link); optional sub-issues on GitHub (no per-sub-issue git branches)
+- **Build from GitHub** (`/build-from-github`) – Creates/links implementation branch for the issue, implements, runs all tests/lint until green, then commit/PR
 - **Review PR** (`/review-pr`) – Reviews code, posts review comments
 
 ## Chat Participants (VSCode)
