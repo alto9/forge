@@ -1,13 +1,17 @@
 name: Release
 
 on:
-  push:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
     branches:
       - main
 
 jobs:
   release:
     name: Release
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -19,6 +23,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.workflow_run.head_sha }}
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
       
@@ -61,4 +66,4 @@ jobs:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
         run: |
           VSIX_FILE=$(ls -t forge-*.vsix | head -1)
-          npx --yes ovsx publish --packagePath "$VSIX_FILE" --pat $OVSX_PAT --skip-duplicates
+          npx --yes ovsx publish --packagePath "$VSIX_FILE" --pat $OVSX_PAT
