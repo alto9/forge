@@ -53,3 +53,11 @@ jobs:
         run: |
           VSIX_FILE=$(ls forge-*.vsix | head -1)
           npx --yes @vscode/vsce publish --packagePath "$VSIX_FILE" --pat $VSCE_PAT
+      
+      - name: Publish to Open VSX marketplace
+        if: success()
+        env:
+          OVSX_PAT: ${{ secrets.OVSX_PAT }}
+        run: |
+          VSIX_FILE=$(ls forge-*.vsix | head -1)
+          npx --yes ovsx publish --packagePath "$VSIX_FILE" --pat $OVSX_PAT
