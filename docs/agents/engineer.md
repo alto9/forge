@@ -53,7 +53,7 @@ flowchart TD
 
 ## Flow Steps
 
-1. **Branch setup and link** — For the issue number in the build link: run `create-feature-branch feature/issue-{N}` with root `main` for a top-level issue or `feature/issue-{parent}` for a sub-issue. Push when needed; associate the branch with **that** issue on GitHub (Development / `gh issue develop` / MCP) if missing.
+1. **Branch setup and link** — For the issue in the build link: build-from-github ensures the correct branch before handoff; if not on the issue branch, run branch setup: create/checkout `feature/issue-{N}` from `main` (top-level) or `feature/issue-{parent}` (sub-issue). Push when needed; link to that issue via `gh issue develop` or MCP if missing.
 2. **Perform Code Changes** — Implement scoped changes from the issue body; read the parent issue when the build target is a sub-issue.
 3. **Validate Success** — Run **all** validation skills from `.forge/skill_registry.json`: **unit-test**, **integration-test**, **lint-test**. Re-run after substantive edits. **Do not** commit or create a PR until each exits successfully.
 4. **Scan changes for security vulnerabilities** — Examine the changeset for security risks before proceeding.

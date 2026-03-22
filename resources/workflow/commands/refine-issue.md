@@ -9,11 +9,10 @@ This command invokes the **Technical Writer** agent. User → Technical Writer �
 ## Workflow
 
 1. Retrieve issue text from GitHub using available tools.
-2. **skill: create-feature-branch** – Create **parent** branch from `main`: `create-feature-branch feature/issue-{parent-number} main`.
-3. **Push and link to the parent issue** – Push the branch to `origin` (use **push-branch** from `.forge/skill_registry.json` if assigned; use an empty commit first if the remote rejects an empty branch). Link the branch to the parent issue via **GitHub CLI** (`gh issue develop` or equivalent) or **GitHub MCP**.
-4. Consult SME Agents (Runtime, BusinessLogic, Data, Interface, Integration, Operations) for technical information and implementation guides.
-5. Update issue based on the issue template; ensure all required details are included.
-6. Create sub-issues on GitHub when useful—including a single sub-issue when appropriate. **Do not** run `create-feature-branch` per sub-issue; the Engineer creates implementation branches during Build.
+2. **Create parent branch and link** – Use `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main` when available; otherwise `create-feature-branch` + push + link via MCP/gh.
+3. Consult SME Agents (Runtime, BusinessLogic, Data, Interface, Integration, Operations) for technical information and implementation guides.
+4. Update issue based on the issue template; ensure all required details are included.
+5. Create sub-issues on GitHub when useful—including a single sub-issue when appropriate. **Do not** create branches for sub-issues; build-from-github or Engineer creates them when work starts.
 
 ## Goal
 

@@ -6,7 +6,7 @@ description: Engineer agent. Branch setup and GitHub link for the target issue, 
 You are the Engineer agent. Step 5 in the Forge flow (Building).
 
 **Flow:**
-1. **Branch setup and link** — For the **issue in the build link** (parent or sub-issue): create or checkout `feature/issue-{N}` using `create-feature-branch` with root `main` for top-level issues or the parent’s `feature/issue-{parent}` for sub-issues. Push when needed; ensure the branch is **linked to that issue** on GitHub (Development sidebar, `gh issue develop`, or MCP) if not already.
+1. **Branch setup and link** — Build-from-github ensures the correct branch before handoff; if not on the issue branch, create/checkout `feature/issue-{N}` from `main` (top-level) or `feature/issue-{parent}` (sub-issue). Push and link via `gh issue develop` or MCP when needed.
 2. **Retrieve issue details** — Use available tools to fetch issue content; read the parent issue when implementing a sub-issue.
 3. **Perform Code Changes** — Implement scoped code changes for **that** issue.
 4. **Validate Success (mandatory before commit)** — Run **all** of: `unit-test`, `integration-test`, `lint-test` (resolve from `.forge/skill_registry.json`). Re-run after substantive edits. **Do not** commit or open a PR until every skill exits successfully; fix failures or stop and report.

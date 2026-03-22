@@ -10,13 +10,12 @@ This command invokes the **Engineer** agent. User → Engineer → branch setup 
 
 1. Parse and validate issue reference.
 2. Retrieve issue details using available tools (e.g. MCP GitHub, gh CLI).
-3. **Branch setup and link** – For the **issue in the link** (parent or sub-issue): create/checkout `feature/issue-{N}` from `main` or parent branch; push; link branch to that issue on GitHub if not already linked.
-4. **Perform Code Changes** – Implement scoped work (read parent issue if sub-issue).
-5. **Validate Success** – Run `unit-test`, `integration-test`, and `lint-test` from `.forge/skill_registry.json`. **Do not commit or open a PR until every command succeeds.** Re-run after substantive edits.
-6. **Scan changes for security vulnerabilities** – Examine the changeset before proceeding.
-7. **skill: commit-code** – Commit approved changes.
-8. **skill: push-branch** – Push branch state to remote.
-9. **skill: create-pr** – Create GitHub PR for review handoff. Use `.github/pull_request_template.md` if present.
+3. **Branch setup** (execute before Engineer handoff):
+   - **Check current branch:** If already on the correct branch for the issue (e.g. `feature/issue-123`), proceed.
+   - **If not on correct branch:** Check for an existing branch linked to the issue (GitHub linked branches, open PRs referencing it, remote branches matching convention).
+   - **If linked/existing branch found:** Fetch and checkout that branch.
+   - **Otherwise:** Create and link. Prefer `gh issue develop <issue-number> --name feature/issue-{N} --base <base>`. For sub-issues: base = `feature/issue-{parent}`; for parent issues: base = `main`. Fallback: `create-feature-branch` + push + link via MCP/gh.
+4. Handoff to Engineer: implement code changes; run `unit-test`, `integration-test`, `lint-test` (all must pass before commit); scan security; commit; push; create-pr. Use `.github/pull_request_template.md` if present.
 
 ## Skill Resolution
 

@@ -9,8 +9,8 @@ This document describes the intended flow of responsibility among Forge agents. 
 | 1 | Product Owner | Product Owner | Retrieve vision.json and project.json; determine adjustments; hand off to Architect |
 | 2 | Architecting | Architect | Retrieve vision; clarity check; invoke SME subagents (async); Planner recap |
 | 3 | Planning | Planner | pull-milestones; pull-milestone-issues; determine GitHub changes |
-| 4 | Refining | Technical Writer | Retrieve issue; create-feature-branch parent; push and link branch to parent issue; consult SME; update issue; create sub-issues on GitHub when useful (no per-sub-issue git branches) |
-| 5 | Building | Engineer | Create/link `feature/issue-{N}` for the issue being built; perform code changes; validate (unit-test, integration-test, lint-test) must all pass before commit; scan security; commit; push; create-pr |
+| 4 | Refining | Technical Writer | Retrieve issue; create parent branch and link (gh issue develop); consult SME; update issue; create sub-issues when useful (no sub-issue branches) |
+| 5 | Building | Engineer | Branch setup by build-from-github or Engineer for issue being built; perform code changes; validate (unit-test, integration-test, lint-test) must all pass before commit; scan security; commit; push; create-pr |
 | 6 | Reviewing | Quality Assurance | Retrieve PR; checkout; review accuracy; check vulnerabilities; add review to PR |
 
 ## Commands and Flows
@@ -115,7 +115,7 @@ User (Github Issue Link) ──► Technical Writer Agent
                     Retrieve issue text from GitHub
                                     │
                                     ▼
-                    create-feature-branch parent from main
+                    Create parent branch (linked to issue via gh issue develop)
                                     │
                                     ▼
                     push parent branch; link branch to parent issue (gh / MCP)
@@ -127,28 +127,29 @@ User (Github Issue Link) ──► Technical Writer Agent
                     Update issue based on template
                                     │
                                     ▼
-                    Create sub-issues on GitHub when useful (no git branch per sub-issue)
+                    Create sub-issues on GitHub when useful (no branch per sub-issue)
 ```
 
 **Steps:**
 1. Retrieve issue text from GitHub (use available tools).
-2. Create parent branch from main: `create-feature-branch feature/issue-{parent-number} main`.
-3. Push the parent branch to `origin` and link it to the parent issue (GitHub Development / `gh issue develop` / MCP). Use `push-branch` and an empty commit if needed so the remote accepts the branch.
-4. Consult SME Agents (runtime, business_logic, data, interface, integration, operations) for technical information and implementation guides.
-5. Update the issue based on the issue template; ensure all required details are included.
-6. Create sub-issues on GitHub when useful (including a single sub-issue when appropriate). Do **not** create a separate git branch per sub-issue; the Engineer owns implementation branches during Build.
+2. Create parent branch and link: `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main` when available; otherwise `create-feature-branch` + push + link via MCP/gh.
+3. Consult SME Agents (runtime, business_logic, data, interface, integration, operations) for technical information and implementation guides.
+4. Update the issue based on the issue template; ensure all required details are included.
+5. Create sub-issues on GitHub when useful (including a single sub-issue when appropriate). Do not create branches for sub-issues; build-from-github or Engineer creates them when work starts.
 
 ---
 
 ## 4. Building Flow (`/build-from-github`)
 
 ```
-User (Github Issue Link) ──► Engineer Agent
+User (Github Issue Link) ──► Branch setup (ensure correct branch)
+                                    │
+                    Check current; if not, use linked/existing or create per CONTRIBUTING (gh issue develop for linking)
                                     │
                                     ▼
-                         Retrieve issue details (parent or sub-issue)
-                         create-feature-branch feature/issue-{N} from main or parent branch
-                         push; link branch to that issue if not already linked
+                         Branch setup: ensure feature/issue-{N} for issue in link
+                         (create from main or parent; push and link if needed)
+                         Then: Engineer retrieves issue details, implements, validates
                                     │
                                     ▼
                          Implement code changes
@@ -165,10 +166,10 @@ User (Github Issue Link) ──► Engineer Agent
 ```
 
 **Steps:**
-1. Engineer: fetch the issue in the link; create or checkout `feature/issue-{N}` with root `main` for top-level issues or the parent’s `feature/issue-{parent}` for sub-issues; push and ensure the branch is linked to **that** issue on GitHub when missing.
-2. Engineer: implement code changes for the issue scope.
-3. Engineer: run unit-test, integration-test, and lint-test from `.forge/skill_registry.json`; **do not** commit or open a PR until every check passes (fix or stop and report).
-4. Engineer: scan the changeset for security vulnerabilities.
+1. Branch setup (build-from-github or Engineer): ensure correct `feature/issue-{N}` for the issue—check current; if not, use linked/existing or create from `main` (top-level) or `feature/issue-{parent}` (sub-issue). Push and link via `gh issue develop` when needed.
+2. Engineer: retrieve issue details; implement code changes for the issue scope.
+3. Engineer: run unit-test, integration-test, lint-test from `.forge/skill_registry.json`; **do not** commit or open a PR until every check passes (fix or stop and report).
+4. Engineer: scan changeset for security vulnerabilities.
 5. Engineer: commit, push-branch; create GitHub pull request (use available tools). When creating the PR, use `.github/pull_request_template.md` if present, otherwise a standard fallback template.
 
 ---
