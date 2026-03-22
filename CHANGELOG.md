@@ -1,3 +1,10 @@
+## <small>3.10.1 (2026-03-22)</small>
+
+* chore(release): 3.10.1 ([2ba7d6d](https://github.com/alto9/forge/commit/2ba7d6d))
+* refactor: enhance agent workflows and documentation for issue refinement and building ([4c00f25](https://github.com/alto9/forge/commit/4c00f25))
+* refactor: update Technical Writer and Engineer agent workflows and documentation ([6f843f7](https://github.com/alto9/forge/commit/6f843f7))
+* Merge origin/main with workflow conflict resolution ([b6888fe](https://github.com/alto9/forge/commit/b6888fe))
+
 ## 3.10.0 (2026-03-18)
 
 * feat: introduce Quality Assurance and Technical Writer agents, update workflow documentation ([16a6845](https://github.com/alto9/forge/commit/16a6845))
