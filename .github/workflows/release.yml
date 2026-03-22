@@ -38,26 +38,27 @@ jobs:
         run: npm run package
       
       - name: Semantic Release
+        id: semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx semantic-release
       
       - name: Re-package extension (post-release)
-        if: success()
+        if: success() && hashFiles('.semantic-release-success') != ''
         run: npm run package
       
       - name: Publish VSCode extension to marketplace
-        if: success()
+        if: success() && hashFiles('.semantic-release-success') != ''
         env:
           VSCE_PAT: ${{ secrets.VSCE_PAT }}
         run: |
-          VSIX_FILE=$(ls forge-*.vsix | head -1)
+          VSIX_FILE=$(ls -t forge-*.vsix | head -1)
           npx --yes @vscode/vsce publish --packagePath "$VSIX_FILE" --pat $VSCE_PAT
       
       - name: Publish to Open VSX marketplace
-        if: success()
+        if: success() && hashFiles('.semantic-release-success') != ''
         env:
           OVSX_PAT: ${{ secrets.OVSX_PAT }}
         run: |
-          VSIX_FILE=$(ls forge-*.vsix | head -1)
-          npx --yes ovsx publish --packagePath "$VSIX_FILE" --pat $OVSX_PAT
+          VSIX_FILE=$(ls -t forge-*.vsix | head -1)
+          npx --yes ovsx publish --packagePath "$VSIX_FILE" --pat $OVSX_PAT --skip-duplicates

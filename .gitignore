@@ -3,4 +3,5 @@ dist
 node_modules
 .vscode-test/
 *.vsix
+.semantic-release-success
 .DS_Store
