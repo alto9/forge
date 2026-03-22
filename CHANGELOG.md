@@ -1,3 +1,7 @@
+## 3.11.0 (2026-03-22)
+
+* feat(release): add Open VSX marketplace publishing step to workflow ([4c52189](https://github.com/alto9/forge/commit/4c52189))
+
 ## <small>3.10.1 (2026-03-22)</small>
 
 * chore(release): 3.10.1 ([2ba7d6d](https://github.com/alto9/forge/commit/2ba7d6d))
