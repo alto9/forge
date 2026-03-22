@@ -1,3 +1,7 @@
+## <small>3.11.2 (2026-03-22)</small>
+
+* fix(release): update release workflow to trigger on CI completion ([f397c0e](https://github.com/alto9/forge/commit/f397c0e))
+
 ## <small>3.11.1 (2026-03-22)</small>
 
 * fix: update release workflow ([c475635](https://github.com/alto9/forge/commit/c475635))
