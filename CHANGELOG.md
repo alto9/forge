@@ -1,3 +1,7 @@
+## <small>3.13.2 (2026-03-25)</small>
+
+* refactor: streamline skill registry and update validation processes ([3cc2641](https://github.com/alto9/forge/commit/3cc2641))
+
 ## <small>3.13.1 (2026-03-25)</small>
 
 * docs: update chat participants in README ([98e5c02](https://github.com/alto9/forge/commit/98e5c02))
