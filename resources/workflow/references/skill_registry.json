@@ -8,8 +8,8 @@
       "status": "active",
       "category": "git_flow",
       "retag": "branch-create",
-      "script_path": ".cursor/skills/create-feature-branch/scripts/create-feature-branch.js",
-      "usage": "node .cursor/skills/create-feature-branch/scripts/create-feature-branch.js <branch-name> [root-branch]",
+      "script_path": ".cursor/skills/create-feature-branch/scripts/create-feature-branch.sh",
+      "usage": ".cursor/skills/create-feature-branch/scripts/create-feature-branch.sh <branch-name> [root-branch]",
       "primary_consumers": ["tech_writer", "engineer"]
     },
     {
@@ -17,8 +17,8 @@
       "status": "active",
       "category": "git_flow",
       "retag": "commit-code",
-      "script_path": ".cursor/skills/commit/scripts/commit.js",
-      "usage": "node .cursor/skills/commit/scripts/commit.js -m \"<message>\"",
+      "script_path": ".cursor/skills/commit/scripts/commit.sh",
+      "usage": ".cursor/skills/commit/scripts/commit.sh -m \"<message>\"",
       "primary_consumers": ["engineer"]
     },
     {
@@ -26,8 +26,8 @@
       "status": "active",
       "category": "git_flow",
       "retag": "branch-push",
-      "script_path": ".cursor/skills/push-branch/scripts/push-branch.js",
-      "usage": "node .cursor/skills/push-branch/scripts/push-branch.js",
+      "script_path": ".cursor/skills/push-branch/scripts/push-branch.sh",
+      "usage": ".cursor/skills/push-branch/scripts/push-branch.sh",
       "primary_consumers": ["engineer", "tech_writer"]
     },
     {
@@ -35,8 +35,8 @@
       "status": "active",
       "category": "git_flow",
       "retag": "github-milestones",
-      "script_path": ".cursor/skills/pull-milestones/scripts/pull-milestones.js",
-      "usage": "node .cursor/skills/pull-milestones/scripts/pull-milestones.js [owner/repo] --state open --format json [--compact]",
+      "script_path": ".cursor/skills/pull-milestones/scripts/pull-milestones.sh",
+      "usage": ".cursor/skills/pull-milestones/scripts/pull-milestones.sh [owner/repo] --state open --format json [--compact]",
       "primary_consumers": ["planner", "tech_writer", "engineer"]
     },
     {
@@ -44,8 +44,8 @@
       "status": "active",
       "category": "git_flow",
       "retag": "github-milestone-issues",
-      "script_path": ".cursor/skills/pull-milestone-issues/scripts/pull-milestone-issues.js",
-      "usage": "node .cursor/skills/pull-milestone-issues/scripts/pull-milestone-issues.js <milestone-id> [owner/repo] --state open --format json [--compact]",
+      "script_path": ".cursor/skills/pull-milestone-issues/scripts/pull-milestone-issues.sh",
+      "usage": ".cursor/skills/pull-milestone-issues/scripts/pull-milestone-issues.sh <milestone-id> [owner/repo] --state open --format json [--compact]",
       "primary_consumers": ["planner", "tech_writer", "engineer"]
     }
   ],

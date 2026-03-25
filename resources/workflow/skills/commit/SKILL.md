@@ -9,7 +9,7 @@ Use the provided script to commit staged changes. Validates branch and runs pre-
 
 ## Usage
 
-Run the script: `scripts/commit.js -m "<message>"`
+Run the script: `scripts/commit.sh -m "<message>"`
 
 ## Commit Message Format
 

@@ -22,7 +22,7 @@ Use the provided script to fetch GitHub repository milestones. Outputs JSON or m
 
 Run the script:
 
-`node scripts/pull-milestones.js [owner/repo] [--state open|closed|all] [--format json|markdown] [--compact]`
+`scripts/pull-milestones.sh [owner/repo] [--state open|closed|all] [--format json|markdown] [--compact]`
 
 - `owner/repo` is optional when run from a git repository with a GitHub remote. If omitted, the script uses `gh repo view` to resolve the current repo.
 - `--state`: Filter by milestone state. Default: `open`.
@@ -30,9 +30,9 @@ Run the script:
 - `--compact`: JSON only; return fewer fields (number, title, state, html_url, open_issues, closed_issues, due_on).
 
 Examples:
-- `node scripts/pull-milestones.js` (uses current repo, open milestones, JSON)
-- `node scripts/pull-milestones.js alto9/forge --state all --format markdown`
-- `node scripts/pull-milestones.js owner/repo --state closed`
+- `scripts/pull-milestones.sh` (uses current repo, open milestones, JSON)
+- `scripts/pull-milestones.sh alto9/forge --state all --format markdown`
+- `scripts/pull-milestones.sh owner/repo --state closed`
 
 ## Agent instructions
 

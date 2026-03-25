@@ -9,6 +9,6 @@ Use the provided script to push the current branch safely.
 
 ## Usage
 
-Run the script: `node scripts/push-branch.js`
+Run the script: `scripts/push-branch.sh`
 
 When present, the agent may read CONTRIBUTING.md and README.md for project SDLC: pre-push validation (lint, test, build), branch conventions.

@@ -9,7 +9,7 @@ Use the provided script to create a new branch from the specified root branch.
 
 ## Usage
 
-Run the script: `scripts/create-feature-branch.js <branch-name> [root-branch]`
+Run the script: `scripts/create-feature-branch.sh <branch-name> [root-branch]`
 
 Default root branch is `main`.
 

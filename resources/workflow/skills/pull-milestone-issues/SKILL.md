@@ -24,7 +24,7 @@ Use the provided script to fetch all GitHub issues in a milestone (issues assign
 
 Run the script:
 
-`node scripts/pull-milestone-issues.js <milestone-id> [owner/repo] [--state open|closed|all] [--format json|markdown] [--include-prs] [--compact]`
+`scripts/pull-milestone-issues.sh <milestone-id> [owner/repo] [--state open|closed|all] [--format json|markdown] [--include-prs] [--compact]`
 
 - `milestone-id` is required. Use the milestone number from `pull-milestones` output (the `number` field).
 - `owner/repo` is optional when run from a git repository with a GitHub remote. If omitted, the script uses `gh repo view` to resolve the current repo.
@@ -34,9 +34,9 @@ Run the script:
 - `--compact`: JSON only; return fewer fields (number, title, body, state, html_url, assignees, labels, created_at).
 
 Examples:
-- `node scripts/pull-milestone-issues.js 1` (milestone 1, current repo, open issues, JSON)
-- `node scripts/pull-milestone-issues.js 2 alto9/forge --state all --format markdown`
-- `node scripts/pull-milestone-issues.js 3 owner/repo --state closed`
+- `scripts/pull-milestone-issues.sh 1` (milestone 1, current repo, open issues, JSON)
+- `scripts/pull-milestone-issues.sh 2 alto9/forge --state all --format markdown`
+- `scripts/pull-milestone-issues.sh 3 owner/repo --state closed`
 
 ## Agent instructions
 

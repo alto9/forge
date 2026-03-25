@@ -795,11 +795,11 @@ When present, read \`CONTRIBUTING.md\` and \`README.md\` in the repository root 
 - Examine the changeset for security vulnerabilities and unsafe patterns
 
 ### Step 7: skill: commit-code
-- Run the commit skill: \`.cursor/skills/commit/scripts/commit.js -m "<conventional-commit-message>"\`
+- Run the commit skill: \`.cursor/skills/commit/scripts/commit.sh -m "<conventional-commit-message>"\`
 - Generate the message from the changes using the format in CONTRIBUTING.md
 
 ### Step 8: skill: push-branch
-- Run: \`.cursor/skills/push-branch/scripts/push-branch.js\`
+- Run: \`.cursor/skills/push-branch/scripts/push-branch.sh\`
 
 ### Step 9: skill: create-pr
 - Create PR via GitHub MCP or gh CLI. Use .github/pull_request_template.md if present.
