@@ -4,7 +4,7 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-const FORGE_MANIFEST_VERSION = 1;
+const FORGE_MANIFEST_VERSION = 2;
 const FORGE_MANIFEST_FILE = '.forge-manifest.json';
 const MANAGED_DIRECTORIES = ['agents', 'commands', 'skills', 'hooks'];
 
@@ -145,6 +145,51 @@ function toHashMap(files: ManagedFileRecord[]): Map<string, string> {
     return map;
 }
 
+function isManagedPath(pathValue: string): boolean {
+    if (pathValue === 'hooks.json') return true;
+    return MANAGED_DIRECTORIES.some((directory) => pathValue.startsWith(`${directory}/`));
+}
+
+export function getStaleManagedPaths(
+    manifest: ForgeManifest | null,
+    desiredFiles: ManagedFileRecord[]
+): string[] {
+    if (!manifest) return [];
+    const desiredPaths = new Set(desiredFiles.map((file) => file.path));
+    return manifest.managedFiles
+        .map((file) => file.path)
+        .filter((filePath) => isManagedPath(filePath) && !desiredPaths.has(filePath));
+}
+
+function removeEmptyParentDirs(cursorHome: string, managedPath: string): void {
+    let currentDir = path.dirname(path.join(cursorHome, managedPath));
+    const stopDir = path.resolve(cursorHome);
+
+    while (currentDir !== stopDir && currentDir.startsWith(`${stopDir}${path.sep}`)) {
+        if (!fs.existsSync(currentDir)) break;
+        const entries = fs.readdirSync(currentDir);
+        if (entries.length > 0) break;
+        fs.rmdirSync(currentDir);
+        currentDir = path.dirname(currentDir);
+    }
+}
+
+function deleteStaleManagedFiles(
+    cursorHome: string,
+    stalePaths: string[],
+    outputChannel?: vscode.OutputChannel
+): void {
+    for (const stalePath of stalePaths) {
+        const absolutePath = path.join(cursorHome, stalePath);
+        if (!fs.existsSync(absolutePath)) continue;
+        const stats = fs.statSync(absolutePath);
+        if (!stats.isFile()) continue;
+        fs.unlinkSync(absolutePath);
+        removeEmptyParentDirs(cursorHome, stalePath);
+        outputChannel?.appendLine(`Removed stale managed file ~/.cursor/${stalePath}`);
+    }
+}
+
 export function shouldSyncManagedFiles(
     manifest: ForgeManifest | null,
     forgeVersion: string,
@@ -201,6 +246,7 @@ export class InstallGlobalCommand {
             const desiredManagedFiles = collectDesiredManagedFiles(workflowPath, cursorHome);
             const currentManagedFiles = collectCurrentManagedFiles(cursorHome, desiredManagedFiles);
             const existingManifest = readManifest(cursorHome);
+            const staleManagedPaths = getStaleManagedPaths(existingManifest, desiredManagedFiles);
             const needsSync = shouldSyncManagedFiles(
                 existingManifest,
                 forgeVersion,
@@ -301,6 +347,11 @@ export class InstallGlobalCommand {
                     const hooksJsonDest = path.join(cursorHome, 'hooks.json');
                     fs.writeFileSync(hooksJsonDest, buildHooksJson(cursorHome), 'utf8');
                     outputChannel?.appendLine('Installed ~/.cursor/hooks.json');
+
+                    if (staleManagedPaths.length > 0) {
+                        progress.report({ message: 'Removing legacy managed files...' });
+                        deleteStaleManagedFiles(cursorHome, staleManagedPaths, outputChannel);
+                    }
 
                     writeManifest(cursorHome, {
                         manifestVersion: FORGE_MANIFEST_VERSION,

@@ -22,7 +22,7 @@ This command invokes the **Engineer** agent to apply pull request review feedbac
 5. Handoff to Engineer to satisfy feedback:
    - Preserve original issue intent and acceptance scope.
    - Address requested changes from Quality Assurance and other review feedback.
-   - Run `unit-test`, `integration-test`, `lint-test` (all must pass before commit).
+  - Run repository-inferred validation (tests/lint/build as applicable; all must pass before commit).
    - Scan changes for security vulnerabilities.
    - Commit and push updates to the same PR branch.
 

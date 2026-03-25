@@ -751,7 +751,7 @@ This command implements the **Engineer** agent flow (Building). User → branch 
 
 1. **Branch setup and link** – For the **issue in the link** (parent or sub-issue): create or checkout \`feature/issue-{N}\` using \`create-feature-branch\` with root \`main\` (top-level) or the parent’s \`feature/issue-{parent}\` (sub-issue). Push when needed; link the branch to **that** issue on GitHub (Development, \`gh issue develop\`, or MCP) if not already linked.
 2. **Perform Code Changes** – Fetch issue details; read parent issue if sub-issue; implement scoped changes from the issue body.
-3. **Validate Success** – Run \`unit-test\`, \`integration-test\`, and \`lint-test\` (resolve from .forge/skill_registry.json). Re-run after substantive edits. **Do not commit or open a PR until every skill exits successfully**; fix failures or stop and report.
+3. **Validate Success** – Run repository-inferred validation (tests/lint/build as applicable). Re-run after substantive edits. **Do not commit or open a PR until all required checks exit successfully**; fix failures or stop and report.
 4. **Scan changes for security vulnerabilities** – Examine the changeset before proceeding.
 5. **skill: commit-code** – Commit approved changes.
 6. **skill: push-branch** – Push branch state to remote.
@@ -787,9 +787,7 @@ When present, read \`CONTRIBUTING.md\` and \`README.md\` in the repository root 
 - Implement the changes
 
 ### Step 5: Validate Success (mandatory before commit)
-- Run \`unit-test\` skill (resolve from .forge/skill_registry.json)
-- Run \`integration-test\` skill
-- Run \`lint-test\` skill
+- Run repository-inferred validation commands (tests/lint/build as applicable)
 - Re-run the full set after substantive edits
 - **Block commit and PR** until all of the above complete with exit code zero
 

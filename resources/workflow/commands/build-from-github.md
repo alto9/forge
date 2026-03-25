@@ -15,7 +15,7 @@ This command invokes the **Engineer** agent. User → Engineer → branch setup 
    - **If not on correct branch:** Check for an existing branch linked to the issue (GitHub linked branches, open PRs referencing it, remote branches matching convention).
    - **If linked/existing branch found:** Fetch and checkout that branch.
    - **Otherwise:** Create and link. Prefer `gh issue develop <issue-number> --name feature/issue-{N} --base <base>`. For sub-issues: base = `feature/issue-{parent}`; for parent issues: base = `main`. Fallback: `create-feature-branch` + push + link via MCP/gh.
-4. Handoff to Engineer: implement code changes; run `unit-test`, `integration-test`, `lint-test` (all must pass before commit); scan security; commit; push; create-pr. Use `.github/pull_request_template.md` if present.
+4. Handoff to Engineer: implement code changes; run repository-inferred validation (tests/lint/build as applicable, all must pass before commit); scan security; commit; push; create-pr. Use `.github/pull_request_template.md` if present.
 
 ## Skill Resolution
 

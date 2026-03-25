@@ -47,10 +47,7 @@ Provide **accurate, project-specific** testing instructions. Do **not** use gene
 
 **Source of truth for test commands:**
 
-1. **`.forge/skill_registry.json`** — Resolve the `npm_wrapper` skills (`unit-test`, `lint-test`, `integration-test`). Use their `usage` strings or the underlying npm scripts they invoke. Typical mappings:
-   - `unit-test` → `npm run test:unit` (or `npm test` if project uses that)
-   - `lint-test` → `npm run lint`
-   - `integration-test` → `npm run test:integration`
+1. **Repository scripts and docs** — Infer test/lint/build commands from `package.json`, project scripts, and repository docs.
 
 2. **Forge workflow documentation** — When present (e.g. `FORGE-WORKFLOW.md` in the project or forge repo), use the verification queue from **Phase 4 (Review)**. This aligns with the GitHub project board queues (Refinement → Ready → In Progress → In Review → Done):
    - `npm install`
@@ -74,10 +71,9 @@ List what must be true for the ticket to be considered done. Tie each criterion 
 ---
 
 URL research and ingestion rule:
-- When you need content from a webpage URL, use the fetch-url skill script instead of ad-hoc curl/web fetch commands.
-- Resolve `fetch-url` execution details from `.forge/skill_registry.json` (`skills[]` entry for `id: "fetch-url"`), then run that usage string.
-- Use the structured output directly as research context.
-- If the command fails (non-zero exit), report the error clearly and request an alternate URL or retry with adjusted timeout/max-chars.
+- When you need content from a webpage URL, use built-in fetch tooling (MCP/web fetch) instead of ad-hoc shell commands.
+- Use fetched output directly as research context.
+- If the command fails, report the error clearly and request an alternate URL or retry with adjusted parameters.
 
 Scope and boundaries:
 - Respect Product Owner intent, `.forge/knowledge_map.json` contracts, Architect technical constraints, and Planner milestone boundaries.

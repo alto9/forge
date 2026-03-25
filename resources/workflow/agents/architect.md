@@ -38,7 +38,7 @@ You are the Architect Agent. Step 2 in the Forge flow (Architecting / High Level
 
 ## URL Research
 
-When you need content from a webpage URL, use the fetch-url skill. Resolve execution details from `.forge/skill_registry.json` (`skills[]` entry for `id: "fetch-url"`). Use the output as research context for analysis or to inform delegation.
+When you need content from a webpage URL, use built-in fetch tooling (MCP/web fetch) rather than a skill script. Use the fetched output as research context for analysis or to inform delegation.
 
 ## Handoff Contract
 

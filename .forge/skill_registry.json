@@ -1,58 +1,8 @@
 {
   "version": "1.5.1",
   "description": "Canonical skill registry for agent and command execution. Agents and commands should resolve skill IDs from assignment maps below, then execute via the skill entry script_path and usage.",
-  "canonical_categories": [
-    "npm_wrapper",
-    "git_flow",
-    "research"
-  ],
+  "canonical_categories": ["git_flow"],
   "skills": [
-    {
-      "id": "fetch-url",
-      "status": "active",
-      "category": "research",
-      "retag": "url-ingestion",
-      "script_path": ".cursor/skills/fetch-url/scripts/fetch-url.js",
-      "usage": "node .cursor/skills/fetch-url/scripts/fetch-url.js \"<url>\" --timeout 20 --max-chars 24000",
-      "primary_consumers": [
-        "product_owner",
-        "architect",
-        "planner",
-        "runtime",
-        "business_logic",
-        "data",
-        "interface",
-        "integration",
-        "operations"
-      ]
-    },
-    {
-      "id": "lint-test",
-      "status": "active",
-      "category": "npm_wrapper",
-      "retag": "lint-test",
-      "script_path": ".cursor/skills/lint-test/scripts/lint-test.js",
-      "usage": "node .cursor/skills/lint-test/scripts/lint-test.js",
-      "primary_consumers": ["engineer", "quality_assurance"]
-    },
-    {
-      "id": "unit-test",
-      "status": "active",
-      "category": "npm_wrapper",
-      "retag": "unit-test",
-      "script_path": ".cursor/skills/unit-test/scripts/unit-test.js",
-      "usage": "node .cursor/skills/unit-test/scripts/unit-test.js",
-      "primary_consumers": ["engineer", "quality_assurance"]
-    },
-    {
-      "id": "integration-test",
-      "status": "active",
-      "category": "npm_wrapper",
-      "retag": "integration-test",
-      "script_path": ".cursor/skills/integration-test/scripts/integration-test.js",
-      "usage": "node .cursor/skills/integration-test/scripts/integration-test.js",
-      "primary_consumers": ["engineer", "quality_assurance"]
-    },
     {
       "id": "create-feature-branch",
       "status": "active",
@@ -100,9 +50,9 @@
     }
   ],
   "agent_assignments": {
-    "planner": ["fetch-url", "pull-milestones", "pull-milestone-issues"],
+    "planner": ["pull-milestones", "pull-milestone-issues"],
     "tech_writer": ["create-feature-branch", "push-branch", "pull-milestone-issues"],
-    "engineer": ["create-feature-branch", "lint-test", "unit-test", "integration-test", "commit", "push-branch"],
+    "engineer": ["create-feature-branch", "commit", "push-branch"],
     "quality_assurance": []
   },
   "command_assignments": {

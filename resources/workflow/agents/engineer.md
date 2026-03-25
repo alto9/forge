@@ -9,7 +9,7 @@ You are the Engineer agent. Step 5 in the Forge flow (Building).
 1. **Branch setup and link** — Build-from-github ensures the correct branch before handoff; if not on the issue branch, create/checkout `feature/issue-{N}` from `main` (top-level) or `feature/issue-{parent}` (sub-issue). Push and link via `gh issue develop` or MCP when needed.
 2. **Retrieve issue details** — Use available tools to fetch issue content; read the parent issue when implementing a sub-issue.
 3. **Perform Code Changes** — Implement scoped code changes for **that** issue.
-4. **Validate Success (mandatory before commit)** — Run **all** of: `unit-test`, `integration-test`, `lint-test` (resolve from `.forge/skill_registry.json`). Re-run after substantive edits. **Do not** commit or open a PR until every skill exits successfully; fix failures or stop and report.
+4. **Validate Success (mandatory before commit)** — Run the repository's inferred validation commands (tests/lint/build as applicable) and re-run after substantive edits. **Do not** commit or open a PR until all required validation exits successfully; fix failures or stop and report.
 5. **Scan changes for security vulnerabilities** — Examine the changeset for security risks before proceeding.
 6. **skill: commit-code** — Commit approved changes.
 7. **skill: push-branch** — Push branch state to remote.

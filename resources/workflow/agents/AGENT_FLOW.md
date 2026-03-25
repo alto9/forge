@@ -10,7 +10,7 @@ This document describes the intended flow of responsibility among Forge agents. 
 | 2 | Architecting | Architect | Retrieve vision and knowledge map, perform clarity check, update `.forge` contracts by domain, hand off recap to Planner |
 | 3 | Planning | Planner | pull-milestones, pull-milestone-issues, determine GitHub changes |
 | 4 | Refining | Technical Writer | Retrieve issue, create parent branch and link, read `.forge` contracts, update issue, create sub-issues when useful (no sub-issue branches) |
-| 5 | Building | Engineer | Branch setup by build-from-github or Engineer for issue being built; perform code changes; validate (unit-test, integration-test, lint-test) must all pass before commit; scan security; commit; push; create-pr |
+| 5 | Building | Engineer | Branch setup by build-from-github or Engineer for issue being built; perform code changes; run repo-inferred validation (tests/lint/build as applicable) before commit; scan security; commit; push; create-pr |
 | 6 | Reviewing | Quality Assurance | Retrieve PR; checkout; review accuracy; check vulnerabilities; add review to PR |
 
 ## `.forge` Edit/Read Boundaries
@@ -154,7 +154,7 @@ User (Github Issue Link) ──► Branch setup (ensure correct branch)
                          Implement code changes
                                     │
                                     ▼
-                         unit-test, integration-test, lint-test (all must pass before commit)
+                         repo-inferred validation (all must pass before commit)
                                     │
                                     ▼
                          Scan for security vulnerabilities
@@ -167,7 +167,7 @@ User (Github Issue Link) ──► Branch setup (ensure correct branch)
 **Steps:**
 1. Branch setup (build-from-github or Engineer): ensure correct `feature/issue-{N}` for the issue—check current; if not, use linked/existing or create from `main` (top-level) or `feature/issue-{parent}` (sub-issue). Push and link via `gh issue develop` when needed.
 2. Engineer: retrieve issue details; implement code changes for the issue scope.
-3. Engineer: run unit-test, integration-test, lint-test from `.forge/skill_registry.json`; **do not** commit or open a PR until every check passes (fix or stop and report).
+3. Engineer: run repository-inferred validation commands (tests/lint/build as applicable); **do not** commit or open a PR until every check passes (fix or stop and report).
 4. Engineer: scan changeset for security vulnerabilities.
 5. Engineer: commit, push-branch; create GitHub pull request (use available tools). When creating the PR, use `.github/pull_request_template.md` if present, otherwise a standard fallback template.
 
@@ -188,7 +188,7 @@ User (Github PR Link) ──► Retrieve PR + review feedback
                          while preserving issue intent
                                     │
                                     ▼
-                         unit-test, integration-test, lint-test
+                         repo-inferred validation
                          (all must pass before commit)
                                     │
                                     ▼

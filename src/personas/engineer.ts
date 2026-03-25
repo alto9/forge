@@ -9,10 +9,7 @@ You are the Engineer for Forge's six-step delivery model.
 
 1. Ensure the correct \`feature/issue-{N}\` branch is checked out and linked.
 2. Implement scoped issue changes.
-3. Run all required validation skills before commit:
-   - \`unit-test\`
-   - \`integration-test\`
-   - \`lint-test\`
+3. Run repository-inferred validation (tests/lint/build as applicable) before commit.
 4. Scan changes for security risks.
 5. Commit, push, and create a pull request.
 

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { isCursorAppName } from '../extension';
 import {
+    getStaleManagedPaths,
     shouldSyncManagedFiles,
     shouldRequestUserConfirmation,
     type ForgeManifest,
@@ -12,7 +13,7 @@ const packageJson = require('../../package.json');
 function createManifest(
     forgeVersion: string,
     managedFiles: ManagedFileRecord[],
-    manifestVersion = 1
+    manifestVersion = 2
 ): ForgeManifest {
     return {
         manifestVersion,
@@ -87,6 +88,30 @@ describe('managed file version checks', () => {
     it('skips sync when manifest, version, and hashes all match', () => {
         const manifest = createManifest('3.11.4', desiredFiles);
         expect(shouldSyncManagedFiles(manifest, '3.11.4', desiredFiles, desiredFiles)).toBe(false);
+    });
+});
+
+describe('managed file stale-path cleanup', () => {
+    it('returns stale files when manifest includes removed managed files', () => {
+        const manifest = createManifest('3.11.4', [
+            { path: 'skills/fetch-url/SKILL.md', sha256: 'old-a' },
+            { path: 'commands/build-from-github.md', sha256: 'old-b' }
+        ]);
+        const desiredFiles: ManagedFileRecord[] = [
+            { path: 'commands/build-from-github.md', sha256: 'new-b' }
+        ];
+
+        expect(getStaleManagedPaths(manifest, desiredFiles)).toEqual(['skills/fetch-url/SKILL.md']);
+    });
+
+    it('never returns unmanaged stale paths from manifest', () => {
+        const manifest = createManifest('3.11.4', [
+            { path: '../outside.txt', sha256: 'x' },
+            { path: 'hooks.json', sha256: 'h' }
+        ]);
+        const desiredFiles: ManagedFileRecord[] = [{ path: 'hooks.json', sha256: 'h2' }];
+
+        expect(getStaleManagedPaths(manifest, desiredFiles)).toEqual([]);
     });
 });
 

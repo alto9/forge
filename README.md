@@ -57,7 +57,7 @@ After setup:
 ~/.cursor/
 ├── agents/                   # visionary, architect, planner, refine, domain SMEs, build, review
 ├── commands/                 # architect-this, plan-roadmap, refine-issue, build-from-github, build-from-pr-review, review-pr
-├── skills/                   # fetch-url, pull-milestones, pull-milestone-issues, etc.
+├── skills/                   # gh-driven workflow skills (branch, commit, milestone operations)
 ├── hooks/                    # JSON schema validation on .forge file edits
 └── hooks.json                # Cursor hooks config
 ```
