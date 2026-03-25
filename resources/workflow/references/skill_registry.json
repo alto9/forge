@@ -18,12 +18,9 @@
         "product_owner",
         "architect",
         "planner",
-        "runtime",
-        "business_logic",
-        "data",
-        "interface",
-        "integration",
-        "operations"
+        "tech_writer",
+        "engineer",
+        "quality_assurance"
       ]
     },
     {

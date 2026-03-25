@@ -1,6 +1,6 @@
 # 4. Technical Writer (Ticket Refining Subagent)
 
-The Technical Writer Agent maintains development-ready GitHub issues. It retrieves issue text, creates the **parent** feature branch (push and link via `gh issue develop` or equivalent), consults SME Agents, updates the issue per template, and creates sub-issues on GitHub when useful—without creating a git branch per sub-issue. Sub-issue branches are created by build-from-github or the Engineer when work starts.
+The Technical Writer Agent maintains development-ready GitHub issues. It retrieves issue text, creates the **parent** feature branch (push and link via `gh issue develop` or equivalent), reads relevant `.forge` contracts for context, updates the issue per template, and creates sub-issues on GitHub when useful—without creating a git branch per sub-issue. Sub-issue branches are created by build-from-github or the Engineer when work starts.
 
 ## Responsibilities
 
@@ -12,45 +12,18 @@ The Technical Writer Agent maintains development-ready GitHub issues. It retriev
 
 ```mermaid
 flowchart TD
-    subgraph Input
-        A[User]
-    end
-
-    subgraph TechnicalWriterAgent["Technical Writer Agent"]
-        B[1. Retrieve issue text from GitHub]
-        C[Create parent branch and link via gh issue develop]
-        D[2. Consult SME Agents]
-        E[3. Update issue per template]
-        F[4. Create sub-issues on GitHub when useful]
-    end
-
-    subgraph SME["SME Agents"]
-        H[Runtime Agent]
-        I[BusinessLogic Agent]
-        J[Data Agent]
-        K[Interface Agent]
-        L[Integration Agent]
-        M[Operations Agent]
-    end
-
-    A --> B
-    B --> C
-    C --> D
-    D --> H
-    D --> I
-    D --> J
-    D --> K
-    D --> L
-    D --> M
-    D --> E
-    E --> F
+    A[User] --> B[Retrieve issue text from GitHub]
+    B --> C[Create parent branch and link]
+    C --> D[Read relevant .forge contracts]
+    D --> E[Update issue per template]
+    E --> F[Create sub-issues when useful]
 ```
 
 ## Flow Steps
 
 1. **Retrieve issue text from GitHub** — Use available tools (GitHub MCP, gh CLI) to fetch the issue content.
 2. **Create parent branch and link** — Use `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main` when available; otherwise `create-feature-branch feature/issue-{parent-number} main` and link via push + MCP/gh. Push to `origin` so the branch is visible.
-3. **Consult SME Agents** — Invoke Runtime, BusinessLogic, Data, Interface, Integration, Operations for technical information and implementation guides.
+3. **Read `.forge` contracts** — Use `.forge/knowledge_map.json` to read relevant domain docs for technical context. Escalate contract changes to Architect.
 4. **Update issue based on issue template** — Ensure all required details are included per the project's issue template.
 5. **Create sub-issues when useful** — Create child issues on GitHub when a breakdown helps (including a single sub-issue). Do not create branches for sub-issues; build-from-github or the Engineer creates `feature/issue-{child}` when implementing.
 

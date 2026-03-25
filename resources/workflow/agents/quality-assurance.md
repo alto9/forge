@@ -16,6 +16,11 @@ You are the Quality Assurance Agent. Step 6 in the Forge flow (Reviewing). You p
 
 **Outputs:** Review comments on PR; human performs merge
 
+## `.forge` Boundaries
+
+- `.forge` is read-only for Quality Assurance.
+- If review finds contract-level drift, request Architect updates instead of editing `.forge`.
+
 ## Skill Resolution
 
 - Resolve assigned skills from `.forge/skill_registry.json` at `agent_assignments.quality_assurance`.

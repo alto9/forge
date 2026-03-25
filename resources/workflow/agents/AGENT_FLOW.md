@@ -6,12 +6,20 @@ This document describes the intended flow of responsibility among Forge agents. 
 
 | Step | Phase | Agent | Key Actions |
 |------|-------|-------|-------------|
-| 1 | Product Owner | Product Owner | Retrieve vision.json and project.json; determine adjustments; hand off to Architect |
-| 2 | Architecting | Architect | Retrieve vision; clarity check; invoke SME subagents (async); Planner recap |
-| 3 | Planning | Planner | pull-milestones; pull-milestone-issues; determine GitHub changes |
-| 4 | Refining | Technical Writer | Retrieve issue; create parent branch and link (gh issue develop); consult SME; update issue; create sub-issues when useful (no sub-issue branches) |
+| 1 | Product Owner | Product Owner | Retrieve `vision.json` and `project.json`, determine adjustments, hand off to Architect |
+| 2 | Architecting | Architect | Retrieve vision and knowledge map, perform clarity check, update `.forge` contracts by domain, hand off recap to Planner |
+| 3 | Planning | Planner | pull-milestones, pull-milestone-issues, determine GitHub changes |
+| 4 | Refining | Technical Writer | Retrieve issue, create parent branch and link, read `.forge` contracts, update issue, create sub-issues when useful (no sub-issue branches) |
 | 5 | Building | Engineer | Branch setup by build-from-github or Engineer for issue being built; perform code changes; validate (unit-test, integration-test, lint-test) must all pass before commit; scan security; commit; push; create-pr |
 | 6 | Reviewing | Quality Assurance | Retrieve PR; checkout; review accuracy; check vulnerabilities; add review to PR |
+
+## `.forge` Edit/Read Boundaries
+
+- **May edit `.forge`:** Product Owner and Architect.
+- **Read-only for `.forge`:** Planner, Technical Writer, Engineer, Quality Assurance.
+- Product Owner owns product intent (`.forge/vision.json`, `.forge/project.json`).
+- Architect owns technical contract shape and content under `.forge/knowledge_map.json` and mapped domain docs.
+- Downstream agents consume those contracts and escalate contract changes back to Architect instead of editing `.forge` directly.
 
 ## Commands and Flows
 
@@ -41,11 +49,11 @@ Structured input that kicks off the market → features flow. Use when new marke
 ```
 
 **Flow:**
-1. User provides Product Intake Prompt (or pastes market research content)
-2. Product Owner ingests, researches if needed, updates `vision.json`
-3. Architect receives prompt; updates knowledge map and domain contracts if technical scope changed
-4. Planner receives recap; creates/updates milestones if roadmap impact
-5. Downstream: Technical Writer → Engineer → Quality Assurance as usual
+1. User provides Product Intake Prompt (or pastes market research content).
+2. Product Owner ingests and updates `vision.json`.
+3. Architect receives prompt; updates knowledge map and domain contracts when technical scope changes.
+4. Planner receives recap and creates/updates milestones if roadmap impact exists.
+5. Downstream: Technical Writer → Engineer → Quality Assurance.
 
 ---
 
@@ -59,25 +67,18 @@ User ──► Architect Agent ──► [Clarity check]
                     ┌───────────────┴───────────────┐
                     │ No clarity                    │ Yes
                     ▼                               ▼
-              Loop to user              Examine input for SME subagents
-                                               │
-                    ┌──────────────────────────┼──────────────────────────┐
-                    ▼                          ▼                          ▼
-              Runtime Agent            BusinessLogic Agent           Data Agent
-              Interface Agent          Integration Agent           Operations Agent
-                    │                          │                          │
-                    └──────────────────────────┼──────────────────────────┘
+              Loop to user      Update knowledge map + mapped domain contracts
                                                │
                                                ▼
                                     Invoke Planner with recap
 ```
 
 **Steps:**
-1. Architect retrieves `vision.json` and determines if adjustments are needed.
-2. **Clarity check:** Have enough clarity to prompt SME agents? If no, loop back to user.
-3. Examine user input to determine which SME subagents to invoke (async).
-4. Each SME: examine prompt input; examine files in domain; make concise updates.
-5. Invoke Planner subagent with recap of changes made.
+1. Architect retrieves `vision.json` and `.forge/knowledge_map.json`.
+2. **Clarity check:** if direction is unclear, loop to user for clarification.
+3. Update `.forge/knowledge_map.json` shape only when required.
+4. Update domain contract files listed in `.forge/knowledge_map.json` for impacted domains.
+5. Hand off recap to Planner.
 
 ---
 
@@ -118,10 +119,7 @@ User (Github Issue Link) ──► Technical Writer Agent
                     Create parent branch (linked to issue via gh issue develop)
                                     │
                                     ▼
-                    push parent branch; link branch to parent issue (gh / MCP)
-                                    │
-                                    ▼
-              Consult SME Agents for technical info and implementation guides
+                    Read `.forge` domain contracts as context
                                     │
                                     ▼
                     Update issue based on template
@@ -133,7 +131,7 @@ User (Github Issue Link) ──► Technical Writer Agent
 **Steps:**
 1. Retrieve issue text from GitHub (use available tools).
 2. Create parent branch and link: `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main` when available; otherwise `create-feature-branch` + push + link via MCP/gh.
-3. Consult SME Agents (runtime, business_logic, data, interface, integration, operations) for technical information and implementation guides.
+3. Read relevant `.forge` contracts from `.forge/knowledge_map.json` for technical context. Escalate contract changes to Architect.
 4. Update the issue based on the issue template; ensure all required details are included.
 5. Create sub-issues on GitHub when useful (including a single sub-issue when appropriate). Do not create branches for sub-issues; build-from-github or Engineer creates them when work starts.
 
@@ -202,16 +200,13 @@ User (Github PR Link) ──► Quality Assurance Agent
 Market Input / Product Intake
          │
          ▼
-   Product Owner (vision.json)
+   Product Owner (vision + project)
          │
          ▼
-   Architect ──────────────────────────────────────┐
-         │  knowledge_map + domain contracts       │
-         │  Delegates to: runtime, business_logic,  │
-         │  data, interface, integration, ops       │
-         │                                         │
-         ▼                                         │
-   Planner (GitHub milestones) ◄───────────────────┘
+   Architect (knowledge_map + domain contracts)
+         │
+         ▼
+   Planner (GitHub milestones)
          │
          ▼
    Technical Writer (tickets + parent branch)
@@ -220,42 +215,21 @@ Market Input / Product Intake
    Engineer → Quality Assurance
 ```
 
-## Domain Subagents: Subject Matter Experts
-
-Each domain subagent owns its contracts and performs updates:
-
-| Subagent | Owns | Responsibilities |
-|----------|------|-------------------|
-| **runtime** | `.forge/runtime/` | Configuration, startup, lifecycle, execution model |
-| **business_logic** | `.forge/business_logic/` | Domain model, user stories, error handling |
-| **data** | `.forge/data/` | Data model, persistence, serialization, consistency |
-| **interface** | `.forge/interface/` | Input handling, presentation, interaction flow |
-| **integration** | `.forge/integration/` | API contracts, external systems, messaging |
-| **operations** | `.forge/operations/` | Build, deployment, observability, security |
-
-Domain subagents are **invoked by the Architect** when work falls in their scope. They perform the actual file updates and contract maintenance.
-
 ## Knowledge Map
 
 `.forge/knowledge_map.json` defines the structure of domain contracts. Use it to:
 
-- Map domains to their primary docs and children
-- Determine which subagent to invoke for a given file or topic
-- Understand the boundaries between domains
+- Map domains to their primary docs and children.
+- Determine which contract files are relevant for a topic.
+- Enforce boundaries between runtime, business logic, data, interface, integration, and operations documentation.
 
 ## When to Invoke Which Agent
 
 | Prompt concerns | Invoke |
 |------------------|--------|
 | Product vision, strategy, market | Product Owner |
-| Cross-domain architecture, technical direction, routing | Architect |
-| Architect prompt touching runtime/config/lifecycle | Architect → runtime |
-| Architect prompt touching data/persistence/schema | Architect → data |
-| Architect prompt touching domain rules, user stories | Architect → business_logic |
-| Architect prompt touching UI, inputs, presentation | Architect → interface |
-| Architect prompt touching APIs, external systems | Architect → integration |
-| Architect prompt touching build, deploy, security | Architect → operations |
+| Cross-domain architecture, contract updates, knowledge map changes | Architect |
 | Milestones, roadmap sequencing | Planner |
-| Ticket decomposition | Technical Writer |
+| Ticket decomposition, acceptance criteria, parent/sub-issue clarity | Technical Writer |
 | Implementation, tests | Engineer |
 | Code review, security review | Quality Assurance |

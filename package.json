@@ -40,52 +40,40 @@
   "contributes": {
     "chatParticipants": [
       {
-        "id": "forge.participant",
-        "name": "forge",
-        "fullName": "Forge",
-        "description": "Main Forge helper for guidance and general questions"
+        "id": "forge.product-owner.participant",
+        "name": "product-owner",
+        "fullName": "Product Owner",
+        "description": "Step 1: maintains product vision and project direction"
       },
       {
-        "id": "forge-refine.participant",
-        "name": "forge-refine",
-        "fullName": "Forge Refine",
-        "description": "Refine GitHub issues to clarify business value and requirements"
+        "id": "forge.architect.participant",
+        "name": "architect",
+        "fullName": "Architect",
+        "description": "Step 2: enforces knowledge map structure and updates domain contracts"
       },
       {
-        "id": "forge-commit.participant",
-        "name": "forge-commit",
-        "fullName": "Forge Commit",
-        "description": "Commit with validation and conventional commit messages (uses commit skill)"
+        "id": "forge.planner.participant",
+        "name": "planner",
+        "fullName": "Planner",
+        "description": "Step 3: plans milestones and issues from validated direction"
       },
       {
-        "id": "forge-push.participant",
-        "name": "forge-push",
-        "fullName": "Forge Push",
-        "description": "Safely push to remote (uses push-branch skill)"
+        "id": "forge.technical-writer.participant",
+        "name": "technical-writer",
+        "fullName": "Technical Writer",
+        "description": "Step 4: refines issues and sub-issues with clear acceptance criteria"
       },
       {
-        "id": "forge-pullrequest.participant",
-        "name": "forge-pullrequest",
-        "fullName": "Forge Pull Request",
-        "description": "Create PR with conventional commit validation (uses make-pull-request skill)"
+        "id": "forge.engineer.participant",
+        "name": "engineer",
+        "fullName": "Engineer",
+        "description": "Step 5: implements issues, validates tests, and creates pull requests"
       },
       {
-        "id": "forge-setup-issue.participant",
-        "name": "forge-setup-issue",
-        "fullName": "Forge Setup Issue",
-        "description": "Prepare environment for issue work (create-feature-branch from parent or main)"
-      },
-      {
-        "id": "forge-build-issue.participant",
-        "name": "forge-build-issue",
-        "fullName": "Forge Build Issue",
-        "description": "Implement issue end-to-end via build-from-github workflow (commit, push-branch, create PR)"
-      },
-      {
-        "id": "forge-review-pr.participant",
-        "name": "forge-review-pr",
-        "fullName": "Forge Review PR",
-        "description": "Pull PR branch, review code, post review comments (uses review-pr skill)"
+        "id": "forge.quality-assurance.participant",
+        "name": "quality-assurance",
+        "fullName": "Quality Assurance",
+        "description": "Step 6: reviews pull requests for correctness and security"
       }
     ],
     "commands": [

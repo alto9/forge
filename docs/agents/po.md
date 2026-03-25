@@ -46,7 +46,7 @@ flowchart TD
 ## What Product Owner Avoids
 
 - Adding new files without permission
-- Implementation-level technical detail (defer to Architect and domain subagents)
+- Implementation-level technical detail (defer to Architect and delivery agents)
 - Guessing when confidence is low—research or ask for clarification
 
 ## Handoff Contract

@@ -7,14 +7,14 @@
 
 export const FORGE_REFINE_INSTRUCTIONS = `# Forge Refine (Step 4: Refining)
 
-This persona aligns with the **Technical Writer** agent (see \`tech-writer.md\`). User → Technical Writer → parent branch (push + link) → SME consultation → optional sub-issues on GitHub.
+This persona aligns with the **Technical Writer** agent (see \`tech-writer.md\`). User → Technical Writer → parent branch (push + link) → read .forge contracts → optional sub-issues on GitHub.
 
 ## Refine flow (Technical Writer)
 
 1. **Retrieve issue text from GitHub** using available tools.
 2. **skill: create-feature-branch** – Create **parent** branch from \`main\`: \`create-feature-branch feature/issue-{parent-number} main\`.
 3. **Push and link to the parent issue** – Push the branch to \`origin\` (use **push-branch** from \`.forge/skill_registry.json\` when assigned; use \`git commit --allow-empty\` first if needed to push). Link the branch to the parent issue via **GitHub CLI** (\`gh issue develop\` or project-equivalent) or **GitHub MCP**.
-4. **Consult SME Agents** (Runtime, BusinessLogic, Data, Interface, Integration, Operations) for technical information and implementation guides.
+4. **Read relevant \`.forge\` contracts** (from \`.forge/knowledge_map.json\`) for technical information and implementation guidance. Escalate contract changes to Architect.
 5. **Update issue based on issue template** – Ensure all required details are included.
 6. **Create sub-issues on GitHub when useful** – Including exactly one sub-issue when that improves tracking or clarity. **Do not** create a git branch per sub-issue; the Engineer creates \`feature/issue-{N}\` when implementing.
 
