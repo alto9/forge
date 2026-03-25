@@ -11,7 +11,7 @@ Forge Studio provides:
 - **Forge Help persona** – Workflow explainer for command/agent guidance and handoff questions
 - **Agent workflow** – Visionary, Architect, Planner, Refine, and domain SMEs (runtime, business_logic, data, interface, integration, operations) for planning and documentation; Build and Review agents for implementation
 - **Commands** – architect-this, plan-roadmap, refine-issue, build-from-github, build-from-pr-review, review-pr (injected via Cursor-agent initialization)
-- **Chat participants** – @forge, @forge-refine, @forge-commit, @forge-push, @forge-pullrequest, @forge-setup-issue, @forge-build-issue, @forge-review-pr (VSCode chat participants mirror Cursor agents)
+- **Chat participants** – @forge-help, @product-owner, @architect, @planner, @technical-writer, @engineer, @quality-assurance (VSCode chat participants mirror Cursor agents)
 
 ## Quick Start
 
@@ -41,14 +41,12 @@ Type `@` in chat to use Forge personas:
 | Participant | Purpose |
 |-------------|---------|
 | **@forge-help** | Workflow guide for Forge steps, commands, handoffs, and quality gates |
-| **@forge** | Main Forge helper for guidance and general questions |
-| **@forge-refine** | Refine GitHub issues to clarify business value and requirements |
-| **@forge-commit** | Commit with validation and conventional commit messages |
-| **@forge-push** | Safely push to remote |
-| **@forge-pullrequest** | Create PR with conventional commit validation |
-| **@forge-setup-issue** | Prepare environment for issue work (create-feature-branch from parent or main) |
-| **@forge-build-issue** | Implement issue end-to-end via build-from-github workflow |
-| **@forge-review-pr** | Pull PR branch, review code, post review comments |
+| **@product-owner** | Step 1: maintain product vision and project direction |
+| **@architect** | Step 2: update technical contracts and knowledge structure |
+| **@planner** | Step 3: align milestones and issues with documented direction |
+| **@technical-writer** | Step 4: refine GitHub issues into implementation-ready tickets |
+| **@engineer** | Step 5: implement scoped issue work and prepare PRs |
+| **@quality-assurance** | Step 6: review PRs for correctness and security |
 
 ## Project Structure
 
