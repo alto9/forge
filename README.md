@@ -6,23 +6,25 @@ VSCode/Cursor extension for context engineering and agentic development. Forge S
 
 Forge Studio provides:
 
-- **Initialize Agents** – Detects Cursor vs VSCode, installs agents/commands/skills/hooks to `~/.cursor/` (user-level), and creates `.forge/` in the project
+- **Initialize Cursor Agents** – Installs agents/commands/skills/hooks to `~/.cursor/` (user-level)
+- **Initialize Project** – Creates `.forge/` in the current project
 - **Agent workflow** – Visionary, Architect, Planner, Refine, and domain SMEs (runtime, business_logic, data, interface, integration, operations) for planning and documentation; Build and Review agents for implementation
-- **Commands** – architect-this, plan-roadmap, refine-issue, build-from-github, review-pr (injected via Initialize Agents)
+- **Commands** – architect-this, plan-roadmap, refine-issue, build-from-github, review-pr (injected via Cursor-agent initialization)
 - **Chat participants** – @forge, @forge-refine, @forge-commit, @forge-push, @forge-pullrequest, @forge-setup-issue, @forge-build-issue, @forge-review-pr (VSCode chat participants mirror Cursor agents)
 
 ## Quick Start
 
 1. Open a project in Cursor or VSCode
-2. Run **Forge: Initialize Agents** from the Command Palette (`Cmd/Ctrl+Shift+P`)
-3. Forge detects your IDE (or asks if unclear), then creates:
+2. On Cursor startup, Forge checks user-level Cursor agents in `~/.cursor/` and prompts before applying updates when changes are needed
+3. Run **Forge: Initialize Project** from the Command Palette (`Cmd/Ctrl+Shift+P`) to create project-level `.forge/`
+4. Forge creates:
    - `~/.cursor/` – agents, commands, skills, hooks (user-level, shared across projects)
    - `~/.cursor/hooks.json` – JSON schema validation on .forge file edits
    - `.forge/` – vision.json, project.json, skill_registry.json, knowledge_map.json, schemas/ (project-level)
 
 ## User Flow
 
-After running **Forge: Initialize Agents**, use the injected agents and commands:
+After Cursor-agent initialization, use the injected agents and commands:
 
 - **Architect** (`/architect-this`) – Examines vision.json, delegates to domain SME agents, invokes Planner
 - **Plan Roadmap** (`/plan-roadmap`) – Manages GitHub milestones and issues via pull-milestones, pull-milestone-issues

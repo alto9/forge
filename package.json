@@ -37,6 +37,9 @@
     "theme": "dark"
   },
   "main": "./dist/extension.js",
+  "activationEvents": [
+    "onStartupFinished"
+  ],
   "contributes": {
     "chatParticipants": [
       {
@@ -79,7 +82,11 @@
     "commands": [
       {
         "command": "forge.initializeAgents",
-        "title": "Forge: Initialize Agents"
+        "title": "Forge: Initialize Cursor Agents"
+      },
+      {
+        "command": "forge.initializeProject",
+        "title": "Forge: Initialize Project"
       }
     ]
   },
