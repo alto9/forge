@@ -8,8 +8,9 @@ Forge Studio provides:
 
 - **Initialize Cursor Agents** – Installs agents/commands/skills/hooks to `~/.cursor/` (user-level)
 - **Initialize Project** – Creates `.forge/` in the current project
+- **Forge Help persona** – Workflow explainer for command/agent guidance and handoff questions
 - **Agent workflow** – Visionary, Architect, Planner, Refine, and domain SMEs (runtime, business_logic, data, interface, integration, operations) for planning and documentation; Build and Review agents for implementation
-- **Commands** – architect-this, plan-roadmap, refine-issue, build-from-github, review-pr (injected via Cursor-agent initialization)
+- **Commands** – architect-this, plan-roadmap, refine-issue, build-from-github, build-from-pr-review, review-pr (injected via Cursor-agent initialization)
 - **Chat participants** – @forge, @forge-refine, @forge-commit, @forge-push, @forge-pullrequest, @forge-setup-issue, @forge-build-issue, @forge-review-pr (VSCode chat participants mirror Cursor agents)
 
 ## Quick Start
@@ -30,6 +31,7 @@ After Cursor-agent initialization, use the injected agents and commands:
 - **Plan Roadmap** (`/plan-roadmap`) – Manages GitHub milestones and issues via pull-milestones, pull-milestone-issues
 - **Refine Issue** (`/refine-issue`) – Refines GitHub issues with SME context; creates parent branch (push + link); optional sub-issues on GitHub (no per-sub-issue git branches)
 - **Build from GitHub** (`/build-from-github`) – Creates/links implementation branch for the issue, implements, runs all tests/lint until green, then commit/PR
+- **Build from PR Review** (`/build-from-pr-review`) – Retrieves PR feedback, checks out PR branch, applies requested changes, validates, and pushes updates for re-review
 - **Review PR** (`/review-pr`) – Reviews code, posts review comments
 
 ## Chat Participants (VSCode)
@@ -38,6 +40,7 @@ Type `@` in chat to use Forge personas:
 
 | Participant | Purpose |
 |-------------|---------|
+| **@forge-help** | Workflow guide for Forge steps, commands, handoffs, and quality gates |
 | **@forge** | Main Forge helper for guidance and general questions |
 | **@forge-refine** | Refine GitHub issues to clarify business value and requirements |
 | **@forge-commit** | Commit with validation and conventional commit messages |
@@ -55,7 +58,7 @@ After setup:
 ```
 ~/.cursor/
 ├── agents/                   # visionary, architect, planner, refine, domain SMEs, build, review
-├── commands/                 # architect-this, plan-roadmap, refine-issue, build-from-github, review-pr
+├── commands/                 # architect-this, plan-roadmap, refine-issue, build-from-github, build-from-pr-review, review-pr
 ├── skills/                   # fetch-url, pull-milestones, pull-milestone-issues, etc.
 ├── hooks/                    # JSON schema validation on .forge file edits
 └── hooks.json                # Cursor hooks config

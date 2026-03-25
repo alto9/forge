@@ -43,6 +43,12 @@
   "contributes": {
     "chatParticipants": [
       {
+        "id": "forge.help.participant",
+        "name": "forge-help",
+        "fullName": "Forge Help",
+        "description": "Workflow guide: explains Forge commands, steps, and handoffs"
+      },
+      {
         "id": "forge.product-owner.participant",
         "name": "product-owner",
         "fullName": "Product Owner",

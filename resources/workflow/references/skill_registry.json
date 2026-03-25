@@ -107,6 +107,7 @@
     "plan-roadmap": ["pull-milestones", "pull-milestone-issues"],
     "refine-issue": [],
     "build-from-github": [],
+    "build-from-pr-review": [],
     "review-pr": []
   },
   "archived_legacy_removed": [

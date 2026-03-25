@@ -23,7 +23,7 @@ This document describes the intended flow of responsibility among Forge agents. 
 
 ## Commands and Flows
 
-Five canonical commands orchestrate the agent flows:
+Six canonical commands orchestrate the agent flows:
 
 | Command | Input | Output |
 |---------|-------|--------|
@@ -31,6 +31,7 @@ Five canonical commands orchestrate the agent flows:
 | `/plan-roadmap` | `.forge/vision.json`, `.forge/knowledge_map.json` | Synced GitHub milestones/issues |
 | `/refine-issue {link}` | GitHub issue link | Refined tickets ready for development |
 | `/build-from-github` | GitHub issue link | GitHub pull request |
+| `/build-from-pr-review {link}` | GitHub PR link | Updated PR branch with feedback addressed |
 | `/review-pr {link}` | GitHub PR link | PR with review (human performs merge) |
 
 ---
@@ -172,7 +173,37 @@ User (Github Issue Link) ──► Branch setup (ensure correct branch)
 
 ---
 
-## 5. Reviewing Flow (`/review-pr`)
+## 5. Build from PR Review Flow (`/build-from-pr-review`)
+
+```
+User (Github PR Link) ──► Retrieve PR + review feedback
+                                    │
+                                    ▼
+                        Resolve original issue context
+                        Verify current branch matches PR head
+                        (fetch + checkout PR branch if needed)
+                                    │
+                                    ▼
+                         Engineer applies review feedback
+                         while preserving issue intent
+                                    │
+                                    ▼
+                         unit-test, integration-test, lint-test
+                         (all must pass before commit)
+                                    │
+                                    ▼
+                         Security scan, commit, push PR branch
+```
+
+**Steps:**
+1. Retrieve PR details, source branch, and review feedback (reviews/comments) using available tools.
+2. Resolve original issue context for scope integrity.
+3. Verify branch context and checkout PR source branch if not already on it.
+4. Engineer applies requested feedback, runs all required validations, scans security, and pushes updates to the same PR branch.
+
+---
+
+## 6. Reviewing Flow (`/review-pr`)
 
 ```
 User (Github PR Link) ──► Quality Assurance Agent

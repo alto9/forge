@@ -5,6 +5,7 @@ import { FORGE_PLANNER_INSTRUCTIONS } from './personas/planner';
 import { FORGE_TECHNICAL_WRITER_INSTRUCTIONS } from './personas/technical-writer';
 import { FORGE_ENGINEER_INSTRUCTIONS } from './personas/engineer';
 import { FORGE_QUALITY_ASSURANCE_INSTRUCTIONS } from './personas/quality-assurance';
+import { FORGE_HELP_INSTRUCTIONS } from './personas/forge-help';
 
 /**
  * Chat participants for Forge that enable direct interaction with Forge
@@ -30,6 +31,7 @@ export class ForgeChatParticipant {
      * Register all Forge personas as chat participants
      */
     static registerAll(context: vscode.ExtensionContext): void {
+        this.registerParticipant(context, 'forge.help.participant', this.handleForgeHelpRequest);
         this.registerParticipant(context, 'forge.product-owner.participant', this.handleProductOwnerRequest);
         this.registerParticipant(context, 'forge.architect.participant', this.handleArchitectRequest);
         this.registerParticipant(context, 'forge.planner.participant', this.handlePlannerRequest);
@@ -43,6 +45,17 @@ export class ForgeChatParticipant {
      */
     static register(context: vscode.ExtensionContext): void {
         this.registerAll(context);
+    }
+
+    private static async handleForgeHelpRequest(
+        request: vscode.ChatRequest,
+        context: vscode.ChatContext,
+        stream: vscode.ChatResponseStream,
+        token: vscode.CancellationToken
+    ): Promise<void> {
+        stream.markdown('# Forge Help\n\n');
+        stream.markdown(FORGE_HELP_INSTRUCTIONS);
+        stream.markdown('\n\n---\n\n**Ask any Forge workflow question and I will guide your next step.**');
     }
 
     private static async handleProductOwnerRequest(
