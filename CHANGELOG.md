@@ -1,3 +1,7 @@
+## <small>3.13.3 (2026-03-25)</small>
+
+* refactor: migrate scripts from JavaScript to Bash for improved performance and usability ([8775b4b](https://github.com/alto9/forge/commit/8775b4b))
+
 ## <small>3.13.2 (2026-03-25)</small>
 
 * refactor: streamline skill registry and update validation processes ([3cc2641](https://github.com/alto9/forge/commit/3cc2641))
