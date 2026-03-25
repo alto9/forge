@@ -1,3 +1,7 @@
+## 3.12.0 (2026-03-25)
+
+* feat: add initialization commands for Cursor agents and project setup ([e495011](https://github.com/alto9/forge/commit/e495011))
+
 ## <small>3.11.4 (2026-03-25)</small>
 
 * refactor: update agent roles and knowledge map structure ([f0926a9](https://github.com/alto9/forge/commit/f0926a9))
