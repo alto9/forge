@@ -1,3 +1,7 @@
+## <small>3.13.1 (2026-03-25)</small>
+
+* docs: update chat participants in README ([98e5c02](https://github.com/alto9/forge/commit/98e5c02))
+
 ## 3.13.0 (2026-03-25)
 
 * feat: introduce Forge Help persona and related commands ([a58b1be](https://github.com/alto9/forge/commit/a58b1be))
