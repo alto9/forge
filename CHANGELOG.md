@@ -1,3 +1,7 @@
+## 3.13.0 (2026-03-25)
+
+* feat: introduce Forge Help persona and related commands ([a58b1be](https://github.com/alto9/forge/commit/a58b1be))
+
 ## 3.12.0 (2026-03-25)
 
 * feat: add initialization commands for Cursor agents and project setup ([e495011](https://github.com/alto9/forge/commit/e495011))
