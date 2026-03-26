@@ -9,17 +9,16 @@ This document describes the intended flow of responsibility among Forge agents. 
 | 1 | Product Owner | Product Owner | Retrieve `vision.json` and `project.json`, determine adjustments, hand off to Architect |
 | 2 | Architecting | Architect | Retrieve vision and knowledge map, perform clarity check, update `.forge` contracts by domain, hand off recap to Planner |
 | 3 | Planning | Planner | pull-milestones, pull-milestone-issues, determine GitHub changes |
-| 4 | Refining | Technical Writer | Retrieve issue, create parent branch and link, read `.forge` contracts, update issue, create sub-issues when useful (no sub-issue branches) |
-| 5 | Building | Engineer | Branch setup by build-from-github or Engineer for issue being built; perform code changes; run repo-inferred validation (tests/lint/build as applicable) before commit; scan security; commit; push; create-pr |
+| 4 | Refining | Technical Writer | Retrieve issue, create parent branch and link, use `.forge` contracts for context (patch when misleading), update issue, create sub-issues when useful (no sub-issue branches) |
+| 5 | Building | Engineer | Branch setup by build-from-github or Engineer for issue being built; perform code changes; use `.forge` for alignment; run repo-inferred validation (tests/lint/build as applicable) before commit; scan security; commit; push; create-pr |
 | 6 | Reviewing | Quality Assurance | Retrieve PR; checkout; review accuracy; check vulnerabilities; add review to PR |
 
-## `.forge` Edit/Read Boundaries
+## `.forge` context and edits
 
-- **May edit `.forge`:** Product Owner and Architect.
-- **Read-only for `.forge`:** Planner, Technical Writer, Engineer, Quality Assurance.
-- Product Owner owns product intent (`.forge/vision.json`, `.forge/project.json`).
-- Architect owns technical contract shape and content under `.forge/knowledge_map.json` and mapped domain docs.
-- Downstream agents consume those contracts and escalate contract changes back to Architect instead of editing `.forge` directly.
+- **All agents** use `.forge` for context as needed: start from `.forge/knowledge_map.json` to find relevant contracts and schemas.
+- **Primary ownership:** **Product Owner** owns product intent (`.forge/vision.json`, `.forge/project.json`). **Architect** is the primary steward of **`.forge/knowledge_map.json`** structure and coherence across mapped domain contracts.
+- **Any agent may edit** files under `.forge` when doing so improves accuracy or clarity—for example, shipped work or refined tickets are poorly represented, or contracts drift from reality. Prefer updating canonical `.forge` docs over adding parallel documentation elsewhere (extra READMEs, ad hoc design notes).
+- **Scope:** Keep edits minimal and consistent with existing schemas and map structure. **Large** structural changes, new domains, or ambiguous cross-domain trade-offs should still go through **Architect** (e.g. `/architect-this`) when a quick local fix is not enough.
 
 ## Commands and Flows
 
@@ -120,7 +119,7 @@ User (Github Issue Link) ──► Technical Writer Agent
                     Create parent branch (linked to issue via gh issue develop)
                                     │
                                     ▼
-                    Read `.forge` domain contracts as context
+                    Use `.forge` domain contracts as context (patch if misleading)
                                     │
                                     ▼
                     Update issue based on template
@@ -132,7 +131,7 @@ User (Github Issue Link) ──► Technical Writer Agent
 **Steps:**
 1. Retrieve issue text from GitHub (use available tools).
 2. Create parent branch and link: `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main` when available; otherwise `create-issue-branch` (pass `<owner/repo>` when not in a clone) + push + link via MCP/gh.
-3. Read relevant `.forge` contracts from `.forge/knowledge_map.json` for technical context. Escalate contract changes to Architect.
+3. Read relevant `.forge` contracts from `.forge/knowledge_map.json` for technical context. Update `.forge` when contracts are wrong or stale for this ticket; escalate to Architect when the fix needs structural or cross-domain design work.
 4. Update the issue based on the issue template; ensure all required details are included.
 5. Create sub-issues on GitHub when useful (including a single sub-issue when appropriate). Do not create branches for sub-issues; build-from-github or Engineer creates them when work starts.
 

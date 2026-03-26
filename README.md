@@ -9,7 +9,7 @@ Forge Studio provides:
 - **Initialize Cursor Agents** – Installs agents/commands/skills/hooks to `~/.cursor/` (user-level)
 - **Initialize Project** – Creates `.forge/` in the current project
 - **Forge Help persona** – Workflow explainer for command/agent guidance and handoff questions
-- **Agent workflow** – Visionary, Architect, Planner, Refine, and domain SMEs (runtime, business_logic, data, interface, integration, operations) for planning and documentation; Build and Review agents for implementation
+- **Agent workflow** – Six-step flow: **Product Owner** → **Architect** → **Planner** → **Technical Writer** → **Engineer** → **Quality Assurance**, plus **Forge Help** for workflow questions. Agents install to `~/.cursor/agents/` from `resources/workflow/`. Shared context lives in the project’s **`.forge/`** folder: any agent may update those files when contracts are wrong or unclear; **Product Owner** owns `vision.json` / `project.json`, and **Architect** is the primary steward of `knowledge_map.json` and cross-domain coherence (see `resources/workflow/agents/AGENT_FLOW.md`).
 - **Commands** – architect-this, plan-roadmap, refine-issue, build-from-github, build-from-pr-review, review-pr (injected via Cursor-agent initialization)
 - **Chat participants** – @forge-help, @product-owner, @architect, @planner, @technical-writer, @engineer, @quality-assurance (VSCode chat participants mirror Cursor agents)
 
@@ -27,7 +27,7 @@ Forge Studio provides:
 
 After Cursor-agent initialization, use the injected agents and commands:
 
-- **Architect** (`/architect-this`) – Examines vision.json, delegates to domain SME agents, invokes Planner
+- **Architect** (`/architect-this`) – Aligns `.forge/knowledge_map.json` and domain contract docs with product intent; hands off to Planner
 - **Plan Roadmap** (`/plan-roadmap`) – Manages GitHub milestones and issues via pull-milestones, pull-milestone-issues
 - **Refine Issue** (`/refine-issue`) – Refines GitHub issues with SME context; creates parent branch (push + link); optional sub-issues on GitHub (no per-sub-issue git branches)
 - **Build from GitHub** (`/build-from-github`) – Creates/links implementation branch for the issue, implements, runs all tests/lint until green, then commit/PR
@@ -55,7 +55,7 @@ After setup:
 **User-level (~/.cursor/):**
 ```
 ~/.cursor/
-├── agents/                   # visionary, architect, planner, refine, domain SMEs, build, review
+├── agents/                   # product-owner, architect, planner, technical-writer, engineer, quality-assurance, forge-help (+ AGENT_FLOW.md)
 ├── commands/                 # architect-this, plan-roadmap, refine-issue, build-from-github, build-from-pr-review, review-pr
 ├── skills/                   # gh-driven workflow skills (branch, commit, milestone operations)
 ├── hooks/                    # JSON schema validation on .forge file edits

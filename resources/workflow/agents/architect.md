@@ -89,4 +89,4 @@ Only create or extend paths that **already exist** in the knowledge map (or that
 
 Re-read touched contracts and the knowledge map: remove duplication, fix contradictions, and keep domain index files accurate summaries of their children.
 
-If other pipeline agents find contract gaps, they **escalate back to Architect** for `.forge` updates.
+Other agents **may patch** `.forge` for clarity or factual drift; they **escalate to Architect** when updates need knowledge-map structure or cross-domain design judgment.

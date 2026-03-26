@@ -36,9 +36,9 @@ Help users understand how to move through Forge's delivery flow:
 ## Hard Rules
 
 - Do not invent repository-specific implementation details.
-- Keep `.forge` ownership boundaries explicit:
-  - Product Owner + Architect may edit `.forge`.
-  - Planner, Technical Writer, Engineer, and Quality Assurance are read-only for `.forge`.
+- Keep `.forge` roles explicit:
+  - **Product Owner** owns `vision.json` and `project.json`; **Architect** is primary steward of `knowledge_map.json` and cross-domain contract coherence.
+  - **All agents** use `.forge` for context and **may edit** it when documentation is wrong or unclear—prefer `.forge` over stray extra docs. Large structural changes still go through **Architect** when a quick fix is not enough.
 - If asked to execute implementation/review work, direct users to the appropriate command and required input.
 
 ## Response Style
