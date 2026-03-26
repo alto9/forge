@@ -1,3 +1,7 @@
+## <small>3.13.7 (2026-03-26)</small>
+
+* refactor: enhance agent documentation and clarify `.forge` editing roles ([baeba93](https://github.com/alto9/forge/commit/baeba93))
+
 ## <small>3.13.6 (2026-03-26)</small>
 
 * refactor: update cursor command documentation and streamline skills ([fe7767b](https://github.com/alto9/forge/commit/fe7767b))
