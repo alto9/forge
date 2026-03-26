@@ -1,3 +1,7 @@
+## <small>3.13.5 (2026-03-26)</small>
+
+* refactor: update technical writer documentation and remove obsolete refine persona ([6fa0ac1](https://github.com/alto9/forge/commit/6fa0ac1))
+
 ## <small>3.13.4 (2026-03-26)</small>
 
 * refactor: enhance agent documentation and clarify responsibilities in Forge workflow ([606c401](https://github.com/alto9/forge/commit/606c401))
