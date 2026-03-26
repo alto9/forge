@@ -131,7 +131,7 @@ User (Github Issue Link) ──► Technical Writer Agent
 
 **Steps:**
 1. Retrieve issue text from GitHub (use available tools).
-2. Create parent branch and link: `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main` when available; otherwise `create-feature-branch` + push + link via MCP/gh.
+2. Create parent branch and link: `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main` when available; otherwise `create-issue-branch` (pass `<owner/repo>` when not in a clone) + push + link via MCP/gh.
 3. Read relevant `.forge` contracts from `.forge/knowledge_map.json` for technical context. Escalate contract changes to Architect.
 4. Update the issue based on the issue template; ensure all required details are included.
 5. Create sub-issues on GitHub when useful (including a single sub-issue when appropriate). Do not create branches for sub-issues; build-from-github or Engineer creates them when work starts.

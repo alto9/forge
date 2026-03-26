@@ -4,12 +4,30 @@
   "canonical_categories": ["git_flow"],
   "skills": [
     {
-      "id": "create-feature-branch",
+      "id": "create-issue-branch",
       "status": "active",
       "category": "git_flow",
       "retag": "branch-create",
-      "script_path": ".cursor/skills/create-feature-branch/scripts/create-feature-branch.sh",
-      "usage": ".cursor/skills/create-feature-branch/scripts/create-feature-branch.sh <branch-name> [root-branch]",
+      "script_path": ".cursor/skills/create-issue-branch/scripts/create-issue-branch.sh",
+      "usage": ".cursor/skills/create-issue-branch/scripts/create-issue-branch.sh (<owner/repo> <branch-name> <issue-number> <root-branch> | <branch-name> <issue-number> [root-branch])",
+      "primary_consumers": ["tech_writer", "engineer"]
+    },
+    {
+      "id": "assign-issue-to-me",
+      "status": "active",
+      "category": "git_flow",
+      "retag": "github-issue-assign",
+      "script_path": ".cursor/skills/assign-issue-to-me/scripts/assign-issue-to-me.sh",
+      "usage": ".cursor/skills/assign-issue-to-me/scripts/assign-issue-to-me.sh (<owner/repo> <issue-number> | <issue-number>)",
+      "primary_consumers": ["engineer"]
+    },
+    {
+      "id": "get-issue-branches",
+      "status": "active",
+      "category": "git_flow",
+      "retag": "github-issue-branches",
+      "script_path": ".cursor/skills/get-issue-branches/scripts/get-issue-branches.sh",
+      "usage": ".cursor/skills/get-issue-branches/scripts/get-issue-branches.sh (<owner/repo> <issue-number> | <issue-number>)",
       "primary_consumers": ["tech_writer", "engineer"]
     },
     {
@@ -51,8 +69,8 @@
   ],
   "agent_assignments": {
     "planner": ["pull-milestones", "pull-milestone-issues"],
-    "tech_writer": ["create-feature-branch", "push-branch", "pull-milestone-issues"],
-    "engineer": ["create-feature-branch", "commit", "push-branch"],
+    "tech_writer": ["create-issue-branch", "push-branch", "pull-milestone-issues", "get-issue-branches"],
+    "engineer": ["create-issue-branch", "assign-issue-to-me", "get-issue-branches", "commit", "push-branch"],
     "quality_assurance": []
   },
   "command_assignments": {

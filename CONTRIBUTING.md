@@ -75,142 +75,34 @@ src/
 5. Update documentation
 6. Submit a pull request
 
-## Modifying Cursor Command Templates
+## Modifying Cursor commands (Markdown)
 
-Forge manages Cursor command files (`.cursor/commands/*.md`) using a template system with hash-based validation. Here's how to modify them:
+**Forge: Setup for Cursor** copies Markdown from the bundled **resources** tree into the workspace as `.cursor/commands/*.md`. There is no separate TypeScript template layer for those files.
 
-### Template Location
+### Source of truth
 
-Command templates are stored in:
-```
-packages/vscode-extension/src/templates/cursorCommands.ts
-```
+- Edit files under **`resources/workflow/commands/`** (for example `build-from-github.md`, `refine-issue.md`).
+- After setup, the same filenames appear under **`.cursor/commands/`** in the project.
 
-### Modification Process
+### Release checklist
 
-1. **Edit the Template**:
-   ```typescript
-   // packages/vscode-extension/src/templates/cursorCommands.ts
-   export const FORGE_DESIGN_TEMPLATE = `# Forge Design
-   
-   This command helps you work within an active Forge design session...
-   `;
-   ```
+1. Change the Markdown under `resources/workflow/commands/` as needed.
+2. Bump version in `package.json` and add a **CHANGELOG** entry when shipping.
+3. Run **`npm test`** and manually run setup (Extension Development Host, **Forge: Setup for Cursor**) on a sample repo to confirm commands copy correctly.
 
-2. **Version Bump**:
-   - Update version in `packages/vscode-extension/package.json`
-   - If breaking change: increment major version
-   - If new features: increment minor version
-   - If bug fix: increment patch version
+### Adding a new Cursor command Markdown file
 
-3. **Update CHANGELOG**:
-   - Add entry describing template changes
-   - Indicate if users need to re-initialize
+1. Add **`resources/workflow/commands/<kebab-name>.md`** with the prompt body Cursor should show.
+2. Re-run setup in a test workspace; the new file is copied with the rest of the directory. No extra TypeScript registration is required for the Markdown copy step.
 
-4. **Test Thoroughly**:
-   ```bash
-   # Run unit tests
-   npm test
-   
-   # Run integration tests
-   npm run test:integration
-   
-   # Manual testing in Extension Development Host (F5)
-   ```
+### Breaking changes
 
-5. **Test the Full Flow**:
-   - Create a test project
-   - Initialize project (should create command files with new hash)
-   - Manually modify command file content
-   - Re-open Forge Studio (should detect outdated command)
-   - Re-initialize (should update command file)
+If a command change alters behavior in a way that breaks existing workflows:
 
-### Impact on Existing Projects
-
-When you modify a command template:
-
-- **New Projects**: Will get the new template automatically
-- **Existing Projects**: Command files will show as "outdated" (hash mismatch)
-- **Update Path**: Users must re-initialize project to get updated commands
-- **Visual Feedback**: Welcome Screen shows ⚠ orange indicator for outdated commands
-
-### Hash Validation System
-
-Command files include a hash comment:
-```markdown
-<!-- forge-hash: a1b2c3d4e5f6... -->
-
-# Forge Design
-...
-```
-
-**How it works**:
-1. Hash is computed from template content (SHA-256)
-2. Hash is embedded in generated command file
-3. During validation, file content is re-hashed and compared
-4. Mismatch indicates outdated or modified file
-
-**Why it exists**:
-- Ensures consistency across all Forge projects
-- Detects when templates are updated
-- Prevents manual edits from breaking workflows
-- Enables automatic updating during re-initialization
-
-### Testing Strategy
-
-When modifying templates:
-
-1. **Unit Tests** (`commandValidation.test.ts`):
-   - Test hash computation
-   - Test validation with valid/invalid content
-   - Test file generation with embedded hash
-
-2. **Integration Tests** (`InitializationIntegration.test.ts`):
-   - Test initialization creates command files
-   - Test outdated commands are updated
-   - Test progress messages during creation
-
-3. **Manual Tests**:
-   - Create new project → verify commands created
-   - Modify command file → verify marked invalid
-   - Re-initialize → verify command updated
-   - Delete command → verify marked missing
-
-### Adding New Commands
-
-To add a new command file:
-
-1. **Add Template**:
-   ```typescript
-   export const FORGE_NEW_TEMPLATE = `# Forge New Command
-   
-   Description and usage...
-   `;
-   
-   export const COMMAND_TEMPLATES: Record<string, string> = {
-     '.cursor/commands/forge-commit.md': FORGE_COMMIT_TEMPLATE,
-     '.cursor/commands/forge-build-issue.md': FORGE_BUILD_ISSUE_TEMPLATE,
-     '.cursor/commands/forge-new.md': FORGE_NEW_TEMPLATE  // New!
-   };
-   ```
-
-2. **Update Tests**: Add test cases for the new command
-
-3. **Update Documentation**: Document the new command in README.md
-
-4. **Version Bump**: Increment minor version (new feature)
-
-### Breaking Changes
-
-If a template change is breaking (changes command behavior significantly):
-
-1. **Assess Impact**: Will existing projects break?
-2. **Migration Guide**: Provide clear upgrade path
-3. **Major Version Bump**: Increment major version (e.g., 1.0.0 → 2.0.0)
-4. **Clear Communication**: 
-   - Detailed release notes
-   - Migration instructions
-   - Deprecation warnings if applicable
+1. **Assess impact** on projects that already ran setup.
+2. Provide a **migration note** in CHANGELOG (for example: re-run **Forge: Setup for Cursor** to refresh `.cursor/commands`).
+3. **Version bump** appropriately (major if incompatible).
+4. Communicate clearly in release notes.
 
 ## Prompt Generation Guidelines
 

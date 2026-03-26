@@ -34,7 +34,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 ## Operating loop
 
 1. **Retrieve the issue** — Fetch issue text, comments, and metadata (milestone, labels, project board) via GitHub MCP, **`gh`**, or equivalent.
-2. **Create parent branch and link** — Prefer `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main` when available; otherwise run the **`create-feature-branch`** skill, **`push-branch`**, and link the branch to the issue via MCP/gh.
+2. **Create parent branch and link** — Prefer `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main --checkout` when available; otherwise run the **`create-issue-branch`** skill (`.cursor/skills/create-issue-branch/scripts/create-issue-branch.sh <owner/repo> feature/issue-{parent-number} <parent-issue-number> main`), **`push-branch`**, and link the branch to the issue via MCP/gh.
 3. **Ground in contracts (read-only)** — From **`.forge/knowledge_map.json`**, open only the **domain contracts** that apply to this ticket. Use them to resolve ambiguity in the issue; if contracts are wrong or missing, **escalate to Architect** instead of silently changing `.forge`.
 4. **Refine the issue body** — Align with the repo’s issue template (if any). Ensure the **Mandatory ticket format** is satisfied for **sub-issues**; for **parent** issues, ensure the summary sets up children clearly without duplicating full sub-issue detail.
 5. **Split when useful** — Add **sub-issues** when it improves clarity, parallelization, or tracking. Prefer the **smallest useful** set of children (sometimes **one** sub-issue is right; avoid busywork micro-issues). **Never** create a branch per sub-issue.
@@ -79,7 +79,7 @@ Some repos use **`.github/ISSUE_TEMPLATE/*.yml`** (bug vs feature, etc.). When t
 
 | Skill ID | Role |
 |----------|------|
-| `create-feature-branch` | Fallback when `gh issue develop` is unavailable; parent branch only. |
+| `create-issue-branch` | Fallback when `gh issue develop` is unavailable; pass `<owner/repo>` when not in a clone. |
 | `push-branch` | Publish the parent feature branch. |
 | `pull-milestone-issues` | Inspect issues in a milestone: `pull-milestone-issues.sh <milestone-id> [owner/repo] ...` |
 

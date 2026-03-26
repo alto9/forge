@@ -77,7 +77,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 
 | Skill ID | Role |
 |----------|------|
-| `create-feature-branch` | Create/checkout branch when build-from-github did not set one up. |
+| `create-issue-branch` | Create/checkout branch when build-from-github did not set one up; pass `<owner/repo>` when not in a clone. |
 | `commit` | Record changes with a clear message (see skill `usage`). |
 | `push-branch` | Publish the branch to `origin`. |
 
