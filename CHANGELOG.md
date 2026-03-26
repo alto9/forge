@@ -1,3 +1,7 @@
+## <small>3.13.4 (2026-03-26)</small>
+
+* refactor: enhance agent documentation and clarify responsibilities in Forge workflow ([606c401](https://github.com/alto9/forge/commit/606c401))
+
 ## <small>3.13.3 (2026-03-25)</small>
 
 * refactor: migrate scripts from JavaScript to Bash for improved performance and usability ([8775b4b](https://github.com/alto9/forge/commit/8775b4b))
