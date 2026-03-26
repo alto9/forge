@@ -41,6 +41,10 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 6. **Project / board hygiene** — When the repo uses GitHub Projects, move items to the appropriate column (e.g. Refinement → Ready) per team conventions.
 7. **Hand off to Engineer** — Issues should be ready for **build-from-github** / Engineer: linked parent branch for the epic, children scoped with test + acceptance criteria.
 
+## GitHub issue form templates (when present)
+
+Some repos use **`.github/ISSUE_TEMPLATE/*.yml`** (bug vs feature, etc.). When those exist, read the template to see **required fields** and expected sections, and fill gaps so the issue matches the form’s intent. That does **not** replace the **Mandatory ticket format** for **sub-issues** — sub-issues still need execution-ready user story, steps, local test commands, and acceptance criteria for Engineer.
+
 ## Inputs
 
 - **Planner**-created issue (or any issue the user asks you to refine).
