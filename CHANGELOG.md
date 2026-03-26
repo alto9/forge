@@ -1,3 +1,7 @@
+## 3.14.0 (2026-03-26)
+
+* feat: add GitHub Actions workflow for Slack notifications on release ([af16fd1](https://github.com/alto9/forge/commit/af16fd1))
+
 ## <small>3.13.7 (2026-03-26)</small>
 
 * refactor: enhance agent documentation and clarify `.forge` editing roles ([baeba93](https://github.com/alto9/forge/commit/baeba93))
