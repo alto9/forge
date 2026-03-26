@@ -1,3 +1,7 @@
+## <small>3.14.1 (2026-03-26)</small>
+
+* refactor: consolidate Slack notification workflow into main release workflow ([7557625](https://github.com/alto9/forge/commit/7557625))
+
 ## 3.14.0 (2026-03-26)
 
 * feat: add GitHub Actions workflow for Slack notifications on release ([af16fd1](https://github.com/alto9/forge/commit/af16fd1))
