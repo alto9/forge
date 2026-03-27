@@ -15,9 +15,20 @@ This document describes the intended flow of responsibility among Forge agents. 
 
 ## `.forge` context and edits
 
+**What `.forge` is:** the **cumulative** record of agreed knowledge and **technical design choices**—durable contracts, not a diary. Domain contracts should read as **timeless current-state** (what is true until revised). **Do not** use `.forge` to mirror GitHub schedule, status, or history: no dates-as-history, sprints, or narrative anchored to issues/PRs except where a contract truly needs a stable external identifier (prefer neutral requirement wording). Point-in-time and execution tracking belong in **issues, PRs, and chat**.
+
+**Who carries what outward / inward:**
+
+| Direction | Owners |
+|-----------|--------|
+| `.forge` → accurate GitHub milestones and issues | **Planner**, **Technical Writer** |
+| Implementation matches `.forge` (work executed via issues) | **Engineer**, **Quality Assurance** |
+
+**Architect** maintains structural coherence **inside** `.forge` (`knowledge_map.json` and cross-domain contracts); syncing ticket text to contracts, or verifying code against contracts, is **not** the Architect's job.
+
 - **All agents** use `.forge` for context as needed: start from `.forge/knowledge_map.json` to find relevant contracts and schemas.
 - **Primary ownership:** **Product Owner** owns product intent (`.forge/vision.json`, `.forge/project.json`). **Architect** is the primary steward of **`.forge/knowledge_map.json`** structure and coherence across mapped domain contracts.
-- **Any agent may edit** files under `.forge` when doing so improves accuracy or clarity—for example, shipped work or refined tickets are poorly represented, or contracts drift from reality. Prefer updating canonical `.forge` docs over adding parallel documentation elsewhere (extra READMEs, ad hoc design notes).
+- **Any agent may edit** files under `.forge` when doing so improves accuracy or clarity—for example, shipped work or refined tickets are poorly represented, or contracts drift from reality. Prefer updating canonical `.forge` docs over adding parallel documentation elsewhere (extra READMEs, ad hoc design notes). Keep those edits **current-state**, not point-in-time (see above).
 - **Scope:** Keep edits minimal and consistent with existing schemas and map structure. **Large** structural changes, new domains, or ambiguous cross-domain trade-offs should still go through **Architect** (e.g. `/architect-this`) when a quick local fix is not enough.
 
 ## Commands and Flows
