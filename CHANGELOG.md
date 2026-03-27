@@ -1,3 +1,7 @@
+## <small>3.14.2 (2026-03-27)</small>
+
+* refactor: enhance `.forge` documentation and clarify editing roles ([6f892b1](https://github.com/alto9/forge/commit/6f892b1))
+
 ## <small>3.14.1 (2026-03-26)</small>
 
 * refactor: consolidate Slack notification workflow into main release workflow ([7557625](https://github.com/alto9/forge/commit/7557625))
