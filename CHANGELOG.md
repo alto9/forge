@@ -1,3 +1,7 @@
+## <small>3.14.3 (2026-03-28)</small>
+
+* refactor: update agent documentation and clarify `.forge` editing roles ([8aae053](https://github.com/alto9/forge/commit/8aae053))
+
 ## <small>3.14.2 (2026-03-27)</small>
 
 * refactor: enhance `.forge` documentation and clarify editing roles ([6f892b1](https://github.com/alto9/forge/commit/6f892b1))
