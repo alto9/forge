@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isCursorAppName } from '../extension';
+import { isCursorAppName, shouldRunAutoProjectSync } from '../extension';
 import {
     getStaleManagedPaths,
     shouldSyncManagedFiles,
@@ -45,6 +45,14 @@ describe('initialization command split', () => {
 
         expect(command).toBeDefined();
         expect(command.title).toBe('Forge: Initialize Project');
+    });
+
+    it('contributes auto project sync setting defaulted on', () => {
+        const setting =
+            packageJson.contributes?.configuration?.properties?.['forge.autoProjectSync.enabled'];
+        expect(setting).toBeDefined();
+        expect(setting.type).toBe('boolean');
+        expect(setting.default).toBe(true);
     });
 });
 
@@ -122,4 +130,21 @@ describe('startup confirmation behavior', () => {
         expect(shouldRequestUserConfirmation(true, false)).toBe(false);
         expect(shouldRequestUserConfirmation(true, undefined)).toBe(false);
     });
+});
+
+describe('automated project sync throttling', () => {
+    it('runs when no previous sync timestamp exists', () => {
+        expect(shouldRunAutoProjectSync(undefined, 1_000)).toBe(true);
+    });
+
+    it('skips when minimum interval has not elapsed', () => {
+        const oneHour = 60 * 60 * 1000;
+        expect(shouldRunAutoProjectSync(10_000, 10_000 + oneHour - 1, oneHour)).toBe(false);
+    });
+
+    it('runs when minimum interval has elapsed', () => {
+        const oneHour = 60 * 60 * 1000;
+        expect(shouldRunAutoProjectSync(10_000, 10_000 + oneHour, oneHour)).toBe(true);
+    });
+
 });

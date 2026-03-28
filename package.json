@@ -94,7 +94,17 @@
         "command": "forge.initializeProject",
         "title": "Forge: Initialize Project"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Forge",
+      "properties": {
+        "forge.autoProjectSync.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable automatic hourly .forge project sync for canonical files in all workspace folders."
+        }
+      }
+    }
   },
   "scripts": {
     "vscode:prepublish": "webpack --mode production --devtool hidden-source-map",

@@ -82,6 +82,48 @@ Current-state contract for \`${section}\`.
 `;
 }
 
+function normalizeJson(rawJson: string): string | null {
+    try {
+        const parsed = JSON.parse(rawJson);
+        return JSON.stringify(parsed, null, 2);
+    } catch {
+        return null;
+    }
+}
+
+function syncCanonicalJsonReference(
+    sourcePath: string,
+    destinationPath: string,
+    destinationLabel: string,
+    outputChannel?: vscode.OutputChannel
+) {
+    if (!fs.existsSync(sourcePath)) return;
+
+    const canonicalRaw = fs.readFileSync(sourcePath, 'utf8');
+    const canonicalNormalized = normalizeJson(canonicalRaw);
+    if (!canonicalNormalized) {
+        outputChannel?.appendLine(`Warning: invalid canonical JSON at ${sourcePath}; skipping sync.`);
+        return;
+    }
+
+    if (!fs.existsSync(destinationPath)) {
+        fs.writeFileSync(destinationPath, `${canonicalNormalized}\n`, 'utf8');
+        outputChannel?.appendLine(`Created ${destinationLabel}`);
+        return;
+    }
+
+    const currentRaw = fs.readFileSync(destinationPath, 'utf8');
+    const currentNormalized = normalizeJson(currentRaw);
+    const isAccurate = currentNormalized === canonicalNormalized;
+    if (isAccurate) {
+        outputChannel?.appendLine(`Verified ${destinationLabel} (up to date)`);
+        return;
+    }
+
+    fs.writeFileSync(destinationPath, `${canonicalNormalized}\n`, 'utf8');
+    outputChannel?.appendLine(`Updated ${destinationLabel} from canonical source`);
+}
+
 async function ensureKnowledgeMapDocs(
     forgeDir: string,
     knowledgeMapPath: string,
@@ -128,23 +170,8 @@ export class SetupCursorCommand {
             return;
         }
 
-        let projectUri = workspaceFolders[0].uri;
-        if (workspaceFolders.length > 1) {
-            const selected = await vscode.window.showWorkspaceFolderPick({
-                placeHolder: 'Select the project to setup for Cursor'
-            });
-            if (!selected) return;
-            projectUri = selected.uri;
-        }
-
-        const projectPath = projectUri.fsPath;
-        const extensionPath = context.extensionPath;
-        const workflowPath = path.join(extensionPath, 'resources', 'workflow');
-
-        if (!fs.existsSync(workflowPath)) {
-            vscode.window.showErrorMessage(
-                'Forge workflow resources not found. The extension may be misconfigured.'
-            );
+        const projectPath = await SetupCursorCommand.pickProjectPath();
+        if (!projectPath) {
             return;
         }
 
@@ -157,22 +184,10 @@ export class SetupCursorCommand {
             },
             async (progress) => {
                 try {
-                    progress.report({ message: 'Creating .forge folder...' });
-                    await ensureForgeFolder(projectPath, extensionPath, workflowPath, outputChannel);
-
-                    if (!options?.forgeOnly) {
-                        progress.report({ message: 'Creating .cursor agents...' });
-                        await ensureCursorAgents(projectPath, workflowPath, outputChannel);
-
-                        progress.report({ message: 'Creating .cursor commands...' });
-                        await ensureCursorCommands(projectPath, workflowPath, outputChannel);
-
-                        progress.report({ message: 'Creating .cursor skills...' });
-                        await ensureCursorSkills(projectPath, workflowPath, outputChannel);
-
-                        progress.report({ message: 'Creating .cursor hooks...' });
-                        await ensureCursorHooks(projectPath, workflowPath, outputChannel);
-                    }
+                    await SetupCursorCommand.syncProjectFolder(context, projectPath, outputChannel, {
+                        forgeOnly: options?.forgeOnly,
+                        progress
+                    });
 
                     vscode.window.showInformationMessage(
                         options?.forgeOnly
@@ -186,6 +201,64 @@ export class SetupCursorCommand {
                 }
             }
         );
+    }
+
+    static async syncProjectFolder(
+        context: vscode.ExtensionContext,
+        projectPath: string,
+        outputChannel?: vscode.OutputChannel,
+        options?: {
+            forgeOnly?: boolean;
+            progress?: { report: (value: { message?: string }) => void };
+            silent?: boolean;
+        }
+    ): Promise<boolean> {
+        const extensionPath = context.extensionPath;
+        const workflowPath = path.join(extensionPath, 'resources', 'workflow');
+
+        if (!fs.existsSync(workflowPath)) {
+            const message = 'Forge workflow resources not found. The extension may be misconfigured.';
+            outputChannel?.appendLine(message);
+            if (!options?.silent) {
+                vscode.window.showErrorMessage(message);
+            }
+            return false;
+        }
+
+        options?.progress?.report({ message: 'Creating .forge folder...' });
+        await ensureForgeFolder(projectPath, extensionPath, workflowPath, outputChannel);
+
+        if (!options?.forgeOnly) {
+            options?.progress?.report({ message: 'Creating .cursor agents...' });
+            await ensureCursorAgents(projectPath, workflowPath, outputChannel);
+
+            options?.progress?.report({ message: 'Creating .cursor commands...' });
+            await ensureCursorCommands(projectPath, workflowPath, outputChannel);
+
+            options?.progress?.report({ message: 'Creating .cursor skills...' });
+            await ensureCursorSkills(projectPath, workflowPath, outputChannel);
+
+            options?.progress?.report({ message: 'Creating .cursor hooks...' });
+            await ensureCursorHooks(projectPath, workflowPath, outputChannel);
+        }
+
+        return true;
+    }
+
+    private static async pickProjectPath(): Promise<string | null> {
+        const workspaceFolders = vscode.workspace.workspaceFolders;
+        if (!workspaceFolders || workspaceFolders.length === 0) {
+            return null;
+        }
+
+        if (workspaceFolders.length === 1) {
+            return workspaceFolders[0].uri.fsPath;
+        }
+
+        const selected = await vscode.window.showWorkspaceFolderPick({
+            placeHolder: 'Select the project to setup for Cursor'
+        });
+        return selected?.uri.fsPath ?? null;
     }
 }
 
@@ -227,25 +300,26 @@ async function ensureForgeFolder(
 
     const skillRegistrySrc = path.join(workflowPath, 'references', 'skill_registry.json');
     const skillRegistryDest = path.join(forgeDir, 'skill_registry.json');
-    if (fs.existsSync(skillRegistrySrc)) {
-        fs.copyFileSync(skillRegistrySrc, skillRegistryDest);
-        outputChannel?.appendLine('Created .forge/skill_registry.json');
-    }
+    syncCanonicalJsonReference(
+        skillRegistrySrc,
+        skillRegistryDest,
+        '.forge/skill_registry.json',
+        outputChannel
+    );
 
     const knowledgeMapSrc = path.join(workflowPath, 'references', 'knowledge_map.json');
     const knowledgeMapDest = path.join(forgeDir, 'knowledge_map.json');
-    if (fs.existsSync(knowledgeMapSrc)) {
-        fs.copyFileSync(knowledgeMapSrc, knowledgeMapDest);
-        outputChannel?.appendLine('Created .forge/knowledge_map.json');
-    }
+    syncCanonicalJsonReference(
+        knowledgeMapSrc,
+        knowledgeMapDest,
+        '.forge/knowledge_map.json',
+        outputChannel
+    );
 
     for (const schemaFile of SCHEMA_FILES) {
         const srcPath = path.join(extensionPath, 'schemas', schemaFile);
         const destPath = path.join(schemasDir, schemaFile);
-        if (fs.existsSync(srcPath)) {
-            fs.copyFileSync(srcPath, destPath);
-            outputChannel?.appendLine(`Copied schema ${schemaFile}`);
-        }
+        syncCanonicalJsonReference(srcPath, destPath, `.forge/schemas/${schemaFile}`, outputChannel);
     }
 
     await ensureKnowledgeMapDocs(forgeDir, knowledgeMapDest, outputChannel);
@@ -338,3 +412,9 @@ async function ensureCursorHooks(
     }
     outputChannel?.appendLine('Created .cursor/hooks/');
 }
+
+export const __testables = {
+    normalizeJson,
+    syncCanonicalJsonReference,
+    ensureForgeFolder
+};
