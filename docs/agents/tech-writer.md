@@ -23,7 +23,7 @@ flowchart TD
 
 1. **Retrieve issue text from GitHub** — Use available tools (GitHub MCP, gh CLI) to fetch the issue content.
 2. **Create parent branch and link** — Use `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main --checkout` when available; otherwise `.cursor/skills/create-issue-branch/scripts/create-issue-branch.sh <owner/repo> feature/issue-{parent-number} <parent-issue-number> main` and link via push + MCP/gh if needed. Push to `origin` so the branch is visible.
-3. **Read `.forge` contracts** — Use `.forge/knowledge_map.json` to read relevant domain docs for technical context. Escalate contract changes to Architect.
+3. **Read `.forge` contracts** — Use `.forge/knowledge_map.json` to read relevant domain docs for technical context. If refinement establishes a **material decision** that should be documented and the mapped contract is missing or misleading, patch it with a minimal current-state update; escalate structural or cross-domain changes to Architect.
 4. **Update issue based on issue template** — Ensure all required details are included per the project's issue template.
 5. **Create sub-issues when useful** — Create child issues on GitHub when a breakdown helps (including a single sub-issue). Do not create branches for sub-issues; build-from-github or the Engineer creates `feature/issue-{child}` when implementing.
 

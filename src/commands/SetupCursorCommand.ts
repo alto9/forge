@@ -8,6 +8,11 @@ import {
     SCHEMA_FILES
 } from '../templates/forgeAssets';
 
+type KnowledgeNode = {
+    primary_doc?: string;
+    children?: Array<string | KnowledgeNode>;
+};
+
 /** Recursively copy a directory, overwriting existing files. */
 function copyDirRecursive(src: string, dest: string) {
     if (!fs.existsSync(src)) return;
@@ -21,6 +26,89 @@ function copyDirRecursive(src: string, dest: string) {
         } else {
             fs.copyFileSync(srcPath, destPath);
         }
+    }
+}
+
+function collectMarkdownPaths(node: KnowledgeNode, acc: Set<string>) {
+    if (typeof node.primary_doc === 'string' && node.primary_doc.endsWith('.md')) {
+        acc.add(node.primary_doc);
+    }
+    for (const child of node.children ?? []) {
+        if (typeof child === 'string') {
+            if (child.endsWith('.md')) acc.add(child);
+            continue;
+        }
+        collectMarkdownPaths(child, acc);
+    }
+}
+
+function pathTitle(filePath: string): string {
+    const filename = path.basename(filePath, '.md');
+    return filename
+        .split(/[_-]+/)
+        .filter(Boolean)
+        .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+        .join(' ');
+}
+
+function defaultMarkdownForPath(relativePath: string): string {
+    const section = relativePath.replace('.forge/', '').replace(/\.md$/, '');
+    const title = pathTitle(relativePath);
+    const isIndexDoc = path.basename(relativePath) === 'index.md';
+    if (isIndexDoc) {
+        return `# ${title}
+
+This document defines the current-state contract for the ${section} domain.
+
+## Scope
+
+- Record durable constraints and boundaries for this domain.
+- Keep this file aligned with mapped child contracts.
+
+## Primary code pointers (optional)
+
+- Add stable code directories or modules here when known.
+- Keep entries concise and remove stale pointers.
+`;
+    }
+
+    return `# ${title}
+
+Current-state contract for \`${section}\`.
+
+## Primary code pointers (optional)
+
+- Add stable code directories or modules here when known.
+`;
+}
+
+async function ensureKnowledgeMapDocs(
+    forgeDir: string,
+    knowledgeMapPath: string,
+    outputChannel?: vscode.OutputChannel
+) {
+    if (!fs.existsSync(knowledgeMapPath)) return;
+
+    try {
+        const knowledgeMapRaw = fs.readFileSync(knowledgeMapPath, 'utf8');
+        const parsed = JSON.parse(knowledgeMapRaw) as { knowledge_map?: KnowledgeNode[] };
+        const mapRoots = Array.isArray(parsed.knowledge_map) ? parsed.knowledge_map : [];
+        const markdownPaths = new Set<string>();
+        for (const root of mapRoots) {
+            collectMarkdownPaths(root, markdownPaths);
+        }
+
+        for (const relativePath of markdownPaths) {
+            if (!relativePath.startsWith('.forge/')) continue;
+            const absolutePath = path.join(path.dirname(forgeDir), relativePath);
+            if (fs.existsSync(absolutePath)) continue;
+            fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+            fs.writeFileSync(absolutePath, defaultMarkdownForPath(relativePath), 'utf8');
+            outputChannel?.appendLine(`Created ${relativePath}`);
+        }
+    } catch (error) {
+        const msg = error instanceof Error ? error.message : String(error);
+        outputChannel?.appendLine(`Warning: could not scaffold knowledge map markdown docs: ${msg}`);
     }
 }
 
@@ -159,6 +247,8 @@ async function ensureForgeFolder(
             outputChannel?.appendLine(`Copied schema ${schemaFile}`);
         }
     }
+
+    await ensureKnowledgeMapDocs(forgeDir, knowledgeMapDest, outputChannel);
 }
 
 async function ensureCursorAgents(

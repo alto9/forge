@@ -1,6 +1,6 @@
 # 2. Architecting (High Level Design)
 
-The Architect Agent performs high-level technical design and directly maintains `.forge` architecture contracts. It retrieves vision, validates clarity, enforces `knowledge_map` structure, updates impacted domain docs, and hands off to Planner.
+The Architect Agent performs high-level technical design and maintains `.forge` architecture contracts. It retrieves vision, validates clarity, enforces `knowledge_map` structure, updates impacted domain docs, and hands off to Planner. The Architect may delegate analysis to domain-focused helpers, but remains accountable for the final cross-domain contract coherence.
 
 ## Responsibilities
 

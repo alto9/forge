@@ -19,7 +19,7 @@ flowchart TD
     subgraph Planner["agent: Planner"]
         B[skill: pull-milestones {owner/repo}]
         C[For each milestone returned, retrieve issues for the milestone]
-        D[skill: pull-milestone-issues {projectId}]
+        D[skill: pull-milestone-issues {milestone-id}]
         E[Determine which changes should be made in GitHub, adding/adjusting milestones or milestone issues]
     end
 
@@ -38,7 +38,7 @@ flowchart TD
 
 1. **skill: pull-milestones {owner/repo}** — Run the `pull-milestones` skill to retrieve all milestones from GitHub. Resolve owner/repo from `gh repo view` or pass explicitly.
 2. **For each milestone returned** — Iterate over the milestones.
-3. **skill: pull-milestone-issues {projectId}** — Run `pull-milestone-issues` with the milestone number to retrieve issues for that milestone.
+3. **skill: pull-milestone-issues {milestone-id}** — Run `pull-milestone-issues` with the milestone number to retrieve issues for that milestone.
 4. **Determine which changes should be made in GitHub** — Add or adjust milestones or milestone issues via GitHub MCP or `gh` CLI. Do not update past or in-flight tickets.
 
 ## Skill Resolution

@@ -23,7 +23,7 @@ We are using a phased context engineering system called Forge. There are 6 phase
 - [ ] Engineer
 - [ ] Quality Assurance
 
-Forge saves context in the project’s `.forge` folder. The file structure is predefined in `.forge/knowledge_map.json`. Each phase has a corresponding agent. The `.forge` folder is the source of truth for **intent**; the Technical Writer **reads** it for grounding and **may edit** contracts when refinement exposes inaccuracies—**Architect** remains primary steward of knowledge-map structure. This step produces **clear GitHub issues and (when needed) sub-issues**. Agents, skills, and commands aim to provide thorough context for agentic development.
+Forge saves context in the project’s `.forge` folder. The file structure is predefined in `.forge/knowledge_map.json`. Each phase has a corresponding agent. The `.forge` folder is the source of truth for **intent**; the Technical Writer **reads** it for grounding and may patch mapped contracts only when refinement establishes a **material decision** that should be documented and is currently missing or misleading—**Architect** remains primary steward of knowledge-map structure. This step produces **clear GitHub issues and (when needed) sub-issues**. Agents, skills, and commands aim to provide thorough context for agentic development.
 
 ## Owns (sources of truth)
 
@@ -35,7 +35,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 
 1. **Retrieve the issue** — Fetch issue text, comments, and metadata (milestone, labels, project board) via GitHub MCP, **`gh`**, or equivalent.
 2. **Create parent branch and link** — Prefer `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main --checkout` when available; otherwise run the **`create-issue-branch`** skill (`.cursor/skills/create-issue-branch/scripts/create-issue-branch.sh <owner/repo> feature/issue-{parent-number} <parent-issue-number> main`), **`push-branch`**, and link the branch to the issue via MCP/gh.
-3. **Ground in contracts** — From **`.forge/knowledge_map.json`**, open only the **domain contracts** that apply to this ticket. Use them to resolve ambiguity in the issue. If a contract is wrong or stale for this ticket, update it in `.forge` when the fix is clear; **escalate to Architect** when the correction needs structural or cross-domain design work.
+3. **Ground in contracts** — From **`.forge/knowledge_map.json`**, open only the **domain contracts** that apply to this ticket. Use them to resolve ambiguity in the issue. If refinement reveals a **material decision** that should be documented and is missing or stale, update the mapped contract in `.forge` with a minimal current-state fix; **escalate to Architect** when the correction needs structural or cross-domain design work.
 4. **Refine the issue body** — Align with the repo’s issue template (if any). Ensure the **Mandatory ticket format** is satisfied for **sub-issues**; for **parent** issues, ensure the summary sets up children clearly without duplicating full sub-issue detail.
 5. **Split when useful** — Add **sub-issues** when it improves clarity, parallelization, or tracking. Prefer the **smallest useful** set of children (sometimes **one** sub-issue is right; avoid busywork micro-issues). **Never** create a branch per sub-issue.
 6. **Project / board hygiene** — When the repo uses GitHub Projects, move items to the appropriate column (e.g. Refinement → Ready) per team conventions.
@@ -71,7 +71,7 @@ Some repos use **`.github/ISSUE_TEMPLATE/*.yml`** (bug vs feature, etc.). When t
 
 ## Hard rules
 
-- **`.forge` edits** — Allowed when they improve clarity or correctness relative to the ticket (especially domain contracts). Do not replace **Product Owner** or **Architect** on vision, `project.json`, or large map changes without their pass.
+- **`.forge` edits** — Allowed only for **material + missing** contract updates discovered during refinement. Keep edits minimal and current-state. Do not replace **Product Owner** or **Architect** on vision, `project.json`, or large map changes without their pass.
 - **Sub-issues do not get branches** — Only the **parent** issue’s **`feature/issue-{parent}`** branch pattern for the epic line of work; Engineer follows **Engineer** agent rules for sub-issue branches.
 - **Resolve skills from** `.forge/skill_registry.json` — `agent_assignments.tech_writer` and matching `skills[]` entries; use each skill’s `script_path` and `usage` as the source of truth. **Do not hardcode** skill paths in this file.
 

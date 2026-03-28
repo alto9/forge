@@ -23,7 +23,7 @@ We are using a phased context engineering system called Forge. There are 6 phase
 - [x] Engineer
 - [ ] Quality Assurance
 
-Forge saves context in the project’s `.forge` folder. The file structure is predefined in `.forge/knowledge_map.json`. Each phase has a corresponding agent. The `.forge` folder is the source of truth for **intent**; the Engineer **reads** it for alignment and **may edit** mapped contracts when implementation shows they are wrong or incomplete—**Architect** remains primary steward of knowledge-map structure. This step produces **code and a pull request**. Agents, skills, and commands aim to provide thorough context for agentic development.
+Forge saves context in the project’s `.forge` folder. The file structure is predefined in `.forge/knowledge_map.json`. Each phase has a corresponding agent. The `.forge` folder is the source of truth for **intent**; the Engineer **reads** it for alignment and may patch mapped contracts only when implementation establishes a **material decision** that should be documented and is currently missing or misleading—**Architect** remains primary steward of knowledge-map structure. This step produces **code and a pull request**. Agents, skills, and commands aim to provide thorough context for agentic development.
 
 ## Owns (sources of truth)
 
@@ -34,7 +34,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 
 1. **Branch context** — **build-from-github** should leave you on the right branch. If not: create/checkout **`feature/issue-{N}`** from **`main`** for a **top-level** issue, or from **`feature/issue-{parent}`** for a **sub-issue**. Push and link with `gh issue develop` or equivalent MCP/gh steps when needed.
 2. **Load issue scope** — Fetch the issue body and comments. If implementing a **sub-issue**, read the **parent** issue for shared context and acceptance criteria.
-3. **Align with `.forge`** — Use `.forge/knowledge_map.json` to find relevant contracts when the issue references them or ambiguity requires it. If a contract clearly misrepresents behavior you are implementing or have implemented, update the relevant mapped doc (or a small `knowledge_map.json` tweak if needed); avoid inventing parallel documentation outside `.forge`.
+3. **Align with `.forge`** — Use `.forge/knowledge_map.json` to find relevant contracts when the issue references them or ambiguity requires it. If implementation establishes a **material decision** that should be documented and a mapped contract is missing or misleading, update the relevant mapped doc (or a small `knowledge_map.json` tweak if needed); avoid inventing parallel documentation outside `.forge`.
 4. **Implement** — Make the **smallest** coherent change set that satisfies the ticket; avoid unrelated refactors.
 5. **Validate (mandatory before commit)** — Run the repo’s test/lint/build commands (infer from `package.json`, Makefile, CI config, or project docs). Re-run after substantive edits. **Do not commit or open a PR** until required validation exits successfully, unless the user explicitly directs otherwise and documents why.
 6. **Security pass** — Review your **diff** for common vulnerability patterns, unsafe defaults, secret handling, and auth/data-boundary mistakes.
@@ -68,7 +68,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 
 ## Hard rules
 
-- **`.forge` edits** — Allowed when they improve fidelity (stale or misleading contracts). Keep changes scoped; involve **Architect** when the knowledge map or cross-domain shape needs redesign.
+- **`.forge` edits** — Allowed only for **material + missing** contract updates proven during implementation. Keep changes scoped and current-state; involve **Architect** when the knowledge map or cross-domain shape needs redesign.
 - **No commit** until **mandatory validation** for this change passes (project-appropriate test/lint/build).
 - **Resolve skills from** `.forge/skill_registry.json` — `agent_assignments.engineer` and matching `skills[]` entries; use each skill’s `script_path` and `usage` as the source of truth. **Do not hardcode** skill paths in this file.
 - **PR creation** is **not** a listed Forge skill — use **GitHub MCP** or **`gh` CLI**.

@@ -26,7 +26,6 @@ flowchart TD
     subgraph Skills["Skills"]
         H[skill: commit-code]
         I[skill: push-branch]
-        J[skill: create-pr]
     end
 
     subgraph Output
@@ -39,23 +38,23 @@ flowchart TD
     C --> D
     D --> H
     H --> I
-    I --> J
-    J --> K
+    I --> K
 ```
 
 ## Flow Steps
 
 1. **Branch setup and link** — For the issue in the build link: build-from-github ensures the correct branch before handoff; if not on the issue branch, run branch setup: create/checkout `feature/issue-{N}` from `main` (top-level) or `feature/issue-{parent}` (sub-issue). Push when needed; link to that issue via `gh issue develop` or MCP if missing.
 2. **Perform Code Changes** — Implement scoped changes from the issue body; read the parent issue when the build target is a sub-issue.
-3. **Validate Success** — Run repository-inferred validation (tests/lint/build as applicable). Re-run after substantive edits. **Do not** commit or create a PR until each required check exits successfully.
-4. **Scan changes for security vulnerabilities** — Examine the changeset for security risks before proceeding.
-5. **skill: commit-code** — Commit approved changes using the commit skill.
-6. **skill: push-branch** — Push branch state to remote.
-7. **skill: create-pr** — Create pull request for review handoff. Use `.github/pull_request_template.md` if present.
+3. **Contract fidelity (targeted)** — If implementation establishes a **material decision** that should be documented and mapped `.forge` contracts are missing or misleading, patch the mapped contract with a minimal current-state edit; escalate structural or cross-domain changes to Architect.
+4. **Validate Success** — Run repository-inferred validation (tests/lint/build as applicable). Re-run after substantive edits. **Do not** commit or create a PR until each required check exits successfully.
+5. **Scan changes for security vulnerabilities** — Examine the changeset for security risks before proceeding.
+6. **skill: commit-code** — Commit approved changes using the commit skill.
+7. **skill: push-branch** — Push branch state to remote.
+8. **Create PR (GitHub MCP or `gh`)** — Open pull request for review handoff. Use `.github/pull_request_template.md` if present.
 
 ## Skill Resolution
 
-Resolve assigned skills from `.forge/skill_registry.json` at `agent_assignments.engineer`.
+Resolve assigned skills from `.forge/skill_registry.json` at `agent_assignments.engineer`. PR creation uses GitHub MCP or `gh` CLI (not a Forge skill id).
 
 ## Handoff Contract
 

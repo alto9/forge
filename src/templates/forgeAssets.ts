@@ -53,5 +53,6 @@ export function getDefaultProjectJson(projectName: string, githubUrl: string, gi
 /** Schema file names to copy from extension to .forge/schemas/ */
 export const SCHEMA_FILES = [
   "vision.schema.json",
-  "project.schema.json"
+  "project.schema.json",
+  "features.schema.json"
 ] as const;
