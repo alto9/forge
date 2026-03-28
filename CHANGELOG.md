@@ -1,3 +1,7 @@
+## <small>3.15.1 (2026-03-28)</small>
+
+* refactor: enhance documentation for issue refinement process ([271af9e](https://github.com/alto9/forge/commit/271af9e))
+
 ## 3.15.0 (2026-03-28)
 
 * feat: implement automated project sync feature ([b9a769c](https://github.com/alto9/forge/commit/b9a769c))
