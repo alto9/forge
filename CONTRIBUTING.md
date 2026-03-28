@@ -84,6 +84,8 @@ src/
 - Edit files under **`resources/workflow/commands/`** (for example `build-from-github.md`, `refine-issue.md`).
 - After setup, the same filenames appear under **`.cursor/commands/`** in the project.
 
+**Commands vs agents:** Cursor command Markdown defines **orchestration** (inputs, delegation, output checks). Agent Markdown under **`resources/workflow/agents/`** defines **execution behavior** for each phase. For example, `refine-issue.md` pairs with `tech-writer.md`; if guidance conflicts, the command file governs invocation/output checks and the agent file governs refinement behavior.
+
 ### Release checklist
 
 1. Change the Markdown under `resources/workflow/commands/` as needed.

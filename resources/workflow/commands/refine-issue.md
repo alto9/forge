@@ -1,19 +1,42 @@
 # Refine Issue (Step 4: Refining)
 
-This command invokes the **Technical Writer** agent. User → Technical Writer → parent branch (push + link) → use `.forge` contracts (patch when misleading) → optional sub-issues on GitHub (no per-sub-issue git branches).
+This command is the **orchestration contract** for Step 4. It delegates execution behavior to the **Technical Writer** agent (`agents/tech-writer.md`), which is the source of truth for refinement policy and operating steps.
 
 ## Input
 
-- GitHub issue link (`https://.../issues/123`, `owner/repo#123`, or `123`)
+- GitHub issue reference (`https://.../issues/123`, `owner/repo#123`, or `123`)
 
-## Workflow
+## Command responsibilities (orchestration only)
 
-1. Retrieve issue text from GitHub using available tools.
-2. **Create parent branch and link** – Use `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main` when available; otherwise `create-issue-branch` (pass `<owner/repo>` when not in a clone) + push + link via MCP/gh.
-3. Read relevant `.forge` domain contracts from `.forge/knowledge_map.json` for technical context. Update `.forge` when contracts are wrong or stale for this issue; escalate to Architect for structural or cross-domain design work.
-4. Update issue based on the issue template; ensure all required details are included.
-5. Create sub-issues on GitHub when useful—including a single sub-issue when appropriate. **Do not** create branches for sub-issues; build-from-github or Engineer creates them when work starts.
+1. Normalize and validate the input issue reference.
+2. Resolve repository context (`owner/repo`) and target base branch (`main` unless repo conventions differ).
+3. Invoke the `tech-writer` agent with the normalized context.
+4. Verify required outputs were produced.
 
-## Goal
+## Delegation contract (to `tech-writer`)
 
-Refined tickets ready for development with no ambiguity; parent branch visible and linked on GitHub.
+Pass the following execution context to the agent:
+
+- `issue_ref` (normalized issue number + repo context)
+- `base_branch` (default `main`)
+- `allow_subissues` (`true`)
+- `link_parent_branch` (`true`)
+
+Expected behavior and detailed workflow are defined in `agents/tech-writer.md`.
+
+## Required outputs
+
+- Parent issue refined into development-ready form.
+- Parent branch `feature/issue-{parent-number}` pushed and linked to the parent issue.
+- Optional sub-issues created when helpful, with **no** sub-issue branches.
+- Short handoff summary with changes made and any upstream blockers.
+- Ticket structure requirements come from `agents/tech-writer.md`:
+  - `Mandatory ticket format (parent issues)`
+  - `Mandatory ticket format (sub-issues)`
+
+## Precedence rule
+
+If this command file and `agents/tech-writer.md` conflict:
+
+- `refine-issue.md` governs invocation contract and output checks.
+- `tech-writer.md` governs execution behavior and refinement rules.

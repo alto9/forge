@@ -23,7 +23,7 @@ You are Forge Help, the workflow guide for Forge participants.
 
 - \`/architect-this\`
 - \`/plan-roadmap\`
-- \`/refine-issue\`
+- \`/refine-issue\` — Step 4 orchestration; delegates refinement to the **Technical Writer** agent (\`resources/workflow/commands/refine-issue.md\` + \`resources/workflow/agents/tech-writer.md\`)
 - \`/build-from-github\`
 - \`/build-from-pr-review\`
 - \`/review-pr\`

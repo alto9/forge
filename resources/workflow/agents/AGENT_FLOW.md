@@ -9,7 +9,7 @@ This document describes the intended flow of responsibility among Forge agents. 
 | 1 | Product Owner | Product Owner | Retrieve `vision.json` and `project.json`, determine adjustments, hand off to Architect |
 | 2 | Architecting | Architect | Retrieve vision and knowledge map, perform clarity check, update `.forge` contracts by domain, hand off recap to Planner |
 | 3 | Planning | Planner | pull-milestones, pull-milestone-issues, determine GitHub changes |
-| 4 | Refining | Technical Writer | Retrieve issue, create parent branch and link, use `.forge` contracts for context (patch when misleading), update issue, create sub-issues when useful (no sub-issue branches) |
+| 4 | Refining | Technical Writer | `/refine-issue` handles orchestration; Technical Writer handles refinement execution policy, including parent-branch linking and optional sub-issues (no sub-issue branches) |
 | 5 | Building | Engineer | Branch setup by build-from-github or Engineer for issue being built; perform code changes; use `.forge` for alignment; run repo-inferred validation (tests/lint/build as applicable) before commit; scan security; commit; push; create-pr |
 | 6 | Reviewing | Quality Assurance | Retrieve PR; checkout; review accuracy; check vulnerabilities; add review to PR |
 
@@ -122,30 +122,23 @@ User ──► command: /plan-roadmap ──► agent: Planner
 ## 3. Refining Flow (`/refine-issue`)
 
 ```
-User (Github Issue Link) ──► Technical Writer Agent
+User (GitHub Issue Link) ──► command: /refine-issue
                                     │
                                     ▼
-                    Retrieve issue text from GitHub
+                     Normalize input + resolve repo/base context
                                     │
                                     ▼
-                    Create parent branch (linked to issue via gh issue develop)
+                         Delegate execution to Technical Writer
                                     │
                                     ▼
-                    Use `.forge` domain contracts as context (patch if misleading)
-                                    │
-                                    ▼
-                    Update issue based on template
-                                    │
-                                    ▼
-                    Create sub-issues on GitHub when useful (no branch per sub-issue)
+                    Verify required outputs (refined issue, parent branch linked,
+                      optional sub-issues without sub-issue branches, handoff summary)
 ```
 
 **Steps:**
-1. Retrieve issue text from GitHub (use available tools).
-2. Create parent branch and link: `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main` when available; otherwise `create-issue-branch` (pass `<owner/repo>` when not in a clone) + push + link via MCP/gh.
-3. Read relevant `.forge` contracts from `.forge/knowledge_map.json` for technical context. Update `.forge` only when a **material decision** needed for this ticket is missing or misrepresented; keep edits minimal and current-state, and escalate to Architect when the fix needs structural or cross-domain design work.
-4. Update the issue based on the issue template; ensure all required details are included.
-5. Create sub-issues on GitHub when useful (including a single sub-issue when appropriate). Do not create branches for sub-issues; build-from-github or Engineer creates them when work starts.
+1. `/refine-issue` owns the invocation contract: normalize issue reference, resolve repo/base context, delegate, and verify required outputs.
+2. `resources/workflow/agents/tech-writer.md` owns refinement behavior and process policy (authoritative operating loop and hard rules).
+3. If command and agent guidance conflict, command governs invocation/output checks and agent governs execution behavior.
 
 ---
 

@@ -29,7 +29,7 @@ After Cursor-agent initialization, use the injected agents and commands:
 
 - **Architect** (`/architect-this`) – Aligns `.forge/knowledge_map.json` and domain contract docs with product intent; hands off to Planner
 - **Plan Roadmap** (`/plan-roadmap`) – Manages GitHub milestones and issues via pull-milestones, pull-milestone-issues
-- **Refine Issue** (`/refine-issue`) – Refines GitHub issues with SME context; creates parent branch (push + link); optional sub-issues on GitHub (no per-sub-issue git branches)
+- **Refine Issue** (`/refine-issue`) – Step 4 **orchestration** (normalize input, delegate, verify outputs); the **Technical Writer** agent carries out refinement (parent branch linked, optional sub-issues, no per-sub-issue branches). Authoritative details: `resources/workflow/commands/refine-issue.md` and `resources/workflow/agents/tech-writer.md`.
 - **Build from GitHub** (`/build-from-github`) – Creates/links implementation branch for the issue, implements, runs all tests/lint until green, then commit/PR
 - **Build from PR Review** (`/build-from-pr-review`) – Retrieves PR feedback, checks out PR branch, applies requested changes, validates, and pushes updates for re-review
 - **Review PR** (`/review-pr`) – Reviews code, posts review comments
@@ -44,7 +44,7 @@ Type `@` in chat to use Forge personas:
 | **@product-owner** | Step 1: maintain product vision and project direction |
 | **@architect** | Step 2: update technical contracts and knowledge structure |
 | **@planner** | Step 3: align milestones and issues with documented direction |
-| **@technical-writer** | Step 4: refine GitHub issues into implementation-ready tickets |
+| **@technical-writer** | Step 4: Technical Writer agent refines issues into implementation-ready work (invocation contract for `/refine-issue` is in `resources/workflow/commands/refine-issue.md`) |
 | **@engineer** | Step 5: implement scoped issue work and prepare PRs |
 | **@quality-assurance** | Step 6: review PRs for correctness and security |
 
