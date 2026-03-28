@@ -1,3 +1,7 @@
+## 3.15.0 (2026-03-28)
+
+* feat: implement automated project sync feature ([b9a769c](https://github.com/alto9/forge/commit/b9a769c))
+
 ## <small>3.14.3 (2026-03-28)</small>
 
 * refactor: update agent documentation and clarify `.forge` editing roles ([8aae053](https://github.com/alto9/forge/commit/8aae053))
