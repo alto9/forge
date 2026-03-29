@@ -101,7 +101,7 @@
         "forge.autoProjectSync.enabled": {
           "type": "boolean",
           "default": true,
-          "description": "Enable automatic hourly .forge project sync for canonical files in all workspace folders."
+          "description": "Enable prompt-based .forge update checks when a workspace opens or folders are added."
         }
       }
     }

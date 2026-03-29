@@ -82,6 +82,21 @@ describe('forge folder sync policies', () => {
         fs.writeFileSync(filePath, content, 'utf8');
     }
 
+    function writeCanonicalAssets(extensionPath: string): void {
+        const workflowPath = path.join(extensionPath, 'resources', 'workflow');
+        writeFileSyncEnsured(
+            path.join(workflowPath, 'references', 'skill_registry.json'),
+            '{"version":"canonical-skill"}'
+        );
+        writeFileSyncEnsured(
+            path.join(workflowPath, 'references', 'knowledge_map.json'),
+            '{"knowledge_map":[{"primary_doc":".forge/interface/index.md"}]}'
+        );
+        for (const schema of SCHEMA_FILES) {
+            writeFileSyncEnsured(path.join(extensionPath, 'schemas', schema), '{"schemaVersion":"canonical"}');
+        }
+    }
+
     it('keeps vision and project create-only while syncing canonical refs and schemas', async () => {
         const projectPath = makeTempDir();
         const extensionPath = makeTempDir();
@@ -158,5 +173,39 @@ describe('forge folder sync policies', () => {
         expect(synced).toBe(true);
         expect(fs.existsSync(path.join(projectPath, '.forge', 'vision.json'))).toBe(true);
         expect(fs.existsSync(path.join(projectPath, '.forge', 'project.json'))).toBe(true);
+    });
+
+    it('marks project as needing sync when .forge is missing', () => {
+        const projectPath = makeTempDir();
+        const extensionPath = makeTempDir();
+        tempDirs.push(projectPath, extensionPath);
+        writeCanonicalAssets(extensionPath);
+
+        expect(__testables.projectForgeAssetsNeedSync(projectPath, extensionPath)).toBe(true);
+    });
+
+    it('marks project as needing sync when mapped markdown docs are missing', async () => {
+        const projectPath = makeTempDir();
+        const extensionPath = makeTempDir();
+        tempDirs.push(projectPath, extensionPath);
+        writeCanonicalAssets(extensionPath);
+
+        const workflowPath = path.join(extensionPath, 'resources', 'workflow');
+        await __testables.ensureForgeFolder(projectPath, extensionPath, workflowPath);
+        fs.rmSync(path.join(projectPath, '.forge', 'interface', 'index.md'));
+
+        expect(__testables.projectForgeAssetsNeedSync(projectPath, extensionPath)).toBe(true);
+    });
+
+    it('marks project as up to date when canonical .forge assets match', async () => {
+        const projectPath = makeTempDir();
+        const extensionPath = makeTempDir();
+        tempDirs.push(projectPath, extensionPath);
+        writeCanonicalAssets(extensionPath);
+
+        const workflowPath = path.join(extensionPath, 'resources', 'workflow');
+        await __testables.ensureForgeFolder(projectPath, extensionPath, workflowPath);
+
+        expect(__testables.projectForgeAssetsNeedSync(projectPath, extensionPath)).toBe(false);
     });
 });

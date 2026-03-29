@@ -1,26 +1,11 @@
 import * as vscode from 'vscode';
 import { InitializeAgentsCommand } from './commands/InitializeAgentsCommand';
 import { InitializeProjectCommand } from './commands/InitializeProjectCommand';
-import { SetupCursorCommand } from './commands/SetupCursorCommand';
+import { SetupCursorCommand, projectForgeAssetsNeedSync } from './commands/SetupCursorCommand';
 import { ForgeChatParticipant } from './chatParticipant';
 
 let outputChannel: vscode.OutputChannel;
-const AUTO_PROJECT_SYNC_INTERVAL_MS = 60 * 60 * 1000;
-const AUTO_PROJECT_SYNC_STATE_PREFIX = 'forge.autoProjectSync.lastSyncAt.';
 const AUTO_PROJECT_SYNC_ENABLED_SETTING = 'autoProjectSync.enabled';
-
-function getAutoProjectSyncStateKey(folderUriString: string): string {
-    return `${AUTO_PROJECT_SYNC_STATE_PREFIX}${folderUriString}`;
-}
-
-export function shouldRunAutoProjectSync(
-    lastSyncAt: number | undefined,
-    now: number,
-    minimumIntervalMs = AUTO_PROJECT_SYNC_INTERVAL_MS
-): boolean {
-    if (!lastSyncAt) return true;
-    return now - lastSyncAt >= minimumIntervalMs;
-}
 
 export function isAutoProjectSyncEnabled(): boolean {
     return vscode.workspace
@@ -28,63 +13,113 @@ export function isAutoProjectSyncEnabled(): boolean {
         .get<boolean>(AUTO_PROJECT_SYNC_ENABLED_SETTING, true);
 }
 
-function registerAutomatedProjectSync(
+function registerProjectSyncPrompt(
     context: vscode.ExtensionContext,
     channel: vscode.OutputChannel
 ): void {
-    const inFlight = new Set<string>();
+    const checking = new Set<string>();
+    const syncing = new Set<string>();
+    let promptInFlight = false;
 
-    const runForFolder = async (
-        folder: vscode.WorkspaceFolder,
-        reason: 'startup' | 'workspace-change' | 'interval'
-    ) => {
-        const folderKey = folder.uri.toString();
-        if (inFlight.has(folderKey)) {
-            return;
-        }
-        if (!isAutoProjectSyncEnabled()) {
-            return;
-        }
-
-        const stateKey = getAutoProjectSyncStateKey(folderKey);
-        const now = Date.now();
-        const lastSyncAt = context.workspaceState.get<number>(stateKey);
-        if (!shouldRunAutoProjectSync(lastSyncAt, now)) {
-            return;
-        }
-
-        inFlight.add(folderKey);
-        try {
-            const synced = await SetupCursorCommand.syncProjectFolder(
-                context,
-                folder.uri.fsPath,
-                channel,
-                { forgeOnly: true, silent: true }
-            );
-            if (synced) {
-                await context.workspaceState.update(stateKey, now);
-                channel.appendLine(
-                    `Auto-synced .forge canonical assets for ${folder.name} (${reason}).`
-                );
+    const getOutdatedFolders = async (
+        folders: readonly vscode.WorkspaceFolder[]
+    ): Promise<vscode.WorkspaceFolder[]> => {
+        const outdated: vscode.WorkspaceFolder[] = [];
+        for (const folder of folders) {
+            const folderKey = folder.uri.toString();
+            if (checking.has(folderKey) || syncing.has(folderKey)) {
+                continue;
             }
-        } catch (error) {
-            const msg = error instanceof Error ? error.message : String(error);
-            channel.appendLine(`Auto project sync failed for ${folder.name}: ${msg}`);
+            checking.add(folderKey);
+            try {
+                const needsUpdate = projectForgeAssetsNeedSync(
+                    folder.uri.fsPath,
+                    context.extensionPath
+                );
+                if (needsUpdate) {
+                    outdated.push(folder);
+                }
+            } finally {
+                checking.delete(folderKey);
+            }
+        }
+        return outdated;
+    };
+
+    const promptForUpdates = async (
+        folders: vscode.WorkspaceFolder[],
+        reason: 'startup' | 'workspace-change'
+    ) => {
+        if (promptInFlight || folders.length === 0) {
+            return;
+        }
+
+        promptInFlight = true;
+        const folderNames = folders.map((folder) => folder.name).join(', ');
+        const message =
+            folders.length === 1
+                ? `Forge detected out-of-date .forge files in ${folders[0].name}. Update now?`
+                : `Forge detected out-of-date .forge files in ${folders.length} workspace folders (${folderNames}). Update now?`;
+
+        try {
+            const action = await vscode.window.showInformationMessage(
+                message,
+                'Update .forge',
+                'Not now'
+            );
+            if (action !== 'Update .forge') {
+                channel.appendLine(`Skipped .forge update prompt (${reason}).`);
+                return;
+            }
+
+            for (const folder of folders) {
+                syncing.add(folder.uri.toString());
+            }
+
+            await Promise.all(
+                folders.map(async (folder) => {
+                    try {
+                        const synced = await SetupCursorCommand.syncProjectFolder(
+                            context,
+                            folder.uri.fsPath,
+                            channel,
+                            { forgeOnly: true, silent: true }
+                        );
+                        if (synced) {
+                            channel.appendLine(
+                                `Updated .forge canonical assets for ${folder.name} (${reason}).`
+                            );
+                        }
+                    } catch (error) {
+                        const msg = error instanceof Error ? error.message : String(error);
+                        channel.appendLine(`Project sync failed for ${folder.name}: ${msg}`);
+                    } finally {
+                        syncing.delete(folder.uri.toString());
+                    }
+                })
+            );
         } finally {
-            inFlight.delete(folderKey);
+            promptInFlight = false;
         }
     };
 
-    const runForCurrentWorkspace = async (reason: 'startup' | 'interval') => {
+    const runForFolders = async (
+        folders: readonly vscode.WorkspaceFolder[],
+        reason: 'startup' | 'workspace-change'
+    ) => {
         if (!isAutoProjectSyncEnabled()) {
             return;
         }
-        const folders = vscode.workspace.workspaceFolders ?? [];
-        await Promise.all(folders.map((folder) => runForFolder(folder, reason)));
+        if (folders.length === 0) {
+            return;
+        }
+        const outdated = await getOutdatedFolders(folders);
+        await promptForUpdates(outdated, reason);
     };
 
     const startupTimer = setTimeout(() => {
-        void runForCurrentWorkspace('startup');
+        const folders = vscode.workspace.workspaceFolders ?? [];
+        void runForFolders(folders, 'startup');
     }, 1000);
     context.subscriptions.push({
         dispose: () => {
@@ -92,17 +127,8 @@ function registerAutomatedProjectSync(
         }
     });
 
-    const interval = setInterval(() => {
-        void runForCurrentWorkspace('interval');
-    }, AUTO_PROJECT_SYNC_INTERVAL_MS);
-    context.subscriptions.push({
-        dispose: () => {
-            clearInterval(interval);
-        }
-    });
-
     const workspaceFolderListener = vscode.workspace.onDidChangeWorkspaceFolders((event) => {
-        void Promise.all(event.added.map((folder) => runForFolder(folder, 'workspace-change')));
+        void runForFolders(event.added, 'workspace-change');
     });
     context.subscriptions.push(workspaceFolderListener);
 }
@@ -139,7 +165,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
     context.subscriptions.push(initializeProjectCommand);
 
-    registerAutomatedProjectSync(context, outputChannel);
+    registerProjectSyncPrompt(context, outputChannel);
 
     // Auto-initialize Cursor agents on startup only when running in Cursor.
     if (isCursorAppName(vscode.env.appName || '')) {

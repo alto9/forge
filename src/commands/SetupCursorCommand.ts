@@ -124,12 +124,21 @@ function syncCanonicalJsonReference(
     outputChannel?.appendLine(`Updated ${destinationLabel} from canonical source`);
 }
 
-async function ensureKnowledgeMapDocs(
-    forgeDir: string,
-    knowledgeMapPath: string,
-    outputChannel?: vscode.OutputChannel
-) {
-    if (!fs.existsSync(knowledgeMapPath)) return;
+function canonicalJsonNeedsSync(sourcePath: string, destinationPath: string): boolean {
+    if (!fs.existsSync(sourcePath)) return false;
+    if (!fs.existsSync(destinationPath)) return true;
+
+    const canonicalRaw = fs.readFileSync(sourcePath, 'utf8');
+    const canonicalNormalized = normalizeJson(canonicalRaw);
+    if (!canonicalNormalized) return false;
+
+    const currentRaw = fs.readFileSync(destinationPath, 'utf8');
+    const currentNormalized = normalizeJson(currentRaw);
+    return currentNormalized !== canonicalNormalized;
+}
+
+function getKnowledgeMapMarkdownPaths(knowledgeMapPath: string): Set<string> | null {
+    if (!fs.existsSync(knowledgeMapPath)) return new Set<string>();
 
     try {
         const knowledgeMapRaw = fs.readFileSync(knowledgeMapPath, 'utf8');
@@ -139,18 +148,70 @@ async function ensureKnowledgeMapDocs(
         for (const root of mapRoots) {
             collectMarkdownPaths(root, markdownPaths);
         }
+        return markdownPaths;
+    } catch {
+        return null;
+    }
+}
 
-        for (const relativePath of markdownPaths) {
-            if (!relativePath.startsWith('.forge/')) continue;
-            const absolutePath = path.join(path.dirname(forgeDir), relativePath);
-            if (fs.existsSync(absolutePath)) continue;
-            fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
-            fs.writeFileSync(absolutePath, defaultMarkdownForPath(relativePath), 'utf8');
-            outputChannel?.appendLine(`Created ${relativePath}`);
-        }
-    } catch (error) {
-        const msg = error instanceof Error ? error.message : String(error);
-        outputChannel?.appendLine(`Warning: could not scaffold knowledge map markdown docs: ${msg}`);
+export function projectForgeAssetsNeedSync(projectPath: string, extensionPath: string): boolean {
+    const workflowPath = path.join(extensionPath, 'resources', 'workflow');
+    if (!fs.existsSync(workflowPath)) {
+        return false;
+    }
+
+    const forgeDir = path.join(projectPath, '.forge');
+    const schemasDir = path.join(forgeDir, 'schemas');
+    if (!fs.existsSync(forgeDir)) return true;
+    if (!fs.existsSync(path.join(forgeDir, 'vision.json'))) return true;
+    if (!fs.existsSync(path.join(forgeDir, 'project.json'))) return true;
+
+    const skillRegistrySrc = path.join(workflowPath, 'references', 'skill_registry.json');
+    const skillRegistryDest = path.join(forgeDir, 'skill_registry.json');
+    if (canonicalJsonNeedsSync(skillRegistrySrc, skillRegistryDest)) return true;
+
+    const knowledgeMapSrc = path.join(workflowPath, 'references', 'knowledge_map.json');
+    const knowledgeMapDest = path.join(forgeDir, 'knowledge_map.json');
+    if (canonicalJsonNeedsSync(knowledgeMapSrc, knowledgeMapDest)) return true;
+
+    for (const schemaFile of SCHEMA_FILES) {
+        const srcPath = path.join(extensionPath, 'schemas', schemaFile);
+        const destPath = path.join(schemasDir, schemaFile);
+        if (canonicalJsonNeedsSync(srcPath, destPath)) return true;
+    }
+
+    const markdownPaths = getKnowledgeMapMarkdownPaths(knowledgeMapDest);
+    if (!markdownPaths) {
+        return true;
+    }
+
+    for (const relativePath of markdownPaths) {
+        if (!relativePath.startsWith('.forge/')) continue;
+        const absolutePath = path.join(projectPath, relativePath);
+        if (!fs.existsSync(absolutePath)) return true;
+    }
+
+    return false;
+}
+
+async function ensureKnowledgeMapDocs(
+    forgeDir: string,
+    knowledgeMapPath: string,
+    outputChannel?: vscode.OutputChannel
+) {
+    const markdownPaths = getKnowledgeMapMarkdownPaths(knowledgeMapPath);
+    if (!markdownPaths) {
+        outputChannel?.appendLine('Warning: could not scaffold knowledge map markdown docs: invalid JSON.');
+        return;
+    }
+
+    for (const relativePath of markdownPaths) {
+        if (!relativePath.startsWith('.forge/')) continue;
+        const absolutePath = path.join(path.dirname(forgeDir), relativePath);
+        if (fs.existsSync(absolutePath)) continue;
+        fs.mkdirSync(path.dirname(absolutePath), { recursive: true });
+        fs.writeFileSync(absolutePath, defaultMarkdownForPath(relativePath), 'utf8');
+        outputChannel?.appendLine(`Created ${relativePath}`);
     }
 }
 
@@ -415,6 +476,9 @@ async function ensureCursorHooks(
 
 export const __testables = {
     normalizeJson,
+    canonicalJsonNeedsSync,
+    getKnowledgeMapMarkdownPaths,
     syncCanonicalJsonReference,
-    ensureForgeFolder
+    ensureForgeFolder,
+    projectForgeAssetsNeedSync
 };

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isCursorAppName, shouldRunAutoProjectSync } from '../extension';
+import { isCursorAppName } from '../extension';
 import {
     getStaleManagedPaths,
     shouldSyncManagedFiles,
@@ -132,19 +132,11 @@ describe('startup confirmation behavior', () => {
     });
 });
 
-describe('automated project sync throttling', () => {
-    it('runs when no previous sync timestamp exists', () => {
-        expect(shouldRunAutoProjectSync(undefined, 1_000)).toBe(true);
+describe('project sync prompt settings', () => {
+    it('describes prompt-based startup checks instead of hourly auto-sync', () => {
+        const setting =
+            packageJson.contributes?.configuration?.properties?.['forge.autoProjectSync.enabled'];
+        expect(setting.description).toContain('prompt');
+        expect(setting.description).toContain('open');
     });
-
-    it('skips when minimum interval has not elapsed', () => {
-        const oneHour = 60 * 60 * 1000;
-        expect(shouldRunAutoProjectSync(10_000, 10_000 + oneHour - 1, oneHour)).toBe(false);
-    });
-
-    it('runs when minimum interval has elapsed', () => {
-        const oneHour = 60 * 60 * 1000;
-        expect(shouldRunAutoProjectSync(10_000, 10_000 + oneHour, oneHour)).toBe(true);
-    });
-
 });
