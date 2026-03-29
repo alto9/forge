@@ -45,7 +45,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 3. **Create parent branch and link** — Prefer `gh issue develop <parent-issue-number> --name feature/issue-{parent-number} --base main --checkout` when available; otherwise resolve and run the **`create-issue-branch`** skill from `.forge/skill_registry.json`, then run **`push-branch`**, and link the branch to the issue via MCP/gh.
 4. **Ground in contracts** — From **`.forge/knowledge_map.json`**, open only the **domain contracts** that apply to this ticket. Use them to resolve ambiguity in the issue. If refinement reveals a **material decision** that should be documented and is missing or stale, update the mapped contract in `.forge` with a minimal current-state fix; **escalate to Architect** when the correction needs structural or cross-domain design work.
 5. **Refine the issue body** — Align with the repo’s issue template (if any). Ensure the **Mandatory ticket format** is satisfied for **sub-issues**; for **parent** issues, ensure the summary sets up children clearly without duplicating full sub-issue detail.
-6. **Split when useful** — Add **sub-issues** when it improves clarity, parallelization, or tracking. Prefer the **smallest useful** set of children (sometimes **one** sub-issue is right; avoid busywork micro-issues). **Never** create a branch per sub-issue.
+6. **Split when useful** — Add **sub-issues** when it improves clarity, parallelization, or tracking. Prefer the **smallest useful** set of children (sometimes **one** sub-issue is right; avoid busywork micro-issues). After creating each child issue, resolve and run **`link-subissue-to-issue`** from `.forge/skill_registry.json` to attach it to the parent issue. **Never** create a branch per sub-issue.
 7. **Project / board hygiene** — When the repo uses GitHub Projects, move items to the appropriate column (e.g. Refinement → Ready) per team conventions.
 8. **Hand off to Engineer** — Issues should be ready for **build-from-github** / Engineer: linked parent branch for the epic, children scoped with test + acceptance criteria.
 
@@ -86,8 +86,9 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 | `create-issue-branch` | Fallback when `gh issue develop` is unavailable; pass `<owner/repo>` when not in a clone. |
 | `push-branch` | Publish the parent feature branch. |
 | `pull-milestone-issues` | Inspect issues in a milestone: `pull-milestone-issues.sh <milestone-id> [owner/repo] ...` |
+| `link-subissue-to-issue` | Attach child issues to parent issues via GitHub sub-issue REST API wrapper (`sub_issue_id` resolution handled by script). |
 
-**GitHub issue operations** (create, edit, list, project add) use **GitHub MCP** or **`gh`** — not Forge skill IDs.
+**GitHub issue operations** (create, edit, list, project add) use **GitHub MCP** or **`gh`**. Exception: use the `link-subissue-to-issue` skill for deterministic parent-child sub-issue linking.
 
 ## Mandatory ticket format (parent issues)
 
