@@ -1,3 +1,8 @@
+## <small>3.16.1 (2026-03-29)</small>
+
+* chore: update icon path in package.json ([1e251bf](https://github.com/alto9/forge/commit/1e251bf))
+* chore: update package.json and add new logo asset ([3463157](https://github.com/alto9/forge/commit/3463157))
+
 ## 3.16.0 (2026-03-29)
 
 * refactor: update project sync mechanism to prompt users for updates ([1a05041](https://github.com/alto9/forge/commit/1a05041))
