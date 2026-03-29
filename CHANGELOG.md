@@ -1,3 +1,8 @@
+## 3.16.0 (2026-03-29)
+
+* refactor: update project sync mechanism to prompt users for updates ([1a05041](https://github.com/alto9/forge/commit/1a05041))
+* feat: add link-subissue-to-issue skill and update skill registry ([dc7144f](https://github.com/alto9/forge/commit/dc7144f))
+
 ## <small>3.15.1 (2026-03-28)</small>
 
 * refactor: enhance documentation for issue refinement process ([271af9e](https://github.com/alto9/forge/commit/271af9e))
