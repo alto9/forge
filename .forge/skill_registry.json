@@ -1,5 +1,5 @@
 {
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Canonical skill registry for agent and command execution. Agents and commands should resolve skill IDs from assignment maps below, then execute via the skill entry script_path and usage.",
   "canonical_categories": [
     "git_flow"
@@ -38,6 +38,17 @@
       "primary_consumers": [
         "tech_writer",
         "engineer"
+      ]
+    },
+    {
+      "id": "link-subissue-to-issue",
+      "status": "active",
+      "category": "git_flow",
+      "retag": "github-subissue-link",
+      "script_path": ".cursor/skills/link-subissue-to-issue/scripts/link-subissue-to-issue.sh",
+      "usage": ".cursor/skills/link-subissue-to-issue/scripts/link-subissue-to-issue.sh ([--replace-parent|-r] <owner/repo> <parent-issue-number> <child-issue-number> | [--replace-parent|-r] <parent-issue-number> <child-issue-number>)",
+      "primary_consumers": [
+        "tech_writer"
       ]
     },
     {
@@ -99,7 +110,8 @@
       "create-issue-branch",
       "push-branch",
       "pull-milestone-issues",
-      "get-issue-branches"
+      "get-issue-branches",
+      "link-subissue-to-issue"
     ],
     "engineer": [
       "create-issue-branch",
