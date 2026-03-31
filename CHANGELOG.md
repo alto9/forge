@@ -1,3 +1,7 @@
+## <small>3.16.2 (2026-03-31)</small>
+
+* chore: update skill registry to version 1.5.2 and add new skill ([a573d3d](https://github.com/alto9/forge/commit/a573d3d))
+
 ## <small>3.16.1 (2026-03-29)</small>
 
 * chore: update icon path in package.json ([1e251bf](https://github.com/alto9/forge/commit/1e251bf))
