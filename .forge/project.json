@@ -1,9 +1,9 @@
 {
   "name": "forge",
-  "description": "",
+  "description": "VS Code/Cursor extension (Forge Studio) for context engineering: `.forge` product and technical intent, staged agent workflow, and GitHub as the system of record for issues and roadmap. Includes a planned Forge Roadmap command: read-only webview of Projects v2 issues whose Status is not Done, grouped by Sprint field or by milestone, pass-through GitHub auth with sign-in prompt when needed, scoped per active project with multi-root disambiguation—without storing a duplicate backlog in the repo.",
   "type": "opensource",
   "metadata_path": ".forge",
   "code_path": ".",
-  "github_url": "https://github.com/owner/forge",
-  "github_board": "https://github.com/orgs/owner/projects/1"
+  "github_url": "https://github.com/alto9/forge",
+  "github_board": "https://github.com/orgs/alto9/projects/1"
 }

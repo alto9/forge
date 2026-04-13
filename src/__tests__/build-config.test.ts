@@ -26,18 +26,6 @@ describe('Webview Build Configuration', () => {
             expect(buildScript).toContain('esbuild');
         });
 
-        it.skipIf(!hasWebviews)('should build refinement bundle', () => {
-            const buildScript = packageJson.scripts['build:webview'];
-            expect(buildScript).toContain('src/webview/refinement/index.tsx');
-            expect(buildScript).toContain('media/refinement/main.js');
-        });
-
-        it.skipIf(!hasWebviews)('should build scribe bundle', () => {
-            const buildScript = packageJson.scripts['build:webview'];
-            expect(buildScript).toContain('src/webview/scribe/index.tsx');
-            expect(buildScript).toContain('media/scribe/main.js');
-        });
-
         it.skipIf(!hasWebviews)('should build roadmap bundle', () => {
             const buildScript = packageJson.scripts['build:webview'];
             expect(buildScript).toContain('src/webview/roadmap/index.tsx');
@@ -76,53 +64,23 @@ describe('Webview Build Configuration', () => {
             expect(devScript).toContain('esbuild');
         });
 
-        it.skipIf(!hasWebviews)('should watch all webview bundles', () => {
+        it.skipIf(!hasWebviews)('should watch roadmap bundle', () => {
             const devScript = packageJson.scripts['dev:webview'];
-            expect(devScript).toContain('src/webview/refinement/index.tsx');
-            expect(devScript).toContain('src/webview/scribe/index.tsx');
             expect(devScript).toContain('src/webview/roadmap/index.tsx');
             expect(devScript).toContain('--watch');
         });
 
-        it.skipIf(!hasWebviews)('should use concurrently for parallel watching', () => {
-            const devScript = packageJson.scripts['dev:webview'];
-            expect(devScript).toContain('concurrently');
+        it.skipIf(!hasWebviews)('should use concurrently for webpack and webview watch', () => {
+            const watchScript = packageJson.scripts.watch;
+            expect(watchScript).toContain('concurrently');
         });
     });
 
     describe('Build outputs', () => {
-        it.skipIf(!hasWebviews)('should create media/refinement/main.js', () => {
-            const refinementBundle = path.join(__dirname, '../../media/refinement/main.js');
-            const exists = fs.existsSync(refinementBundle);
-            expect(exists).toBe(true);
-        });
-
-        it.skipIf(!hasWebviews)('should create media/scribe/main.js', () => {
-            const scribeBundle = path.join(__dirname, '../../media/scribe/main.js');
-            const exists = fs.existsSync(scribeBundle);
-            expect(exists).toBe(true);
-        });
-
         it.skipIf(!hasWebviews)('should create media/roadmap/main.js', () => {
             const roadmapBundle = path.join(__dirname, '../../media/roadmap/main.js');
             const exists = fs.existsSync(roadmapBundle);
             expect(exists).toBe(true);
-        });
-
-        it.skipIf(!hasWebviews)('should have reasonable refinement bundle size', () => {
-            const refinementBundle = path.join(__dirname, '../../media/refinement/main.js');
-            const stats = fs.statSync(refinementBundle);
-            const sizeKB = stats.size / 1024;
-            expect(sizeKB).toBeLessThan(200);
-            expect(sizeKB).toBeGreaterThan(0);
-        });
-
-        it.skipIf(!hasWebviews)('should have reasonable scribe bundle size', () => {
-            const scribeBundle = path.join(__dirname, '../../media/scribe/main.js');
-            const stats = fs.statSync(scribeBundle);
-            const sizeKB = stats.size / 1024;
-            expect(sizeKB).toBeLessThan(200);
-            expect(sizeKB).toBeGreaterThan(0);
         });
 
         it.skipIf(!hasWebviews)('should have reasonable roadmap bundle size', () => {
@@ -211,18 +169,6 @@ describe('Webview Build Configuration', () => {
     });
 
     describe('Entry points', () => {
-        it.skipIf(!hasWebviews)('should have refinement entry point', () => {
-            const refinementEntry = path.join(__dirname, '../webview/refinement/index.tsx');
-            const exists = fs.existsSync(refinementEntry);
-            expect(exists).toBe(true);
-        });
-
-        it.skipIf(!hasWebviews)('should have scribe entry point', () => {
-            const scribeEntry = path.join(__dirname, '../webview/scribe/index.tsx');
-            const exists = fs.existsSync(scribeEntry);
-            expect(exists).toBe(true);
-        });
-
         it.skipIf(!hasWebviews)('should have roadmap entry point', () => {
             const roadmapEntry = path.join(__dirname, '../webview/roadmap/index.tsx');
             const exists = fs.existsSync(roadmapEntry);
@@ -234,18 +180,6 @@ describe('Webview Build Configuration', () => {
         it('should have media directory', () => {
             const mediaDir = path.join(__dirname, '../../media');
             const exists = fs.existsSync(mediaDir);
-            expect(exists).toBe(true);
-        });
-
-        it.skipIf(!hasWebviews)('should have media/refinement directory', () => {
-            const refinementDir = path.join(__dirname, '../../media/refinement');
-            const exists = fs.existsSync(refinementDir);
-            expect(exists).toBe(true);
-        });
-
-        it.skipIf(!hasWebviews)('should have media/scribe directory', () => {
-            const scribeDir = path.join(__dirname, '../../media/scribe');
-            const exists = fs.existsSync(scribeDir);
             expect(exists).toBe(true);
         });
 

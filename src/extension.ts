@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { InitializeAgentsCommand } from './commands/InitializeAgentsCommand';
 import { InitializeProjectCommand } from './commands/InitializeProjectCommand';
+import { RoadmapCommand } from './commands/RoadmapCommand';
 import { SetupCursorCommand, projectForgeAssetsNeedSync } from './commands/SetupCursorCommand';
 import { ForgeChatParticipant } from './chatParticipant';
 
@@ -164,6 +165,11 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
     context.subscriptions.push(initializeProjectCommand);
+
+    const roadmapCommand = vscode.commands.registerCommand('forge.showRoadmap', async () => {
+        await RoadmapCommand.execute(context);
+    });
+    context.subscriptions.push(roadmapCommand);
 
     registerProjectSyncPrompt(context, outputChannel);
 

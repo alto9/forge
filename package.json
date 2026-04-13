@@ -93,6 +93,10 @@
       {
         "command": "forge.initializeProject",
         "title": "Forge: Initialize Project"
+      },
+      {
+        "command": "forge.showRoadmap",
+        "title": "Forge: Roadmap"
       }
     ],
     "configuration": {
@@ -102,18 +106,33 @@
           "type": "boolean",
           "default": true,
           "description": "Enable prompt-based .forge update checks when a workspace opens or folders are added."
+        },
+        "forge.roadmap.statusFieldName": {
+          "type": "string",
+          "default": "Status",
+          "description": "GitHub Projects v2 single-select field name for issue status (used to exclude Done)."
+        },
+        "forge.roadmap.sprintFieldName": {
+          "type": "string",
+          "default": "Sprint",
+          "description": "GitHub Projects v2 field name for sprint (single select or iteration)."
+        },
+        "forge.roadmap.doneStatusName": {
+          "type": "string",
+          "default": "Done",
+          "description": "Status option value that means complete (issues with this status are hidden)."
         }
       }
     }
   },
   "scripts": {
-    "vscode:prepublish": "webpack --mode production --devtool hidden-source-map",
-    "compile": "webpack",
-    "build": "webpack",
-    "watch": "webpack --watch",
+    "vscode:prepublish": "webpack --mode production --devtool hidden-source-map && npm run build:webview",
+    "compile": "webpack && npm run build:webview",
+    "build": "webpack && npm run build:webview",
+    "watch": "concurrently \"webpack --watch\" \"npm run dev:webview\"",
     "package": "npx @vscode/vsce package --no-dependencies",
-    "build:webview": "echo No webviews",
-    "dev:webview": "echo No webviews",
+    "build:webview": "esbuild src/webview/roadmap/index.tsx --bundle --outfile=media/roadmap/main.js --platform=browser --format=iife --target=es2020 --minify",
+    "dev:webview": "esbuild src/webview/roadmap/index.tsx --bundle --outfile=media/roadmap/main.js --platform=browser --format=iife --target=es2020 --watch",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",

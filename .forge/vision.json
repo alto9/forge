@@ -1,25 +1,58 @@
 {
   "vision": {
-    "title": "",
-    "mission": "",
-    "core_purpose": "",
-    "key_architecture": "",
+    "title": "Forge Studio",
+    "mission": "Give teams a systematic way to build and use rich product and technical context in the IDE so AI-assisted delivery stays aligned from vision to shipped work—without replacing GitHub as the place where issue state lives.",
+    "core_purpose": "Engineers using Cursor or VS Code need shared, validated context in `.forge` and a clear view of what is still open in GitHub. Forge Studio bridges those worlds: agents and commands maintain intent and contracts locally, while delivery and backlog truth stay in GitHub. A dedicated in-IDE roadmap view makes incomplete work visible next to Forge context without copying issues into the repo.",
+    "key_architecture": "Product and structural intent live in `.forge` (vision, project anchor, knowledge map, domain contracts). Execution tracking—issues, milestones, and project fields—lives in GitHub. Forge reads from GitHub for roadmap and planning surfaces; it does not maintain a second backlog database in the repository.",
     "long_term_vision": {
       "strategic_goals": {
-        "short_term": "",
-        "medium_term": "",
-        "long_term": ""
+        "short_term": "Ship a read-only Forge Roadmap experience: a command that opens a webview table of issues whose GitHub Projects v2 Status is not Done for the active Forge project, grouped by the Projects v2 Sprint field by default, with an in-view control to switch grouping to repository milestone. Use pass-through GitHub authentication (the IDE session); if the user is not signed into GitHub, prompt them to sign in before loading. In multi-root workspaces, prompt once for which workspace folder or active project to scope the view. Phase one is list-only—no edits or state changes from this UI. Defer dedicated rate-limit handling and client-side caching.",
+        "medium_term": "Deepen IDE integration between `.forge` intent and GitHub delivery: faster refresh, clearer empty and error states, and workflows that help Planner and engineers stay aligned without duplicating GitHub.",
+        "long_term": "Forge Studio remains the default context-engineering layer for Alto9 and community users: authoritative local intent, GitHub-authoritative delivery, and optional richer views and automation where they reduce friction without splitting truth."
       }
     },
     "key_principles": [
-      {"priority": 1, "text": ""}
+      {
+        "priority": 1,
+        "text": "GitHub is the source of truth for issues, milestones, and project board fields. Forge surfaces that data; it does not imply a parallel backlog store in the repo."
+      },
+      {
+        "priority": 2,
+        "text": "Ship incrementally: prove value with read-only views and clear scope before adding mutations from the extension."
+      },
+      {
+        "priority": 3,
+        "text": "Project-scoped UX: roadmap and backlog views apply to one Forge-associated repository context at a time; multi-root workspaces must disambiguate which folder or project is active."
+      },
+      {
+        "priority": 4,
+        "text": "Roadmap semantics are fixed for v1: incomplete means the issue's GitHub Projects v2 Status is not Done; sprint grouping reads the Projects v2 Sprint field; milestone grouping uses the issue milestone. Data that requires Projects v2 uses the GitHub GraphQL API as needed."
+      },
+      {
+        "priority": 5,
+        "text": "Authentication is pass-through to the user's GitHub sign-in for the IDE. If not signed in, prompt to sign in before fetching roadmap data. Initial roadmap scope does not include rate-limit mitigation or client-side caching."
+      }
     ],
     "market_strategy": {
       "competitive_advantages": [
-        {"priority": 1, "text": ""}
+        {
+          "priority": 1,
+          "text": "Forge combines structured agentic context (`.forge`) with live GitHub delivery state in the IDE, so teams plan and implement without tab churn or duplicate issue lists."
+        },
+        {
+          "priority": 2,
+          "text": "The staged Forge workflow (Product Owner through Quality Assurance) stays honest about ownership: local intent files vs. GitHub execution, with skills and agents aligned to that split."
+        }
       ],
       "differentiation_from_competitors": [
-        {"priority": 1, "text": ""}
+        {
+          "priority": 1,
+          "text": "Unlike generic AI extensions that treat issues as an afterthought, Forge positions the backlog as GitHub-backed truth while `.forge` holds the why and how for agents."
+        },
+        {
+          "priority": 2,
+          "text": "Unlike standalone PM tools, Forge does not fork issue data into a proprietary store for the roadmap view—reducing drift and preserving GitHub as the workflow hub."
+        }
       ]
     }
   }
