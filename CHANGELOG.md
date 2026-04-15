@@ -1,3 +1,7 @@
+## <small>3.17.1 (2026-04-15)</small>
+
+* docs: update contributing guidelines, package description, and README for clarity ([92faf32](https://github.com/alto9/forge/commit/92faf32))
+
 ## 3.17.0 (2026-04-13)
 
 * feat: implement Forge Roadmap command and webview integration ([de2c3e0](https://github.com/alto9/forge/commit/de2c3e0))
