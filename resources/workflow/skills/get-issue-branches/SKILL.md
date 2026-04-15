@@ -20,6 +20,8 @@ From a **gh-linked clone**, you may use:
 - **owner/repo** — GitHub repository (`OWNER/REPO` or `HOST/OWNER/REPO`), required when not in a gh-linked clone.
 - **issue-number** — Issue number or URL, as accepted by `gh issue develop --list`.
 
+For a **sub-issue**, GitHub may list **no** linked branches on the child; run this against the **parent** issue number to find **`feature/issue-{parent}`**.
+
 ### Example
 
 ```bash

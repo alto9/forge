@@ -1,6 +1,6 @@
 # 5. Building
 
-The **Engineer** agent owns the implementation branch for the issue being built, implements code changes, runs automated validation until everything passes, scans for security issues, then commits, pushes, and creates a PR.
+The **Engineer** agent works on the correct feature branch for the build target (for **sub-issues**, always the **parent** branch `feature/issue-{parent}`), implements code changes, runs automated validation until everything passes, scans for security issues, then commits, pushes, and creates a PR.
 
 ## Responsibilities
 
@@ -43,7 +43,7 @@ flowchart TD
 
 ## Flow Steps
 
-1. **Branch setup and link** — For the issue in the build link: build-from-github ensures the correct branch before handoff; if not on the issue branch, run branch setup: create/checkout `feature/issue-{N}` from `main` (top-level) or `feature/issue-{parent}` (sub-issue). Push when needed; link to that issue via `gh issue develop` or MCP if missing.
+1. **Branch setup and link** — For the issue in the build link: build-from-github ensures the correct branch before handoff. For a **top-level** issue: `feature/issue-{N}` from `main`. For a **sub-issue**: **`feature/issue-{parent}`** only—do not create or use `feature/issue-{child}`. Push when needed; link via `gh issue develop` or MCP per **`resources/workflow/commands/build-from-github.md`** (parent branch carries the link for epic work).
 2. **Perform Code Changes** — Implement scoped changes from the issue body; read the parent issue when the build target is a sub-issue.
 3. **Contract fidelity (targeted)** — If implementation establishes a **material decision** that should be documented and mapped `.forge` contracts are missing or misleading, patch the mapped contract with a minimal current-state edit; escalate structural or cross-domain changes to Architect.
 4. **Validate Success** — Run repository-inferred validation (tests/lint/build as applicable). Re-run after substantive edits. **Do not** commit or create a PR until each required check exits successfully.

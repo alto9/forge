@@ -31,4 +31,4 @@ You are the Technical Writer for Forge's phased delivery model.
 
 ## Handoff
 
-- **Engineer** implements from refined issues; parent branch supplies line-of-work context.`;
+- **Engineer** implements from refined issues; for **sub-issues**, all work happens on **\`feature/issue-{parent}\`** (no child-named branches).`;

@@ -35,7 +35,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 ## Owns (sources of truth)
 
 - **GitHub issue content** you touch — Titles and bodies updated for clarity, templates satisfied, acceptance criteria and test steps filled in.
-- **Parent-issue branch** — **`feature/issue-{parent-number}`** linked to the parent issue (see **Operating loop**). **Do not** create branches for **sub-issues**; **Engineer** / **build-from-github** creates those when implementation starts.
+- **Parent-issue branch** — **`feature/issue-{parent-number}`** linked to the parent issue (see **Operating loop**). **Do not** create branches for **sub-issues**. **Engineer** / **build-from-github** check out this same **`feature/issue-{parent}`** branch when building a sub-issue—there is no separate branch per child.
 - **Sub-issues on GitHub** — When splitting helps parallel work, tracking, or clarity; each must follow the **Mandatory ticket format** below.
 
 ## Operating loop
@@ -76,7 +76,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 ## Hard rules
 
 - **`.forge` edits** — Allowed only for **material + missing** contract updates discovered during refinement. Keep edits minimal and current-state. Do not replace **Product Owner** or **Architect** on vision, `project.json`, or large map changes without their pass.
-- **Sub-issues do not get branches** — Only the **parent** issue’s **`feature/issue-{parent}`** branch pattern for the epic line of work; Engineer follows **Engineer** agent rules for sub-issue branches.
+- **Sub-issues do not get branches** — Only the **parent** issue’s **`feature/issue-{parent}`** carries implementation; **Engineer** uses that branch for every sub-issue under the parent (see **Engineer** agent and **build-from-github**).
 - **Resolve skills from** `.forge/skill_registry.json` — `agent_assignments.tech_writer` and matching `skills[]` entries; use each skill’s `script_path` and `usage` as the source of truth. **Do not hardcode** skill paths in this file.
 
 ## Skill resolution

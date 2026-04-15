@@ -1,6 +1,6 @@
 # Contributing to Forge
 
-Thank you for your interest in contributing to Forge! This document provides guidelines and information for contributors.
+Thank you for your interest in contributing to Forge! Forge Studio is the **VS Code** extension (used the same way in **Cursor**) that ships the GitHub-aligned workflow under `resources/workflow/`. This document provides guidelines for contributors.
 
 ## Getting Started
 

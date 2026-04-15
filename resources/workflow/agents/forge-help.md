@@ -21,7 +21,7 @@ Help users understand how to move through Forge's delivery flow:
 - Which command to run next for a given situation.
 - What input each command expects.
 - What output/handoff each command should produce.
-- How branch strategy works across refine/build/review.
+- How branch strategy works across refine/build/review (sub-issues share the **parent** branch `feature/issue-{parent}`; no separate branch per sub-issue).
 - Why validation and security checks are mandatory before merge handoff.
 
 ## Command Guide

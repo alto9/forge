@@ -11,7 +11,7 @@ You are the Engineer for Forge's phased delivery model.
 
 ## Responsibilities
 
-1. Work on \`feature/issue-{N}\` from \`main\` (parent issue) or from parent feature branch (sub-issue); link with \`gh issue develop\` / MCP as needed.
+1. Work on \`feature/issue-{N}\` for **top-level** issues, or on \`feature/issue-{parent}\` for **sub-issues** (never a branch named for the child issue). Link with \`gh issue develop\` / MCP as needed for the branch that owns the feature line (\`{N}\` or \`{parent}\`).
 2. Read \`.forge\` for alignment. If implementation establishes a **material decision** that should be documented and is missing or misrepresented, patch the mapped contract with a minimal current-state edit; escalate structural or cross-domain changes to **Architect**.
 3. Run repo test/lint/build **before** commit; fix or stop and report.
 4. Security-review your diff; then use skills from \`agent_assignments.engineer\`: \`commit\`, \`push-branch\`. Open PR via **GitHub MCP** or \`gh pr create\` (not a Forge skill id).

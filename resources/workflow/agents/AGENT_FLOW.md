@@ -147,11 +147,11 @@ User (GitHub Issue Link) ──► command: /refine-issue
 ```
 User (Github Issue Link) ──► Branch setup (ensure correct branch)
                                     │
-                    Check current; if not, use linked/existing or create per CONTRIBUTING (gh issue develop for linking)
+                    Resolve parent if sub-issue; target = feature/issue-{N} (top-level)
+                    or feature/issue-{parent} (sub-issue — never a child-named branch)
                                     │
                                     ▼
-                         Branch setup: ensure feature/issue-{N} for issue in link
-                         (create from main or parent; push and link if needed)
+                         Branch setup: checkout/create target; push and link if needed
                          Then: Engineer retrieves issue details, implements, validates
                                     │
                                     ▼
@@ -169,7 +169,7 @@ User (Github Issue Link) ──► Branch setup (ensure correct branch)
 ```
 
 **Steps:**
-1. Branch setup (build-from-github or Engineer): ensure correct `feature/issue-{N}` for the issue—check current; if not, use linked/existing or create from `main` (top-level) or `feature/issue-{parent}` (sub-issue). Push and link via `gh issue develop` when needed.
+1. Branch setup (build-from-github or Engineer): for a **top-level** issue, ensure **`feature/issue-{N}`**; for a **sub-issue**, ensure **`feature/issue-{parent}`** only (no `feature/issue-{child}`). Check current branch; if not, use linked/existing branches or create from `main` as described in **`resources/workflow/commands/build-from-github.md`**. Push and link via `gh issue develop` when needed (parent issue owns the branch link for epic work).
 2. Engineer: retrieve issue details; implement code changes for the issue scope.
 3. Engineer: run repository-inferred validation commands (tests/lint/build as applicable); **do not** commit or open a PR until every check passes (fix or stop and report).
 4. Engineer: scan changeset for security vulnerabilities.

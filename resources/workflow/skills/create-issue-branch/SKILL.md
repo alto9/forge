@@ -7,6 +7,10 @@ description: [git_flow|branch-create] Create an issue branch from the specified 
 
 Use the provided script to create a branch linked to a GitHub issue (`gh issue develop`). Requires the GitHub CLI (`gh`).
 
+## Alto9 / Forge policy (sub-issues)
+
+For **sub-issues**, do **not** use this skill with the **child** issue number to create a dedicated branch. Implementation uses **`feature/issue-{parent}`** only—checkout that branch (or create it with **parent** issue number and branch name `feature/issue-{parent}`). See **`resources/workflow/commands/build-from-github.md`** and **`resources/workflow/agents/engineer.md`**.
+
 ## Usage
 
 **From a skill install or any directory** (explicit repo):

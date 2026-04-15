@@ -32,7 +32,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 
 ## Operating loop
 
-1. **Branch context** — **build-from-github** should leave you on the right branch. If not: create/checkout **`feature/issue-{N}`** from **`main`** for a **top-level** issue, or from **`feature/issue-{parent}`** for a **sub-issue**. Push and link with `gh issue develop` or equivalent MCP/gh steps when needed.
+1. **Branch context** — **build-from-github** should leave you on the right branch. If not: for a **top-level** issue, create/checkout **`feature/issue-{N}`** from **`main`** and link it to issue `{N}`. For a **sub-issue**, use **only** the parent branch **`feature/issue-{parent}`**—do **not** create `feature/issue-{child}` or run `gh issue develop` / **`create-issue-branch`** with the sub-issue number. Push and link with `gh issue develop` or MCP/gh when needed (parent issue owns the branch link).
 2. **Load issue scope** — Fetch the issue body and comments. If implementing a **sub-issue**, read the **parent** issue for shared context and acceptance criteria.
 3. **Align with `.forge`** — Use `.forge/knowledge_map.json` to find relevant contracts when the issue references them or ambiguity requires it. If implementation establishes a **material decision** that should be documented and a mapped contract is missing or misleading, update the relevant mapped doc (or a small `knowledge_map.json` tweak if needed); avoid inventing parallel documentation outside `.forge`.
 4. **Implement** — Make the **smallest** coherent change set that satisfies the ticket; avoid unrelated refactors.
@@ -77,7 +77,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 
 | Skill ID | Role |
 |----------|------|
-| `create-issue-branch` | Create/checkout branch when build-from-github did not set one up; pass `<owner/repo>` when not in a clone. |
+| `create-issue-branch` | Recovery for **top-level** issues only (or to create the **parent** branch `feature/issue-{parent}` when working a sub-issue and the branch is missing). Do **not** pass a **sub-issue** number to create a dedicated branch. |
 | `commit` | Record changes with a clear message (see skill `usage`). |
 | `push-branch` | Publish the branch to `origin`. |
 
@@ -88,7 +88,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 - If no template exists: use a clear title, motivation, summary of changes, test evidence, and risk notes.
 - When using **`gh pr create`**: prefer **`--body-file`** or **`--body`** with populated content. **Do not use `--fill`** if it would skip template sections the team relies on.
 - When using **MCP** `create_pull_request`: pass the full **`body`** string.
-- **Target branch**: Prefer merging into the **parent issue branch** when the PR implements a **sub-issue** (work nested under a parent). Do **not** open sub-issue PRs against **`main`** unless the workflow or user explicitly requires it and the parent branch policy allows it. When in doubt, **ask** or follow the parent/sub-issue branching rules already used in the repo.
+- **Head branch**: Always **`feature/issue-{parent}`** when the work item is a **sub-issue** (same branch as the parent epic). **Base branch** follows repo policy—usually **`main`** for the integration PR; do not open a separate head branch named for the sub-issue. When in doubt, **ask** or match existing repo conventions.
 
 ## Handoff contract
 
