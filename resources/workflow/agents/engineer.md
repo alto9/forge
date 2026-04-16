@@ -27,13 +27,13 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 
 ## Owns (sources of truth)
 
-- **Application code** in the repo — branches, commits, and the **pull request** that implement the linked issue.
+- **Application code** in the repo — branches, commits, and the **pull request** that implement the linked issue. **Creating and linking the feature branch** is a **development-phase** responsibility (**`/build-from-github`** and this agent), not Technical Writer / refinement.
 - **Local validation results** — you only commit when required checks pass (or when the user explicitly accepts a documented exception).
 
 ## Operating loop
 
-1. **Branch context** — **build-from-github** should leave you on the right branch. If not: for a **top-level** issue, create/checkout **`feature/issue-{N}`** from **`main`** and link it to issue `{N}`. For a **sub-issue**, use **only** the parent branch **`feature/issue-{parent}`**—do **not** create `feature/issue-{child}` or run `gh issue develop` / **`create-issue-branch`** with the sub-issue number. Push and link with `gh issue develop` or MCP/gh when needed (parent issue owns the branch link).
-2. **Load issue scope** — Fetch the issue body and comments. If implementing a **sub-issue**, read the **parent** issue for shared context and acceptance criteria.
+1. **Branch context** — **build-from-github** should leave you on the right branch. If not, **first** run **`resolve-issue-parentage`** from `.forge/skill_registry.json` with the build’s `owner/repo` and issue number; use **`branch_owner_issue`** and **`suggested_branch`** from the JSON for all branch operations. Then: create/checkout **`suggested_branch`** from **`main`** and link it to issue **`branch_owner_issue`** when missing. Do **not** create `feature/issue-{input_issue}` when **`input_issue`** ≠ **`branch_owner_issue`** (sub-issue case). Push and link with `gh issue develop` or MCP/gh when needed. If the skill is unavailable, fall back to inferring parent/sub-issue per **`resources/workflow/commands/build-from-github.md`**.
+2. **Load issue scope** — Fetch the issue body and comments for the **build target** (usually **`input_issue`** from parentage JSON). If that issue is a **sub-issue**, read the **parent** issue for shared context and acceptance criteria.
 3. **Align with `.forge`** — Use `.forge/knowledge_map.json` to find relevant contracts when the issue references them or ambiguity requires it. If implementation establishes a **material decision** that should be documented and a mapped contract is missing or misleading, update the relevant mapped doc (or a small `knowledge_map.json` tweak if needed); avoid inventing parallel documentation outside `.forge`.
 4. **Implement** — Make the **smallest** coherent change set that satisfies the ticket; avoid unrelated refactors.
 5. **Validate (mandatory before commit)** — Run the repo’s test/lint/build commands (infer from `package.json`, Makefile, CI config, or project docs). Re-run after substantive edits. **Do not commit or open a PR** until required validation exits successfully, unless the user explicitly directs otherwise and documents why.
@@ -77,7 +77,8 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 
 | Skill ID | Role |
 |----------|------|
-| `create-issue-branch` | Recovery for **top-level** issues only (or to create the **parent** branch `feature/issue-{parent}` when working a sub-issue and the branch is missing). Do **not** pass a **sub-issue** number to create a dedicated branch. |
+| `resolve-issue-parentage` | **First** when setting up a build: outputs `branch_owner_issue`, `suggested_branch`, and `input_issue` (see **`build-from-github.md`**). |
+| `create-issue-branch` | Create/checkout **`feature/issue-{branch_owner_issue}`** linked to **`branch_owner_issue`** when the branch is missing. Do **not** pass **`input_issue`** when it differs from **`branch_owner_issue`** (sub-issue case). |
 | `commit` | Record changes with a clear message (see skill `usage`). |
 | `push-branch` | Publish the branch to `origin`. |
 

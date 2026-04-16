@@ -2,6 +2,8 @@
 
 This command invokes the **Engineer** agent. User → Engineer → branch setup and issue link → implement → **all automated tests pass** → commit → push → create PR.
 
+**Branch creation and linking happen in this step only** (not during `/refine-issue`).
+
 ## Input
 
 - GitHub issue link (`https://.../issues/123`, `owner/repo#123`, or `123`)
@@ -9,24 +11,24 @@ This command invokes the **Engineer** agent. User → Engineer → branch setup 
 ## Workflow
 
 1. Parse and validate issue reference.
-2. Retrieve issue details using available tools (e.g. MCP GitHub, gh CLI). Determine whether the issue is a **sub-issue** and resolve its **parent** issue number (GitHub sub-issue relationship / API).
-3. **Branch setup** (execute before Engineer handoff). Alto9 policy: **sub-issues do not get their own git branches**. All work for a sub-issue happens on the parent’s branch **`feature/issue-{parent}`**.
+2. **Resolve branch owner (mandatory)** — Run the **`resolve-issue-parentage`** skill from `.forge/skill_registry.json` (`agent_assignments.engineer`) with `owner/repo` and the issue number. Parse the **single JSON line** on stdout. Use these fields:
+   - **`branch_owner_issue`** — The issue number that owns the integration branch (parent when the input is a sub-issue; otherwise the input issue).
+   - **`suggested_branch`** — Always `feature/issue-{branch_owner_issue}`.
+   - **`input_issue`** — The issue the user asked to build (unchanged); Engineer implements **this** issue’s scope while on **`suggested_branch`**.
+3. **Branch setup** (execute before Engineer handoff). Alto9 policy: **sub-issues do not get their own git branches**. All work uses **`feature/issue-{branch_owner_issue}`** from step 2.
 
    **Target branch name**
 
-   - **Top-level issue** (not a sub-issue): `feature/issue-{N}` where `{N}` is this issue’s number.
-   - **Sub-issue:** `feature/issue-{parent}` where `{parent}` is the parent issue’s number—**not** the sub-issue’s number.
+   - **`feature/issue-{branch_owner_issue}`** — Use **`branch_owner_issue`** from **`resolve-issue-parentage`** for every branch lookup, link, and create operation (never use **`input_issue`** for the branch name when it differs, e.g. when building a sub-issue).
 
    **Steps**
 
    - **Check current branch:** If already on the target branch for this build, proceed.
    - **If not on target branch:** Look for an existing branch to use:
-     - For a **top-level** issue: branches linked to **this** issue, open PRs, or remotes matching `feature/issue-{N}`.
-     - For a **sub-issue:** branches linked to the **parent** issue (the child issue may have no linked branch), open PRs for the parent line of work, or remotes matching `feature/issue-{parent}`.
+     - Branches linked to issue **`branch_owner_issue`**, open PRs for that line of work, or remotes matching **`feature/issue-{branch_owner_issue}`** (use **`get-issue-branches`** with **`branch_owner_issue`**).
    - **If a matching branch is found:** Fetch and checkout it.
-   - **Otherwise — top-level issue:** Create and link. Prefer `gh issue develop <N> --name feature/issue-{N} --base main`. Fallback: **`create-issue-branch`** from `.forge/skill_registry.json` with root `main`, then push + link via MCP/gh.
-   - **Otherwise — sub-issue:** Do **not** create `feature/issue-{child}` or run `gh issue develop <child>`. Create/checkout **`feature/issue-{parent}`** only: prefer `gh issue develop <parent> --name feature/issue-{parent} --base main` if the parent branch does not exist; if it exists remotely, fetch and checkout. Fallback: **`create-issue-branch`** with branch name `feature/issue-{parent}`, issue number **`parent`** (not the sub-issue number), base `main`. Push when needed.
-4. Handoff to Engineer: implement code changes; use `.forge` for alignment when relevant (see Engineer agent—update contracts there instead of ad hoc docs when they misrepresent the work); run repository-inferred validation (tests/lint/build as applicable, all must pass before commit); scan security; commit; push; create-pr. Use `.github/pull_request_template.md` if present.
+   - **Otherwise:** Create and link **`feature/issue-{branch_owner_issue}`** for issue **`branch_owner_issue`** only. Prefer `gh issue develop <branch_owner_issue> --name feature/issue-{branch_owner_issue} --base main`. Fallback: **`create-issue-branch`** from `.forge/skill_registry.json` with branch name `feature/issue-{branch_owner_issue}`, issue number **`branch_owner_issue`**, base `main`. Push + link via MCP/gh when needed. Do **not** create `feature/issue-{input_issue}` when **`input_issue`** ≠ **`branch_owner_issue`** (sub-issue case).
+4. Handoff to Engineer: implement code changes for **`input_issue`**; use `.forge` for alignment when relevant (see Engineer agent—update contracts there instead of ad hoc docs when they misrepresent the work); run repository-inferred validation (tests/lint/build as applicable, all must pass before commit); scan security; commit; push; create-pr. Use `.github/pull_request_template.md` if present.
 
 ## Skill Resolution
 

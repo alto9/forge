@@ -10,26 +10,26 @@ This command is the **orchestration contract** for Step 4. It delegates executio
 
 1. Normalize and validate the input issue reference.
 2. Resolve repository context (`owner/repo`) and target base branch (`main` unless repo conventions differ).
-3. Invoke the `tech-writer` agent with the normalized context.
-4. Verify required outputs were produced.
+3. **Normalize to parent issue when the input is a sub-issue** — Before delegating to Technical Writer, determine whether the normalized issue is a GitHub **sub-issue** of another issue. Run the **`resolve-issue-parentage`** skill from `.forge/skill_registry.json` (`command_assignments.refine-issue` / `agent_assignments.tech_writer`), or equivalently `gh api repos/{owner}/{repo}/issues/{issue_number}/parent` ([sub-issues REST API](https://docs.github.com/rest/issues/sub-issues)): on **200**, read the parent issue’s `number` and treat that as the **working issue** for refinement; on **404**, the input issue is top-level and remains the working issue. Technical Writer always refines this **working (parent) issue** and may add or update **sub-issues** under it — never refine only a child in isolation when a parent exists.
+4. Invoke the `tech-writer` agent with the normalized context for the **working issue** (parent).
+5. Verify required outputs were produced.
 
 ## Delegation contract (to `tech-writer`)
 
 Pass the following execution context to the agent:
 
-- `issue_ref` (normalized issue number + repo context)
-- `base_branch` (default `main`)
+- `issue_ref` (normalized **parent** issue number + repo context after step 3)
+- `base_branch` (default `main`; informational for issue text only — refinement does **not** create git branches)
 - `allow_subissues` (`true`)
-- `link_parent_branch` (`true`)
+- `original_issue_ref` (optional) — the pre-normalization issue number if it differed from the working parent (so the agent can note redirect in the summary)
 
 Expected behavior and detailed workflow are defined in `agents/tech-writer.md`.
 
 ## Required outputs
 
-- Parent issue refined into development-ready form.
-- Parent branch `feature/issue-{parent-number}` pushed and linked to the parent issue.
-- Optional sub-issues created when helpful, with **no** sub-issue branches.
-- Short handoff summary with changes made and any upstream blockers.
+- **Parent (working) issue** refined into development-ready form.
+- Optional sub-issues created or updated when helpful (**no** git branches in this phase).
+- Short handoff summary with changes made and any upstream blockers (include if input was redirected from a sub-issue to the parent).
 - Ticket structure requirements come from `agents/tech-writer.md`:
   - `Mandatory ticket format (parent issues)`
   - `Mandatory ticket format (sub-issues)`

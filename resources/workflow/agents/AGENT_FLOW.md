@@ -9,8 +9,8 @@ This document describes the intended flow of responsibility among Forge agents. 
 | 1 | Product Owner | Product Owner | Retrieve `vision.json` and `project.json`, determine adjustments, hand off to Architect |
 | 2 | Architecting | Architect | Retrieve vision and knowledge map, perform clarity check, update `.forge` contracts by domain, hand off recap to Planner |
 | 3 | Planning | Planner | pull-milestones, pull-milestone-issues, determine GitHub changes |
-| 4 | Refining | Technical Writer | `/refine-issue` handles orchestration; Technical Writer handles refinement execution policy, including parent-branch linking and optional sub-issues (no sub-issue branches) |
-| 5 | Building | Engineer | Branch setup by build-from-github or Engineer for issue being built; perform code changes; use `.forge` for alignment; run repo-inferred validation (tests/lint/build as applicable) before commit; scan security; commit; push; create-pr |
+| 4 | Refining | Technical Writer | `/refine-issue` handles orchestration (including normalizing sub-issue links to the parent); Technical Writer refines GitHub issue bodies and optional sub-issues — **no git branches** in this phase |
+| 5 | Building | Engineer | **`resolve-issue-parentage`** then branch setup by **`/build-from-github`** or Engineer; **`feature/issue-{branch_owner}`** created/linked here; perform code changes; use `.forge` for alignment; run repo-inferred validation (tests/lint/build as applicable) before commit; scan security; commit; push; create-pr |
 | 6 | Reviewing | Quality Assurance | Retrieve PR; checkout; review accuracy; check vulnerabilities; add review to PR |
 
 ## `.forge` context and edits
@@ -125,14 +125,14 @@ User ──► command: /plan-roadmap ──► agent: Planner
 User (GitHub Issue Link) ──► command: /refine-issue
                                     │
                                     ▼
-                     Normalize input + resolve repo/base context
+                     Normalize input + resolve repo/base context + parent if sub-issue
                                     │
                                     ▼
                          Delegate execution to Technical Writer
                                     │
                                     ▼
-                    Verify required outputs (refined issue, parent branch linked,
-                      optional sub-issues without sub-issue branches, handoff summary)
+                    Verify required outputs (refined parent issue,
+                      optional sub-issues on GitHub only, handoff summary)
 ```
 
 **Steps:**
@@ -145,10 +145,9 @@ User (GitHub Issue Link) ──► command: /refine-issue
 ## 4. Building Flow (`/build-from-github`)
 
 ```
-User (Github Issue Link) ──► Branch setup (ensure correct branch)
+User (Github Issue Link) ──► resolve-issue-parentage skill (branch_owner_issue)
                                     │
-                    Resolve parent if sub-issue; target = feature/issue-{N} (top-level)
-                    or feature/issue-{parent} (sub-issue — never a child-named branch)
+                    Target branch = feature/issue-{branch_owner_issue} (never child-named)
                                     │
                                     ▼
                          Branch setup: checkout/create target; push and link if needed
@@ -169,7 +168,7 @@ User (Github Issue Link) ──► Branch setup (ensure correct branch)
 ```
 
 **Steps:**
-1. Branch setup (build-from-github or Engineer): for a **top-level** issue, ensure **`feature/issue-{N}`**; for a **sub-issue**, ensure **`feature/issue-{parent}`** only (no `feature/issue-{child}`). Check current branch; if not, use linked/existing branches or create from `main` as described in **`resources/workflow/commands/build-from-github.md`**. Push and link via `gh issue develop` when needed (parent issue owns the branch link for epic work).
+1. Branch setup (build-from-github or Engineer): run **`resolve-issue-parentage`**, then ensure **`feature/issue-{branch_owner_issue}`** (see **`resources/workflow/commands/build-from-github.md`**). Sub-issues never get a separate branch name. Push and link via `gh issue develop` when needed (**`branch_owner_issue`** owns the branch link).
 2. Engineer: retrieve issue details; implement code changes for the issue scope.
 3. Engineer: run repository-inferred validation commands (tests/lint/build as applicable); **do not** commit or open a PR until every check passes (fix or stop and report).
 4. Engineer: scan changeset for security vulnerabilities.
@@ -244,10 +243,10 @@ Market Input / Product Intake
    Planner (GitHub milestones)
          │
          ▼
-   Technical Writer (tickets + parent branch)
+   Technical Writer (tickets + sub-issues on GitHub)
          │
          ▼
-   Engineer → Quality Assurance
+   Engineer (branches + code) → Quality Assurance
 ```
 
 ## Knowledge Map

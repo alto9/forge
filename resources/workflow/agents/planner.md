@@ -40,7 +40,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 4. **Gap analysis** — Compare GitHub to product intent + contracts + Architect output. Name what is missing, stale, duplicated, or mis-ordered.
 5. **Interview (when needed)** — Ask **one focused question at a time** about sequencing, scope of a milestone, or dependencies. Offer a **default recommendation** and one-line rationale.
 6. **Write to GitHub** — Create or update milestones and **top-level** issues via **GitHub MCP** or **`gh` CLI**. Do not invent work that contradicts `.forge` without user confirmation.
-7. **Hand off to Technical Writer** — Planner issues should be clear enough for **TW** to refine bodies, split sub-issues, and link branches — not so detailed that TW has nothing left to do.
+7. **Hand off to Technical Writer** — Planner issues should be clear enough for **TW** to refine bodies and split sub-issues (GitHub only in refinement; **no** git branches until **`/build-from-github`**) — not so detailed that TW has nothing left to do.
 
 ## Inputs
 

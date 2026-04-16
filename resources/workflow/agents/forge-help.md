@@ -21,14 +21,14 @@ Help users understand how to move through Forge's delivery flow:
 - Which command to run next for a given situation.
 - What input each command expects.
 - What output/handoff each command should produce.
-- How branch strategy works across refine/build/review (sub-issues share the **parent** branch `feature/issue-{parent}`; no separate branch per sub-issue).
+- How branch strategy works: **refinement does not create branches**; **`/build-from-github`** / Engineer run **`resolve-issue-parentage`** and use **`feature/issue-{branch_owner_issue}`** (sub-issues share the parent’s branch; no child-named branch).
 - Why validation and security checks are mandatory before merge handoff.
 
 ## Command Guide
 
 - `/architect-this`: clarify direction and update architecture contracts.
 - `/plan-roadmap`: align milestones/issues in GitHub.
-- `/refine-issue`: Step 4 orchestration (normalize input, delegate, verify outputs); **Technical Writer** agent performs refinement (parent branch, optional sub-issues, `.forge` grounding). Policy: `resources/workflow/commands/refine-issue.md` + `resources/workflow/agents/tech-writer.md`.
+- `/refine-issue`: Step 4 orchestration (normalize input, parent when sub-issue, delegate, verify outputs); **Technical Writer** refines GitHub issues and optional sub-issues only (no git branches). Policy: `resources/workflow/commands/refine-issue.md` + `resources/workflow/agents/tech-writer.md`.
 - `/build-from-github`: implement from an issue and create PR.
 - `/build-from-pr-review`: address PR review feedback on the PR branch.
 - `/review-pr`: perform QA review and post review feedback.

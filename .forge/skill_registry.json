@@ -1,9 +1,7 @@
 {
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Canonical skill registry for agent and command execution. Agents and commands should resolve skill IDs from assignment maps below, then execute via the skill entry script_path and usage.",
-  "canonical_categories": [
-    "git_flow"
-  ],
+  "canonical_categories": ["git_flow"],
   "skills": [
     {
       "id": "create-issue-branch",
@@ -12,10 +10,7 @@
       "retag": "branch-create",
       "script_path": ".cursor/skills/create-issue-branch/scripts/create-issue-branch.sh",
       "usage": ".cursor/skills/create-issue-branch/scripts/create-issue-branch.sh (<owner/repo> <branch-name> <issue-number> <root-branch> | <branch-name> <issue-number> [root-branch])",
-      "primary_consumers": [
-        "tech_writer",
-        "engineer"
-      ]
+      "primary_consumers": ["engineer"]
     },
     {
       "id": "assign-issue-to-me",
@@ -24,9 +19,7 @@
       "retag": "github-issue-assign",
       "script_path": ".cursor/skills/assign-issue-to-me/scripts/assign-issue-to-me.sh",
       "usage": ".cursor/skills/assign-issue-to-me/scripts/assign-issue-to-me.sh (<owner/repo> <issue-number> | <issue-number>)",
-      "primary_consumers": [
-        "engineer"
-      ]
+      "primary_consumers": ["engineer"]
     },
     {
       "id": "get-issue-branches",
@@ -35,10 +28,16 @@
       "retag": "github-issue-branches",
       "script_path": ".cursor/skills/get-issue-branches/scripts/get-issue-branches.sh",
       "usage": ".cursor/skills/get-issue-branches/scripts/get-issue-branches.sh (<owner/repo> <issue-number> | <issue-number>)",
-      "primary_consumers": [
-        "tech_writer",
-        "engineer"
-      ]
+      "primary_consumers": ["engineer"]
+    },
+    {
+      "id": "resolve-issue-parentage",
+      "status": "active",
+      "category": "git_flow",
+      "retag": "github-issue-parentage",
+      "script_path": ".cursor/skills/resolve-issue-parentage/scripts/resolve-issue-parentage.sh",
+      "usage": ".cursor/skills/resolve-issue-parentage/scripts/resolve-issue-parentage.sh (<owner/repo> <issue-number> | <issue-number>)",
+      "primary_consumers": ["tech_writer", "engineer"]
     },
     {
       "id": "link-subissue-to-issue",
@@ -47,9 +46,7 @@
       "retag": "github-subissue-link",
       "script_path": ".cursor/skills/link-subissue-to-issue/scripts/link-subissue-to-issue.sh",
       "usage": ".cursor/skills/link-subissue-to-issue/scripts/link-subissue-to-issue.sh ([--replace-parent|-r] <owner/repo> <parent-issue-number> <child-issue-number> | [--replace-parent|-r] <parent-issue-number> <child-issue-number>)",
-      "primary_consumers": [
-        "tech_writer"
-      ]
+      "primary_consumers": ["tech_writer"]
     },
     {
       "id": "commit",
@@ -58,9 +55,7 @@
       "retag": "commit-code",
       "script_path": ".cursor/skills/commit/scripts/commit.sh",
       "usage": ".cursor/skills/commit/scripts/commit.sh -m \"<message>\"",
-      "primary_consumers": [
-        "engineer"
-      ]
+      "primary_consumers": ["engineer"]
     },
     {
       "id": "push-branch",
@@ -69,10 +64,7 @@
       "retag": "branch-push",
       "script_path": ".cursor/skills/push-branch/scripts/push-branch.sh",
       "usage": ".cursor/skills/push-branch/scripts/push-branch.sh",
-      "primary_consumers": [
-        "engineer",
-        "tech_writer"
-      ]
+      "primary_consumers": ["engineer"]
     },
     {
       "id": "pull-milestones",
@@ -81,11 +73,7 @@
       "retag": "github-milestones",
       "script_path": ".cursor/skills/pull-milestones/scripts/pull-milestones.sh",
       "usage": ".cursor/skills/pull-milestones/scripts/pull-milestones.sh [owner/repo] --state open --format json [--compact]",
-      "primary_consumers": [
-        "planner",
-        "tech_writer",
-        "engineer"
-      ]
+      "primary_consumers": ["planner", "tech_writer", "engineer"]
     },
     {
       "id": "pull-milestone-issues",
@@ -94,41 +82,19 @@
       "retag": "github-milestone-issues",
       "script_path": ".cursor/skills/pull-milestone-issues/scripts/pull-milestone-issues.sh",
       "usage": ".cursor/skills/pull-milestone-issues/scripts/pull-milestone-issues.sh <milestone-id> [owner/repo] --state open --format json [--compact]",
-      "primary_consumers": [
-        "planner",
-        "tech_writer",
-        "engineer"
-      ]
+      "primary_consumers": ["planner", "tech_writer", "engineer"]
     }
   ],
   "agent_assignments": {
-    "planner": [
-      "pull-milestones",
-      "pull-milestone-issues"
-    ],
-    "tech_writer": [
-      "create-issue-branch",
-      "push-branch",
-      "pull-milestone-issues",
-      "get-issue-branches",
-      "link-subissue-to-issue"
-    ],
-    "engineer": [
-      "create-issue-branch",
-      "assign-issue-to-me",
-      "get-issue-branches",
-      "commit",
-      "push-branch"
-    ],
+    "planner": ["pull-milestones", "pull-milestone-issues"],
+    "tech_writer": ["resolve-issue-parentage", "pull-milestone-issues", "link-subissue-to-issue"],
+    "engineer": ["resolve-issue-parentage", "create-issue-branch", "assign-issue-to-me", "get-issue-branches", "commit", "push-branch"],
     "quality_assurance": []
   },
   "command_assignments": {
     "architect-this": [],
-    "plan-roadmap": [
-      "pull-milestones",
-      "pull-milestone-issues"
-    ],
-    "refine-issue": [],
+    "plan-roadmap": ["pull-milestones", "pull-milestone-issues"],
+    "refine-issue": ["resolve-issue-parentage"],
     "build-from-github": [],
     "build-from-pr-review": [],
     "review-pr": []

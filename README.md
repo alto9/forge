@@ -29,8 +29,8 @@ After Cursor-agent initialization, use the injected agents and commands in the e
 
 - **Architect** (`/architect-this`) – Aligns `.forge/knowledge_map.json` and domain contract docs with product intent; hands off to Planner
 - **Plan Roadmap** (`/plan-roadmap`) – Manages GitHub milestones and issues via pull-milestones, pull-milestone-issues
-- **Refine Issue** (`/refine-issue`) – Step 4 **orchestration** (normalize input, delegate, verify outputs); the **Technical Writer** agent carries out refinement (parent branch linked, optional sub-issues, no per-sub-issue branches). Authoritative details: `resources/workflow/commands/refine-issue.md` and `resources/workflow/agents/tech-writer.md`.
-- **Build from GitHub** (`/build-from-github`) – Ensures the correct feature branch (for **sub-issues**, the parent’s **`feature/issue-{parent}`** only), implements, runs all tests/lint until green, then commit/PR
+- **Refine Issue** (`/refine-issue`) – Step 4 **orchestration** (normalize input, resolve parent when the link is a sub-issue, delegate, verify outputs); the **Technical Writer** agent refines GitHub issue bodies and optional sub-issues — **no** git branches in this phase. Authoritative details: `resources/workflow/commands/refine-issue.md` and `resources/workflow/agents/tech-writer.md`.
+- **Build from GitHub** (`/build-from-github`) – Runs **`resolve-issue-parentage`**, creates/checks out **`feature/issue-{branch_owner}`**, implements, runs all tests/lint until green, then commit/PR (branches are created **here**, not during refinement)
 - **Build from PR Review** (`/build-from-pr-review`) – Retrieves PR feedback, checks out PR branch, applies requested changes, validates, and pushes updates for re-review
 - **Review PR** (`/review-pr`) – Reviews code, posts review comments
 
