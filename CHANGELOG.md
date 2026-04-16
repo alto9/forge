@@ -1,3 +1,7 @@
+## 3.18.0 (2026-04-16)
+
+* feat: enhance issue refinement and building processes ([feed8ad](https://github.com/alto9/forge/commit/feed8ad))
+
 ## <small>3.17.1 (2026-04-15)</small>
 
 * docs: update contributing guidelines, package description, and README for clarity ([92faf32](https://github.com/alto9/forge/commit/92faf32))
