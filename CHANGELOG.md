@@ -1,3 +1,7 @@
+## 3.20.0 (2026-04-17)
+
+* feat: update skill registry to version 1.5.5 and enhance Engineer agent workflow ([e5f8437](https://github.com/alto9/forge/commit/e5f8437))
+
 ## 3.19.0 (2026-04-17)
 
 * feat: update skill registry and enhance GitHub integration ([bc09d6b](https://github.com/alto9/forge/commit/bc09d6b))
