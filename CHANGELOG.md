@@ -1,3 +1,7 @@
+## 3.19.0 (2026-04-17)
+
+* feat: update skill registry and enhance GitHub integration ([bc09d6b](https://github.com/alto9/forge/commit/bc09d6b))
+
 ## 3.18.0 (2026-04-16)
 
 * feat: enhance issue refinement and building processes ([feed8ad](https://github.com/alto9/forge/commit/feed8ad))
