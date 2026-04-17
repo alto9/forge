@@ -1,6 +1,6 @@
 {
-  "version": "1.5.4",
-  "description": "Canonical skill registry for agent and command execution. Agents and commands should resolve skill IDs from assignment maps below, then execute via the skill entry script_path and usage.",
+  "version": "1.5.5",
+  "description": "Canonical skill registry for agent and command execution. Agents and commands should resolve skill IDs from assignment maps below, then execute via the skill entry script_path and usage (paths are relative to the Cursor workspace root, e.g. .cursor/skills/... after Forge setup for Cursor). Skills installed only under ~/.cursor/skills are out of band for Forge unless copied into the project.",
   "canonical_categories": ["git_flow"],
   "skills": [
     {
@@ -113,7 +113,7 @@
     "architect-this": [],
     "plan-roadmap": ["pull-milestones", "pull-milestone-issues"],
     "refine-issue": ["resolve-issue-parentage"],
-    "build-from-github": [],
+    "build-from-github": ["resolve-issue-parentage", "get-issue-branches", "create-issue-branch", "gh-project-set-status"],
     "build-from-pr-review": [],
     "review-pr": ["gh-pr-review"]
   },

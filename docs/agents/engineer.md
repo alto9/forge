@@ -1,12 +1,12 @@
 # 5. Building
 
-The **Engineer** agent uses **`resolve-issue-parentage`** (then **`feature/issue-{branch_owner_issue}`**), implements code changes, runs automated validation until everything passes, scans for security issues, then commits, pushes, and creates a PR. **Refinement** does not create branches; branch setup is **development-phase** work.
+The **Engineer** agent uses **`resolve-issue-parentage`** (then **`feature/issue-{branch_owner_issue}`**), implements code changes, runs automated validation until everything passes, scans for security issues, then commits, pushes, and **ensures a PR exists**—often by **updating** an existing PR for that head when sub-issues share the parent branch (see **`resources/workflow/commands/build-from-github.md`**). **Refinement** does not create branches; branch setup is **development-phase** work.
 
 ## Responsibilities
 
 | Owns | Receives | Outputs |
 |------|----------|---------|
-| Branch creation/link for target issue, implementation, validation, security scan | Refined GitHub issue link (parent or sub-issue) | Pull request; handoff to Quality Assurance |
+| Branch creation/link for target issue, implementation, validation, security scan | Refined GitHub issue link (parent or sub-issue) | Pull request (new or updated); handoff to Quality Assurance |
 
 ## Behavior Flow
 
@@ -50,7 +50,7 @@ flowchart TD
 5. **Scan changes for security vulnerabilities** — Examine the changeset for security risks before proceeding.
 6. **skill: commit-code** — Commit approved changes using the commit skill.
 7. **skill: push-branch** — Push branch state to remote.
-8. **Create PR (GitHub MCP or `gh`)** — Open pull request for review handoff. Use `.github/pull_request_template.md` if present.
+8. **PR (GitHub MCP or `gh`)** — Use `gh pr view --head feature/issue-{branch_owner_issue}` (or MCP) first; **update** an existing PR or **create** one. Use `.github/pull_request_template.md` if present.
 
 ## Skill Resolution
 

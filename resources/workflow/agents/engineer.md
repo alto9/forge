@@ -39,8 +39,8 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 5. **Validate (mandatory before commit)** — Run the repo’s test/lint/build commands (infer from `package.json`, Makefile, CI config, or project docs). Re-run after substantive edits. **Do not commit or open a PR** until required validation exits successfully, unless the user explicitly directs otherwise and documents why.
 6. **Security pass** — Review your **diff** for common vulnerability patterns, unsafe defaults, secret handling, and auth/data-boundary mistakes.
 7. **Commit and push** — Use assigned **skills** (see **Skill resolution**): **`commit`**, then **`push-branch`**.
-8. **Open a PR** — Use **GitHub MCP** or **`gh pr create`** (not a Forge skill ID). Populate the body from the repo template when present (see **Pull request creation**).
-9. **Project board (orchestrated with build-from-github)** — **`build-from-github`** should run **`gh-project-set-status`** for **`input_issue`** → **In Progress** before implementation. After the PR exists: if **every** sub-issue under **`branch_owner_issue`** is **`CLOSED`**, run **`gh-project-set-status`** for the **parent** issue number (**`branch_owner_issue`**) → **In Review** (read **`github_board`** from **`.forge/project.json`**).
+8. **Ensure a PR exists (new or updated)** — Use **GitHub MCP** or **`gh`** (not a Forge skill ID). **Before** `gh pr create`, run **`gh pr view --head feature/issue-{branch_owner_issue}`** (or equivalent MCP). If a PR already exists for that head (typical when building a **sub-issue** on the parent branch), **update** title/body (and checklist) so **`input_issue`** is clearly in scope; optionally thread a PR or issue comment. If none exists, **create** the PR. See **Pull request creation**.
+9. **Project board (orchestrated with build-from-github)** — **`build-from-github`** should run **`gh-project-set-status`** for **`input_issue`** → **In Progress** before implementation. After a PR **exists**: if **every** sub-issue under **`branch_owner_issue`** is **`CLOSED`**, run **`gh-project-set-status`** for the **parent** issue number (**`branch_owner_issue`**) → **In Review** (read **`github_board`** from **`.forge/project.json`**).
 10. **Documentation repo (optional)** — If **`.forge/project.json`** sets **`doc_repo`** and this PR **completes parent documentation scope** (direct build of the parent issue, or you confirm the last remaining sub-issue work is done per **`build-from-github.md`**): open the workspace folder named **`doc_repo`**, update docs using evidence from the **application** repo (`git` history vs **`main`**, PR summary). Run **`commit`** and **`push-branch`** only with **cwd** at the **documentation** repo root—never mix doc commits into the application branch.
 11. **Hand off to Quality Assurance** — PR link, issue link(s), and a short summary of what changed and how you verified it.
 
@@ -87,10 +87,11 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 
 ## Pull request creation
 
-- Before opening the PR, check **`.github/pull_request_template.md`** or **`.github/PULL_REQUEST_TEMPLATE.md`**.
-- If a template exists: read it and fill each section from the **changes** and **linked issue**. Replace HTML comment placeholders with real content. Include **`Fixes #N`** (or the project’s convention) when the PR closes an issue.
+- Before **`gh pr create`**, detect an existing PR with **`gh pr view --head feature/issue-{branch_owner_issue}`** (or MCP). **Update** that PR when it exists instead of opening a duplicate.
+- Before opening or updating the PR, check **`.github/pull_request_template.md`** or **`.github/PULL_REQUEST_TEMPLATE.md`**.
+- If a template exists: read it and fill each section from the **changes** and **linked issue**. Replace HTML comment placeholders with real content. Include **`Fixes #N`** / **`Closes #N`** (or the project’s convention) when the PR closes an issue. Multiple closing keywords on one PR are normal when several issues share **`feature/issue-{branch_owner_issue}`**; confirm with reviewers if merge timing must differ per issue.
 - If no template exists: use a clear title, motivation, summary of changes, test evidence, and risk notes.
-- When using **`gh pr create`**: prefer **`--body-file`** or **`--body`** with populated content. **Do not use `--fill`** if it would skip template sections the team relies on.
+- When using **`gh pr create`**: prefer **`--body-file`** or **`--body`** with populated content. **Do not use `--fill`** if it would skip template sections the team relies on. For updates, use **`gh pr edit`** (or MCP) with the same rigor.
 - When using **MCP** `create_pull_request`: pass the full **`body`** string.
 - **Head branch**: Always **`feature/issue-{parent}`** when the work item is a **sub-issue** (same branch as the parent epic). **Base branch** follows repo policy—usually **`main`** for the integration PR; do not open a separate head branch named for the sub-issue. When in doubt, **ask** or match existing repo conventions.
 

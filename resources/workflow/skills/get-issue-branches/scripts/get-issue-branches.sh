@@ -42,4 +42,21 @@ if [[ -z "$issue_number" ]]; then
   exit 1
 fi
 
-gh issue develop --list "$issue_number" --repo "$owner_repo"
+echo "Linked development branches for ${owner_repo}#${issue_number}:"
+
+set +e
+output="$(gh issue develop --list "$issue_number" --repo "$owner_repo" 2>&1)"
+gh_ec=$?
+set -e
+
+if [[ "$gh_ec" -ne 0 ]]; then
+  printf '%s\n' "$output" >&2
+  exit "$gh_ec"
+fi
+
+if [[ -z "${output//[$'\t\r\n ']/}" ]]; then
+  echo "(none)"
+  exit 0
+fi
+
+printf '%s\n' "$output"
