@@ -1,5 +1,5 @@
 {
-  "version": "1.5.3",
+  "version": "1.5.4",
   "description": "Canonical skill registry for agent and command execution. Agents and commands should resolve skill IDs from assignment maps below, then execute via the skill entry script_path and usage.",
   "canonical_categories": ["git_flow"],
   "skills": [
@@ -83,13 +83,31 @@
       "script_path": ".cursor/skills/pull-milestone-issues/scripts/pull-milestone-issues.sh",
       "usage": ".cursor/skills/pull-milestone-issues/scripts/pull-milestone-issues.sh <milestone-id> [owner/repo] --state open --format json [--compact]",
       "primary_consumers": ["planner", "tech_writer", "engineer"]
+    },
+    {
+      "id": "gh-pr-review",
+      "status": "active",
+      "category": "git_flow",
+      "retag": "github-pr-review",
+      "script_path": ".cursor/skills/gh-pr-review/scripts/gh-pr-review.sh",
+      "usage": ".cursor/skills/gh-pr-review/scripts/gh-pr-review.sh (<owner/repo> <pr-number> <approve|request-changes|comment> <body> | <pr-number> <approve|request-changes|comment> <body>)",
+      "primary_consumers": ["quality_assurance"]
+    },
+    {
+      "id": "gh-project-set-status",
+      "status": "active",
+      "category": "git_flow",
+      "retag": "github-project-status",
+      "script_path": ".cursor/skills/gh-project-set-status/scripts/gh-project-set-status.sh",
+      "usage": ".cursor/skills/gh-project-set-status/scripts/gh-project-set-status.sh <github_board_url> <owner/repo> <issue-number> <status-name>",
+      "primary_consumers": ["engineer", "quality_assurance"]
     }
   ],
   "agent_assignments": {
     "planner": ["pull-milestones", "pull-milestone-issues"],
     "tech_writer": ["resolve-issue-parentage", "pull-milestone-issues", "link-subissue-to-issue"],
-    "engineer": ["resolve-issue-parentage", "create-issue-branch", "assign-issue-to-me", "get-issue-branches", "commit", "push-branch"],
-    "quality_assurance": []
+    "engineer": ["resolve-issue-parentage", "create-issue-branch", "assign-issue-to-me", "get-issue-branches", "gh-project-set-status", "commit", "push-branch"],
+    "quality_assurance": ["gh-pr-review", "gh-project-set-status"]
   },
   "command_assignments": {
     "architect-this": [],
@@ -97,7 +115,7 @@
     "refine-issue": ["resolve-issue-parentage"],
     "build-from-github": [],
     "build-from-pr-review": [],
-    "review-pr": []
+    "review-pr": ["gh-pr-review"]
   },
   "archived_legacy_removed": [
     {
@@ -187,11 +205,6 @@
     },
     {
       "id": "gh-pr-checkout",
-      "replaced_by": "available tools",
-      "reason": "Removed; agents use available tools (MCP, etc.) for GitHub operations."
-    },
-    {
-      "id": "gh-pr-review",
       "replaced_by": "available tools",
       "reason": "Removed; agents use available tools (MCP, etc.) for GitHub operations."
     },

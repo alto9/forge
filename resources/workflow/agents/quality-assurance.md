@@ -38,8 +38,12 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 4. **Local verification (when repo allows)** — If the workflow expects it: **fetch and checkout** the PR branch and run the project’s test/lint/build commands **only** to validate claims or reproduce failures. If you cannot run locally, **state that limitation** in the review and rely on diff + CI + issue evidence.
 5. **Review for correctness** — Check logic, edge cases, error handling, API/UX consistency with the issue, and whether the change set is **minimal** for the stated goal.
 6. **Review for security** — Same pass as Engineer’s security mindset, but **independent**: authz, injection, path traversal, secrets, logging of sensitive data, dependency risk notes if relevant.
-7. **Post the review** — Submit a **summary** plus **line-level** comments where useful. Use **request changes** when the PR cannot ship as-is; **approve** when satisfied.
-8. **Do not merge** — Human or maintainer workflow merges after addressing feedback.
+7. **Post line-level feedback** — Add review comments on specific lines where they help; keep them actionable.
+8. **Submit the formal PR review** — You must end with **one** submitted review that includes a **non-empty body** and a clear verdict:
+   - **GitHub MCP (preferred):** `pull_request_review_write` with `method: "create"`, `body`, and `event` **`APPROVE`**, **`REQUEST_CHANGES`**, or **`COMMENT`**. Use **`REQUEST_CHANGES`** when the PR must not merge as-is (this is the “declining” / blocking outcome).
+   - **CLI fallback:** run **`gh-pr-review`** from `.forge/skill_registry.json` with `approve`, `request-changes`, or `comment` and the same body text.
+9. **Project board self-heal (optional)** — If **`.forge/project.json`** has **`github_board`**, resolve the **parent** issue for the PR when applicable. If **all** sub-issues under that parent are **`CLOSED`**, run **`gh-project-set-status`** to set the **parent** issue to **In Review** (see **`review-pr.md`**).
+10. **Do not merge** — Human or maintainer workflow merges after addressing feedback.
 
 ## Inputs
 
@@ -66,16 +70,17 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 ## Hard rules
 
 - **`.forge` edits** — Quality Assurance is read-only by default; use review feedback and involve **Architect** for contract updates unless the user explicitly asks otherwise.
-- **Resolve skills from** `.forge/skill_registry.json` — `agent_assignments.quality_assurance` is currently **empty**; there are **no** Forge skills assigned to this agent. Use **GitHub MCP**, **`gh`**, and local git commands as needed.
+- **Resolve skills from** `.forge/skill_registry.json` — `agent_assignments.quality_assurance` includes **`gh-pr-review`** and **`gh-project-set-status`**. Prefer **GitHub MCP** for `pull_request_review_write` when available; use **`gh-pr-review`** when MCP is unavailable.
 - **Do not hardcode** skill paths in this file.
 
 ## Skill resolution
 
-| Notes |
-|-------|
-| `agent_assignments.quality_assurance` is **`[]`** in `skill_registry.json`. |
+| Skill ID | Role |
+|----------|------|
+| `gh-pr-review` | Submit **`approve`** / **`request-changes`** / **`comment`** via `gh pr review` with a required body (fallback when MCP review submit is not used). |
+| `gh-project-set-status` | Set GitHub Projects **Status** using **`github_board`** from **`.forge/project.json`** (e.g. parent **In Review** when all sub-issues are closed). Requires `gh` **project** scope. |
 
-PR review and Git operations use **GitHub MCP** and **`gh` CLI** (and standard git checkout/fetch when you run local checks).
+Line comments and diff inspection use **GitHub MCP** and **`gh` CLI** (and standard git checkout/fetch when you run local checks).
 
 ## Handoff contract
 

@@ -1,6 +1,6 @@
 # Build from GitHub (Step 5: Building)
 
-This command invokes the **Engineer** agent. User → Engineer → branch setup and issue link → implement → **all automated tests pass** → commit → push → create PR.
+This command invokes the **Engineer** agent. User → Engineer → branch setup and issue link → **rebase on `main`** → **project board `In Progress`** → implement → **all automated tests pass** → commit → push → create PR → **optional parent `In Review` + doc sync**.
 
 **Branch creation and linking happen in this step only** (not during `/refine-issue`).
 
@@ -28,7 +28,25 @@ This command invokes the **Engineer** agent. User → Engineer → branch setup 
      - Branches linked to issue **`branch_owner_issue`**, open PRs for that line of work, or remotes matching **`feature/issue-{branch_owner_issue}`** (use **`get-issue-branches`** with **`branch_owner_issue`**).
    - **If a matching branch is found:** Fetch and checkout it.
    - **Otherwise:** Create and link **`feature/issue-{branch_owner_issue}`** for issue **`branch_owner_issue`** only. Prefer `gh issue develop <branch_owner_issue> --name feature/issue-{branch_owner_issue} --base main`. Fallback: **`create-issue-branch`** from `.forge/skill_registry.json` with branch name `feature/issue-{branch_owner_issue}`, issue number **`branch_owner_issue`**, base `main`. Push + link via MCP/gh when needed. Do **not** create `feature/issue-{input_issue}` when **`input_issue`** ≠ **`branch_owner_issue`** (sub-issue case).
-4. Handoff to Engineer: implement code changes for **`input_issue`**; use `.forge` for alignment when relevant (see Engineer agent—update contracts there instead of ad hoc docs when they misrepresent the work); run repository-inferred validation (tests/lint/build as applicable, all must pass before commit); scan security; commit; push; create-pr. Use `.github/pull_request_template.md` if present.
+
+   **Rebase on `main` (mandatory after a branch exists locally)**
+
+   - `git fetch origin main` (or the repo’s default integration branch if the project standardizes on another name—**`main`** is the Forge default).
+   - `git rebase origin/main` while on **`feature/issue-{branch_owner_issue}`**.
+   - On **conflict**: resolve in-session, `git rebase --continue`, and only then proceed. If the branch was **already pushed**, coordinate before any **force-with-lease** push (Engineer should not force-push without explicit user agreement).
+
+4. **GitHub Projects — `In Progress`** — Read **`.forge/project.json`**. If **`github_board`** is present, run **`gh-project-set-status`** from `.forge/skill_registry.json` with: **`github_board` URL**, **`owner/repo`**, **`input_issue`**, status **`In Progress`**. The skill adds the issue to the project if needed. Requires `gh` with **`project`** scope (`gh auth refresh -s project` if commands fail).
+
+5. Handoff to Engineer: implement code changes for **`input_issue`**; use `.forge` for alignment when relevant (see Engineer agent—update contracts there instead of ad hoc docs when they misrepresent the work); run repository-inferred validation (tests/lint/build as applicable, all must pass before commit); scan security; commit; push; create-pr. Use `.github/pull_request_template.md` if present.
+
+6. **After the PR is created successfully**
+
+   - **Parent → `In Review` (optional)** — For **`branch_owner_issue`**, load **sub-issues** (GitHub MCP **`issue_read`** `get_sub_issues`, or `gh api`). If there is **at least one** sub-issue and **every** sub-issue is **`CLOSED`**, run **`gh-project-set-status`** with **`branch_owner_issue`** and status **`In Review`** (same **`github_board`** and **`owner/repo`**).
+
+   - **Documentation sync (optional)** — If **`doc_repo`** is set in **`.forge/project.json`** **and** this PR **completes parent scope** for documentation purposes: either **`input_issue`** equals **`branch_owner_issue`**, or **`input_issue`** was the **last open sub-issue** for that parent (confirm via sub-issue list: no other sub-issue remains open for **`branch_owner_issue`** before treating this build as “scope complete”). Then:
+     - Open the **Cursor workspace folder** whose **name** equals **`doc_repo`**. If that folder is not in the workspace, **stop** and report clearly.
+     - In the **documentation** repo root, gather evidence from the **application** repo: `git log` / `git diff` against **`main`**, PR title/body, linked issues.
+     - Update docs (Markdown / VitePress / site layout as appropriate). Run **`commit`** and **`push-branch`** with **current working directory** set to the **documentation repository root** so commits land only in the doc repo. Use a **dedicated** commit (and message) for documentation, separate from application commits.
 
 ## Skill Resolution
 
@@ -37,4 +55,4 @@ This command invokes the **Engineer** agent. User → Engineer → branch setup 
 
 ## Goal
 
-Produce a GitHub pull request ready for Quality Assurance, with automated validation fully passing before commit.
+Produce a GitHub pull request ready for Quality Assurance, with automated validation fully passing before commit, branch history rebased on **`main`**, project board updated when configured, and documentation synced when **`doc_repo`** applies.

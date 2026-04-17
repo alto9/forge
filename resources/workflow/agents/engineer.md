@@ -32,7 +32,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 
 ## Operating loop
 
-1. **Branch context** — **build-from-github** should leave you on the right branch. If not, **first** run **`resolve-issue-parentage`** from `.forge/skill_registry.json` with the build’s `owner/repo` and issue number; use **`branch_owner_issue`** and **`suggested_branch`** from the JSON for all branch operations. Then: create/checkout **`suggested_branch`** from **`main`** and link it to issue **`branch_owner_issue`** when missing. Do **not** create `feature/issue-{input_issue}` when **`input_issue`** ≠ **`branch_owner_issue`** (sub-issue case). Push and link with `gh issue develop` or MCP/gh when needed. If the skill is unavailable, fall back to inferring parent/sub-issue per **`resources/workflow/commands/build-from-github.md`**.
+1. **Branch context** — **build-from-github** should leave you on the right branch. If not, **first** run **`resolve-issue-parentage`** from `.forge/skill_registry.json` with the build’s `owner/repo` and issue number; use **`branch_owner_issue`** and **`suggested_branch`** from the JSON for all branch operations. Then: create/checkout **`suggested_branch`** from **`main`** and link it to issue **`branch_owner_issue`** when missing. Do **not** create `feature/issue-{input_issue}` when **`input_issue`** ≠ **`branch_owner_issue`** (sub-issue case). Push and link with `gh issue develop` or MCP/gh when needed. If the skill is unavailable, fall back to inferring parent/sub-issue per **`resources/workflow/commands/build-from-github.md`**. After the branch exists, **`git fetch origin main`** and **`git rebase origin/main`** on the feature branch; resolve conflicts before continuing. If the branch was already on the remote, avoid force-pushing without explicit user agreement.
 2. **Load issue scope** — Fetch the issue body and comments for the **build target** (usually **`input_issue`** from parentage JSON). If that issue is a **sub-issue**, read the **parent** issue for shared context and acceptance criteria.
 3. **Align with `.forge`** — Use `.forge/knowledge_map.json` to find relevant contracts when the issue references them or ambiguity requires it. If implementation establishes a **material decision** that should be documented and a mapped contract is missing or misleading, update the relevant mapped doc (or a small `knowledge_map.json` tweak if needed); avoid inventing parallel documentation outside `.forge`.
 4. **Implement** — Make the **smallest** coherent change set that satisfies the ticket; avoid unrelated refactors.
@@ -40,7 +40,9 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 6. **Security pass** — Review your **diff** for common vulnerability patterns, unsafe defaults, secret handling, and auth/data-boundary mistakes.
 7. **Commit and push** — Use assigned **skills** (see **Skill resolution**): **`commit`**, then **`push-branch`**.
 8. **Open a PR** — Use **GitHub MCP** or **`gh pr create`** (not a Forge skill ID). Populate the body from the repo template when present (see **Pull request creation**).
-9. **Hand off to Quality Assurance** — PR link, issue link(s), and a short summary of what changed and how you verified it.
+9. **Project board (orchestrated with build-from-github)** — **`build-from-github`** should run **`gh-project-set-status`** for **`input_issue`** → **In Progress** before implementation. After the PR exists: if **every** sub-issue under **`branch_owner_issue`** is **`CLOSED`**, run **`gh-project-set-status`** for the **parent** issue number (**`branch_owner_issue`**) → **In Review** (read **`github_board`** from **`.forge/project.json`**).
+10. **Documentation repo (optional)** — If **`.forge/project.json`** sets **`doc_repo`** and this PR **completes parent documentation scope** (direct build of the parent issue, or you confirm the last remaining sub-issue work is done per **`build-from-github.md`**): open the workspace folder named **`doc_repo`**, update docs using evidence from the **application** repo (`git` history vs **`main`**, PR summary). Run **`commit`** and **`push-branch`** only with **cwd** at the **documentation** repo root—never mix doc commits into the application branch.
+11. **Hand off to Quality Assurance** — PR link, issue link(s), and a short summary of what changed and how you verified it.
 
 ## Inputs
 
@@ -79,6 +81,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 |----------|------|
 | `resolve-issue-parentage` | **First** when setting up a build: outputs `branch_owner_issue`, `suggested_branch`, and `input_issue` (see **`build-from-github.md`**). |
 | `create-issue-branch` | Create/checkout **`feature/issue-{branch_owner_issue}`** linked to **`branch_owner_issue`** when the branch is missing. Do **not** pass **`input_issue`** when it differs from **`branch_owner_issue`** (sub-issue case). |
+| `gh-project-set-status` | Set GitHub Projects **Status** for an issue using **`github_board`** from **`.forge/project.json`** (`In Progress` for **`input_issue`**; **`In Review`** for **`branch_owner_issue`** when all sub-issues are closed). Requires `gh` **project** scope. |
 | `commit` | Record changes with a clear message (see skill `usage`). |
 | `push-branch` | Publish the branch to `origin`. |
 
