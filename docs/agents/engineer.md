@@ -50,7 +50,7 @@ flowchart TD
 5. **Scan changes for security vulnerabilities** — Examine the changeset for security risks before proceeding.
 6. **skill: commit-code** — Commit approved changes using the commit skill.
 7. **skill: push-branch** — Push branch state to remote.
-8. **PR (GitHub MCP or `gh`)** — Use `gh pr view --head feature/issue-{branch_owner_issue}` (or MCP) first; **update** an existing PR or **create** one. Use `.github/pull_request_template.md` if present.
+8. **PR (GitHub MCP or `gh`)** — Use `gh pr list --head "feature/issue-{branch_owner_issue}" --state open --limit 1 --json number` (add `-R owner/repo` when needed; `gh pr view` has no `--head`) then `gh pr view <number>` if found, or MCP; **update** an existing PR or **create** one. Use `.github/pull_request_template.md` if present.
 
 ## Skill Resolution
 

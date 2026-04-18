@@ -28,7 +28,7 @@ Help users understand how to move through Forge's delivery flow:
 
 - `/architect-this`: clarify direction and update architecture contracts.
 - `/plan-roadmap`: align milestones/issues in GitHub.
-- `/refine-issue`: Step 4 orchestration (normalize input, parent when sub-issue, delegate, verify outputs); **Technical Writer** refines GitHub issues and optional sub-issues only (no git branches). Policy: `resources/workflow/commands/refine-issue.md` + `resources/workflow/agents/tech-writer.md`.
+- `/refine-issue`: Step 4 orchestration (normalize input, parent when sub-issue, delegate, verify outputs); **Technical Writer** refines GitHub issues and optional sub-issues only (no git branches). Policy: `resources/workflow/commands/refine-issue.md` + `resources/workflow/agents/technical-writer.md`.
 - `/build-from-github`: implement from an issue and create PR.
 - `/build-from-pr-review`: address PR review feedback on the PR branch.
 - `/review-pr`: perform QA review and post review feedback.

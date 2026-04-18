@@ -5,7 +5,7 @@ The Technical Writer Agent maintains development-ready GitHub issues. The comman
 ## Precedence
 
 - `resources/workflow/commands/refine-issue.md`: invocation contract and required outputs.
-- `resources/workflow/agents/tech-writer.md`: refinement behavior and policy details.
+- `resources/workflow/agents/technical-writer.md`: refinement behavior and policy details.
 - If they conflict, command governs invocation/output checks; agent governs execution behavior.
 
 ## Responsibilities

@@ -216,8 +216,8 @@ async function ensureKnowledgeMapDocs(
 }
 
 /**
- * Setup project for Cursor: .forge folder, .cursor commands, agents, skills, hooks.
- * Uses workflow templates from resources/workflow.
+ * Project Cursor sync: ensures `.forge/` (always) and optionally `<project>/.cursor/` (agents, commands, skills, hooks) from `resources/workflow/`.
+ * **Forge: Initialize Project** calls this with `forgeOnly: true` (`.forge/` only). **Forge: Initialize Cursor Agents** uses `InstallGlobalCommand` for `~/.cursor/` instead.
  */
 export class SetupCursorCommand {
     static async execute(

@@ -140,9 +140,21 @@ if ! echo "$fields_array_json" | jq -e 'type == "array"' >/dev/null 2>&1; then
   json_debug_fail "gh project field-list: internal normalize did not produce an array" "$fields_json"
 fi
 
+# jq note: every predicate for select() must stay *inside* select(...).
+# Otherwise jq parses select(.name == "status") and (.options...) as two
+# pipeline stages; the second stage outputs bare booleans (e.g. true).
 field_block="$(echo "$fields_array_json" | jq -c '
-  (map(select((.name | ascii_downcase) == "status") and (.options != null) and ((.options | length) > 0)) | first)
-  // (map(select(.options != null and (.options | length) > 0)) | first)
+  (map(select(
+    (.name | ascii_downcase) == "status"
+    and (.options != null)
+    and ((.options | type) == "array")
+    and ((.options | length) > 0)
+  )) | first)
+  // (map(select(
+    (.options != null)
+    and ((.options | type) == "array")
+    and ((.options | length) > 0)
+  )) | first)
 ')"
 
 if [[ -z "$field_block" || "$field_block" == "null" ]]; then

@@ -4,14 +4,16 @@ This document describes the intended flow of responsibility among Forge agents. 
 
 ## Six-Step Model
 
-| Step | Phase | Agent | Key Actions |
-|------|-------|-------|-------------|
-| 1 | Product Owner | Product Owner | Retrieve `vision.json` and `project.json`, determine adjustments, hand off to Architect |
-| 2 | Architecting | Architect | Retrieve vision and knowledge map, perform clarity check, update `.forge` contracts by domain, hand off recap to Planner |
-| 3 | Planning | Planner | pull-milestones, pull-milestone-issues, determine GitHub changes |
-| 4 | Refining | Technical Writer | `/refine-issue` handles orchestration (including normalizing sub-issue links to the parent); Technical Writer refines GitHub issue bodies and optional sub-issues — **no git branches** in this phase |
-| 5 | Building | Engineer | **`resolve-issue-parentage`** then branch setup by **`/build-from-github`** or Engineer; **`feature/issue-{branch_owner}`** created/linked here; perform code changes; use `.forge` for alignment; run repo-inferred validation (tests/lint/build as applicable) before commit; scan security; commit; push; create-pr |
-| 6 | Reviewing | Quality Assurance | Retrieve PR; checkout; review accuracy; check vulnerabilities; add review to PR |
+
+| Step | Phase         | Agent             | Key Actions                                                                                                                                                                                                                                                                                                            |
+| ---- | ------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | Product Owner | Product Owner     | Retrieve `vision.json` and `project.json`, determine adjustments, hand off to Architect                                                                                                                                                                                                                                |
+| 2    | Architecting  | Architect         | Retrieve vision and knowledge map, perform clarity check, update `.forge` contracts by domain, hand off recap to Planner                                                                                                                                                                                               |
+| 3    | Planning      | Planner           | pull-milestones, pull-milestone-issues, determine GitHub changes                                                                                                                                                                                                                                                       |
+| 4    | Refining      | Technical Writer  | `/refine-issue` handles orchestration (including normalizing sub-issue links to the parent); Technical Writer refines GitHub issue bodies and optional sub-issues — **no git branches** in this phase                                                                                                                  |
+| 5    | Building      | Engineer          | `**resolve-issue-parentage`** then branch setup by `**/build-from-github**` or Engineer; `**feature/issue-{branch_owner}**` created/linked here; perform code changes; use `.forge` for alignment; run repo-inferred validation (tests/lint/build as applicable) before commit; scan security; commit; push; create-pr |
+| 6    | Reviewing     | Quality Assurance | Retrieve PR; checkout; review accuracy; check vulnerabilities; add review to PR                                                                                                                                                                                                                                        |
+
 
 ## `.forge` context and edits
 
@@ -19,15 +21,17 @@ This document describes the intended flow of responsibility among Forge agents. 
 
 **Who carries what outward / inward:**
 
-| Direction | Owners |
-|-----------|--------|
-| `.forge` → accurate GitHub milestones and issues | **Planner**, **Technical Writer** |
+
+| Direction                                                  | Owners                              |
+| ---------------------------------------------------------- | ----------------------------------- |
+| `.forge` → accurate GitHub milestones and issues           | **Planner**, **Technical Writer**   |
 | Implementation matches `.forge` (work executed via issues) | **Engineer**, **Quality Assurance** |
+
 
 **Architect** maintains structural coherence **inside** `.forge` (`knowledge_map.json` and cross-domain contracts); syncing ticket text to contracts, or verifying code against contracts, is **not** the Architect's job.
 
 - **All agents** use `.forge` for context as needed: start from `.forge/knowledge_map.json` to find relevant contracts and schemas.
-- **Primary ownership:** **Product Owner** owns product intent (`.forge/vision.json`, `.forge/project.json`). **Architect** is the primary steward of **`.forge/knowledge_map.json`** structure and coherence across mapped domain contracts.
+- **Primary ownership:** **Product Owner** owns product intent (`.forge/vision.json`, `.forge/project.json`). **Architect** is the primary steward of `**.forge/knowledge_map.json`** structure and coherence across mapped domain contracts.
 - **Technical Writer + Engineer may patch mapped domain contracts** when execution/refinement establishes a **material decision** that should be documented and is currently missing or misleading. Keep updates minimal and **current-state** (no timeline narrative).
 - **Planner + Quality Assurance are read-only by default** on `.forge`; escalate contract or intent changes unless the user explicitly asks otherwise.
 - **Scope:** Keep edits minimal and consistent with existing schemas and map structure. **Large** structural changes, new domains, or ambiguous cross-domain trade-offs should still go through **Architect** (e.g. `/architect-this`) when a quick local fix is not enough.
@@ -36,14 +40,16 @@ This document describes the intended flow of responsibility among Forge agents. 
 
 Six canonical commands orchestrate the agent flows:
 
-| Command | Input | Output |
-|---------|-------|--------|
-| `/architect-this {string}` | User prompt | Updated `.forge` documents |
-| `/plan-roadmap` | `.forge/vision.json`, `.forge/knowledge_map.json` | Synced GitHub milestones/issues |
-| `/refine-issue {link}` | GitHub issue link | Refined tickets ready for development |
-| `/build-from-github` | GitHub issue link | GitHub pull request |
-| `/build-from-pr-review {link}` | GitHub PR link | Updated PR branch with feedback addressed |
-| `/review-pr {link}` | GitHub PR link | PR with review (human performs merge) |
+
+| Command                        | Input                                             | Output                                    |
+| ------------------------------ | ------------------------------------------------- | ----------------------------------------- |
+| `/architect-this {string}`     | User prompt                                       | Updated `.forge` documents                |
+| `/plan-roadmap`                | `.forge/vision.json`, `.forge/knowledge_map.json` | Synced GitHub milestones/issues           |
+| `/refine-issue {link}`         | GitHub issue link                                 | Refined tickets ready for development     |
+| `/build-from-github`           | GitHub issue link                                 | GitHub pull request                       |
+| `/build-from-pr-review {link}` | GitHub PR link                                    | Updated PR branch with feedback addressed |
+| `/review-pr {link}`            | GitHub PR link                                    | PR with review (human performs merge)     |
+
 
 ---
 
@@ -52,6 +58,7 @@ Six canonical commands orchestrate the agent flows:
 Structured input that kicks off the market → features flow. Use when new market need, user feedback, or strategic direction arrives.
 
 **Template:**
+
 ```
 [Market / User / Strategic Input]
 - Source: [e.g., user research, competitor analysis, support tickets, stakeholder request]
@@ -61,6 +68,7 @@ Structured input that kicks off the market → features flow. Use when new marke
 ```
 
 **Flow:**
+
 1. User provides Product Intake Prompt (or pastes market research content).
 2. Product Owner ingests and updates `vision.json`.
 3. Architect receives prompt; updates knowledge map and domain contracts when technical scope changes.
@@ -86,6 +94,7 @@ User ──► Architect Agent ──► [Clarity check]
 ```
 
 **Steps:**
+
 1. Architect retrieves `vision.json` and `.forge/knowledge_map.json`.
 2. **Clarity check:** if direction is unclear, loop to user for clarification.
 3. Update `.forge/knowledge_map.json` shape only when required.
@@ -113,6 +122,7 @@ User ──► command: /plan-roadmap ──► agent: Planner
 ```
 
 **Steps:**
+
 1. **pull-milestones** – Retrieve all milestones from GitHub. Resolve owner/repo from `gh repo view` or pass explicitly.
 2. **For each milestone** – Run **pull-milestone-issues** with the milestone number to retrieve issues.
 3. **Create/update via GitHub** – Use GitHub MCP or `gh` CLI to create milestones, create issues, and assign issues to milestones. Do not update past or in-flight tickets.
@@ -136,8 +146,9 @@ User (GitHub Issue Link) ──► command: /refine-issue
 ```
 
 **Steps:**
+
 1. `/refine-issue` owns the invocation contract: normalize issue reference, resolve repo/base context, delegate, and verify required outputs.
-2. `resources/workflow/agents/tech-writer.md` owns refinement behavior and process policy (authoritative operating loop and hard rules).
+2. `resources/workflow/agents/technical-writer.md` owns refinement behavior and process policy (authoritative operating loop and hard rules).
 3. If command and agent guidance conflict, command governs invocation/output checks and agent governs execution behavior.
 
 ---
@@ -168,7 +179,8 @@ User (Github Issue Link) ──► resolve-issue-parentage skill (branch_owner_i
 ```
 
 **Steps:**
-1. Branch setup (build-from-github or Engineer): run **`resolve-issue-parentage`**, then ensure **`feature/issue-{branch_owner_issue}`** (see **`resources/workflow/commands/build-from-github.md`**). Sub-issues never get a separate branch name. Push and link via `gh issue develop` when needed (**`branch_owner_issue`** owns the branch link).
+
+1. Branch setup (build-from-github or Engineer): run `**resolve-issue-parentage`**, then ensure `**feature/issue-{branch_owner_issue}**` (see `**resources/workflow/commands/build-from-github.md**`). Sub-issues never get a separate branch name. Push and link via `gh issue develop` when needed (`**branch_owner_issue**` owns the branch link).
 2. Engineer: retrieve issue details; implement code changes for the issue scope.
 3. Engineer: run repository-inferred validation commands (tests/lint/build as applicable); **do not** commit or open a PR until every check passes (fix or stop and report).
 4. Engineer: scan changeset for security vulnerabilities.
@@ -199,6 +211,7 @@ User (Github PR Link) ──► Retrieve PR + review feedback
 ```
 
 **Steps:**
+
 1. Retrieve PR details, source branch, and review feedback (reviews/comments) using available tools.
 2. Resolve original issue context for scope integrity.
 3. Verify branch context and checkout PR source branch if not already on it.
@@ -222,6 +235,7 @@ User (Github PR Link) ──► Quality Assurance Agent
 ```
 
 **Steps:**
+
 1. Quality Assurance: retrieve PR details; checkout PR source branch.
 2. Quality Assurance: examine changes for correctness and security.
 3. Quality Assurance: add review comments to the PR to aid manual human approval. Do not merge; a human will perform the merge.
@@ -259,11 +273,14 @@ Market Input / Product Intake
 
 ## When to Invoke Which Agent
 
-| Prompt concerns | Invoke |
-|------------------|--------|
-| Product vision, strategy, market | Product Owner |
-| Cross-domain architecture, contract updates, knowledge map changes | Architect |
-| Milestones, roadmap sequencing | Planner |
-| Ticket decomposition, acceptance criteria, parent/sub-issue clarity | Technical Writer |
-| Implementation, tests | Engineer |
-| Code review, security review | Quality Assurance |
+
+| Prompt concerns                                                     | Invoke            |
+| ------------------------------------------------------------------- | ----------------- |
+| Product vision, strategy, market                                    | Product Owner     |
+| Cross-domain architecture, contract updates, knowledge map changes  | Architect         |
+| Milestones, roadmap sequencing                                      | Planner           |
+| Ticket decomposition, acceptance criteria, parent/sub-issue clarity | Technical Writer  |
+| Implementation, tests                                               | Engineer          |
+| Code review, security review                                        | Quality Assurance |
+
+
