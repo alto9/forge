@@ -2,7 +2,7 @@
   "name": "forge-studio",
   "displayName": "Forge Studio",
   "description": "VS Code and Cursor extension for GitHub-centric context engineering: staged agents, slash commands, and chat personas aligned with issues, PRs, and milestones.",
-  "version": "3.20.0",
+  "version": "3.20.1",
   "license": "MIT",
   "author": "Alto9",
   "publisher": "alto9",
