@@ -1,3 +1,7 @@
+## 3.21.0 (2026-04-23)
+
+* feat: update skill registry to version 1.5.8 and introduce workflow retrospective skill ([f212a80](https://github.com/alto9/forge/commit/f212a80))
+
 ## <small>3.20.1 (2026-04-18)</small>
 
 * docs: adjustments based on feedback ([f82b5ee](https://github.com/alto9/forge/commit/f82b5ee))
