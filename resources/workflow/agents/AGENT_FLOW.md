@@ -11,8 +11,8 @@ This document describes the intended flow of responsibility among Forge agents. 
 | 2    | Architecting  | Architect         | Retrieve vision and knowledge map, perform clarity check, update `.forge` contracts by domain, hand off recap to Planner                                                                                                                                                                                               |
 | 3    | Planning      | Planner           | pull-milestones, pull-milestone-issues, determine GitHub changes                                                                                                                                                                                                                                                       |
 | 4    | Refining      | Technical Writer  | `/refine-issue` handles orchestration (including normalizing sub-issue links to the parent); Technical Writer refines GitHub issue bodies and optional sub-issues — **no git branches** in this phase                                                                                                                  |
-| 5    | Building      | Engineer          | `**resolve-issue-parentage`** then branch setup by `**/build-from-github**` or Engineer; `**feature/issue-{branch_owner}**` created/linked here; perform code changes; use `.forge` for alignment; run repo-inferred validation (tests/lint/build as applicable) before commit; scan security; commit; push; create-pr |
-| 6    | Reviewing     | Quality Assurance | Retrieve PR; checkout; review accuracy; check vulnerabilities; add review to PR                                                                                                                                                                                                                                        |
+| 5    | Building      | Engineer          | `**resolve-issue-parentage`** then branch setup by `**/build-from-github**` or Engineer; `**feature/issue-{branch_owner}**` created/linked here; GitHub Projects **In Progress** / post-PR **In Review** or sub-**Done** per `build-from-github.md`; perform code changes; use `.forge` for alignment; run repo-inferred validation before commit; scan security; commit; push; create-pr; **`forge-post-workflow-retrospective`** (`issue` mode) |
+| 6    | Reviewing     | Quality Assurance | Retrieve PR; checkout; review accuracy; check vulnerabilities; line comments when useful; **submit formal PR review** (MCP or **`gh-pr-review`**); optional board self-heal; **workflow retrospective** on PR conversation                                                                                                                                                           |
 
 
 ## `.forge` context and edits
@@ -185,6 +185,7 @@ User (Github Issue Link) ──► resolve-issue-parentage skill (branch_owner_i
 3. Engineer: run repository-inferred validation commands (tests/lint/build as applicable); **do not** commit or open a PR until every check passes (fix or stop and report).
 4. Engineer: scan changeset for security vulnerabilities.
 5. Engineer: commit, push-branch; create GitHub pull request (use available tools). When creating the PR, use `.github/pull_request_template.md` if present, otherwise a standard fallback template.
+6. Engineer / command: update project board after PR per **`build-from-github.md`**; post **`forge-post-workflow-retrospective`** on **`input_issue`**.
 
 ---
 
@@ -230,7 +231,9 @@ User (Github PR Link) ──► Quality Assurance Agent
                          Review for correctness and security
                                     │
                                     ▼
-                         Add review comments to PR
+                         Optional line-level review comments
+                         Submit one formal PR review (Reviews tab)
+                         Optional workflow retrospective (PR comment)
                          (Human performs merge)
 ```
 
@@ -238,7 +241,8 @@ User (Github PR Link) ──► Quality Assurance Agent
 
 1. Quality Assurance: retrieve PR details; checkout PR source branch.
 2. Quality Assurance: examine changes for correctness and security.
-3. Quality Assurance: add review comments to the PR to aid manual human approval. Do not merge; a human will perform the merge.
+3. Quality Assurance: add line-level review comments when useful; **submit exactly one formal GitHub PR review** with a non-empty body (**`pull_request_review_write`** or **`gh-pr-review`** / `gh pr review` — not `gh pr comment` alone). Verify it appears under **Reviews**.
+4. Quality Assurance: optional project board self-heal; **forge-post-workflow-retrospective** in **`pr`** mode on the PR conversation. Do not merge; a human will perform the merge.
 
 ---
 

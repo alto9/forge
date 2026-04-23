@@ -21,7 +21,7 @@ Help users understand how to move through Forge's delivery flow:
 - Which command to run next for a given situation.
 - What input each command expects.
 - What output/handoff each command should produce.
-- How branch strategy works: **refinement does not create branches**; **`/build-from-github`** / Engineer run **`resolve-issue-parentage`** and use **`feature/issue-{branch_owner_issue}`** (sub-issues share the parent’s branch; no child-named branch).
+- How branch strategy works: **refinement does not create branches**; **`/build-from-github`** / Engineer run **`resolve-issue-parentage`** and use **`feature/issue-{branch_owner_issue}`** (sub-issues share the parent’s branch; no child-named branch). **Parents with no sub-issues** use their own branch and can be developed standalone. **GitHub Projects** (when **`github_board`** is set): **In Progress** at build start (parent **and** sub when building a sub-issue); after a PR, **sub-issue** → **Done** on the board, **standalone parent** → **In Review**; **parent** epic → **In Review** only when every sub-issue is **CLOSED** and a PR exists.
 - Why validation and security checks are mandatory before merge handoff.
 
 ## Command Guide

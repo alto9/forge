@@ -5,7 +5,7 @@ description: [git_flow|github-pr-review] Submit an approving, request-changes, o
 
 # GitHub PR review (submit)
 
-Submits a **single** review on a pull request using `gh pr review`. Use when GitHub MCP `pull_request_review_write` is unavailable.
+Submits a **single formal PR review** (the review record GitHub shows on the **Reviews** tab / in the PR timeline) using **`gh pr review`**. This is **not** the same as a general conversation comment (`gh pr comment`). Use when GitHub MCP `pull_request_review_write` is unavailable.
 
 Requires `gh` with `repo` scope. For org/private repos, ensure authentication is valid.
 

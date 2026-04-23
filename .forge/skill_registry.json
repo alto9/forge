@@ -1,5 +1,5 @@
 {
-  "version": "1.5.7",
+  "version": "1.5.8",
   "description": "Canonical skill registry for agent and command execution. Agents and commands should resolve skill IDs from assignment maps below, then execute via each skill's script_path and usage. The Forge VSIX always contains the full workflow bundle; Forge: Initialize Cursor Agents installs a complete copy under ~/.cursor/ (nothing is omitted from that install—only unused on a given task). Forge: Initialize Project maintains .forge/ in the workspace and does not write <workspace>/.cursor/. Path resolution for script_path entries that start with .cursor/skills/: (1) ~/.cursor/skills/... using the same suffix after .cursor/skills/ (default after global init); (2) when working in the Forge repository, resources/workflow/skills/<skill-id>/scripts/... (same filenames as script_path); (3) optional <workspace>/.cursor/skills/... if your team maintains a repo-local copy.",
   "canonical_categories": ["git_flow"],
   "skills": [
@@ -101,21 +101,30 @@
       "script_path": ".cursor/skills/gh-project-set-status/scripts/gh-project-set-status.sh",
       "usage": ".cursor/skills/gh-project-set-status/scripts/gh-project-set-status.sh <github_board_url> <owner/repo> <issue-number> <status-name>",
       "primary_consumers": ["engineer", "quality_assurance"]
+    },
+    {
+      "id": "forge-post-workflow-retrospective",
+      "status": "active",
+      "category": "git_flow",
+      "retag": "github-forge-retrospective",
+      "script_path": ".cursor/skills/forge-post-workflow-retrospective/scripts/forge-post-workflow-retrospective.sh",
+      "usage": ".cursor/skills/forge-post-workflow-retrospective/scripts/forge-post-workflow-retrospective.sh (issue <owner/repo> <issue-number> <body-file> | issue <issue-number> <body-file> | pr <owner/repo> <pr-number> <body-file> | pr <pr-number> <body-file>)",
+      "primary_consumers": ["engineer", "quality_assurance"]
     }
   ],
   "agent_assignments": {
     "planner": ["pull-milestones", "pull-milestone-issues"],
     "tech_writer": ["resolve-issue-parentage", "pull-milestone-issues", "link-subissue-to-issue"],
-    "engineer": ["resolve-issue-parentage", "create-issue-branch", "assign-issue-to-me", "get-issue-branches", "gh-project-set-status", "commit", "push-branch"],
-    "quality_assurance": ["gh-pr-review", "gh-project-set-status"]
+    "engineer": ["resolve-issue-parentage", "create-issue-branch", "assign-issue-to-me", "get-issue-branches", "gh-project-set-status", "forge-post-workflow-retrospective", "commit", "push-branch"],
+    "quality_assurance": ["gh-pr-review", "gh-project-set-status", "forge-post-workflow-retrospective"]
   },
   "command_assignments": {
     "architect-this": [],
     "plan-roadmap": ["pull-milestones", "pull-milestone-issues"],
     "refine-issue": ["resolve-issue-parentage"],
-    "build-from-github": ["resolve-issue-parentage", "get-issue-branches", "create-issue-branch", "gh-project-set-status"],
+    "build-from-github": ["resolve-issue-parentage", "get-issue-branches", "create-issue-branch", "gh-project-set-status", "forge-post-workflow-retrospective"],
     "build-from-pr-review": [],
-    "review-pr": ["gh-pr-review"]
+    "review-pr": ["gh-pr-review", "forge-post-workflow-retrospective"]
   },
   "archived_legacy_removed": [
     {

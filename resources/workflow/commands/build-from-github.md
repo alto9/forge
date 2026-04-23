@@ -1,6 +1,6 @@
 # Build from GitHub (Step 5: Building)
 
-This command drives **Step 5 (building)**: branch setup and issue link → **rebase on `main`** → **project board `In Progress`** → implement → **all automated tests pass** → commit → push → **ensure a PR exists (new or updated)** → **optional parent `In Review` + doc sync**.
+This command drives **Step 5 (building)**: branch setup and issue link → **rebase on `main`** → **project board** (`In Progress` / after PR: `In Review` or sub-**`Done`**) → implement → **all automated tests pass** → commit → push → **ensure a PR exists (new or updated)** → **board completion rules + doc sync** → **Forge workflow retrospective** on the issue (see **`forge-post-workflow-retrospective`**).
 
 The **Engineer** agent persona describes the same outcomes; invoking a separate **Engineer** Task subagent is **optional** when you implement in the same Cursor chat or IDE—the required result is the checklist below (branch, board status, validation, commit/push, PR). If your org wants traceability from the Engineer subagent, add an explicit step or checklist item to run **Task → engineer** (or equivalent) before closing the build.
 
@@ -37,21 +37,35 @@ The **Engineer** agent persona describes the same outcomes; invoking a separate 
    - `git rebase origin/main` while on **`feature/issue-{branch_owner_issue}`**.
    - On **conflict**: resolve in-session, `git rebase --continue`, and only then proceed. If the branch was **already pushed**, coordinate before any **force-with-lease** push (do not force-push without explicit user agreement).
 
-4. **GitHub Projects — `In Progress`** — Read **`.forge/project.json`**. If **`github_board`** is present, run **`gh-project-set-status`** from `.forge/skill_registry.json` with: **`github_board` URL**, **`owner/repo`**, **`input_issue`**, status **`In Progress`**. The skill adds the issue to the project if needed. Requires `gh` with **`project`** scope (`gh auth refresh -s project` if commands fail).
+4. **GitHub Projects — start of build (`In Progress`)** — Read **`.forge/project.json`**. If **`github_board`** is absent, skip this step. Otherwise, for **`branch_owner_issue`**, load **sub-issues** (GitHub MCP **`issue_read`** `get_sub_issues`, or `gh api`). Use the same list in step 7. Requires `gh` with **`project`** scope (`gh auth refresh -s project` if commands fail).
+
+   Run **`gh-project-set-status`** with **`github_board`**, **`owner/repo`**, and status **`In Progress`** as follows:
+
+   | Situation | Issues to set **`In Progress`** |
+   |-----------|----------------------------------|
+   | **Sub-issue build** (`**input_issue**` ≠ `**branch_owner_issue**`) | **`branch_owner_issue`** (parent) **and** **`input_issue`** (sub) |
+   | **Standalone parent** (`**input_issue**` === `**branch_owner_issue**` **and** **no** sub-issues) | **`input_issue`** only |
+   | **Parent with sub-issues, building the parent ticket** (`**input_issue**` === `**branch_owner_issue**` **and** at least one sub-issue) | **`branch_owner_issue`** only (idempotent if already set from a prior sub-issue run) |
+
+   The skill adds each issue to the project if needed.
 
 5. **Implementation** — Implement code changes for **`input_issue`**; use `.forge` for alignment when relevant (see Engineer agent—update contracts there instead of ad hoc docs when they misrepresent the work); run repository-inferred validation (tests/lint/build as applicable, all must pass before commit); scan security; commit; push.
 
 6. **Pull request (new or existing)** — Sub-issues share the parent branch (**`feature/issue-{branch_owner_issue}`**), so a PR for that head may **already exist** (e.g. opened for an earlier sub-issue). Before **`gh pr create`**:
    - Run **`gh pr list --head "feature/issue-{branch_owner_issue}" --state open --limit 1 --json number,title,url`** (add **`-R owner/repo`** when not in the app repo cwd; **`gh pr view` does not support `--head`**—use **`gh pr view <number>`** after listing) or list PRs for that head via MCP. **If a PR exists:** update **title** and **body** so the current **`input_issue`** is clearly in scope (use `.github/pull_request_template.md` when present); optionally add a **PR comment** or **issue comment** linking this build. **If none exists:** create the PR (same template and linking rules). **Closing keywords** (`Closes #N`, `Fixes #N`): multiple issues on one PR is normal for this branch policy; GitHub closes each referenced issue when the PR merges—confirm ordering with reviewers if some issues should stay open until others merge first.
 
-7. **After a PR exists successfully (new or updated)**
+7. **After a PR exists successfully (new or updated)** — If **`github_board`** is set, apply **one** of the following (same **`github_board`** and **`owner/repo`**). Use the sub-issue list from step 4 (refresh if needed).
 
-   - **Parent → `In Review` (optional)** — For **`branch_owner_issue`**, load **sub-issues** (GitHub MCP **`issue_read`** `get_sub_issues`, or `gh api`). If there is **at least one** sub-issue and **every** sub-issue is **`CLOSED`**, run **`gh-project-set-status`** with **`branch_owner_issue`** and status **`In Review`** (same **`github_board`** and **`owner/repo`**).
+   - **Sub-issue build** (`**input_issue**` ≠ `**branch_owner_issue**`) — Run **`gh-project-set-status`** for **`input_issue`** with status **`Done`**. Do **not** move the sub-issue to **In Review**. Do **not** move **`branch_owner_issue`** to **In Review** until **every** sub-issue is **`CLOSED`** on GitHub **and** this PR exists; then set **`branch_owner_issue`** → **`In Review`**.
+   - **Standalone parent** (`**input_issue**` === `**branch_owner_issue**` **and** **no** sub-issues) — Set **`branch_owner_issue`** → **`In Review`**.
+   - **Epic: all sub-issues closed** — If there is **at least one** sub-issue under **`branch_owner_issue`** and **every** sub-issue is **`CLOSED`**, set **`branch_owner_issue`** → **`In Review`**.
 
    - **Documentation sync (optional)** — If **`doc_repo`** is set in **`.forge/project.json`** **and** this PR **completes parent scope** for documentation purposes: either **`input_issue`** equals **`branch_owner_issue`**, or **`input_issue`** was the **last open sub-issue** for that parent (confirm via sub-issue list: no other sub-issue remains open for **`branch_owner_issue`** before treating this build as “scope complete”). Then:
      - Open the **Cursor workspace folder** whose **name** equals **`doc_repo`**. If that folder is not in the workspace, **stop** and report clearly.
      - In the **documentation** repo root, gather evidence from the **application** repo: `git log` / `git diff` against **`main`**, PR title/body, linked issues.
      - Update docs (Markdown / VitePress / site layout as appropriate). Run **`commit`** and **`push-branch`** with **current working directory** set to the **documentation repository root** so commits land only in the doc repo. Use a **dedicated** commit (and message) for documentation, separate from application commits.
+
+8. **Forge workflow retrospective (issue)** — After step 7 (including optional doc sync), run **`forge-post-workflow-retrospective`** from `.forge/skill_registry.json` in **`issue`** mode: post a concise retrospective comment on **`input_issue`** summarizing what worked or failed in the Forge workflow during this build (skills, board steps, branch/PR flow). See the skill’s **`usage`**.
 
 ## Skill Resolution
 
@@ -60,4 +74,4 @@ The **Engineer** agent persona describes the same outcomes; invoking a separate 
 
 ## Goal
 
-Produce a GitHub pull request ready for Quality Assurance (new or updated for the shared parent branch), with automated validation fully passing before commit, branch history rebased on **`main`**, project board updated when configured, and documentation synced when **`doc_repo`** applies.
+Produce a GitHub pull request ready for Quality Assurance (new or updated for the shared parent branch), with automated validation fully passing before commit, branch history rebased on **`main`**, project board updated when configured, documentation synced when **`doc_repo`** applies, and a **workflow retrospective** comment on **`input_issue`** when the retrospective skill is assigned.

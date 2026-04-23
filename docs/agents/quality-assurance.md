@@ -1,6 +1,6 @@
 # 6. Quality Assurance (Reviewing)
 
-The Quality Assurance Agent reviews pull requests for correctness and security, posts line comments, **submits a formal GitHub review** (approve / request changes / comment) with a body, and never merges. A human performs the merge.
+The Quality Assurance Agent reviews pull requests for correctness and security, posts optional line comments, **submits a formal GitHub PR review** (approve / request changes / comment) that appears on the **Reviews** tab — **not** merely a `gh pr comment` — and never merges. After that, it may post a **workflow retrospective** on the PR conversation. A human performs the merge.
 
 ## Responsibilities
 
@@ -22,8 +22,9 @@ flowchart TD
         D[3. Review implementation for accuracy]
         E[4. Check for security vulnerabilities]
         F[5. Line comments as needed]
-        G[6. Submit formal review via MCP or gh-pr-review skill]
-        H[7. Optional parent In Review on project board]
+        G[6. Submit formal PR review via MCP or gh-pr-review]
+        G2[7. Optional retrospective comment on PR conversation]
+        H[8. Optional parent In Review on project board]
     end
 
     subgraph Output
@@ -36,7 +37,8 @@ flowchart TD
     D --> E
     E --> F
     F --> G
-    G --> H
+    G --> G2
+    G2 --> H
     H --> I
 ```
 
@@ -46,9 +48,10 @@ flowchart TD
 2. **Checkout PR source branch (when needed)** — Fetch and checkout the PR branch locally for verification.
 3. **Review implementation for accuracy** — Examine changeset for correctness, alignment with issue intent, and acceptance criteria.
 4. **Check for security vulnerabilities** — Examine the diff for vulnerability risks, unsafe patterns, and security regressions.
-5. **Add line-level comments** — Where they clarify requested changes or risks.
-6. **Submit the formal PR review** — Non-empty body; **APPROVE**, **REQUEST_CHANGES**, or **COMMENT** via MCP `pull_request_review_write`, or **`gh-pr-review`** skill as fallback.
-7. **Optional project board** — If all sub-issues of the parent are closed, set parent to **In Review** using **`gh-project-set-status`** and **`github_board`** from `.forge/project.json`.
+5. **Add line-level comments** — Where they clarify requested changes or risks. These do **not** replace a submitted review.
+6. **Submit the formal PR review** — Non-empty body; **APPROVE**, **REQUEST_CHANGES**, or **COMMENT** via MCP `pull_request_review_write`, or **`gh-pr-review`** (`gh pr review`) as fallback — **not** `gh pr comment` alone. Confirm the review appears under **Reviews**.
+7. **Optional workflow retrospective** — **`forge-post-workflow-retrospective`** in **`pr`** mode (conversation comment, separate from the review).
+8. **Optional project board** — If all sub-issues of the parent are closed, set parent to **In Review** using **`gh-project-set-status`** and **`github_board`** from `.forge/project.json` (idempotent repair).
 
 ## Handoff Contract
 
