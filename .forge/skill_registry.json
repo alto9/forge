@@ -1,5 +1,5 @@
 {
-  "version": "1.5.9",
+  "version": "1.6.0",
   "description": "Canonical skill registry for agent and workflow execution. Script skills: resolve IDs from assignment maps, then run script_path per usage. Orchestration skills (kind: orchestration): no script_path — follow ~/.cursor/skills/<id>/SKILL.md (or resources/workflow/skills/<id>/SKILL.md in the Forge repo). The Forge VSIX always contains the full workflow bundle; Forge: Initialize Cursor Agents installs a complete copy under ~/.cursor/. Forge: Initialize Project maintains .forge/ in the workspace and does not write <workspace>/.cursor/. Path resolution for script_path entries that start with .cursor/skills/: (1) ~/.cursor/skills/... using the same suffix after .cursor/skills/ (default after global init); (2) when working in the Forge repository, resources/workflow/skills/<skill-id>/scripts/... (same filenames as script_path); (3) optional <workspace>/.cursor/skills/... if your team maintains a repo-local copy.",
   "canonical_categories": ["git_flow"],
   "skills": [
@@ -44,6 +44,20 @@
       "category": "git_flow",
       "kind": "orchestration",
       "primary_consumers": ["quality_assurance"]
+    },
+    {
+      "id": "ideate",
+      "status": "active",
+      "category": "git_flow",
+      "kind": "orchestration",
+      "primary_consumers": ["architect"]
+    },
+    {
+      "id": "audit-forge",
+      "status": "active",
+      "category": "git_flow",
+      "kind": "orchestration",
+      "primary_consumers": ["planner"]
     },
     {
       "id": "create-issue-branch",
@@ -143,6 +157,8 @@
     "quality_assurance": ["gh-pr-review", "gh-project-set-status", "forge-post-workflow-retrospective"]
   },
   "command_assignments": {
+    "ideate": [],
+    "audit-forge": ["pull-milestones", "pull-milestone-issues"],
     "architect-this": [],
     "plan-roadmap": ["pull-milestones", "pull-milestone-issues"],
     "refine-issue": ["resolve-issue-parentage"],

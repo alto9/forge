@@ -349,13 +349,15 @@ describe('forge.openStudio command', () => {
         it('should check required orchestration skill files exist', () => {
             const requiredSkills = [
                 '.cursor/skills/architect-this/SKILL.md',
+                '.cursor/skills/audit-forge/SKILL.md',
+                '.cursor/skills/ideate/SKILL.md',
                 '.cursor/skills/plan-roadmap/SKILL.md',
                 '.cursor/skills/refine-issue/SKILL.md',
                 '.cursor/skills/build-from-github/SKILL.md',
                 '.cursor/skills/build-from-pr-review/SKILL.md',
                 '.cursor/skills/review-pr/SKILL.md'
             ];
-            expect(requiredSkills.length).toBe(6);
+            expect(requiredSkills.length).toBe(8);
         });
     });
 });

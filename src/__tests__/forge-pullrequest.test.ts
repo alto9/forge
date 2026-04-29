@@ -99,8 +99,10 @@ describe('workflow orchestration skills (resources)', () => {
     it('should include expected orchestration skill folders', () => {
         const expected = [
             'architect-this',
+            'audit-forge',
             'build-from-github',
             'build-from-pr-review',
+            'ideate',
             'plan-roadmap',
             'refine-issue',
             'review-pr'

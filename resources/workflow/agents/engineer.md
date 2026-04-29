@@ -29,7 +29,7 @@ We are using a phased context engineering system called Forge. There are 6 phase
 - Engineer
 - Quality Assurance
 
-Forge saves context in the project’s `.forge` folder. The file structure is predefined in `.forge/knowledge_map.json`. Each phase has a corresponding agent. The `.forge` folder is the source of truth for **intent**; the Engineer **reads** it for alignment and may patch mapped contracts only when implementation establishes a **material decision** that should be documented and is currently missing or misleading—**Architect** remains primary steward of knowledge-map structure. This step produces **code and a pull request**. Agents, skills, and commands aim to provide thorough context for agentic development.
+Forge saves context in the project’s `.forge` folder. The file structure is predefined in `.forge/knowledge_map.json`. Each phase has a corresponding agent. The `.forge` folder is the source of truth for **intent**; **all agents correct `.forge` when it is wrong**. The Engineer **reads** `.forge` for alignment and **updates mapped contracts** when implementation proves them false or misleading—minimal, current-state edits. **Architect** remains steward of knowledge-map **structure**; involve Architect when reshaping domains or cross-boundary design. This step produces **code and a pull request**. Agents, skills, and commands aim to provide thorough context for agentic development.
 
 ## Owns (sources of truth)
 
@@ -77,7 +77,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 
 ## Hard rules
 
-- `**.forge` edits** — Allowed only for **material + missing** contract updates proven during implementation. Keep changes scoped and current-state; involve **Architect** when the knowledge map or cross-domain shape needs redesign.
+- `**.forge` edits** — **Correct inaccuracies** proven during implementation in mapped contracts (and obvious project metadata if wrong). Keep changes scoped and current-state; involve **Architect** when the knowledge map or cross-domain shape needs redesign.
 - **No commit** until **mandatory validation** for this change passes (project-appropriate test/lint/build).
 - **Resolve skills from** `.forge/skill_registry.json` — `agent_assignments.engineer` and matching `skills[]` entries **with `script_path`**; use each such skill’s `script_path` and `usage` as the source of truth. For **orchestration** (workflows without `script_path` in the registry), read **`~/.cursor/skills/<id>/SKILL.md`** (or **`resources/workflow/skills/<id>/SKILL.md`** in the Forge repo). **Do not hardcode** script paths in this file.
 - **PR creation** is **not** a listed Forge skill — use **GitHub MCP** or `**gh` CLI**.

@@ -19,6 +19,16 @@ This document describes the intended flow of responsibility among Forge agents. 
 
 **What `.forge` is:** the **cumulative** record of agreed knowledge and **technical design choices**—durable contracts, not a diary. Domain contracts should read as **timeless current-state** (what is true until revised). **Do not** use `.forge` to mirror GitHub schedule, status, or history: no dates-as-history, sprints, or narrative anchored to issues/PRs except where a contract truly needs a stable external identifier (prefer neutral requirement wording). Point-in-time and execution tracking belong in **issues, PRs, and chat**.
 
+**Canonical rule:** **All agents should correct `.forge` when they notice it is wrong** relative to validated truth (chat, code, GitHub planning, review). Prefer **minimal, current-state** edits; do not turn `.forge` into a diary, decision log, or status mirror.
+
+**Stewards (primary depth, not exclusive editors):**
+
+- **Product Owner** — deepest ownership of product intent in `.forge/vision.json` and `.forge/project.json`. Others may patch obvious factual errors (e.g. wrong link, stale name); when “what” shifts materially, involve Product Owner in the same session so intent stays coherent.
+- **Architect** — deepest ownership of `.forge/knowledge_map.json` structure and cross-domain coherence. Others may fix wrong prose in a mapped contract; **new domains, remapping the tree, or ambiguous cross-domain tradeoffs** should usually be an Architect-led pass (e.g. `/architect-this`) or explicit user approval after a localized fix.
+- **Planner, Technical Writer, Engineer, Quality Assurance** — same duty: if a contract or project field is false or misleading, **patch it** or flag it with a fix in the same turn when clear.
+
+**Collaboration guardrails:** After **large** structural edits, a quick **Architect** checkpoint reduces orphan paths and contradictions—it is a quality follow-up, not a veto on fixing clear errors. If a fix would **reverse product strategy**, sync with **Product Owner** in chat before or alongside the edit.
+
 **Who carries what outward / inward:**
 
 
@@ -31,18 +41,27 @@ This document describes the intended flow of responsibility among Forge agents. 
 **Architect** maintains structural coherence **inside** `.forge` (`knowledge_map.json` and cross-domain contracts); syncing ticket text to contracts, or verifying code against contracts, is **not** the Architect's job.
 
 - **All agents** use `.forge` for context as needed: start from `.forge/knowledge_map.json` to find relevant contracts and schemas.
-- **Primary ownership:** **Product Owner** owns product intent (`.forge/vision.json`, `.forge/project.json`). **Architect** is the primary steward of `**.forge/knowledge_map.json`** structure and coherence across mapped domain contracts.
-- **Technical Writer + Engineer may patch mapped domain contracts** when execution/refinement establishes a **material decision** that should be documented and is currently missing or misleading. Keep updates minimal and **current-state** (no timeline narrative).
-- **Planner + Quality Assurance are read-only by default** on `.forge`; escalate contract or intent changes unless the user explicitly asks otherwise.
-- **Scope:** Keep edits minimal and consistent with existing schemas and map structure. **Large** structural changes, new domains, or ambiguous cross-domain trade-offs should still go through **Architect** (e.g. `/architect-this`) when a quick local fix is not enough.
+- **Scope:** Keep edits minimal and consistent with existing schemas and map structure.
+
+## Ideation (initiative → compartments)
+
+**Ideation** is the step of taking one **large initiative** and producing, in order: **product compartments** (themes, scope, non-goals in `vision.json` / `project.json`), **technical compartments** (domains and contracts via `knowledge_map.json` and Architect), and **delivery compartments** (milestone/epic shape and order in GitHub via Planner). It is **not** implementation subtasks (Technical Writer / Engineer).
+
+**Entry:** use **`/ideate`** with an initiative narrative or structured intake (see extended template under Product Intake). Typical sequence: decompose in chat → Product Owner updates vision/project → `/architect-this` → optional milestone sketch in chat → `/plan-roadmap`.
+
+**Optional read-only check:** **`/audit-forge`** produces a contradiction-style report across `vision.json`, `project.json`, `knowledge_map.json`, domain indices, and optionally GitHub milestone titles—no file edits.
+
+---
 
 ## Commands and Flows
 
-Six canonical commands orchestrate the agent flows:
+Orchestration commands for the agent flows:
 
 
 | Command                        | Input                                             | Output                                    |
 | ------------------------------ | ------------------------------------------------- | ----------------------------------------- |
+| `/ideate {string}`             | Initiative narrative or structured intake         | Guided PO → Architect → plan handoff      |
+| `/audit-forge`                 | Optional focus / repo context                     | Read-only `.forge` (± GitHub) audit       |
 | `/architect-this {string}`     | User prompt                                       | Updated `.forge` documents                |
 | `/plan-roadmap`                | `.forge/vision.json`, `.forge/knowledge_map.json` | Synced GitHub milestones/issues           |
 | `/refine-issue {link}`         | GitHub issue link                                 | Refined tickets ready for development     |
@@ -65,12 +84,19 @@ Structured input that kicks off the market → features flow. Use when new marke
 - Signal: [what we learned or what changed]
 - Implication: [how this affects what we should build]
 - Urgency: [now / next quarter / backlog]
+
+[Ideation / Initiative extension — use for large ideas]
+- Initiative name: [short label]
+- Themes: [2–5 outcome-oriented compartments]
+- Non-goals: [what is explicitly out of scope]
+- Success signals: [how we know it worked — no dates-as-history in .forge]
+- Contract mapping hints: [which domains in knowledge_map likely move — runtime, data, business_logic, interface, integration, operations]
 ```
 
 **Flow:**
 
-1. User provides Product Intake Prompt (or pastes market research content).
-2. Product Owner ingests and updates `vision.json`.
+1. User provides Product Intake Prompt (or pastes market research content). For a **large initiative**, prefer **`/ideate`** so decomposition happens before heavy GitHub edits.
+2. Product Owner ingests and updates `vision.json` and `project.json`.
 3. Architect receives prompt; updates knowledge map and domain contracts when technical scope changes.
 4. Planner receives recap and creates/updates milestones if roadmap impact exists.
 5. Downstream: Technical Writer → Engineer → Quality Assurance.
@@ -280,8 +306,10 @@ Market Input / Product Intake
 
 | Prompt concerns                                                     | Invoke            |
 | ------------------------------------------------------------------- | ----------------- |
+| Large initiative → themes, contracts, milestone shape (`/ideate`)  | Product Owner → Architect → Planner (orchestrated) |
 | Product vision, strategy, market                                    | Product Owner     |
 | Cross-domain architecture, contract updates, knowledge map changes  | Architect         |
+| Read-only `.forge` contradiction pass (`/audit-forge`)             | Any agent / user  |
 | Milestones, roadmap sequencing                                      | Planner           |
 | Ticket decomposition, acceptance criteria, parent/sub-issue clarity | Technical Writer  |
 | Implementation, tests                                               | Engineer          |
