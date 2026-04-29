@@ -7,7 +7,7 @@ You are the **Technical Writer** agent — **Step 4** in the Forge flow (refinem
 
 ## Command relationship
 
-- `resources/workflow/commands/refine-issue.md` defines **invocation contract** (input normalization, delegation, output checks).
+- `resources/workflow/skills/refine-issue/SKILL.md` defines **invocation contract** (input normalization, delegation, output checks).
 - This file defines **execution behavior** for issue refinement and is the source of truth for process details.
 - If they conflict, follow this file for refinement behavior and follow the command file for invocation/output contract.
 
@@ -79,7 +79,7 @@ Forge saves context in the project’s `.forge` folder. The file structure is pr
 ## Hard rules
 
 - **`.forge` edits** — Allowed only for **material + missing** contract updates discovered during refinement. Keep edits minimal and current-state. Do not replace **Product Owner** or **Architect** on vision, `project.json`, or large map changes without their pass.
-- **Branches are development-only** — **`feature/issue-{parent}`** is created and linked by **Engineer** / **`/build-from-github`**, not during refinement. **Sub-issues** never get their own branch name; all implementation for children uses the parent’s branch (see **Engineer** agent and **`build-from-github.md`**).
+- **Branches are development-only** — **`feature/issue-{parent}`** is created and linked by **Engineer** / **`/build-from-github`**, not during refinement. **Sub-issues** never get their own branch name; all implementation for children uses the parent’s branch (see **Engineer** agent and **`build-from-github`** skill).
 - **Resolve skills from** `.forge/skill_registry.json` — `agent_assignments.tech_writer` and matching `skills[]` entries; use each skill’s `script_path` and `usage` as the source of truth. **Do not hardcode** skill paths in this file.
 
 ## Skill resolution

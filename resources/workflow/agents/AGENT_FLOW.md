@@ -11,7 +11,7 @@ This document describes the intended flow of responsibility among Forge agents. 
 | 2    | Architecting  | Architect         | Retrieve vision and knowledge map, perform clarity check, update `.forge` contracts by domain, hand off recap to Planner                                                                                                                                                                                               |
 | 3    | Planning      | Planner           | pull-milestones, pull-milestone-issues, determine GitHub changes                                                                                                                                                                                                                                                       |
 | 4    | Refining      | Technical Writer  | `/refine-issue` handles orchestration (including normalizing sub-issue links to the parent); Technical Writer refines GitHub issue bodies and optional sub-issues — **no git branches** in this phase                                                                                                                  |
-| 5    | Building      | Engineer          | `**resolve-issue-parentage`** then branch setup by `**/build-from-github**` or Engineer; `**feature/issue-{branch_owner}**` created/linked here; GitHub Projects **In Progress** / post-PR **In Review** or sub-**Done** per `build-from-github.md`; perform code changes; use `.forge` for alignment; run repo-inferred validation before commit; scan security; commit; push; create-pr; **`forge-post-workflow-retrospective`** (`issue` mode) |
+| 5    | Building      | Engineer          | `**resolve-issue-parentage`** then branch setup by **`build-from-github`** or Engineer; `**feature/issue-{branch_owner}**` created/linked here; GitHub Projects **In Progress** / post-PR **In Review** or sub-**Done** per **`build-from-github`** skill; perform code changes; use `.forge` for alignment; run repo-inferred validation before commit; scan security; git commit/push; create-pr; **`forge-post-workflow-retrospective`** (`issue` mode) |
 | 6    | Reviewing     | Quality Assurance | Retrieve PR; checkout; review accuracy; check vulnerabilities; line comments when useful; **submit formal PR review** (MCP or **`gh-pr-review`**); optional board self-heal; **workflow retrospective** on PR conversation                                                                                                                                                           |
 
 
@@ -180,12 +180,12 @@ User (Github Issue Link) ──► resolve-issue-parentage skill (branch_owner_i
 
 **Steps:**
 
-1. Branch setup (build-from-github or Engineer): run `**resolve-issue-parentage`**, then ensure `**feature/issue-{branch_owner_issue}**` (see `**resources/workflow/commands/build-from-github.md**`). Sub-issues never get a separate branch name. Push and link via `gh issue develop` when needed (`**branch_owner_issue**` owns the branch link).
+1. Branch setup (build-from-github or Engineer): run `**resolve-issue-parentage`**, then ensure `**feature/issue-{branch_owner_issue}**` (see **`resources/workflow/skills/build-from-github/SKILL.md`**). Sub-issues never get a separate branch name. Push and link via `gh issue develop` when needed (`**branch_owner_issue**` owns the branch link).
 2. Engineer: retrieve issue details; implement code changes for the issue scope.
 3. Engineer: run repository-inferred validation commands (tests/lint/build as applicable); **do not** commit or open a PR until every check passes (fix or stop and report).
 4. Engineer: scan changeset for security vulnerabilities.
 5. Engineer: commit, push-branch; create GitHub pull request (use available tools). When creating the PR, use `.github/pull_request_template.md` if present, otherwise a standard fallback template.
-6. Engineer / command: update project board after PR per **`build-from-github.md`**; post **`forge-post-workflow-retrospective`** on **`input_issue`**.
+6. Engineer / workflow: update project board after PR per **`build-from-github`** skill; post **`forge-post-workflow-retrospective`** on **`input_issue`**.
 
 ---
 

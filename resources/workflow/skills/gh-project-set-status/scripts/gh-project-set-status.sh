@@ -3,6 +3,13 @@ set -euo pipefail
 
 export GH_PAGER=cat
 export GH_NO_UPDATE_NOTIFIER=1
+export GH_PROMPT_DISABLED=1
+
+debug_phase() {
+  if [[ "${FORGE_GH_PROJECT_DEBUG:-}" == "1" ]]; then
+    echo "[gh-project-set-status $(date -u +%Y-%m-%dT%H:%M:%SZ)] $*" >&2
+  fi
+}
 
 usage() {
   cat <<'EOF' >&2
@@ -123,14 +130,18 @@ fi
 
 issue_url="https://github.com/${o}/${r}/issues/${issue_num}"
 
+debug_phase "start gh project view proj=$proj_num owner=$proj_owner"
 project_json="$(gh project view "$proj_num" --owner "$proj_owner" --format json)"
+debug_phase "done gh project view"
 require_json_container "gh project view" "$project_json"
 if ! echo "$project_json" | jq -e 'type == "object" and (.id | type == "string")' >/dev/null 2>&1; then
   json_debug_fail "gh project view: expected object with string .id" "$project_json"
 fi
 project_id="$(echo "$project_json" | jq -r '.id')"
 
+debug_phase "start gh project field-list -L 100 proj=$proj_num owner=$proj_owner"
 fields_json="$(gh project field-list "$proj_num" --owner "$proj_owner" --format json -L 100)"
+debug_phase "done gh project field-list"
 require_json_container "gh project field-list" "$fields_json"
 fields_array_json="$(normalize_fields_array "$fields_json")"
 if [[ -z "$fields_array_json" || "$fields_array_json" == "null" ]]; then
@@ -191,7 +202,9 @@ find_item_id() {
   ' | head -n 1
 }
 
+debug_phase "start gh project item-list -L 500 proj=$proj_num owner=$proj_owner (large boards can be slow)"
 items_json="$(gh project item-list "$proj_num" --owner "$proj_owner" --format json -L 500)"
+debug_phase "done gh project item-list"
 require_json_container "gh project item-list" "$items_json"
 items_array_json="$(normalize_items_array "$items_json")"
 if [[ -z "$items_array_json" ]]; then
@@ -204,8 +217,12 @@ fi
 item_id="$(find_item_id "$items_array_json")"
 
 if [[ -z "$item_id" || "$item_id" == "null" ]]; then
+  debug_phase "start gh project item-add url=$issue_url"
   gh project item-add "$proj_num" --owner "$proj_owner" --url "$issue_url" --format json >/dev/null
+  debug_phase "done gh project item-add"
+  debug_phase "start gh project item-list (after item-add)"
   items_json="$(gh project item-list "$proj_num" --owner "$proj_owner" --format json -L 500)"
+  debug_phase "done gh project item-list (after item-add)"
   require_json_container "gh project item-list (after item-add)" "$items_json"
   items_array_json="$(normalize_items_array "$items_json")"
   if [[ -z "$items_array_json" ]] || ! echo "$items_array_json" | jq -e 'type == "array"' >/dev/null 2>&1; then
@@ -218,10 +235,12 @@ if [[ -z "$item_id" || "$item_id" == "null" ]]; then
   fi
 fi
 
+debug_phase "start gh project item-edit item=$item_id status_option=$option_id"
 gh project item-edit \
   --id "$item_id" \
   --project-id "$project_id" \
   --field-id "$field_id" \
   --single-select-option-id "$option_id"
+debug_phase "done gh project item-edit"
 
 echo "Project status updated to \"$want_status\" for issue #${issue_num}."

@@ -346,15 +346,16 @@ describe('forge.openStudio command', () => {
             expect(forgeFolder).toBe('.forge');
         });
 
-        it('should check required command files exist', () => {
-            const requiredCommands = [
-                '.cursor/commands/architect-this.md',
-                '.cursor/commands/plan-roadmap.md',
-                '.cursor/commands/refine-issue.md',
-                '.cursor/commands/build-from-github.md',
-                '.cursor/commands/review-pr.md'
+        it('should check required orchestration skill files exist', () => {
+            const requiredSkills = [
+                '.cursor/skills/architect-this/SKILL.md',
+                '.cursor/skills/plan-roadmap/SKILL.md',
+                '.cursor/skills/refine-issue/SKILL.md',
+                '.cursor/skills/build-from-github/SKILL.md',
+                '.cursor/skills/build-from-pr-review/SKILL.md',
+                '.cursor/skills/review-pr/SKILL.md'
             ];
-            expect(requiredCommands.length).toBe(5);
+            expect(requiredSkills.length).toBe(6);
         });
     });
 });

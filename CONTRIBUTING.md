@@ -75,34 +75,31 @@ src/
 5. Update documentation
 6. Submit a pull request
 
-## Modifying Cursor commands (Markdown)
+## Modifying Agent Skills (orchestration workflows)
 
-**Forge: Setup for Cursor** copies Markdown from the bundled **resources** tree into the workspace as `.cursor/commands/*.md`. There is no separate TypeScript template layer for those files.
+**Forge: Initialize Cursor Agents** copies the full **`resources/workflow/skills/`** tree to **`~/.cursor/skills/`**. **Orchestration** workflows (Steps 2–6 prompts) live as **`resources/workflow/skills/<kebab-name>/SKILL.md`** with YAML frontmatter (`name` must match the folder; use `disable-model-invocation: true` for explicit-only workflows). **Script** skills include a **`scripts/`** subdirectory and are listed with `script_path` in **`resources/workflow/references/skill_registry.json`** (synced to `.forge/skill_registry.json` on project init).
 
-### Source of truth
+**Skills vs agents:** Orchestration **SKILL.md** files define inputs, delegation, and output checks. Agent Markdown under **`resources/workflow/agents/`** defines **execution behavior** for each phase. For example, **`refine-issue`** pairs with **`technical-writer.md`**; if guidance conflicts, the skill governs invocation/output checks and the agent file governs refinement behavior. **Agent markdown filenames** under `resources/workflow/agents/` should match the Cursor/VS Code chat handle (e.g. `@technical-writer` → `technical-writer.md`).
 
-- Edit files under **`resources/workflow/commands/`** (for example `build-from-github.md`, `refine-issue.md`).
-- After setup, the same filenames appear under **`.cursor/commands/`** in the project.
-
-**Commands vs agents:** Cursor command Markdown defines **orchestration** (inputs, delegation, output checks). Agent Markdown under **`resources/workflow/agents/`** defines **execution behavior** for each phase. For example, `refine-issue.md` pairs with `technical-writer.md`; if guidance conflicts, the command file governs invocation/output checks and the agent file governs refinement behavior. **Agent markdown filenames** under `resources/workflow/agents/` should match the Cursor/VS Code chat handle (e.g. `@technical-writer` → `technical-writer.md`) so user-level installs under `~/.cursor/agents/` resolve predictably.
+**Stale `~/.cursor/commands/`:** Forge previously installed orchestration Markdown under **`~/.cursor/commands/`**. That directory is still listed in the install manifest so **removed** Forge-managed command files are **deleted** on the next **Forge: Initialize Cursor Agents** run. Invoking workflows via **`/<skill-name>`** in Agent chat uses **`~/.cursor/skills/`** instead.
 
 ### Release checklist
 
-1. Change the Markdown under `resources/workflow/commands/` as needed.
-2. Bump version in `package.json` and add a **CHANGELOG** entry when shipping.
-3. Run **`npm test`** and manually run setup (Extension Development Host, **Forge: Setup for Cursor**) on a sample repo to confirm commands copy correctly.
+1. Change the relevant **`resources/workflow/skills/<id>/SKILL.md`** and/or **`resources/workflow/references/skill_registry.json`** as needed.
+2. Bump **`version`** inside **`skill_registry.json`** when registry semantics change; bump `package.json` and add a **CHANGELOG** entry when shipping.
+3. Run **`npm test`** and manually run **Forge: Initialize Cursor Agents** on a sample profile to confirm **`~/.cursor/skills/`** updates.
 
-### Adding a new Cursor command Markdown file
+### Adding a new orchestration skill
 
-1. Add **`resources/workflow/commands/<kebab-name>.md`** with the prompt body Cursor should show.
-2. Re-run setup in a test workspace; the new file is copied with the rest of the directory. No extra TypeScript registration is required for the Markdown copy step.
+1. Add **`resources/workflow/skills/<kebab-name>/SKILL.md`** with frontmatter and body (see [Cursor Agent Skills](https://cursor.com/docs/skills)).
+2. Register it in **`resources/workflow/references/skill_registry.json`** (`kind`: **`orchestration`**, no **`script_path`**), bump **`version`**, and extend **`command_assignments`** if helper script skills apply.
 
 ### Breaking changes
 
-If a command change alters behavior in a way that breaks existing workflows:
+If a workflow change alters behavior in a way that breaks existing teams:
 
-1. **Assess impact** on projects that already ran setup.
-2. Provide a **migration note** in CHANGELOG (for example: re-run **Forge: Setup for Cursor** to refresh `.cursor/commands`).
+1. **Assess impact** on projects that already ran **Initialize Cursor Agents**.
+2. Provide a **migration note** in CHANGELOG (for example: re-run **Forge: Initialize Cursor Agents** to refresh **`~/.cursor/skills/`** and prune stale **`~/.cursor/commands`** entries).
 3. **Version bump** appropriately (major if incompatible).
 4. Communicate clearly in release notes.
 

@@ -1,10 +1,16 @@
+---
+name: build-from-github
+description: Forge Step 5 — build from a GitHub issue; branch setup, board In Progress, implement, validate, git commit/push, PR, board completion, optional doc_repo sync, workflow retrospective.
+disable-model-invocation: true
+---
+
 # Build from GitHub (Step 5: Building)
 
-This command drives **Step 5 (building)**: branch setup and issue link → **rebase on `main`** → **project board** (`In Progress` / after PR: `In Review` or sub-**`Done`**) → implement → **all automated tests pass** → commit → push → **ensure a PR exists (new or updated)** → **board completion rules + doc sync** → **Forge workflow retrospective** on the issue (see **`forge-post-workflow-retrospective`**).
+This skill drives **Step 5 (building)**: branch setup and issue link → **rebase on `main`** → **project board** (`In Progress` / after PR: `In Review` or sub-**`Done`**) → implement → **all automated tests pass** → **git commit** → **git push** → **ensure a PR exists (new or updated)** → **board completion rules + doc sync** → **Forge workflow retrospective** on the issue (see **`forge-post-workflow-retrospective`**).
 
 The **Engineer** agent persona describes the same outcomes; invoking a separate **Engineer** Task subagent is **optional** when you implement in the same Cursor chat or IDE—the required result is the checklist below (branch, board status, validation, commit/push, PR). If your org wants traceability from the Engineer subagent, add an explicit step or checklist item to run **Task → engineer** (or equivalent) before closing the build.
 
-**Branch creation and linking happen in this step only** (not during `/refine-issue`).
+**Branch creation and linking happen in this step only** (not during **`refine-issue`**).
 
 ## Input
 
@@ -49,7 +55,7 @@ The **Engineer** agent persona describes the same outcomes; invoking a separate 
 
    The skill adds each issue to the project if needed.
 
-5. **Implementation** — Implement code changes for **`input_issue`**; use `.forge` for alignment when relevant (see Engineer agent—update contracts there instead of ad hoc docs when they misrepresent the work); run repository-inferred validation (tests/lint/build as applicable, all must pass before commit); scan security; commit; push.
+5. **Implementation** — Implement code changes for **`input_issue`**; use `.forge` for alignment when relevant (see Engineer agent—update contracts there instead of ad hoc docs when they misrepresent the work); run repository-inferred validation (tests/lint/build as applicable, all must pass before commit); scan security. **Commit:** stage changes, then **`git commit`** with a **conventional** message (**CONTRIBUTING** / **README**). Do **not** commit on **`main`**, **`master`**, or **`develop`**. **Push:** **`git fetch origin`**, then **`git push -u origin HEAD`** when the branch has no upstream yet, else **`git push origin HEAD`**.
 
 6. **Pull request (new or existing)** — Sub-issues share the parent branch (**`feature/issue-{branch_owner_issue}`**), so a PR for that head may **already exist** (e.g. opened for an earlier sub-issue). Before **`gh pr create`**:
    - Run **`gh pr list --head "feature/issue-{branch_owner_issue}" --state open --limit 1 --json number,title,url`** (add **`-R owner/repo`** when not in the app repo cwd; **`gh pr view` does not support `--head`**—use **`gh pr view <number>`** after listing) or list PRs for that head via MCP. **If a PR exists:** update **title** and **body** so the current **`input_issue`** is clearly in scope (use `.github/pull_request_template.md` when present); optionally add a **PR comment** or **issue comment** linking this build. **If none exists:** create the PR (same template and linking rules). **Closing keywords** (`Closes #N`, `Fixes #N`): multiple issues on one PR is normal for this branch policy; GitHub closes each referenced issue when the PR merges—confirm ordering with reviewers if some issues should stay open until others merge first.
@@ -63,14 +69,14 @@ The **Engineer** agent persona describes the same outcomes; invoking a separate 
    - **Documentation sync (optional)** — If **`doc_repo`** is set in **`.forge/project.json`** **and** this PR **completes parent scope** for documentation purposes: either **`input_issue`** equals **`branch_owner_issue`**, or **`input_issue`** was the **last open sub-issue** for that parent (confirm via sub-issue list: no other sub-issue remains open for **`branch_owner_issue`** before treating this build as “scope complete”). Then:
      - Open the **Cursor workspace folder** whose **name** equals **`doc_repo`**. If that folder is not in the workspace, **stop** and report clearly.
      - In the **documentation** repo root, gather evidence from the **application** repo: `git log` / `git diff` against **`main`**, PR title/body, linked issues.
-     - Update docs (Markdown / VitePress / site layout as appropriate). Run **`commit`** and **`push-branch`** with **current working directory** set to the **documentation repository root** so commits land only in the doc repo. Use a **dedicated** commit (and message) for documentation, separate from application commits.
+     - Update docs (Markdown / VitePress / site layout as appropriate). With **cwd** at the **documentation repository root**, run **`git commit`** (dedicated doc message) then **`git fetch origin`** and **`git push`** (or **`git push -u origin HEAD`** for a new branch). Do **not** mix doc commits into the application branch.
 
 8. **Forge workflow retrospective (issue)** — After step 7 (including optional doc sync), run **`forge-post-workflow-retrospective`** from `.forge/skill_registry.json` in **`issue`** mode: post a concise retrospective comment on **`input_issue`** summarizing what worked or failed in the Forge workflow during this build (skills, board steps, branch/PR flow). See the skill’s **`usage`**.
 
 ## Skill Resolution
 
 - Run skills listed under **`command_assignments.build-from-github`** in `.forge/skill_registry.json` for branch and project setup steps above.
-- For implementation, commit, and push, resolve assigned skills from **`agent_assignments.engineer`** and execute using each matching `skills[]` entry **`script_path`** and **`usage`**.
+- For **git** commit and push, follow this skill and the **Engineer** agent (no Forge script for commit/push). For other automation, use **`agent_assignments.engineer`** entries that define **`script_path`**.
 
 ## Goal
 

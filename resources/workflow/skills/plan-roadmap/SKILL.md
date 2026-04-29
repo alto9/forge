@@ -1,6 +1,12 @@
+---
+name: plan-roadmap
+description: Forge Step 3 — Planner aligns GitHub milestones and issues with the validated roadmap using pull-milestones and pull-milestone-issues skills.
+disable-model-invocation: true
+---
+
 # Plan Roadmap (Step 3: Planning / Low Level Design)
 
-This command invokes the Planner Agent. User → agent: Planner → pull-milestones → pull-milestone-issues → determine GitHub changes.
+This skill invokes the Planner Agent. User → agent: Planner → pull-milestones → pull-milestone-issues → determine GitHub changes.
 
 GitHub is the single source of truth. Before performing any planning action, the Planner pulls milestones and issues from GitHub to understand current state.
 

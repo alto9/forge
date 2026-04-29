@@ -1,6 +1,12 @@
+---
+name: review-pr
+description: Forge Step 6 — QA formal GitHub PR review (approve/request-changes/comment), optional board self-heal, forge-post-workflow-retrospective on PR.
+disable-model-invocation: true
+---
+
 # Review PR (Step 6: Reviewing)
 
-This command invokes the Quality Assurance agent to review the PR for implementation accuracy, security, and to **submit a formal GitHub review** (approve, request changes, or comment) with a written body.
+This skill invokes the Quality Assurance agent to review the PR for implementation accuracy, security, and to **submit a formal GitHub review** (approve, request changes, or comment) with a written body.
 
 ## Input
 
@@ -21,7 +27,7 @@ This command invokes the Quality Assurance agent to review the PR for implementa
 ## Skill Resolution
 
 - Resolve assigned skills from `.forge/skill_registry.json` at `agent_assignments.quality_assurance` and `command_assignments.review-pr`.
-- For each assigned skill ID, execute using the matching `skills[]` entry `script_path` and `usage`.
+- For each assigned skill ID, execute using the matching `skills[]` entry **`script_path`** and **`usage`** when **`script_path`** is present.
 
 ## Goal
 

@@ -3,10 +3,8 @@ import { FORGE_PULLREQUEST_INSTRUCTIONS } from '../personas/forge-pullrequest';
 import * as fs from 'fs';
 import * as path from 'path';
 
-const commandsDir = path.join(process.cwd(), 'resources', 'workflow', 'commands');
-
 /**
- * Persona + shipped command markdown for pull-request related flows.
+ * Persona + shipped orchestration skills for pull-request related flows.
  */
 
 describe('forge-pullrequest persona', () => {
@@ -91,23 +89,25 @@ describe('forge-pullrequest persona', () => {
     });
 });
 
-describe('workflow Cursor commands (resources)', () => {
-    it('should ship command markdown under resources/workflow/commands', () => {
-        expect(fs.existsSync(commandsDir)).toBe(true);
+describe('workflow orchestration skills (resources)', () => {
+    const skillsRoot = path.join(process.cwd(), 'resources', 'workflow', 'skills');
+
+    it('should ship orchestration SKILL.md under resources/workflow/skills', () => {
+        expect(fs.existsSync(skillsRoot)).toBe(true);
     });
 
-    it('should include expected command files', () => {
+    it('should include expected orchestration skill folders', () => {
         const expected = [
-            'architect-this.md',
-            'build-from-github.md',
-            'build-from-pr-review.md',
-            'plan-roadmap.md',
-            'refine-issue.md',
-            'review-pr.md'
+            'architect-this',
+            'build-from-github',
+            'build-from-pr-review',
+            'plan-roadmap',
+            'refine-issue',
+            'review-pr'
         ];
-        for (const name of expected) {
-            const p = path.join(commandsDir, name);
-            expect(fs.existsSync(p), `missing ${name}`).toBe(true);
+        for (const id of expected) {
+            const p = path.join(skillsRoot, id, 'SKILL.md');
+            expect(fs.existsSync(p), `missing ${id}/SKILL.md`).toBe(true);
             expect(fs.readFileSync(p, 'utf8').trim().length).toBeGreaterThan(0);
         }
     });

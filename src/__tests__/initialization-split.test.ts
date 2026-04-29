@@ -106,10 +106,13 @@ describe('managed file stale-path cleanup', () => {
             { path: 'commands/build-from-github.md', sha256: 'old-b' }
         ]);
         const desiredFiles: ManagedFileRecord[] = [
-            { path: 'commands/build-from-github.md', sha256: 'new-b' }
+            { path: 'skills/build-from-github/SKILL.md', sha256: 'new-b' }
         ];
 
-        expect(getStaleManagedPaths(manifest, desiredFiles)).toEqual(['skills/fetch-url/SKILL.md']);
+        expect(getStaleManagedPaths(manifest, desiredFiles)).toEqual([
+            'skills/fetch-url/SKILL.md',
+            'commands/build-from-github.md'
+        ]);
     });
 
     it('never returns unmanaged stale paths from manifest', () => {

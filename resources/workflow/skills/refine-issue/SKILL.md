@@ -1,12 +1,18 @@
+---
+name: refine-issue
+description: Forge Step 4 — orchestrate issue refinement; normalize sub-issues to parent, delegate to @technical-writer, verify outputs. Does not create git branches.
+disable-model-invocation: true
+---
+
 # Refine Issue (Step 4: Refining)
 
-This command is the **orchestration contract** for Step 4. It delegates execution behavior to the **Technical Writer** agent (**`@technical-writer`** in chat; agent markdown at **`~/.cursor/agents/technical-writer.md`** after **Forge: Initialize Cursor Agents**), which is the source of truth for refinement policy and operating steps. Extension source: `resources/workflow/agents/technical-writer.md`.
+This skill is the **orchestration contract** for Step 4. It delegates execution behavior to the **Technical Writer** agent (**`@technical-writer`** in chat; agent markdown at **`~/.cursor/agents/technical-writer.md`** after **Forge: Initialize Cursor Agents**), which is the source of truth for refinement policy and operating steps. Extension source: `resources/workflow/agents/technical-writer.md`.
 
 ## Input
 
 - GitHub issue reference (`https://.../issues/123`, `owner/repo#123`, or `123`)
 
-## Command responsibilities (orchestration only)
+## Skill responsibilities (orchestration only)
 
 1. Normalize and validate the input issue reference.
 2. Resolve repository context (`owner/repo`) and target base branch (`main` unless repo conventions differ).
@@ -36,7 +42,7 @@ Expected behavior and detailed workflow are defined in **`~/.cursor/agents/techn
 
 ## Precedence rule
 
-If this command file and **`technical-writer.md`** conflict:
+If this skill and **`technical-writer.md`** conflict:
 
-- `refine-issue.md` governs invocation contract and output checks.
+- `refine-issue` (this skill) governs invocation contract and output checks.
 - `technical-writer.md` governs execution behavior and refinement rules.

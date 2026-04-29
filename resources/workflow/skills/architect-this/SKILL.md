@@ -1,6 +1,12 @@
+---
+name: architect-this
+description: Forge Step 2 — run Architect to align vision with .forge knowledge-map and domain contracts. Use for architectural direction or after Product Intake updates to vision.
+disable-model-invocation: true
+---
+
 # Architect This (Step 2: Architecting / High Level Design)
 
-This command invokes the Architect Agent. User → Architect Agent → clarity check → knowledge-map and contract updates → Planner recap.
+This skill invokes the Architect Agent. User → Architect Agent → clarity check → knowledge-map and contract updates → Planner recap.
 
 When market need, user feedback, or strategic direction arrives, use the **Product Intake Prompt** format (see AGENT_FLOW.md). In that case, Product Owner runs first to update `vision.json`, then Architect receives the prompt.
 

@@ -9,9 +9,9 @@ Use the provided script to create a branch linked to a GitHub issue (`gh issue d
 
 ## Alto9 / Forge policy (sub-issues)
 
-Run **`resolve-issue-parentage`** first (see **`resources/workflow/commands/build-from-github.md`**). Use **`branch_owner_issue`** and **`suggested_branch`** from its JSON output — never create **`feature/issue-{child}`** for a sub-issue.
+Run **`resolve-issue-parentage`** first (see **`resources/workflow/skills/build-from-github/SKILL.md`**). Use **`branch_owner_issue`** and **`suggested_branch`** from its JSON output — never create **`feature/issue-{child}`** for a sub-issue.
 
-For **sub-issues**, do **not** pass the **child** issue number to this skill. Create or link **`suggested_branch`** with issue number **`branch_owner_issue`** only. See **`resources/workflow/commands/build-from-github.md`** and **`resources/workflow/agents/engineer.md`**. **Technical Writer** / refinement does **not** call this skill; branches are created in the **build** phase only.
+For **sub-issues**, do **not** pass the **child** issue number to this skill. Create or link **`suggested_branch`** with issue number **`branch_owner_issue`** only. See **`resources/workflow/skills/build-from-github/SKILL.md`** and **`resources/workflow/agents/engineer.md`**. **Technical Writer** / refinement does **not** call this skill; branches are created in the **build** phase only.
 
 ## Usage
 

@@ -1,10 +1,10 @@
 # 4. Technical Writer (Ticket Refining Subagent)
 
-The Technical Writer Agent maintains development-ready GitHub issues. The command (`/refine-issue`) defines invocation contract (input normalization, parent resolution when the link is a sub-issue, delegation, output checks), and the Technical Writer agent defines execution behavior for refinement. The agent retrieves issue text, reads relevant `.forge` contracts for context, updates issue content, and creates sub-issues on GitHub when useful. **Refinement does not create git branches.** **Engineer** and **`/build-from-github`** run **`resolve-issue-parentage`** and create **`feature/issue-{branch_owner_issue}`** when implementation starts; sub-issues never get a child-named branch.
+The Technical Writer Agent maintains development-ready GitHub issues. The **`refine-issue`** skill defines invocation contract (input normalization, parent resolution when the link is a sub-issue, delegation, output checks), and the Technical Writer agent defines execution behavior for refinement. The agent retrieves issue text, reads relevant `.forge` contracts for context, updates issue content, and creates sub-issues on GitHub when useful. **Refinement does not create git branches.** **Engineer** and **`/build-from-github`** run **`resolve-issue-parentage`** and create **`feature/issue-{branch_owner_issue}`** when implementation starts; sub-issues never get a child-named branch.
 
 ## Precedence
 
-- `resources/workflow/commands/refine-issue.md`: invocation contract and required outputs.
+- `resources/workflow/skills/refine-issue/SKILL.md`: invocation contract and required outputs.
 - `resources/workflow/agents/technical-writer.md`: refinement behavior and policy details.
 - If they conflict, command governs invocation/output checks; agent governs execution behavior.
 

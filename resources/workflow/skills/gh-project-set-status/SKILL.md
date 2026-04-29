@@ -9,7 +9,9 @@ Sets the **Status** single-select field for an issue on a project board. Adds th
 
 Requires `gh` with **`project`** scope (`gh auth refresh -s project` if `gh project` commands fail with auth errors).
 
-The script sets **`GH_PAGER=cat`** and **`GH_NO_UPDATE_NOTIFIER=1`** so stdout stays JSON-only for `jq` parsing.
+The script sets **`GH_PAGER=cat`**, **`GH_NO_UPDATE_NOTIFIER=1`**, and **`GH_PROMPT_DISABLED=1`** so `gh` does not block on interactive prompts when run non-interactively (missing token or scope fails fast instead of appearing to hang).
+
+Set **`FORGE_GH_PROJECT_DEBUG=1`** to print phase markers with UTC timestamps to stderr around each `gh project` call (`view` → `field-list` → `item-list` → optional `item-add` → `item-edit`) so you can see which API step stalls.
 
 ## Usage
 
@@ -27,6 +29,13 @@ Resolves project and field IDs via `gh project view`, `gh project field-list`, `
 After **Forge: Initialize Cursor Agents**, the runnable script lives at **`~/.cursor/skills/gh-project-set-status/scripts/gh-project-set-status.sh`** (paths in `.forge/skill_registry.json` use the `.cursor/skills/...` prefix—resolve against `~/.cursor/skills/...` unless your team maintains a repo-local `.cursor/skills/` copy).
 
 ## Troubleshooting
+
+**Appears to hang**
+
+1. Run with **`FORGE_GH_PROJECT_DEBUG=1`**; the last “start …” line on stderr is the call that is blocking.
+2. Run **`gh auth status`**; if the token lacks **`project`** scope, run **`gh auth refresh -s project`** (non-interactive runs need a valid token—`GH_PROMPT_DISABLED=1` avoids waiting on a login prompt).
+3. Large boards: **`gh project item-list -L 500`** can take a long time. Reproduce manually with the same `--owner`, project number, and `-L` limit.
+4. If stderr shows nothing for a long time, check network or API outages; `gh` has no built-in timeout.
 
 If the script fails with JSON or `jq` errors:
 

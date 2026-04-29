@@ -1,3 +1,8 @@
+## 3.22.0 (2026-04-28)
+
+* feat: skill registry **1.5.9** — orchestration workflows moved from `resources/workflow/commands/*.md` to **`resources/workflow/skills/<id>/SKILL.md`** (invoke with **`/<skill-name>`** in Agent chat); removed **`commit`** and **`push-branch`** script skills in favor of direct git guidance; **Initialize Cursor Agents** prunes stale Forge-managed **`~/.cursor/commands/*.md`** on upgrade.
+* fix: **`gh-project-set-status`** — set **`GH_PROMPT_DISABLED=1`** and optional **`FORGE_GH_PROJECT_DEBUG=1`** for phase logging; expanded troubleshooting for apparent hangs.
+
 ## 3.21.0 (2026-04-23)
 
 * feat: update skill registry to version 1.5.8 and introduce workflow retrospective skill ([f212a80](https://github.com/alto9/forge/commit/f212a80))
