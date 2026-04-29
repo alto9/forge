@@ -1,3 +1,7 @@
+## <small>3.21.1 (2026-04-29)</small>
+
+* chore(release): 3.22.0 ([0bfa4fc](https://github.com/alto9/forge/commit/0bfa4fc))
+
 ## 3.22.0 (2026-04-28)
 
 * feat: skill registry **1.5.9** — orchestration workflows moved from `resources/workflow/commands/*.md` to **`resources/workflow/skills/<id>/SKILL.md`** (invoke with **`/<skill-name>`** in Agent chat); removed **`commit`** and **`push-branch`** script skills in favor of direct git guidance; **Initialize Cursor Agents** prunes stale Forge-managed **`~/.cursor/commands/*.md`** on upgrade.
