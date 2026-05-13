@@ -1,3 +1,7 @@
+## 3.22.0 (2026-05-13)
+
+* feat(submodules): add submodule superrepo support ([d8ad498](https://github.com/alto9/forge/commit/d8ad498))
+
 ## <small>3.21.2 (2026-04-29)</small>
 
 * chore(release): 3.23.0 ([2e1c03e](https://github.com/alto9/forge/commit/2e1c03e))
