@@ -7,6 +7,7 @@ import {
     getDefaultProjectJson,
     SCHEMA_FILES
 } from '../templates/forgeAssets';
+import { resolveForgeSyncRoots } from '../git/gitmodules';
 
 type KnowledgeNode = {
     primary_doc?: string;
@@ -154,12 +155,11 @@ function getKnowledgeMapMarkdownPaths(knowledgeMapPath: string): Set<string> | n
     }
 }
 
-export function projectForgeAssetsNeedSync(projectPath: string, extensionPath: string): boolean {
-    const workflowPath = path.join(extensionPath, 'resources', 'workflow');
-    if (!fs.existsSync(workflowPath)) {
-        return false;
-    }
-
+function projectForgeAssetsNeedSyncSingle(
+    projectPath: string,
+    extensionPath: string,
+    workflowPath: string
+): boolean {
     const forgeDir = path.join(projectPath, '.forge');
     const schemasDir = path.join(forgeDir, 'schemas');
     if (!fs.existsSync(forgeDir)) return true;
@@ -191,6 +191,22 @@ export function projectForgeAssetsNeedSync(projectPath: string, extensionPath: s
         if (!fs.existsSync(absolutePath)) return true;
     }
 
+    return false;
+}
+
+/**
+ * True if the superproject or any checked-out submodule listed in `.gitmodules` needs `.forge` sync.
+ */
+export function projectForgeAssetsNeedSync(repoRoot: string, extensionPath: string): boolean {
+    const workflowPath = path.join(extensionPath, 'resources', 'workflow');
+    if (!fs.existsSync(workflowPath)) {
+        return false;
+    }
+    for (const root of resolveForgeSyncRoots(repoRoot)) {
+        if (projectForgeAssetsNeedSyncSingle(root, extensionPath, workflowPath)) {
+            return true;
+        }
+    }
     return false;
 }
 
@@ -245,16 +261,22 @@ export class SetupCursorCommand {
             },
             async (progress) => {
                 try {
-                    await SetupCursorCommand.syncProjectFolder(context, projectPath, outputChannel, {
+                    const synced = await SetupCursorCommand.syncProjectFolder(context, projectPath, outputChannel, {
                         forgeOnly: options?.forgeOnly,
                         progress
                     });
 
-                    vscode.window.showInformationMessage(
-                        options?.forgeOnly
-                            ? 'Project setup complete. .forge folder created.'
-                            : 'Project setup complete. .forge and .cursor folders created.'
-                    );
+                    const forgeRootCount = resolveForgeSyncRoots(projectPath).length;
+                    let completionMsg: string;
+                    if (!options?.forgeOnly) {
+                        completionMsg =
+                            'Project setup complete. .forge and .cursor folders created.';
+                    } else if (synced && forgeRootCount > 1) {
+                        completionMsg = `Project setup complete. .forge folders created (${forgeRootCount} repos including submodules).`;
+                    } else {
+                        completionMsg = 'Project setup complete. .forge folder created.';
+                    }
+                    vscode.window.showInformationMessage(completionMsg);
                 } catch (err: unknown) {
                     const msg = err instanceof Error ? err.message : String(err);
                     outputChannel?.appendLine(`Setup failed: ${msg}`);
@@ -286,21 +308,36 @@ export class SetupCursorCommand {
             return false;
         }
 
-        options?.progress?.report({ message: 'Creating .forge folder...' });
-        await ensureForgeFolder(projectPath, extensionPath, workflowPath, outputChannel);
+        const forgeRoots = resolveForgeSyncRoots(projectPath);
+        const superprojectRoot = forgeRoots[0];
+
+        for (let i = 0; i < forgeRoots.length; i++) {
+            const root = forgeRoots[i];
+            let forgeProgressMsg = 'Creating .forge folder...';
+            if (forgeRoots.length > 1) {
+                if (i === 0) {
+                    forgeProgressMsg = `Creating .forge folder (${path.basename(superprojectRoot)})…`;
+                } else {
+                    const rel = path.relative(superprojectRoot, root);
+                    forgeProgressMsg = `Creating .forge folder (${rel})…`;
+                }
+            }
+            options?.progress?.report({ message: forgeProgressMsg });
+            await ensureForgeFolder(root, extensionPath, workflowPath, outputChannel);
+        }
 
         if (!options?.forgeOnly) {
             options?.progress?.report({ message: 'Creating .cursor agents...' });
-            await ensureCursorAgents(projectPath, workflowPath, outputChannel);
+            await ensureCursorAgents(superprojectRoot, workflowPath, outputChannel);
 
             options?.progress?.report({ message: 'Creating .cursor commands...' });
-            await ensureCursorCommands(projectPath, workflowPath, outputChannel);
+            await ensureCursorCommands(superprojectRoot, workflowPath, outputChannel);
 
             options?.progress?.report({ message: 'Creating .cursor skills...' });
-            await ensureCursorSkills(projectPath, workflowPath, outputChannel);
+            await ensureCursorSkills(superprojectRoot, workflowPath, outputChannel);
 
             options?.progress?.report({ message: 'Creating .cursor hooks...' });
-            await ensureCursorHooks(projectPath, workflowPath, outputChannel);
+            await ensureCursorHooks(superprojectRoot, workflowPath, outputChannel);
         }
 
         return true;

@@ -208,4 +208,66 @@ describe('forge folder sync policies', () => {
 
         expect(__testables.projectForgeAssetsNeedSync(projectPath, extensionPath)).toBe(false);
     });
+
+    it('syncs .forge into superproject and checked-out submodule directories', async () => {
+        const superRoot = makeTempDir();
+        const subPath = path.join(superRoot, 'child-sub');
+        const extensionPath = makeTempDir();
+        const workflowPath = path.join(extensionPath, 'resources', 'workflow');
+        tempDirs.push(superRoot, extensionPath);
+
+        fs.mkdirSync(subPath, { recursive: true });
+        fs.writeFileSync(
+            path.join(superRoot, '.gitmodules'),
+            `[submodule "child-sub"]
+\tpath = child-sub
+`,
+            'utf8'
+        );
+
+        writeFileSyncEnsured(
+            path.join(workflowPath, 'references', 'skill_registry.json'),
+            '{"version":"1.0.0"}'
+        );
+        writeFileSyncEnsured(
+            path.join(workflowPath, 'references', 'knowledge_map.json'),
+            '{"knowledge_map":[]}'
+        );
+        for (const schema of SCHEMA_FILES) {
+            writeFileSyncEnsured(path.join(extensionPath, 'schemas', schema), '{"schemaVersion":"1"}');
+        }
+
+        const context = { extensionPath } as vscode.ExtensionContext;
+        const synced = await SetupCursorCommand.syncProjectFolder(context, superRoot, undefined, {
+            forgeOnly: true,
+            silent: true
+        });
+
+        expect(synced).toBe(true);
+        expect(fs.existsSync(path.join(superRoot, '.forge', 'vision.json'))).toBe(true);
+        expect(fs.existsSync(path.join(subPath, '.forge', 'vision.json'))).toBe(true);
+        expect(fs.existsSync(path.join(subPath, '.forge', 'project.json'))).toBe(true);
+    });
+
+    it('projectForgeAssetsNeedSync is true when submodule checkout lacks .forge', async () => {
+        const superRoot = makeTempDir();
+        const subPath = path.join(superRoot, 'only-sub');
+        const extensionPath = makeTempDir();
+        const workflowPath = path.join(extensionPath, 'resources', 'workflow');
+        tempDirs.push(superRoot, extensionPath);
+
+        fs.mkdirSync(subPath, { recursive: true });
+        fs.writeFileSync(
+            path.join(superRoot, '.gitmodules'),
+            `[submodule "only-sub"]
+\tpath = only-sub
+`,
+            'utf8'
+        );
+
+        writeCanonicalAssets(extensionPath);
+        await __testables.ensureForgeFolder(superRoot, extensionPath, workflowPath);
+
+        expect(__testables.projectForgeAssetsNeedSync(superRoot, extensionPath)).toBe(true);
+    });
 });
