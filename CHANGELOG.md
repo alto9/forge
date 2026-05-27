@@ -1,3 +1,7 @@
+## <small>3.22.1 (2026-05-27)</small>
+
+* docs: forge to ai migration ([7bbd276](https://github.com/alto9/forge/commit/7bbd276))
+
 ## 3.22.0 (2026-05-13)
 
 * feat(submodules): add submodule superrepo support ([d8ad498](https://github.com/alto9/forge/commit/d8ad498))
