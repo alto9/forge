@@ -1,12 +1,12 @@
 ---
 name: build-from-github
-description: Forge Step 5 — build from a GitHub issue; branch setup, board In Progress, implement, validate, git commit/push, PR, board completion, optional doc_repo sync, workflow retrospective.
+description: Forge Step 5 — build from a GitHub issue; branch setup, board In Progress, implement, validate, git commit/push, PR, CI-gated board In Review / sub Done, optional doc_repo sync, workflow retrospective.
 disable-model-invocation: true
 ---
 
 # Build from GitHub (Step 5: Building)
 
-This skill drives **Step 5 (building)**: branch setup and issue link → **rebase on `main`** → **project board** (`In Progress` / after PR: `In Review` or sub-**`Done`**) → implement → **all automated tests pass** → **git commit** → **git push** → **ensure a PR exists (new or updated)** → **board completion rules + doc sync** → **Forge workflow retrospective** on the issue (see **`forge-post-workflow-retrospective`**).
+This skill drives **Step 5 (building)**: branch setup and issue link → **rebase on `main`** → **project board** (`In Progress` / after PR + **green CI**: parent **`In Review`** or sub-**`Done`**) → implement → **all automated tests pass** → **git commit** → **git push** → **ensure a PR exists (new or updated)** → **board completion rules (CI-gated `In Review`) + doc sync** → **Forge workflow retrospective** on the issue (see **`forge-post-workflow-retrospective`**).
 
 The **Engineer** agent persona describes the same outcomes; invoking a separate **Engineer** Task subagent is **optional** when you implement in the same Cursor chat or IDE—the required result is the checklist below (branch, board status, validation, commit/push, PR). If your org wants traceability from the Engineer subagent, add an explicit step or checklist item to run **Task → engineer** (or equivalent) before closing the build.
 
@@ -60,11 +60,23 @@ The **Engineer** agent persona describes the same outcomes; invoking a separate 
 6. **Pull request (new or existing)** — Sub-issues share the parent branch (**`feature/issue-{branch_owner_issue}`**), so a PR for that head may **already exist** (e.g. opened for an earlier sub-issue). Before **`gh pr create`**:
    - Run **`gh pr list --head "feature/issue-{branch_owner_issue}" --state open --limit 1 --json number,title,url`** (add **`-R owner/repo`** when not in the app repo cwd; **`gh pr view` does not support `--head`**—use **`gh pr view <number>`** after listing) or list PRs for that head via MCP. **If a PR exists:** update **title** and **body** so the current **`input_issue`** is clearly in scope (use `.github/pull_request_template.md` when present); optionally add a **PR comment** or **issue comment** linking this build. **If none exists:** create the PR (same template and linking rules). **Closing keywords** (`Closes #N`, `Fixes #N`): multiple issues on one PR is normal for this branch policy; GitHub closes each referenced issue when the PR merges—confirm ordering with reviewers if some issues should stay open until others merge first.
 
-7. **After a PR exists successfully (new or updated)** — If **`github_board`** is set, apply **one** of the following (same **`github_board`** and **`owner/repo`**). Use the sub-issue list from step 4 (refresh if needed).
+7. **After a PR exists successfully (new or updated)** — If **`github_board`** is set, apply **board rules** below (same **`github_board`** and **`owner/repo`**). Use the sub-issue list from step 4 (refresh if needed).
 
-   - **Sub-issue build** (`**input_issue**` ≠ `**branch_owner_issue**`) — Run **`gh-project-set-status`** for **`input_issue`** with status **`Done`**. Do **not** move the sub-issue to **In Review**. Do **not** move **`branch_owner_issue`** to **In Review** until **every** sub-issue is **`CLOSED`** on GitHub **and** this PR exists; then set **`branch_owner_issue`** → **`In Review`**.
-   - **Standalone parent** (`**input_issue**` === `**branch_owner_issue**` **and** **no** sub-issues) — Set **`branch_owner_issue`** → **`In Review`**.
-   - **Epic: all sub-issues closed** — If there is **at least one** sub-issue under **`branch_owner_issue`** and **every** sub-issue is **`CLOSED`**, set **`branch_owner_issue`** → **`In Review`**.
+   **Parent ticket complete for board `In Review`**
+
+   Treat the **parent** (`**branch_owner_issue**`) as **complete enough to set `In Review`** only when **all** of the following hold:
+
+   - An **open** PR exists whose **head** is **`feature/issue-{branch_owner_issue}`** (the PR you just created or updated).
+   - **`gh pr checks`** for that PR against **`owner/repo`** reports a **successful** outcome for **required** checks after a fresh push (use **`gh pr checks <pr-number> -R owner/repo --watch`** so pending runs finish; `gh` uses **exit code 8** while checks are still pending—do **not** treat **`In Review`** as satisfied until checks have **completed** with **no failures**). If you only need a snapshot, **`gh pr checks <pr-number> -R owner/repo --required --json name,bucket`** and ensure no **`bucket`** is **`fail`**.
+   - **Sub-issue completeness:** either **`branch_owner_issue`** has **no** sub-issues (**standalone** ticket), **or** **every** sub-issue under **`branch_owner_issue`** is **complete** — meaning GitHub **`state`** is **`CLOSED`** (and typically **`Done`** on the board from an earlier sub-issue build).
+
+   If **`github_board`** is set but these conditions are **not** met, **do not** run **`gh-project-set-status`** → **`In Review`** for **`branch_owner_issue`**; report what is missing (pending/failed checks, open sub-issues, or missing PR).
+
+   **Board actions**
+
+   - **Sub-issue build** (`**input_issue**` ≠ `**branch_owner_issue**`) — After the PR exists, run **`gh-project-set-status`** for **`input_issue`** with status **`Done`**. Do **not** move the sub-issue to **In Review**. When the **Parent ticket complete for board `In Review`** criteria above are satisfied, set **`branch_owner_issue`** → **`In Review`** via **`gh-project-set-status`**.
+   - **Standalone parent** (`**input_issue**` === `**branch_owner_issue**` **and** **no** sub-issues) — When **Parent ticket complete** is satisfied, set **`branch_owner_issue`** → **`In Review`**.
+   - **Epic: parent with sub-issues** — When there is **at least one** sub-issue under **`branch_owner_issue`** and **Parent ticket complete** is satisfied (all sub-issues **closed**, PR head **`feature/issue-{branch_owner_issue}`**, CI passing), set **`branch_owner_issue`** → **`In Review`**.
 
    - **Documentation sync (optional)** — If **`doc_repo`** is set in **`.forge/project.json`** **and** this PR **completes parent scope** for documentation purposes: either **`input_issue`** equals **`branch_owner_issue`**, or **`input_issue`** was the **last open sub-issue** for that parent (confirm via sub-issue list: no other sub-issue remains open for **`branch_owner_issue`** before treating this build as “scope complete”). Then:
      - Open the **Cursor workspace folder** whose **name** equals **`doc_repo`**. If that folder is not in the workspace, **stop** and report clearly.
