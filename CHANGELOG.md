@@ -1,3 +1,7 @@
+## <small>3.22.3 (2026-06-08)</small>
+
+* docs(ai): refine issue #15 contract updates ([5d95f01](https://github.com/alto9/forge/commit/5d95f01)), closes [#15](https://github.com/alto9/forge/issues/15)
+
 ## <small>3.22.2 (2026-06-08)</small>
 
 * docs(ai): forge workflow temporal refactor contract updates ([e839190](https://github.com/alto9/forge/commit/e839190))
