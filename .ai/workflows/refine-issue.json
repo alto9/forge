@@ -2,7 +2,7 @@
   "schema_version": "1.0.0",
   "workflow_id": "refine-issue",
   "name": "Refine Issue",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Forge Step 4 workflow: normalize GitHub issue parentage, ground in .ai contracts, triage tier-User questions, complete issue and contract refinement, and hand off to implementation. Proving workflow for repo-owned workflow definitions.",
   "entry_node_id": "normalize_issue_parentage",
   "metadata": {
@@ -91,15 +91,15 @@
       "node_id": "validate_triage_artifacts",
       "type": "validation",
       "name": "Validate triage artifacts",
-      "description": "Confirm triage files are declared and structurally present before user verification.",
+      "description": "Confirm triage artifact files exist on disk before user verification.",
       "validators": [
         {
-          "validator_id": "forge.artifact.declared",
+          "validator_id": "forge.artifact.exists",
           "type": "artifact",
           "target": "user_questions"
         },
         {
-          "validator_id": "forge.artifact.declared",
+          "validator_id": "forge.artifact.exists",
           "type": "artifact",
           "target": "assumptions"
         }

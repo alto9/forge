@@ -9,7 +9,7 @@ Forge workflow execution is Temporal-backed and data-defined.
 - Activities perform non-deterministic work such as Cursor SDK agent runs, GitHub API calls, filesystem reads or writes, and validation checks.
 - Agent activities are bounded by workflow definition inputs and Cursor SDK integration contracts (`.ai/integration/api_contracts.md`).
 - Human question points suspend the workflow until Forge sends the declared Temporal signal or update.
-- Validation gates run before downstream steps consume agent output or produced artifacts.
+- Validation gates run before downstream steps consume agent output or produced artifacts. Each `validation` node invokes a deterministic worker activity that evaluates declared validators and returns a `ValidationResult` aggregate (`.ai/data/serialization.md`). The workflow orchestrator advances only when `valid=true`.
 - Forge UI state is a projection of Temporal run state plus validated artifacts and local display metadata.
 
 ## Cursor SDK agent activities

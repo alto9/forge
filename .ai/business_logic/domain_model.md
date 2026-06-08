@@ -43,7 +43,8 @@ Canonical field names, node types, and versioning are specified in `.ai/data/ser
 | `forge.workflow.duplicate_id` | domain | `workflow_id` unique across discovered files. |
 | `forge.workflow.unsupported_version` | domain | `schema_version` or definition `version` major not supported by the runner. |
 | `forge.artifact.declared` | artifact | Node `artifact_ids` reference declared workflow artifacts. |
-| `forge.artifact.exists` | artifact | Declared artifact `path` exists or matches at validation time. |
+| `forge.artifact.exists` | artifact | Declared artifact `path` (including globs) resolves to at least one existing file at validation time. |
+| `forge.artifact.integrity` | artifact | On-disk file at `artifact_refs[].path` matches declared `sha256` when the preceding activity envelope includes both fields. |
 | `forge.artifact.schema` | schema | Artifact content matches a referenced JSON Schema. |
 | `forge.envelope.schema` | schema | Activity response envelope matches `.ai/schemas/activity-envelope.schema.json`. |
 | `forge.envelope.unsupported_version` | domain | `envelope_version` MAJOR is supported by the runner. |
@@ -58,7 +59,7 @@ Repositories may add `local.<repo>.<name>` validator IDs for workflow-specific d
 | Phase | When | Validator IDs |
 |-------|------|---------------|
 | Pre-run (definition) | Before a workflow run is created | `forge.workflow.schema`, `forge.workflow.graph`, `forge.workflow.binding`, `forge.workflow.duplicate_id`, `forge.workflow.unsupported_version`, `forge.artifact.declared` |
-| Runtime (validation nodes) | After an activity produces output during a run | `forge.envelope.schema`, `forge.envelope.unsupported_version`, `forge.envelope.size`, `forge.artifact.exists`, `forge.artifact.schema`, `forge.domain.exit_criteria`, plus any `local.*` validators declared on validation nodes |
+| Runtime (validation nodes) | After an activity produces output during a run | `forge.envelope.schema`, `forge.envelope.unsupported_version`, `forge.envelope.size`, `forge.artifact.exists`, `forge.artifact.integrity`, `forge.artifact.schema`, `forge.domain.exit_criteria`, plus any `local.*` validators declared on validation nodes |
 
 Pre-run validation also enforces that each file path `.ai/workflows/<workflow_id>.json` has a filename stem equal to `workflow_id` (reported under `forge.workflow.binding`).
 
@@ -84,7 +85,7 @@ The orchestrator normalizes `issue_ref` to a working parent issue before Phase A
 | A — Workspace prep | `workspace_prep` | `activity` | `issue_context` |
 | B — Ground contracts | `ground_contracts` | `activity` | `issue_context`, optional `domain_report` |
 | B.5 — Triage | `triage_questions` | `activity` | `user_questions`, `assumptions` |
-| B.5 — Triage gate | `validate_triage_artifacts` | `validation` | declares `user_questions`, `assumptions` |
+| B.5 — Triage gate | `validate_triage_artifacts` | `validation` | `forge.artifact.exists` on `user_questions`, `assumptions` |
 | C — User verification | `user_verification_batch` | `human_question` | `refinement`, `user_questions` |
 | C — Blocker loop | `check_user_blockers` | `decision` | loops to `user_verification_batch` while `blockers_open` |
 | D — Issue + `.ai` completion | `complete_refinement` | `activity` | `refinement` |
@@ -119,3 +120,20 @@ Runtime validation (not pre-run) passes when all are true:
 | `forge.refine.complete_refinement` | `resources/workflow/agents/technical-writer.md` |
 | `forge.refine.commit_ai_contracts` | `resources/workflow/agents/technical-writer.md` |
 | `forge.refine.handoff` | `resources/workflow/agents/technical-writer.md` |
+
+#### `/refine-issue` validation gate order (v1)
+
+Implementation wires runtime validation in this order:
+
+1. **`validate_triage_artifacts`** — after `triage_questions`: `forge.artifact.exists` for `user_questions` and `assumptions`.
+2. **`validate_exit_criteria`** — after `complete_refinement`: `local.forge.refine_issue.exit_criteria`.
+3. **Envelope gates** — after Cursor SDK `activity` nodes when #23 envelope mapper is available: `forge.envelope.schema`, `forge.envelope.unsupported_version`, `forge.envelope.size`. Skill-only activities (e.g. `resolve_issue_parentage`) do not emit envelopes and skip envelope gates.
+
+### Runtime validation classes (blocking vs advisory)
+
+| Class | When | Behavior on failure |
+|-------|------|---------------------|
+| **Blocking** | All validators on runtime `validation` nodes (v1 default) | Workflow does not advance; run state becomes `validation failed`; rejected output remains inspectable |
+| **Advisory** | Pre-run diagnostics with `severity: warning` only | Recorded in discovery and pre-run aggregate; does **not** block run start |
+
+Individual validator entries may declare `blocking: false` in a future workflow schema MINOR. v1 treats every runtime catalog validator as blocking.

@@ -109,6 +109,45 @@ Pre-run validation returns an aggregate suitable for discovery (#30) and run-sta
 | `workflow_id` | Present when parsed from the definition. |
 | `path` | Repo-relative path to the definition file. |
 
+### Runtime validation result (aggregate)
+
+Each `validation` node produces one aggregate after all declared validators run. Machine validation: `.ai/schemas/validation-result.schema.json`.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `valid` | yes | `true` when every blocking validator passed. |
+| `node_id` | yes | Validation node that executed. |
+| `workflow_run_id` | yes | Temporal run identifier. |
+| `source_activity_node_id` | no | Upstream activity node whose envelope or artifacts are validated. |
+| `validated_at` | yes | ISO-8601 UTC timestamp when the gate completed. |
+| `diagnostics` | yes | Ordered diagnostic objects (failures and advisory items). |
+| `validator_outcomes` | yes | Per-validator pass/fail summary (see below). |
+
+#### `validator_outcomes[]`
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `validator_id` | yes | Catalog or `local.*` ID from the validation node. |
+| `type` | yes | `schema`, `artifact`, or `domain`. |
+| `target` | no | Path, schema ref, artifact ID, or domain criterion inspected. |
+| `passed` | yes | `true` when this validator succeeded. |
+| `blocking` | yes | `true` for v1 runtime validators; failure prevents progression. |
+| `diagnostics` | no | Validator-specific diagnostic objects when `passed` is false. |
+
+#### Blocking vs advisory at runtime (v1)
+
+- Every validator on a runtime `validation` node is **blocking** in v1. A failed validator sets `valid=false` and the workflow orchestrator does not follow outgoing transitions.
+- **Advisory** outcomes appear only in pre-run aggregates (`severity: warning`) or as non-blocking `diagnostics` inside an otherwise **accepted** activity envelope (`severity: warning` or `info` on envelope fields). Advisory envelope diagnostics do not bypass a failed validation node.
+- Validation failures do **not** schedule Temporal activity retries. Retry eligibility: `.ai/business_logic/error_handling.md`.
+
+#### Artifact checks at runtime
+
+| Validator | Checks |
+|-----------|--------|
+| `forge.artifact.exists` | Resolves workflow artifact `path` (literal or glob) against the run workspace; at least one match must exist. |
+| `forge.artifact.integrity` | For each matching `artifact_refs[]` entry with `path` and `sha256`, computes SHA-256 of on-disk content and compares to declared hash (lowercase hex). |
+| `forge.artifact.schema` | Reads artifact file content and validates against JSON Schema at `target` or envelope `validation_inputs.schema_ref`. |
+
 ## Cursor SDK envelopes
 
 Request and response **boundary** fields (v1): `.ai/integration/api_contracts.md`.

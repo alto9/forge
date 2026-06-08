@@ -12,6 +12,8 @@
         ".ai/schemas/vision.schema.json",
         ".ai/schemas/features.schema.json",
         ".ai/schemas/workflow.schema.json",
+        ".ai/schemas/activity-envelope.schema.json",
+        ".ai/schemas/validation-result.schema.json",
         {
           "name": "runtime",
           "primary_doc": ".ai/runtime/index.md",

@@ -8,7 +8,7 @@ Forge observability makes workflow health, validation state, and recovery action
 - Temporal connection health, namespace, task queue readiness, and worker availability.
 - Workflow run state, current node, pending timers, pending human questions, retry state, and cancellation state.
 - Cursor SDK activity status, run identifiers, failure summaries, and artifact references.
-- Validator outcomes for schema, artifact, and domain checks.
+- Validator outcomes for schema, artifact, and domain checks (`ValidationResult` aggregates on `WorkflowRunProjection.validationSummaries`).
 - GitHub activity failures and rate or auth blockers.
 - Recovery actions after extension restart, worker restart, or Temporal reconnect.
 
@@ -108,6 +108,28 @@ Assistant message text, tool call payloads, `structured_payload` body, `follow_u
 Replace excluded or sensitive values with `[REDACTED]`. Request envelope `inputs` are not logged at info level; log only key names when debug diagnostics are explicitly enabled in a future operator mode.
 
 Envelope field definitions: `.ai/integration/api_contracts.md`. GitHub activity log rules remain in a future integration milestone.
+
+## Validation gate diagnostics (cockpit projection)
+
+Forge projects runtime validation outcomes onto `WorkflowRunProjection` without exposing artifact file bodies or full envelope payloads.
+
+### `validationSummaries[]` (per validation node)
+
+| Field | Description |
+|-------|-------------|
+| `node_id` | Validation node identifier |
+| `node_name` | Human-readable name from workflow definition |
+| `valid` | Aggregate pass/fail |
+| `validated_at` | ISO-8601 UTC from `ValidationResult` |
+| `source_activity_node_id` | Upstream activity when present |
+| `validator_outcomes` | Array of `{ validator_id, type, target, passed, blocking }` |
+| `diagnostics` | Redacted diagnostic list (`code`, `severity`, `message`, `path`, `validator_id`) |
+
+### Run inspector behavior (v1)
+
+- Failed validation nodes show status **Validation failed** with expandable diagnostics.
+- Passed validation nodes show **Validated** with validator ID list; no artifact content inline.
+- When `forge.artifact.integrity` fails, surface expected vs actual hash prefix (first 8 hex chars) only; full paths are repo-relative, not absolute.
 
 ## Open implementation decisions
 
