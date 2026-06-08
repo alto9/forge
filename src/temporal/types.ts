@@ -16,6 +16,7 @@ export interface ManagedLocalSupervisorConfig {
     uiPort: number;
     persistencePath: string;
     namespace: string;
+    taskQueue: string;
 }
 
 export interface ManagedLocalStartError {

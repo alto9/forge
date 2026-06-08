@@ -105,6 +105,23 @@ npm run test
 npm run package    # Package for distribution
 ```
 
+## Temporal configuration
+
+Forge workflow runs use Temporal. By default, **managed-local** mode starts a window-scoped dev server from npm-bundled assets (no separate Temporal CLI install).
+
+Settings live under **Forge › Temporal** in VS Code settings. Precedence: workspace settings, then user settings, then `FORGE_TEMPORAL_*` environment variables, then built-in defaults (see `forge/.ai/runtime/configuration.md`).
+
+| Setting | Default | Purpose |
+|---------|---------|---------|
+| `forge.temporal.mode` | `managedLocal` | `managedLocal` or `external` |
+| `forge.temporal.managedLocal.grpcPort` | `7233` | gRPC port for the local dev server |
+| `forge.temporal.managedLocal.uiPort` | `8233` | Temporal Web UI port (diagnostics) |
+| `forge.temporal.managedLocal.persistencePath` | _(computed)_ | Override persistence directory; default is `{extensionGlobalStorage}/temporal/{windowId}/` |
+| `forge.temporal.managedLocal.namespace` | `forge-local` | Temporal namespace |
+| `forge.temporal.managedLocal.taskQueue` | `forge-workflows` | Default worker task queue |
+
+When mode is `managedLocal`, workflow run creation waits until the dev server reports **ready**. Startup failures block runs with remediation guidance; Forge does not auto-fallback to external mode.
+
 ## License
 
 MIT

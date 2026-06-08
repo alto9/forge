@@ -33,6 +33,7 @@ export function registerTemporalLocalSupervisor(
         uiPort: settings.uiPort,
         persistencePath: settings.persistencePath,
         namespace: settings.namespace,
+        taskQueue: settings.taskQueue,
     };
 
     supervisor = new TemporalLocalSupervisor(config, {

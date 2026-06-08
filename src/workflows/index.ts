@@ -34,5 +34,6 @@ export {
 export {
     WorkflowRunStartBlockedError,
     gateWorkflowRunStart,
+    gateWorkflowRunStartWithTemporalReadiness,
     validateWorkflowForRun,
 } from './validateWorkflowForRun';

@@ -46,6 +46,7 @@ function createSupervisor(options: {
             uiPort: 8233,
             persistencePath: path.join(tempDir, 'storage', 'temporal', 'window-test'),
             namespace: 'forge-local',
+            taskQueue: 'forge-workflows',
         },
         {
             spawnChild: options.spawnChild ?? (() => child),
@@ -183,6 +184,7 @@ describe('TemporalLocalSupervisor', () => {
                 uiPort: 8233,
                 persistencePath: path.join(tempDir, 'storage', 'temporal', 'window-test'),
                 namespace: 'forge-local',
+                taskQueue: 'forge-workflows',
             },
             {
                 startupTimeoutMs: 500,

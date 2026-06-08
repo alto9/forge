@@ -1,9 +1,12 @@
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { TemporalConfigurationInvalidError } from '../temporal/temporalReadinessGate';
+import { TemporalReadinessBlockedError } from '../temporal/TemporalLocalSupervisor';
 import {
     gateWorkflowRunStart,
+    gateWorkflowRunStartWithTemporalReadiness,
     validateWorkflowForRun,
     WorkflowRunStartBlockedError,
 } from './validateWorkflowForRun';
@@ -176,5 +179,42 @@ describe('gateWorkflowRunStart', () => {
             expect(blocked.result.valid).toBe(false);
             expect(blocked.result.workflow_id).toBe('missing-binding');
         }
+    });
+
+    it('combines definition validation with managed-local temporal readiness', async () => {
+        const ensureReady = vi.fn(async () => undefined);
+        const supervisor = { ensureReady };
+
+        const result = await gateWorkflowRunStartWithTemporalReadiness({
+            workspaceRoots: [process.cwd()],
+            workflowId: 'refine-issue',
+            resolveMode: () => 'managedLocal',
+            getSupervisor: () => supervisor as never,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(ensureReady).toHaveBeenCalledOnce();
+    });
+
+    it('blocks combined gate when temporal readiness fails after validation passes', async () => {
+        const ensureReady = vi.fn(async () => {
+            throw new TemporalReadinessBlockedError(
+                {
+                    remediation: 'port',
+                    message: 'Managed-local Temporal dev server failed to start.',
+                },
+                'start_failed'
+            );
+        });
+        const supervisor = { ensureReady };
+
+        await expect(
+            gateWorkflowRunStartWithTemporalReadiness({
+                workspaceRoots: [process.cwd()],
+                workflowId: 'refine-issue',
+                resolveMode: () => 'managedLocal',
+                getSupervisor: () => supervisor as never,
+            })
+        ).rejects.toBeInstanceOf(TemporalConfigurationInvalidError);
     });
 });

@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { gateTemporalReadiness, type TemporalReadinessGateOptions } from '../temporal/temporalReadinessGate';
 import { discoverWorkflowDefinitions } from './discoverWorkflowDefinitions';
 import {
     validateWorkflowDefinition,
@@ -173,5 +174,17 @@ export function gateWorkflowRunStart(options: ValidateWorkflowForRunOptions): Va
     if (!result.valid) {
         throw new WorkflowRunStartBlockedError(result);
     }
+    return result;
+}
+
+/**
+ * Pre-run gate combining workflow definition validation and Temporal readiness.
+ * Throws when validation or managed-local readiness fails.
+ */
+export async function gateWorkflowRunStartWithTemporalReadiness(
+    options: ValidateWorkflowForRunOptions & TemporalReadinessGateOptions
+): Promise<ValidationResult> {
+    const result = gateWorkflowRunStart(options);
+    await gateTemporalReadiness(options);
     return result;
 }
