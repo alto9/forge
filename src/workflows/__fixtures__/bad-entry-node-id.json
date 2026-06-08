@@ -1,0 +1,14 @@
+{
+  "schema_version": "1.0.0",
+  "workflow_id": "bad-entry-node-id",
+  "name": "Bad Entry Node ID",
+  "version": "1.0.0",
+  "entry_node_id": "",
+  "nodes": [
+    {
+      "node_id": "start",
+      "type": "terminal",
+      "name": "Done"
+    }
+  ]
+}
