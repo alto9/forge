@@ -8,7 +8,8 @@ Forge uses persistence according to ownership boundaries.
 - Temporal owns durable workflow histories, retry records, waits, timers, and recovery state.
 - Managed local Temporal mode may use Temporal dev-server persistence with SQLite for single-user workflow execution.
 - External or Cloud Temporal mode uses the configured Temporal endpoint, namespace, and credentials as the durable execution store.
-- Forge local storage may cache run projections, selected workspace context, artifact indexes, and UI preferences. Cached projections are derived from Temporal and can be rebuilt.
+- Forge local storage caches a **window-scoped run index** at `{extensionGlobalStorage}/temporal/{windowId}/run-index.json`, derived run projections, selected workspace context, artifact indexes, and UI preferences. The run index records Temporal `(namespace, workflowId, runId)` pointers for runs started in that VS Code window; projections are derived from Temporal and can be rebuilt from the index after reconnect.
+- **Completed run retention:** terminal index entries remain for **30 days** from `completedAt` or until the user dismisses them. Forge caps **100** completed entries per window; when over cap, the oldest completed entry by `completedAt` is purged on index load. Non-terminal entries are never auto-purged.
 - GitHub owns issues, milestones, project fields, and delivery records. Forge does not persist a duplicate backlog.
 
 ## Primary code pointers (optional)

@@ -62,6 +62,31 @@ Diagnostic log lines for the worker use prefix `[forge.temporal.worker]` and inc
 
 Status bar v1 may show a compound label such as `Temporal: ready · Worker: ready` or separate segments; both connection and worker must be `ready` before workflow run creation proceeds.
 
+## Run recovery states
+
+Forge exposes these named states on each `WorkflowRunProjection` and `WorkflowRunIndexEntry` during restart recovery (#21):
+
+| State | Meaning | User-visible surfaces |
+|-------|---------|----------------------|
+| `synced` | Projection matches latest Temporal describe/query | Run list shows current node and status; human-input and cancel actions allowed |
+| `recovery_pending` | Indexed run awaiting readiness or refresh in progress | Run list badge "Recovering…"; user actions blocked |
+| `refresh_failed` | Temporal reachable but describe/query failed (permission, transient error) | Output channel warning; run list "Refresh failed"; manual refresh offered |
+| `orphaned` | Temporal reports run not found for indexed identity | Run list "Stale"; dismiss action available |
+| `unreachable` | Temporal or worker not yet `ready`; cannot refresh | Run list "Waiting for Temporal…"; automatic retry when readiness gate passes |
+
+### Mode-specific recovery guarantees
+
+| Aspect | managedLocal | external |
+|--------|--------------|----------|
+| Durable history | Window-scoped SQLite under `{extensionGlobalStorage}/temporal/{windowId}/` | Remote Temporal namespace |
+| Survives extension restart | Yes when persistence directory intact | Yes; independent of Forge local files |
+| Recovery requires | Same mode, namespace, persistence path; dev server and worker `ready` | Same mode, address, namespace, credentials; worker `ready` |
+| Unrecoverable when | User deletes or corrupts persistence directory | Wrong endpoint/namespace/credentials, or remote retention expired |
+
+Automatic recovery runs **once per window session** when Temporal connection and supervised worker both first reach `ready` after restart. Manual **Forge: Refresh workflow runs** re-scans all index entries within retention.
+
+Diagnostic log lines for recovery use prefix `[forge.temporal.recovery]` and include `windowId`, `namespace`, `workflowId`, `runId`, `recoveryState`, and error codes. Secrets are never logged.
+
 ## Primary code pointers (optional)
 
 - Add stable code directories or modules here when known.
@@ -72,4 +97,3 @@ Implementation-level items not yet fully specified. `/refine-issue` resolves the
 
 ### Health and diagnostics (remaining)
 - Define log redaction rules for Cursor SDK and GitHub activity diagnostics inside worker-executed activities (activity envelope detail in `api_contracts.md`).
-- Define user-visible recovery states for in-flight run reconnection (#21).

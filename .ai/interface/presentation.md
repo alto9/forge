@@ -73,6 +73,26 @@ Worker health uses the same three v1 surfaces as Temporal connection health:
 | Worker blocked run | "Workflow runs are blocked until the Forge worker is ready. See Forge Temporal output for details." |
 | Extension upgrade restart | "Forge updated the workflow worker for this window." _(Output channel info; no blocking notification)_ |
 
+## Run recovery surfaces
+
+Run recovery (#21) uses the Forge Temporal Output channel and a minimal run list (full cockpit graph out of scope):
+
+1. **Forge Output channel** (`Forge Temporal`) — recovery scan logs with `[forge.temporal.recovery]` prefix.
+2. **Command palette** — **Forge: Refresh workflow runs** for manual re-scan.
+3. **Run list** — per-run recovery badge, cancel, dismiss orphaned, and human-input panel when `synced`.
+
+## UI copy (run recovery)
+
+| Event | Copy |
+|-------|------|
+| Automatic recovery start | "Recovering workflow runs for this window…" _(Output channel info)_ |
+| Recovery complete | "Recovered {count} workflow run(s)." _(Output channel info when count > 0)_ |
+| Refresh failed | "Could not refresh run {workflowId}/{runId} — {reason}. Try **Forge: Refresh workflow runs**." |
+| Orphaned run | "This run is no longer in Temporal. You can dismiss it from the run list." |
+| Cancel confirm | "Cancel workflow run {workflowId}/{runId}? This terminates execution in Temporal." |
+| Actions blocked | "Run actions are unavailable until recovery finishes. See Forge Temporal output." |
+| Human input blocked | "Submit answers after the run finishes recovering." |
+
 ## Open implementation decisions
 
 Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.

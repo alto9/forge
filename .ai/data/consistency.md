@@ -10,7 +10,9 @@ Forge keeps workflow consistency by deriving local views from authoritative sour
 - Discovery scans workspace roots for `.ai/workflows/*.json` and indexes definitions by `workflow_id`. Duplicate IDs across files are errors.
 - Filename stem must equal `workflow_id` for each definition file.
 - Temporal run state is the source of truth for execution progress, retry history, waits, timers, and recovery.
-- Forge run projections are eventually refreshed from Temporal and must tolerate extension restart or worker reconnection.
+- Forge run projections are eventually refreshed from Temporal and must tolerate extension restart or worker reconnection. After restart, Forge runs an automatic recovery scan once per window session when Temporal connection and supervised worker both reach `ready`; Temporal run state wins over stale local projections.
+- Run index entries marked `orphaned` (Temporal not found) may be dismissed by the user; dismiss removes the index entry only and does not mutate Temporal.
+- User actions on in-flight runs (cancel, human-input answer) are blocked until the run projection reaches `synced` recovery state.
 - Cursor SDK activity outputs are not accepted until deterministic validation succeeds.
 - GitHub issue and project state is read or mutated through explicit workflow activities. Forge does not infer delivery truth from local workflow projection state.
 - Human answers are recorded through the declared Temporal signal or update so the durable run history captures the continuation decision.

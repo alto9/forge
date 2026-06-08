@@ -9,6 +9,7 @@ Forge handles workflow errors by preserving durable state, exposing the next saf
 - Validation failures stop progression at the validation gate. The rejected output remains available for inspection, but downstream steps cannot consume it as accepted workflow state.
 - Human input pauses are expected workflow states. Forge asks the user for the required information and resumes the run only through the workflow's declared Temporal signal or update.
 - Restart and reconnect handling rebuilds Forge's visible run projection from Temporal state before allowing user actions against an in-flight run.
+- **Basic recovery actions (v1):** after automatic or manual refresh, the user may **cancel** a non-terminal run (Temporal workflow terminate), **submit human-input answers** for runs in `human input required` state once projection is `synced`, and **dismiss** index entries in `orphaned` state. Activity retry, run restart from a node, and manual retry-policy controls are out of scope.
 
 ## Primary code pointers (optional)
 
