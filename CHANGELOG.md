@@ -1,3 +1,7 @@
+## <small>3.22.8 (2026-06-08)</small>
+
+* docs(ai): refine issue #20 contract updates ([d280f24](https://github.com/alto9/forge/commit/d280f24)), closes [#20](https://github.com/alto9/forge/issues/20)
+
 ## <small>3.22.7 (2026-06-08)</small>
 
 * docs(ai): refine issue #19 contract updates ([540bdad](https://github.com/alto9/forge/commit/540bdad)), closes [#19](https://github.com/alto9/forge/issues/19)
