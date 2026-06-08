@@ -55,6 +55,24 @@ External-mode startup and health use the same three v1 surfaces as managed local
 | Workflow blocked | "Workflow runs are blocked until Temporal is ready. See Forge Temporal output for details." |
 | Mode mismatch hint | "Setting {key} has no effect while `forge.temporal.mode` is {activeMode}." |
 
+## Worker supervision surfaces
+
+Worker health uses the same three v1 surfaces as Temporal connection health:
+
+1. **Forge Output channel** (`Forge Temporal`) — supervisor logs with `[forge.temporal.worker]` prefix.
+2. **VS Code notifications** — error notification on worker `start_failed` with remediation (missing packaged asset, permission denied, repeated crash).
+3. **Status bar item** — worker segment reflecting **Worker health states** in `.ai/operations/observability.md` (compound with Temporal connection state).
+
+## UI copy (worker supervision)
+
+| Event | Notification / status copy |
+|-------|---------------------------|
+| Worker ready | _(optional information notification on first ready in session)_ |
+| Start failed (asset) | "Forge could not start the workflow worker — worker assets are missing from the extension package. Reinstall Forge Studio." |
+| Start failed (crash) | "Forge workflow worker stopped unexpectedly. See Forge Temporal output. Workflow runs are blocked until the worker is healthy." |
+| Worker blocked run | "Workflow runs are blocked until the Forge worker is ready. See Forge Temporal output for details." |
+| Extension upgrade restart | "Forge updated the workflow worker for this window." _(Output channel info; no blocking notification)_ |
+
 ## Open implementation decisions
 
 Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.

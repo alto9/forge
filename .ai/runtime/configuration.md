@@ -6,8 +6,8 @@ Forge workflow configuration selects how workflow definitions are discovered and
 
 - Workflow definitions are discovered from `.ai/workflows/*.json` in the selected repository context.
 - Runtime mode distinguishes **managed local** Temporal from **external** or Cloud Temporal endpoints.
-- Managed local mode configures npm-bundled Temporal dev server startup, window-scoped persistence, worker supervision (see #20), and single-user workflow assumptions.
-- External or Cloud mode configures Temporal endpoint, namespace, task queue, credential binding, and worker connectivity (see issue #19).
+- Managed local mode configures npm-bundled Temporal dev server startup, window-scoped persistence, worker supervision, and single-user workflow assumptions.
+- External or Cloud mode configures Temporal endpoint, namespace, task queue, credential binding, and worker connectivity.
 - Workflow configuration references stable activity IDs, validators, agent paths, skill paths, and artifact locations declared by workflow JSON.
 - Configuration must not require embedding secrets in workflow definition files.
 
@@ -113,7 +113,7 @@ When `forge.temporal.mode` is `external`, Forge blocks workflow run creation unt
 2. gRPC reachability to `forge.temporal.external.address`
 3. TLS handshake success when `tls.enabled` is `true`
 4. Namespace access with configured credentials
-5. Task queue registration probe (worker availability is fully defined in #20; v1 confirms the queue name is reachable or reports worker-unavailable as `unhealthy`, not `connect_failed`, when the server accepts the connection but no worker polls the queue)
+5. Task queue registration probe confirms the configured queue name is reachable. When the server accepts the connection but no worker polls the queue, Forge reports Temporal `unhealthy` until the supervised worker reaches `ready` (see **Worker health states** in `.ai/operations/observability.md`).
 
 If preflight fails, Forge reports `configuration invalid` or `connect_failed` health (`.ai/operations/observability.md`) with remediation steps and does **not** auto-fallback to managed-local mode.
 

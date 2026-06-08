@@ -13,7 +13,7 @@ Forge supports both managed local Temporal and external or Cloud Temporal endpoi
 - **Temporal Cloud:** Address uses the Cloud gRPC endpoint (`host:port` from the Namespace UI). Namespace uses `namespace.accountId`. Auth mode `apiKey` with TLS enabled is the primary v1 path.
 - **Self-hosted external:** Address and namespace are operator-supplied. Auth mode `tlsServer` for TLS-only clusters, or `insecure` for loopback plaintext dev clusters only.
 - **Connection validation:** Preflight runs lazily before workflow runs; failures block run creation without switching to managed-local mode.
-- **Workers:** Forge and out-of-host workers (#20) use the same resolved external settings for the VS Code window.
+- **Workers:** Forge supervises one out-of-host worker child process per VS Code window in both modes. The worker and extension host use the same resolved Temporal settings for the window (`.ai/runtime/configuration.md`). Workers poll the configured task queue; the extension host does not execute activity code.
 
 Temporal owns durable workflow state, retries, waits, timers, and recovery. Forge does not implement a competing durable workflow engine.
 

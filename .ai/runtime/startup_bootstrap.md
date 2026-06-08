@@ -13,7 +13,7 @@ On activation, Forge prepares workflow capability without starting arbitrary wor
 - Publish external connection progress to the same surfaces per `.ai/interface/presentation.md` **External Temporal surfaces**.
 - If managed-local startup fails, block workflow run creation, surface remediation steps, and do not auto-fallback to external mode.
 - If external preflight fails, block workflow run creation, surface remediation steps, and do not auto-fallback to managed-local mode.
-- Start or attach to worker supervision outside the VS Code extension host when workflow execution is enabled (#20).
+- Start or attach to worker supervision outside the VS Code extension host when workflow execution is enabled. Worker start is **lazy**: same trigger as Temporal readiness (first workflow run or explicit readiness check). Forge supervises one worker child process per VS Code window, shared across multi-root folders. The worker starts only after Temporal connection health is `ready`. Extension host runs the Temporal client; the worker polls the configured task queue and executes workflow and activity code. v1 has no direct extension↔worker RPC; coordination is through Temporal APIs only.
 - Rebuild visible projections for in-flight runs by reconnecting to Temporal rather than trusting stale local UI state (#21).
 
 ## Primary code pointers (optional)
