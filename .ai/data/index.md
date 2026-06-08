@@ -1,11 +1,13 @@
 # Index
 
-This document defines the current-state contract for the data/index domain.
+This document defines Forge workflow data ownership, serialization, projection, and validation boundaries.
 
 ## Scope
 
-- Record durable constraints and boundaries for this domain.
-- Keep this file aligned with mapped child contracts.
+- Keep workflow definitions in repo-owned `.ai/workflows/*.json`.
+- Keep durable execution history in Temporal.
+- Treat Forge run projections and artifact indexes as derived support data.
+- Validate serialized agent outputs before downstream workflow steps consume them.
 
 ## Primary code pointers (optional)
 

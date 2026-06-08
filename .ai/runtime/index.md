@@ -1,11 +1,13 @@
 # Index
 
-This document defines the current-state contract for the runtime/index domain.
+This document defines Forge workflow startup, configuration, execution, and shutdown behavior.
 
 ## Scope
 
-- Record durable constraints and boundaries for this domain.
-- Keep this file aligned with mapped child contracts.
+- Discover workflow definitions from `.ai/workflows/*.json`.
+- Select managed local Temporal or external/Cloud Temporal mode.
+- Execute workflows through Temporal-backed workers outside the extension host.
+- Recover visible run state from Temporal after restart.
 
 ## Primary code pointers (optional)
 

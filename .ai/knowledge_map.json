@@ -11,6 +11,7 @@
         ".ai/schemas/project.schema.json",
         ".ai/schemas/vision.schema.json",
         ".ai/schemas/features.schema.json",
+        ".ai/schemas/workflow.schema.json",
         {
           "name": "runtime",
           "primary_doc": ".ai/runtime/index.md",

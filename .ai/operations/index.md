@@ -1,11 +1,13 @@
 # Index
 
-This document defines the current-state contract for the operations/index domain.
+This document defines how Forge packages, supervises, observes, and secures workflow execution.
 
 ## Scope
 
-- Record durable constraints and boundaries for this domain.
-- Keep this file aligned with mapped child contracts.
+- Support managed local Temporal and external or Cloud Temporal modes.
+- Run workers outside the VS Code extension host.
+- Expose workflow health, validation failures, worker readiness, and recovery actions.
+- Keep secrets out of workflow definitions and artifacts.
 
 ## Primary code pointers (optional)
 

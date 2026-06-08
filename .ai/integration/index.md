@@ -1,11 +1,13 @@
 # Index
 
-This document defines the current-state contract for the integration/index domain.
+This document defines Forge workflow boundaries with Temporal, Cursor SDK, GitHub, and workspace files.
 
 ## Scope
 
-- Record durable constraints and boundaries for this domain.
-- Keep this file aligned with mapped child contracts.
+- Use Temporal for durable orchestration and recovery.
+- Use Cursor SDK for bounded agent activities.
+- Use GitHub APIs for delivery state.
+- Resolve workflow definitions, agents, skills, validators, and artifacts from the selected workspace context.
 
 ## Primary code pointers (optional)
 

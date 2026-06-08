@@ -1,11 +1,13 @@
 # Index
 
-This document defines the current-state contract for the business_logic/index domain.
+This document defines Forge's business rules for workflow definitions, runs, activities, validators, human questions, and GitHub delivery ownership.
 
 ## Scope
 
-- Record durable constraints and boundaries for this domain.
-- Keep this file aligned with mapped child contracts.
+- Keep workflow behavior generic and data-defined rather than hard-coding one workflow into Forge.
+- Treat Temporal as the durable execution owner for runs, waits, retries, and recovery.
+- Treat Cursor SDK activity output as provisional until deterministic validation accepts it.
+- Keep GitHub authoritative for issues, milestones, project fields, and delivery records.
 
 ## Primary code pointers (optional)
 
