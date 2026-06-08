@@ -71,7 +71,7 @@ Transitions are node-local: `transitions[]` with required `to_node_id` and optio
 
 ### Policy references
 
-`retry_policies` and `timeout_policies` entries require `policy_id` and optional `description`. Nodes reference policies by `policy_id` string. Concrete retry/timeout semantics are runtime concerns outside this milestone.
+`retry_policies` and `timeout_policies` entries require `policy_id` and optional `description`. Nodes reference policies by `policy_id` string. Concrete retry/timeout semantics and v1 catalog: `.ai/runtime/execution_model.md`. Default when a node omits `retry_policy`: `agent_standard`; default when a node omits `timeout_policy`: `agent_default`.
 
 ## Versioning and migration
 
@@ -109,7 +109,8 @@ Pre-run validation returns an aggregate suitable for discovery (#30) and run-sta
 | `workflow_id` | Present when parsed from the definition. |
 | `path` | Repo-relative path to the definition file. |
 
-## Open implementation decisions
+## Cursor SDK envelopes
 
-### Cursor SDK output envelopes
-- Specify the exact envelope properties for activity ID, Cursor run ID, agent or skill source, status, structured payload, artifacts, validation inputs, and diagnostic messages.
+Request and response **boundary** fields (v1): `.ai/integration/api_contracts.md`.
+
+Full typed output envelope schema — structured payload shapes, artifact reference serialization, envelope versioning rules, and Temporal history size limits — are specified in this document as part of milestone **Bounded Agent Activities** issue #23.

@@ -11,14 +11,27 @@ Forge handles workflow errors by preserving durable state, exposing the next saf
 - Restart and reconnect handling rebuilds Forge's visible run projection from Temporal state before allowing user actions against an in-flight run.
 - **Basic recovery actions (v1):** after automatic or manual refresh, the user may **cancel** a non-terminal run (Temporal workflow terminate), **submit human-input answers** for runs in `human input required` state once projection is `synced`, and **dismiss** index entries in `orphaned` state. Activity retry, run restart from a node, and manual retry-policy controls are out of scope.
 
+## Cursor SDK activity failures
+
+| `failure_class` | Meaning | Automatic retry | User action (v1) |
+|-----------------|---------|-----------------|------------------|
+| `startup` | `CursorAgentError` before SDK run executed | Per `retry_policy` when `retryable=true` | Cancel run; inspect Output channel metadata |
+| `execution` | SDK run started then failed (`status=error`) | Per `retry_policy` when `retryable=true` | Cancel run; inspect diagnostics |
+| `cancelled` | User or Temporal cancelled activity | Never | None — activity not re-run |
+
+After cancellation commits in Temporal, Forge does not re-run the activity even if the SDK run completes late. Late output is discarded.
+
+## Retry eligibility by state
+
+| Failed state | Automatic Temporal retry | User-approved retry | Requires definition edit | Requires new run |
+|--------------|-------------------------|---------------------|-------------------------|------------------|
+| Activity `startup` / `execution` with retryable error | Yes, per node `retry_policy` | Out of scope v1 | No | No |
+| Activity `cancelled` | No | No | No | No |
+| Validation failed | No — blocked at gate | Out of scope v1 | Possibly (validator/target) | Possibly |
+| Configuration invalid (pre-run) | N/A — run not created | N/A | Yes | N/A after fix |
+
+Policy class names and timeout mappings: `.ai/runtime/execution_model.md`.
+
 ## Primary code pointers (optional)
 
 - Add stable code directories or modules here when known.
-
-## Open implementation decisions
-
-Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
-
-### Retry and recovery policy
-- Define the retry classes, timeout classes, and failure categories exposed by workflow JSON.
-- Define which failed states allow user-approved retry, which require editing the workflow definition, and which require restarting a run.

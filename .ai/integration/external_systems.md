@@ -19,7 +19,7 @@ Temporal owns durable workflow state, retries, waits, timers, and recovery. Forg
 
 ## Cursor SDK
 
-Cursor SDK performs bounded agent activity work. Forge activity contracts constrain the requested work, capture the SDK run identity, and validate structured outputs before continuing.
+Cursor SDK (`@cursor/sdk`, TypeScript) performs bounded agent activity work in the supervised Temporal worker. v1 uses **local** runtime with `cwd` set to the run-selected workspace root. Forge activity contracts (`.ai/integration/api_contracts.md`) constrain the requested work, capture SDK run identity in response envelopes, and hand outputs to validators before continuing. Cloud agent activities are deferred.
 
 ## GitHub
 

@@ -91,9 +91,27 @@ Diagnostic log lines for recovery use prefix `[forge.temporal.recovery]` and inc
 
 - Add stable code directories or modules here when known.
 
+## Cursor SDK activity diagnostics
+
+Worker-executed Cursor SDK activities log to the Forge Output channel with prefix `[forge.activity.cursor]`.
+
+### Logged fields (v1)
+
+`activity_id`, `node_id`, `cursor_agent_id`, `cursor_run_id`, `status`, `failure_class`, `retryable`, and `artifact_refs` paths (when present).
+
+### Excluded from logs
+
+Assistant message text, tool call payloads, full SDK event streams, API keys, `Authorization` headers, certificate or private-key material, and environment variable values for names containing `KEY`, `TOKEN`, or `SECRET`.
+
+### Redaction
+
+Replace excluded or sensitive values with `[REDACTED]`. Request envelope `inputs` are not logged at info level; log only key names when debug diagnostics are explicitly enabled in a future operator mode.
+
+Envelope field definitions: `.ai/integration/api_contracts.md`. GitHub activity log rules remain in a future integration milestone.
+
 ## Open implementation decisions
 
 Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
 
 ### Health and diagnostics (remaining)
-- Define log redaction rules for Cursor SDK and GitHub activity diagnostics inside worker-executed activities (activity envelope detail in `api_contracts.md`).
+- Define log redaction rules for GitHub activity diagnostics inside worker-executed activities.
