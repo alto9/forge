@@ -27,6 +27,21 @@ Forge exposes these named health states for the window-scoped managed-local dev 
 
 Diagnostic log lines in the Forge Output channel use prefix `[forge.temporal.local]` and include `windowId`, `grpcPort`, `persistencePath` (redacted if user-overridden to a sensitive path), and `exitCode` on failure. Secrets and credential material are never logged.
 
+## External Temporal health states
+
+Forge exposes these named health states when `forge.temporal.mode` is `external`:
+
+| State | Meaning | User-visible surfaces |
+|-------|---------|----------------------|
+| `idle` | External mode selected; connection not yet requested | Status bar: "Temporal: idle" |
+| `connecting` | Resolving settings, loading credentials, gRPC/TLS handshake in progress | Output channel logs; status bar: "Temporal: connecting…" |
+| `ready` | Preflight succeeded: reachable endpoint, namespace access, auth accepted | Notification: "Forge Temporal ready"; status bar: "Temporal: ready" |
+| `unhealthy` | Connected but repeated health probe failed, or task queue has no polling worker (#20) | Output channel warning; status bar: "Temporal: unhealthy" |
+| `connect_failed` | Address unreachable, TLS failure, auth rejected, or missing required config/secret | Notification (error) with remediation; status bar: "Temporal: failed"; workflow runs blocked |
+| `disconnected` | Previously ready connection lost | Output channel warning; status bar: "Temporal: disconnected" |
+
+Diagnostic log lines for external mode use prefix `[forge.temporal.external]` and include `address` (host:port only), `namespace`, `authMode`, `tlsEnabled`, and probe error codes. API keys, certificates, and Authorization material are never logged.
+
 Worker health states are defined in #20 refinement.
 
 ## Primary code pointers (optional)

@@ -8,7 +8,12 @@ Forge supports both managed local Temporal and external or Cloud Temporal endpoi
 
 **Managed local:** Forge supervises one npm-bundled Temporal dev server child process per VS Code window. The server starts lazily from extension-shipped Node dependencies; users do not install the Temporal CLI. Connection uses `forge.temporal.managedLocal.grpcPort` (default `7233`) and namespace `forge.temporal.managedLocal.namespace` (default `forge-local`). Startup failure blocks workflow runs without auto-fallback to external mode.
 
-**External or Cloud:** Forge connects to a user-configured endpoint and namespace (#19).
+**External or Cloud:** Forge connects to a user-configured gRPC endpoint and namespace. Settings live under `forge.temporal.external.*` (`.ai/runtime/configuration.md`). Credentials are bound through VS Code SecretStorage or environment overrides; workflow JSON never carries connection secrets.
+
+- **Temporal Cloud:** Address uses the Cloud gRPC endpoint (`host:port` from the Namespace UI). Namespace uses `namespace.accountId`. Auth mode `apiKey` with TLS enabled is the primary v1 path.
+- **Self-hosted external:** Address and namespace are operator-supplied. Auth mode `tlsServer` for TLS-only clusters, or `insecure` for loopback plaintext dev clusters only.
+- **Connection validation:** Preflight runs lazily before workflow runs; failures block run creation without switching to managed-local mode.
+- **Workers:** Forge and out-of-host workers (#20) use the same resolved external settings for the VS Code window.
 
 Temporal owns durable workflow state, retries, waits, timers, and recovery. Forge does not implement a competing durable workflow engine.
 

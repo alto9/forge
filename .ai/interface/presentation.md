@@ -34,10 +34,31 @@ Status bar tooltips include gRPC port, namespace, and persistence path (user-ove
 | Start failed (permission) | "Forge could not start Temporal — cannot write persistence data to {path}. Check permissions or set `forge.temporal.managedLocal.persistencePath`." |
 | Workflow blocked | "Workflow runs are blocked until Temporal is ready. See Forge Temporal output for details." |
 
+## External Temporal surfaces
+
+External-mode startup and health use the same three v1 surfaces as managed local:
+
+1. **Forge Output channel** (`Forge Temporal`) — chronological connection logs with `[forge.temporal.external]` prefix.
+2. **Notifications** — information on `ready`; error on `connect_failed` with remediation.
+3. **Status bar item** — left-aligned `$(pulse) Temporal: {state}` reflecting **External Temporal health states** in `.ai/operations/observability.md`.
+
+## UI copy (external Temporal)
+
+| Situation | Copy |
+|-----------|------|
+| Ready | "Forge Temporal ready — connected to {namespace} at {address}." |
+| Connect failed (auth) | "Forge could not connect to Temporal — authentication failed. Run **Forge: Set Temporal API Key** or check `forge.temporal.external.auth.mode`." |
+| Connect failed (TLS) | "Forge could not connect to Temporal — TLS handshake failed at {address}. Verify `forge.temporal.external.tls.enabled` and cluster certificates." |
+| Connect failed (address) | "Forge could not connect to Temporal — {address} is unreachable. Check `forge.temporal.external.address` and network access." |
+| Connect failed (missing config) | "Forge Temporal configuration is incomplete — {field} is required for external mode. See Forge Temporal output." |
+| Insecure mode warning | "Forge Temporal is using insecure (plaintext) gRPC to {address}. Use only for local development." |
+| Workflow blocked | "Workflow runs are blocked until Temporal is ready. See Forge Temporal output for details." |
+| Mode mismatch hint | "Setting {key} has no effect while `forge.temporal.mode` is {activeMode}." |
+
 ## Open implementation decisions
 
 Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
 
 ### Workflow visual states
 - Define node and edge visual states for idle, active, waiting, validating, retrying, failed, cancelled, completed, and skipped states.
-- Define UI copy for workflow start, pending human questions, validation failure, retry approval, cancellation, and external Temporal connectivity (#19).
+- Define UI copy for workflow start, pending human questions, validation failure, retry approval, and cancellation (cockpit run visualization; out of scope for #19 external connectivity).
