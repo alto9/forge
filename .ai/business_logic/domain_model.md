@@ -21,11 +21,34 @@ Workflow definitions reference stable activity identifiers, agent paths, skill p
 
 - Add stable code directories or modules here when known.
 
-## Open implementation decisions
+## Workflow definition model
 
-Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
+Canonical field names, node types, and versioning are specified in `.ai/data/serialization.md` and `.ai/schemas/workflow.schema.json`. Each repository owns workflow policy under `.ai/workflows/<workflow_id>.json`.
 
-### Workflow definition model
-- Specify the canonical workflow definition fields, including workflow identity, versioning, graph nodes, transitions, activities, validators, human question points, artifact declarations, and supported metadata.
-- Define the stable validator ID catalog for schema validation, artifact validation, and domain exit-criteria validation.
-- Define how `/refine-issue` maps into the generic workflow model without reserving bespoke runtime concepts for that workflow.
+### Graph invariants (domain rules)
+
+- `entry_node_id` must match a `node_id` in `nodes`.
+- Every `to_node_id` in `transitions` must reference an existing node.
+- At least one `terminal` node must be reachable from `entry_node_id`.
+- Orphan nodes (not reachable from entry) produce `forge.workflow.orphan_node` warnings.
+- Duplicate `workflow_id` values across files produce `forge.workflow.duplicate_id` errors.
+
+### Validator ID catalog
+
+| `validator_id` | `type` | Purpose |
+|----------------|--------|---------|
+| `forge.workflow.schema` | schema | JSON Schema validation against `.ai/schemas/workflow.schema.json`. |
+| `forge.workflow.graph` | domain | Graph invariants (entry, transitions, terminal reachability). |
+| `forge.workflow.binding` | domain | `activity_id`, `agent_path`, `skill_path`, and policy references resolve. |
+| `forge.workflow.duplicate_id` | domain | `workflow_id` unique across discovered files. |
+| `forge.workflow.unsupported_version` | domain | `schema_version` or definition `version` major not supported by the runner. |
+| `forge.artifact.declared` | artifact | Node `artifact_ids` reference declared workflow artifacts. |
+| `forge.artifact.exists` | artifact | Declared artifact `path` exists or matches at validation time. |
+| `forge.artifact.schema` | schema | Artifact content matches a referenced JSON Schema. |
+| `forge.domain.exit_criteria` | domain | Workflow-specific exit criteria (used by concrete workflows such as `/refine-issue` in issue #17). |
+
+Repositories may add `local.<repo>.<name>` validator IDs for workflow-specific domain checks. Forge-built validators use the `forge.*` prefix.
+
+### `/refine-issue` mapping
+
+Mapping `/refine-issue` phases into a concrete workflow definition is owned by issue #17. This contract keeps `/refine-issue` as an ordinary workflow: no bespoke node types, runtime hooks, or validator IDs reserved in application code.

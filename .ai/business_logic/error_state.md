@@ -4,7 +4,7 @@ Workflow runs expose failures as workflow state, not as hidden agent transcript 
 
 ## Workflow Error States
 
-- Definition invalid: a workflow JSON file fails schema validation or references unknown activities, validators, agents, skills, artifacts, or transitions.
+- Definition invalid: a workflow JSON file fails schema validation, graph invariants, or references unknown activities, validators, agents, skills, artifacts, or transitions. Diagnostics use the shape in `.ai/data/serialization.md` (`code`, `severity`, `path`, `message`, `validator_id`).
 - Configuration invalid: Forge cannot resolve a required Temporal mode, endpoint, namespace, worker setting, repository path, or credential binding.
 - Activity failed: a bounded Cursor SDK activity or other integration activity failed before producing a valid output envelope.
 - Validation failed: an activity produced output, but schema, artifact, or domain validation rejected it.

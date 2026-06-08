@@ -6,6 +6,7 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "schema_version",
     "workflow_id",
     "name",
     "version",
@@ -13,6 +14,10 @@
     "nodes"
   ],
   "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0.0"
+    },
     "workflow_id": {
       "type": "string",
       "minLength": 1
