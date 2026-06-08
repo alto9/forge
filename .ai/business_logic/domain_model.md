@@ -45,6 +45,9 @@ Canonical field names, node types, and versioning are specified in `.ai/data/ser
 | `forge.artifact.declared` | artifact | Node `artifact_ids` reference declared workflow artifacts. |
 | `forge.artifact.exists` | artifact | Declared artifact `path` exists or matches at validation time. |
 | `forge.artifact.schema` | schema | Artifact content matches a referenced JSON Schema. |
+| `forge.envelope.schema` | schema | Activity response envelope matches `.ai/schemas/activity-envelope.schema.json`. |
+| `forge.envelope.unsupported_version` | domain | `envelope_version` MAJOR is supported by the runner. |
+| `forge.envelope.size` | domain | Serialized response envelope within Temporal size limits. |
 | `forge.domain.exit_criteria` | domain | Workflow-specific exit criteria (generic runtime hook). |
 | `local.forge.refine_issue.exit_criteria` | domain | `/refine-issue` refinement complete per mapping section below. |
 
@@ -55,7 +58,7 @@ Repositories may add `local.<repo>.<name>` validator IDs for workflow-specific d
 | Phase | When | Validator IDs |
 |-------|------|---------------|
 | Pre-run (definition) | Before a workflow run is created | `forge.workflow.schema`, `forge.workflow.graph`, `forge.workflow.binding`, `forge.workflow.duplicate_id`, `forge.workflow.unsupported_version`, `forge.artifact.declared` |
-| Runtime (validation nodes) | After an activity produces output during a run | `forge.artifact.exists`, `forge.artifact.schema`, `forge.domain.exit_criteria`, plus any `local.*` validators declared on validation nodes |
+| Runtime (validation nodes) | After an activity produces output during a run | `forge.envelope.schema`, `forge.envelope.unsupported_version`, `forge.envelope.size`, `forge.artifact.exists`, `forge.artifact.schema`, `forge.domain.exit_criteria`, plus any `local.*` validators declared on validation nodes |
 
 Pre-run validation also enforces that each file path `.ai/workflows/<workflow_id>.json` has a filename stem equal to `workflow_id` (reported under `forge.workflow.binding`).
 

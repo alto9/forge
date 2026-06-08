@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ai/activity-envelope.schema.json",
+  "title": "Forge Cursor SDK Activity Response Envelope",
+  "description": "Typed response envelope returned from worker Cursor SDK activities to Temporal. Request envelope boundary fields: .ai/integration/api_contracts.md.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "envelope_version",
+    "activity_id",
+    "node_id",
+    "workflow_run_id",
+    "cursor_agent_id",
+    "cursor_run_id",
+    "output_type",
+    "status",
+    "retryable"
+  ],
+  "properties": {
+    "envelope_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "activity_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "node_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "workflow_run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cursor_agent_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "cursor_run_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "agent_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "skill_path": {
+      "type": "string",
+      "minLength": 1
+    },
+    "output_type": {
+      "type": "string",
+      "enum": ["json", "markdown", "text"]
+    },
+    "status": {
+      "type": "string",
+      "enum": ["finished", "error", "cancelled"]
+    },
+    "failure_class": {
+      "type": "string",
+      "enum": ["startup", "execution", "cancelled"]
+    },
+    "retryable": {
+      "type": "boolean"
+    },
+    "structured_payload": {
+      "oneOf": [
+        { "type": "object" },
+        { "type": "array" },
+        { "type": "string" }
+      ]
+    },
+    "artifact_refs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/artifactRef"
+      }
+    },
+    "follow_up_questions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/followUpQuestion"
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/diagnostic"
+      }
+    },
+    "validation_inputs": {
+      "$ref": "#/$defs/validationInputs"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "status": { "const": "finished" } },
+        "required": ["status"]
+      },
+      "then": {
+        "not": { "required": ["failure_class"] }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "status": { "enum": ["error", "cancelled"] }
+        },
+        "required": ["status"]
+      },
+      "then": {
+        "required": ["failure_class"]
+      }
+    }
+  ],
+  "$defs": {
+    "artifactRef": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifact_id", "path", "size_bytes", "sha256"],
+      "properties": {
+        "artifact_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "size_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "media_type": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "followUpQuestion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question_id", "prompt"],
+      "properties": {
+        "question_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["blocker", "non-blocker"]
+        },
+        "domain": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "severity"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["error", "warning", "info"]
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "type": "string",
+          "enum": ["sdk", "worker", "validator"]
+        }
+      }
+    },
+    "validationInputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "schema_ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "artifact_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "domain_criteria": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

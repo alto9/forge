@@ -51,22 +51,29 @@ Serialized JSON passed from workflow orchestration to the worker activity. Store
 | `inputs` | yes | JSON object of workflow-supplied parameters (issue refs, paths, etc.) |
 | `model` | no | SDK model override; default server resolution when omitted |
 | `artifact_ids` | no | Declared workflow artifact IDs the activity may produce |
+| `output_type` | yes | Declared structured output: `json`, `markdown`, or `text` |
 
 ### Response envelope (boundary v1)
 
-Minimal fields returned from worker to Temporal. Full property catalog, versioning rules, and artifact reference serialization are specified in `.ai/data/serialization.md` (#23).
+Minimal fields returned from worker to Temporal. Full property catalog, versioning rules, artifact reference serialization, and Temporal size limits: `.ai/data/serialization.md`. JSON Schema: `.ai/schemas/activity-envelope.schema.json`.
 
 | Field | Required | Description |
 |-------|----------|-------------|
 | `envelope_version` | yes | `"1.0.0"` |
 | `activity_id` | yes | Echo from request |
+| `node_id` | yes | Workflow graph node |
+| `workflow_run_id` | yes | Temporal run identifier |
 | `cursor_agent_id` | yes | SDK agent ID |
 | `cursor_run_id` | yes | SDK run ID after `send()` |
+| `output_type` | yes | Echo from request |
 | `status` | yes | `finished`, `error`, or `cancelled` |
 | `failure_class` | when not success | `startup`, `execution`, or `cancelled` |
 | `retryable` | yes | From SDK `isRetryable` / policy mapping |
-| `diagnostics` | no | Array of `{ code, message, severity }` — metadata only; no secrets or raw transcripts |
-| `artifact_refs` | no | Pointers populated per #23 |
+| `structured_payload` | when success | Inline output per `output_type`; see size limits in serialization doc |
+| `artifact_refs` | no | `{ artifact_id, path, size_bytes, sha256 }` pointers; no embedded content |
+| `follow_up_questions` | no | Provisional `{ question_id, prompt, severity?, domain? }`; durable pauses use `human_question` nodes |
+| `diagnostics` | no | `{ code, message, severity, path?, source? }` — no secrets or raw transcripts |
+| `validation_inputs` | no | Optional hints for #24 validators (`schema_ref`, `artifact_ids`, `domain_criteria`) |
 
 ### Activity diagnostics and logging
 

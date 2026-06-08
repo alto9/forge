@@ -113,4 +113,112 @@ Pre-run validation returns an aggregate suitable for discovery (#30) and run-sta
 
 Request and response **boundary** fields (v1): `.ai/integration/api_contracts.md`.
 
-Full typed output envelope schema — structured payload shapes, artifact reference serialization, envelope versioning rules, and Temporal history size limits — are specified in this document as part of milestone **Bounded Agent Activities** issue #23.
+Machine validation: `.ai/schemas/activity-envelope.schema.json`.
+
+### Versioning
+
+| Field | Rule |
+|-------|------|
+| `envelope_version` | Semver (`MAJOR.MINOR.PATCH`). v1 value: `"1.0.0"`. |
+| MAJOR mismatch | Validation fails with `forge.envelope.unsupported_version`; envelope is inspectable but not accepted workflow state. |
+| MINOR/PATCH | Additive fields only; consumers ignore unknown optional fields. |
+
+Forge does not auto-migrate stored envelope JSON. Workers emit the supported version; validators reject unsupported majors.
+
+### Request envelope extensions (v1)
+
+In addition to boundary fields in `.ai/integration/api_contracts.md`:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `output_type` | yes | Declared structured output shape: `json`, `markdown`, or `text`. Validators use this with `structured_payload` in the response. |
+
+### Response envelope (full v1)
+
+Extends boundary fields in `.ai/integration/api_contracts.md`.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `envelope_version` | yes | `"1.0.0"` |
+| `activity_id` | yes | Echo from request |
+| `node_id` | yes | Workflow graph node |
+| `workflow_run_id` | yes | Temporal run identifier |
+| `cursor_agent_id` | yes | SDK agent ID |
+| `cursor_run_id` | yes | SDK run ID after `send()` |
+| `agent_path` | one of | Echo from request when present |
+| `skill_path` | one of | Echo from request when present |
+| `output_type` | yes | Echo from request (`json`, `markdown`, `text`) |
+| `status` | yes | `finished`, `error`, or `cancelled` |
+| `failure_class` | when not success | `startup`, `execution`, or `cancelled` |
+| `retryable` | yes | From SDK `isRetryable` / policy mapping |
+| `structured_payload` | when success | Inline structured output (see size limits) |
+| `artifact_refs` | no | Pointers to repo artifacts (see below) |
+| `follow_up_questions` | no | Provisional user questions (see below) |
+| `diagnostics` | no | Ordered diagnostic objects |
+| `validation_inputs` | no | Hints for downstream validators (#24): schema refs, artifact IDs, domain criterion IDs |
+
+#### `structured_payload`
+
+| `output_type` | Shape |
+|---------------|-------|
+| `json` | JSON object or array (not a string wrapper) |
+| `markdown` | String containing markdown |
+| `text` | Plain string |
+
+When `status` is not `finished`, `structured_payload` is omitted. Raw SDK transcripts are never stored in the envelope.
+
+#### `artifact_refs`
+
+Each entry references one produced or updated artifact. Content is not embedded.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `artifact_id` | yes | Matches a workflow-level `artifacts[].artifact_id` when declared |
+| `path` | yes | Repo-relative path from workspace root |
+| `size_bytes` | yes | File size in bytes at write time |
+| `sha256` | yes | Lowercase hex SHA-256 of file content |
+| `media_type` | no | MIME hint (e.g. `text/markdown`, `application/json`) |
+
+Activities must emit `artifact_refs` for any output file whose size exceeds the inline payload cap or when the workflow node declares `artifact_ids`.
+
+#### `follow_up_questions`
+
+Provisional tier-User suggestions from the agent activity. Durable user pauses remain `human_question` workflow nodes and Temporal signals.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `question_id` | yes | Stable ID within the envelope (kebab-case) |
+| `prompt` | yes | Question text for the operator |
+| `severity` | no | `blocker` or `non-blocker`; default `non-blocker` |
+| `domain` | no | Contract domain hint (e.g. `integration`, `data`) |
+
+When a declared artifact such as `user_questions.md` exists for the activity, that artifact is **authoritative** over `follow_up_questions` for triage and Phase C flows.
+
+#### `diagnostics`
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `code` | yes | Machine-readable code (e.g. `sdk.startup`, `forge.envelope.size_exceeded`) |
+| `message` | yes | Human-readable explanation; no secrets |
+| `severity` | yes | `error`, `warning`, or `info` |
+| `path` | no | JSON Pointer into `structured_payload` or repo-relative path |
+| `source` | no | `sdk`, `worker`, or `validator` |
+
+#### `validation_inputs`
+
+Optional hints consumed by validation nodes (#24). Does not bypass validators.
+
+| Field | Description |
+|-------|-------------|
+| `schema_ref` | Repo-relative JSON Schema path |
+| `artifact_ids` | Artifact IDs to check |
+| `domain_criteria` | Domain validator IDs or local criterion names |
+
+### Temporal history size limits
+
+| Limit | Value | On exceed |
+|-------|-------|-----------|
+| Inline `structured_payload` | 64 KiB UTF-8 | Worker moves content to artifact file and returns `artifact_refs` only |
+| Total serialized response envelope | 256 KiB UTF-8 JSON | Worker returns `status=error`, `failure_class=execution`, diagnostic `forge.envelope.size_exceeded`; activity may retry per policy |
+
+Assistant message text, tool payloads, API keys, and full SDK event streams are never written to the envelope or Temporal activity result.

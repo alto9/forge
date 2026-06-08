@@ -101,7 +101,7 @@ Worker-executed Cursor SDK activities log to the Forge Output channel with prefi
 
 ### Excluded from logs
 
-Assistant message text, tool call payloads, full SDK event streams, API keys, `Authorization` headers, certificate or private-key material, and environment variable values for names containing `KEY`, `TOKEN`, or `SECRET`.
+Assistant message text, tool call payloads, `structured_payload` body, `follow_up_questions` prompt text, full SDK event streams, API keys, `Authorization` headers, certificate or private-key material, and environment variable values for names containing `KEY`, `TOKEN`, or `SECRET`.
 
 ### Redaction
 
