@@ -177,7 +177,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     registerProjectSyncPrompt(context, outputChannel);
 
-    registerTemporalLocalSupervisor(context, outputChannel);
+    registerTemporalLocalSupervisor(context);
 
     // Auto-initialize Cursor agents on startup only when running in Cursor.
     if (isCursorAppName(vscode.env.appName || '')) {

@@ -22,6 +22,19 @@ export {
     resolveManagedLocalDevServerEntry,
 } from './devServerLaunch';
 export { classifyStartFailure } from './failureClassification';
+export {
+    formatManagedLocalStatusBarLabel,
+    formatPersistencePathForDisplay,
+    formatReadyNotification,
+    formatStartFailedNotification,
+    formatWorkflowBlockedNotification,
+} from './temporalPresentation';
+export {
+    TEMPORAL_OUTPUT_CHANNEL_NAME,
+    createTemporalOutputChannel,
+    notifyWorkflowBlockedByTemporal,
+    registerManagedLocalTemporalHealthSurfaces,
+} from './temporalHealthSurfaces';
 export { probeManagedLocalTemporalHealth } from './healthProbe';
 export {
     getTemporalLocalSupervisor,

@@ -15,6 +15,7 @@ export interface ManagedLocalSupervisorConfig {
     grpcPort: number;
     uiPort: number;
     persistencePath: string;
+    persistencePathDisplay: string;
     namespace: string;
     taskQueue: string;
 }

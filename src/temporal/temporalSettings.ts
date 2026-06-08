@@ -25,6 +25,7 @@ export interface ResolvedManagedLocalSettings {
     grpcPort: number;
     uiPort: number;
     persistencePath: string;
+    persistencePathUserConfigured: boolean;
     namespace: string;
     taskQueue: string;
 }
@@ -67,15 +68,17 @@ export function resolveManagedLocalSettings(input: {
         config.inspect<string>('persistencePath'),
         'FORGE_TEMPORAL_MANAGED_LOCAL_PERSISTENCE_PATH'
     );
-    const persistencePath =
-        configuredPersistencePath && configuredPersistencePath.length > 0
-            ? configuredPersistencePath
-            : computeDefaultPersistencePath(input.globalStoragePath, input.windowId);
+    const persistencePathUserConfigured =
+        configuredPersistencePath !== undefined && configuredPersistencePath.length > 0;
+    const persistencePath = persistencePathUserConfigured
+        ? configuredPersistencePath
+        : computeDefaultPersistencePath(input.globalStoragePath, input.windowId);
 
     return {
         grpcPort,
         uiPort,
         persistencePath,
+        persistencePathUserConfigured,
         namespace,
         taskQueue,
     };

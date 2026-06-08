@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
+import * as vscode from 'vscode';
 import { TemporalReadinessBlockedError } from './TemporalLocalSupervisor';
 import { TemporalLocalSupervisor } from './TemporalLocalSupervisor';
 import {
@@ -35,6 +36,10 @@ describe('temporalReadinessGate', () => {
                 getSupervisor: () => supervisor,
             })
         ).rejects.toBeInstanceOf(TemporalConfigurationInvalidError);
+
+        expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
+            'Workflow runs are blocked until Temporal is ready. See Forge Temporal output for details.'
+        );
 
         await expect(
             gateTemporalReadiness({

@@ -163,7 +163,7 @@ export class TemporalLocalSupervisor {
         }
 
         this.log(
-            `[forge.temporal.local] starting windowId=${this.config.windowId} grpcPort=${this.config.grpcPort} persistencePath=${this.config.persistencePath}`
+            `[forge.temporal.local] starting windowId=${this.config.windowId} grpcPort=${this.config.grpcPort} persistencePath=${this.config.persistencePathDisplay}`
         );
 
         const child = this.spawnChild({

@@ -1,5 +1,6 @@
 import type { Diagnostic } from '../workflows/types';
 import { TemporalLocalSupervisor, TemporalReadinessBlockedError } from './TemporalLocalSupervisor';
+import { notifyWorkflowBlockedByTemporal } from './temporalHealthSurfaces';
 import { resolveTemporalMode } from './temporalSettings';
 
 export const TEMPORAL_READINESS_VALIDATOR_ID = 'forge.temporal.readiness';
@@ -73,6 +74,7 @@ export async function gateTemporalReadiness(
         await supervisor.ensureReady();
     } catch (error) {
         if (error instanceof TemporalReadinessBlockedError) {
+            notifyWorkflowBlockedByTemporal();
             throw new TemporalConfigurationInvalidError([
                 configurationInvalidDiagnostic(error.message, error.remediation),
             ]);

@@ -59,6 +59,33 @@ describe('managedLocalSettings', () => {
         expect(resolved.persistencePath).toBe(
             path.join(os.tmpdir(), 'forge-global', 'temporal', 'window-abc')
         );
+        expect(resolved.persistencePathUserConfigured).toBe(false);
+    });
+
+    it('marks user-configured persistence path', () => {
+        const customPath = path.join(os.tmpdir(), 'custom-temporal');
+
+        vi.spyOn(vscode.workspace, 'getConfiguration').mockImplementation((section?: string) => {
+            if (section === 'forge.temporal.managedLocal') {
+                return {
+                    inspect: (key: string) => {
+                        if (key === 'persistencePath') {
+                            return { workspaceValue: customPath };
+                        }
+                        return undefined;
+                    },
+                } as vscode.WorkspaceConfiguration;
+            }
+            return {} as vscode.WorkspaceConfiguration;
+        });
+
+        const resolved = resolveManagedLocalSettings({
+            globalStoragePath: path.join(os.tmpdir(), 'forge-global'),
+            windowId: 'window-custom',
+        });
+
+        expect(resolved.persistencePath).toBe(customPath);
+        expect(resolved.persistencePathUserConfigured).toBe(true);
     });
 
     it('prefers workspace settings over environment variables', () => {

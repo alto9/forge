@@ -28,6 +28,11 @@ export const Uri = {
     parse: vi.fn()
 };
 
+export const StatusBarAlignment = {
+    Left: 1,
+    Right: 2,
+};
+
 export const window = {
     showInformationMessage: vi.fn(),
     showErrorMessage: vi.fn(),
@@ -38,6 +43,13 @@ export const window = {
         show: vi.fn(),
         clear: vi.fn(),
         dispose: vi.fn()
+    })),
+    createStatusBarItem: vi.fn(() => ({
+        text: '',
+        tooltip: '',
+        show: vi.fn(),
+        hide: vi.fn(),
+        dispose: vi.fn(),
     })),
     createWebviewPanel: vi.fn(),
     showQuickPick: vi.fn(),

@@ -4,26 +4,33 @@ import {
     ensurePersistenceDirectory,
     resolveManagedLocalSettings,
 } from './managedLocalSettings';
+import {
+    createTemporalOutputChannel,
+    registerManagedLocalTemporalHealthSurfaces,
+} from './temporalHealthSurfaces';
+import { formatPersistencePathForDisplay } from './temporalPresentation';
 import type { ManagedLocalSupervisorConfig } from './types';
 
 let supervisor: TemporalLocalSupervisor | undefined;
-let outputChannel: vscode.OutputChannel | undefined;
 
 export function getTemporalLocalSupervisor(): TemporalLocalSupervisor | undefined {
     return supervisor;
 }
 
 export function registerTemporalLocalSupervisor(
-    context: vscode.ExtensionContext,
-    channel?: vscode.OutputChannel
+    context: vscode.ExtensionContext
 ): TemporalLocalSupervisor {
-    outputChannel = channel;
     const windowId = vscode.env.sessionId;
     const settings = resolveManagedLocalSettings({
         globalStoragePath: context.globalStorageUri.fsPath,
         windowId,
     });
     ensurePersistenceDirectory(settings.persistencePath);
+
+    const persistencePathDisplay = formatPersistencePathForDisplay(
+        settings.persistencePath,
+        settings.persistencePathUserConfigured
+    );
 
     const config: ManagedLocalSupervisorConfig = {
         windowId,
@@ -32,15 +39,26 @@ export function registerTemporalLocalSupervisor(
         grpcPort: settings.grpcPort,
         uiPort: settings.uiPort,
         persistencePath: settings.persistencePath,
+        persistencePathDisplay,
         namespace: settings.namespace,
         taskQueue: settings.taskQueue,
     };
 
+    const outputChannel = createTemporalOutputChannel(context);
+
     supervisor = new TemporalLocalSupervisor(config, {
         log: (line) => {
-            outputChannel?.appendLine(line);
+            outputChannel.appendLine(line);
         },
     });
+
+    registerManagedLocalTemporalHealthSurfaces(
+        context,
+        supervisor,
+        config,
+        persistencePathDisplay,
+        outputChannel
+    );
 
     context.subscriptions.push({
         dispose: () => {
