@@ -1,3 +1,9 @@
+## 3.23.0 (2026-06-08)
+
+* Merge pull request #52 from alto9/feature/issue-15 ([badd523](https://github.com/alto9/forge/commit/badd523)), closes [#52](https://github.com/alto9/forge/issues/52) [#15](https://github.com/alto9/forge/issues/15) [#29](https://github.com/alto9/forge/issues/29) [#30](https://github.com/alto9/forge/issues/30)
+* feat(workflows): add structural JSON Schema validation for workflow definitions ([d318cd7](https://github.com/alto9/forge/commit/d318cd7)), closes [#29](https://github.com/alto9/forge/issues/29)
+* feat(workflows): add workspace workflow definition discovery index ([7c0a126](https://github.com/alto9/forge/commit/7c0a126))
+
 ## <small>3.22.12 (2026-06-08)</small>
 
 * docs(ai): refine issue #24 contract updates ([dd55986](https://github.com/alto9/forge/commit/dd55986)), closes [#24](https://github.com/alto9/forge/issues/24)
