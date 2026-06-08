@@ -17,12 +17,20 @@ export const workspace = {
         delete: vi.fn()
     },
     getWorkspaceFolder: vi.fn(),
+    getConfiguration: vi.fn(() => ({
+        get: vi.fn(),
+    })),
     workspaceFolders: []
 };
 
 export const Uri = {
     file: (path: string) => ({ fsPath: path, path, scheme: 'file' }),
     parse: vi.fn()
+};
+
+export const StatusBarAlignment = {
+    Left: 1,
+    Right: 2,
 };
 
 export const window = {
@@ -36,6 +44,13 @@ export const window = {
         clear: vi.fn(),
         dispose: vi.fn()
     })),
+    createStatusBarItem: vi.fn(() => ({
+        text: '',
+        tooltip: '',
+        show: vi.fn(),
+        hide: vi.fn(),
+        dispose: vi.fn(),
+    })),
     createWebviewPanel: vi.fn(),
     showQuickPick: vi.fn(),
     showInputBox: vi.fn()
@@ -44,6 +59,11 @@ export const window = {
 export const commands = {
     registerCommand: vi.fn(),
     executeCommand: vi.fn()
+};
+
+export const env = {
+    sessionId: 'test-session-id',
+    appName: 'Cursor',
 };
 
 export const ViewColumn = {

@@ -4,6 +4,10 @@ import { InitializeProjectCommand } from './commands/InitializeProjectCommand';
 import { RoadmapCommand } from './commands/RoadmapCommand';
 import { SetupCursorCommand, projectForgeAssetsNeedSync } from './commands/SetupCursorCommand';
 import { ForgeChatParticipant } from './chatParticipant';
+import {
+    registerTemporalLocalSupervisor,
+    shutdownTemporalLocalSupervisor,
+} from './temporal';
 
 let outputChannel: vscode.OutputChannel;
 const AUTO_PROJECT_SYNC_ENABLED_SETTING = 'autoProjectSync.enabled';
@@ -173,6 +177,8 @@ export function activate(context: vscode.ExtensionContext) {
 
     registerProjectSyncPrompt(context, outputChannel);
 
+    registerTemporalLocalSupervisor(context);
+
     // Auto-initialize Cursor agents on startup only when running in Cursor.
     if (isCursorAppName(vscode.env.appName || '')) {
         void InitializeAgentsCommand.execute(context, outputChannel, {
@@ -182,7 +188,9 @@ export function activate(context: vscode.ExtensionContext) {
     }
 }
 
-export function deactivate() {}
+export async function deactivate() {
+    await shutdownTemporalLocalSupervisor();
+}
 
 export function getOutputChannel(): vscode.OutputChannel {
     return outputChannel;

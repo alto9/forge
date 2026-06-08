@@ -122,6 +122,37 @@
           "type": "string",
           "default": "Done",
           "description": "Status option value that means complete (issues with this status are hidden)."
+        },
+        "forge.temporal.mode": {
+          "type": "string",
+          "enum": ["managedLocal", "external"],
+          "default": "managedLocal",
+          "description": "Selects managed-local dev server (npm-bundled, window-scoped) vs external Temporal endpoint. See forge/.ai/runtime/configuration.md."
+        },
+        "forge.temporal.managedLocal.grpcPort": {
+          "type": "number",
+          "default": 7233,
+          "description": "gRPC port for the window-scoped managed-local Temporal dev server."
+        },
+        "forge.temporal.managedLocal.uiPort": {
+          "type": "number",
+          "default": 8233,
+          "description": "Temporal Web UI port for managed-local mode (diagnostics only in v1)."
+        },
+        "forge.temporal.managedLocal.persistencePath": {
+          "type": "string",
+          "default": "",
+          "description": "Override for managed-local dev server persistence directory. When empty, Forge uses {extensionGlobalStorage}/temporal/{windowId}/."
+        },
+        "forge.temporal.managedLocal.namespace": {
+          "type": "string",
+          "default": "forge-local",
+          "description": "Temporal namespace for managed-local workflow runs in this window."
+        },
+        "forge.temporal.managedLocal.taskQueue": {
+          "type": "string",
+          "default": "forge-workflows",
+          "description": "Default task queue for workflow workers in managed-local mode."
         }
       }
     }
@@ -187,6 +218,8 @@
   },
   "dependencies": {
     "@octokit/rest": "^22.0.1",
+    "@temporalio/client": "^1.17.2",
+    "@temporalio/worker": "^1.17.2",
     "ajv": "^8.20.0",
     "gray-matter": "^4.0.3",
     "react": "^18.3.1",
