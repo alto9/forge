@@ -1,3 +1,8 @@
+## <small>3.22.6 (2026-06-08)</small>
+
+* docs: update project board ([aa4aa45](https://github.com/alto9/forge/commit/aa4aa45))
+* docs(ai): refine issue #18 contract updates ([8fd6141](https://github.com/alto9/forge/commit/8fd6141)), closes [#18](https://github.com/alto9/forge/issues/18)
+
 ## <small>3.22.5 (2026-06-08)</small>
 
 * docs(ai): refine issue #17 contract updates ([2f2ba96](https://github.com/alto9/forge/commit/2f2ba96)), closes [#17](https://github.com/alto9/forge/issues/17)
