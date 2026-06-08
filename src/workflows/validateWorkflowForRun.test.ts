@@ -125,6 +125,18 @@ describe('validateWorkflowForRun', () => {
             ])
         );
     });
+
+    it('passes pre-run validation for the repo refine-issue workflow with no error diagnostics', () => {
+        const result = validateWorkflowForRun({
+            workspaceRoots: [process.cwd()],
+            workflowId: 'refine-issue',
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.workflow_id).toBe('refine-issue');
+        expect(result.path).toBe('.ai/workflows/refine-issue.json');
+        expect(result.diagnostics.filter((diagnostic) => diagnostic.severity === 'error')).toEqual([]);
+    });
 });
 
 describe('gateWorkflowRunStart', () => {
