@@ -1,0 +1,195 @@
+{
+  "schema_version": "1.0.0",
+  "workflow_id": "refine-issue",
+  "name": "Refine Issue",
+  "version": "1.0.0",
+  "description": "Forge Step 4 workflow: normalize GitHub issue parentage, ground in .ai contracts, triage tier-User questions, complete issue and contract refinement, and hand off to implementation. Proving workflow for repo-owned workflow definitions.",
+  "entry_node_id": "normalize_issue_parentage",
+  "metadata": {
+    "owner": "forge",
+    "forge_command": "refine-issue",
+    "milestone": "Workflow Definition Contracts",
+    "run_input_issue_ref": "GitHub issue URL, owner/repo#N, or N with repo from workspace remote"
+  },
+  "artifacts": [
+    {
+      "artifact_id": "issue_context",
+      "path": ".cursor/.tmp/refine-*/issue_context.md",
+      "description": "Phase A snapshot: issue body, milestone peers, linked .ai themes."
+    },
+    {
+      "artifact_id": "user_questions",
+      "path": ".cursor/.tmp/refine-*/user_questions.md",
+      "description": "Phase B.5 tier-User questions (cap 8, blocker tags preserved)."
+    },
+    {
+      "artifact_id": "assumptions",
+      "path": ".cursor/.tmp/refine-*/assumptions.md",
+      "description": "Phase B.5 tier-SME assumptions and overflow reclassification."
+    },
+    {
+      "artifact_id": "refinement",
+      "path": ".cursor/.tmp/refine-*/refinement.md",
+      "description": "Phase C answered tier-User decisions and session log."
+    },
+    {
+      "artifact_id": "domain_report",
+      "path": ".cursor/.tmp/refine-*/*.md",
+      "description": "Optional Phase B SME domain reports (excluding triage files above)."
+    }
+  ],
+  "nodes": [
+    {
+      "node_id": "normalize_issue_parentage",
+      "type": "activity",
+      "name": "Normalize issue parentage",
+      "description": "Resolve sub-issue links to the working parent issue before refinement proceeds.",
+      "activity_id": "forge.github.resolve_issue_parentage",
+      "skill_path": "resources/workflow/skills/resolve-issue-parentage/SKILL.md",
+      "artifact_ids": ["issue_context"],
+      "transitions": [
+        { "to_node_id": "workspace_prep" }
+      ]
+    },
+    {
+      "node_id": "workspace_prep",
+      "type": "activity",
+      "name": "Workspace prep (Phase A)",
+      "description": "Create tmp session dir, origin/main worktree for .ai edits, and issue_context.md.",
+      "activity_id": "forge.refine.workspace_prep",
+      "agent_path": "resources/workflow/agents/technical-writer.md",
+      "artifact_ids": ["issue_context"],
+      "transitions": [
+        { "to_node_id": "ground_contracts" }
+      ]
+    },
+    {
+      "node_id": "ground_contracts",
+      "type": "activity",
+      "name": "Ground in contracts (Phase B)",
+      "description": "Read knowledge_map.json, milestone peers, and Open implementation decisions; produce question pass notes.",
+      "activity_id": "forge.refine.ground_contracts",
+      "agent_path": "resources/workflow/agents/technical-writer.md",
+      "artifact_ids": ["issue_context", "domain_report"],
+      "transitions": [
+        { "to_node_id": "triage_questions" }
+      ]
+    },
+    {
+      "node_id": "triage_questions",
+      "type": "activity",
+      "name": "Triage questions (Phase B.5)",
+      "description": "Produce user_questions.md (tier-User, max 8) and assumptions.md (tier-SME).",
+      "activity_id": "forge.refine.triage_questions",
+      "agent_path": "resources/workflow/agents/technical-writer.md",
+      "artifact_ids": ["user_questions", "assumptions"],
+      "transitions": [
+        { "to_node_id": "validate_triage_artifacts" }
+      ]
+    },
+    {
+      "node_id": "validate_triage_artifacts",
+      "type": "validation",
+      "name": "Validate triage artifacts",
+      "description": "Confirm triage files are declared and structurally present before user verification.",
+      "validators": [
+        {
+          "validator_id": "forge.artifact.declared",
+          "type": "artifact",
+          "target": "user_questions"
+        },
+        {
+          "validator_id": "forge.artifact.declared",
+          "type": "artifact",
+          "target": "assumptions"
+        }
+      ],
+      "transitions": [
+        { "to_node_id": "user_verification_batch" }
+      ]
+    },
+    {
+      "node_id": "user_verification_batch",
+      "type": "human_question",
+      "name": "User verification (Phase C)",
+      "description": "Collect tier-User answers in batches of 3-5 questions; blockers first. Append to refinement.md.",
+      "question_id": "user_verification_batch",
+      "artifact_ids": ["refinement", "user_questions"],
+      "transitions": [
+        { "to_node_id": "check_user_blockers" }
+      ]
+    },
+    {
+      "node_id": "check_user_blockers",
+      "type": "decision",
+      "name": "Check tier-User blockers",
+      "description": "Loop Phase C until every blocker in user_questions.md is Answered, Deferred with acceptance, or Superseded.",
+      "transitions": [
+        {
+          "to_node_id": "user_verification_batch",
+          "condition": "blockers_open"
+        },
+        {
+          "to_node_id": "complete_refinement",
+          "condition": "blockers_resolved"
+        }
+      ]
+    },
+    {
+      "node_id": "complete_refinement",
+      "type": "activity",
+      "name": "Complete refinement (Phase D)",
+      "description": "Refine GitHub issue bodies, optional sub-issues, and complete in-scope .ai contracts in the main worktree.",
+      "activity_id": "forge.refine.complete_refinement",
+      "agent_path": "resources/workflow/agents/technical-writer.md",
+      "artifact_ids": ["refinement"],
+      "transitions": [
+        { "to_node_id": "validate_exit_criteria" }
+      ]
+    },
+    {
+      "node_id": "validate_exit_criteria",
+      "type": "validation",
+      "name": "Validate refine-issue exit criteria",
+      "description": "Runtime domain gate before .ai commit and handoff.",
+      "validators": [
+        {
+          "validator_id": "local.forge.refine_issue.exit_criteria",
+          "type": "domain",
+          "target": "refine_issue_refinement_complete"
+        }
+      ],
+      "transitions": [
+        { "to_node_id": "commit_ai_contracts" }
+      ]
+    },
+    {
+      "node_id": "commit_ai_contracts",
+      "type": "activity",
+      "name": "Commit and push .ai contracts",
+      "description": "Auto-commit and push completed .ai edits to main from the disposable worktree (Phase D step 5).",
+      "activity_id": "forge.refine.commit_ai_contracts",
+      "agent_path": "resources/workflow/agents/technical-writer.md",
+      "transitions": [
+        { "to_node_id": "handoff" }
+      ]
+    },
+    {
+      "node_id": "handoff",
+      "type": "activity",
+      "name": "Board hygiene and handoff (Phase E)",
+      "description": "Move project status when configured, remove worktree, publish handoff summary.",
+      "activity_id": "forge.refine.handoff",
+      "agent_path": "resources/workflow/agents/technical-writer.md",
+      "transitions": [
+        { "to_node_id": "terminal_complete" }
+      ]
+    },
+    {
+      "node_id": "terminal_complete",
+      "type": "terminal",
+      "name": "Refinement complete",
+      "description": "Parent issue development-ready; in-scope Open implementation decisions resolved; .ai pushed to main."
+    }
+  ]
+}

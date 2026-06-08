@@ -45,7 +45,8 @@ Canonical field names, node types, and versioning are specified in `.ai/data/ser
 | `forge.artifact.declared` | artifact | Node `artifact_ids` reference declared workflow artifacts. |
 | `forge.artifact.exists` | artifact | Declared artifact `path` exists or matches at validation time. |
 | `forge.artifact.schema` | schema | Artifact content matches a referenced JSON Schema. |
-| `forge.domain.exit_criteria` | domain | Workflow-specific exit criteria (used by concrete workflows such as `/refine-issue` in issue #17). |
+| `forge.domain.exit_criteria` | domain | Workflow-specific exit criteria (generic runtime hook). |
+| `local.forge.refine_issue.exit_criteria` | domain | `/refine-issue` refinement complete per mapping section below. |
 
 Repositories may add `local.<repo>.<name>` validator IDs for workflow-specific domain checks. Forge-built validators use the `forge.*` prefix.
 
@@ -62,4 +63,56 @@ Binding checks at pre-run include: `entry_node_id` and all `to_node_id` values r
 
 ### `/refine-issue` mapping
 
-Mapping `/refine-issue` phases into a concrete workflow definition is owned by issue #17. This contract keeps `/refine-issue` as an ordinary workflow: no bespoke node types, runtime hooks, or validator IDs reserved in application code.
+Canonical definition: `.ai/workflows/refine-issue.json` (`workflow_id`: `refine-issue`). `/refine-issue` uses the same node types as any workflow; Forge does not reserve bespoke node types or runtime hooks for it.
+
+#### Run inputs
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `issue_ref` | yes | GitHub issue reference: full URL (`https://github.com/{owner}/{repo}/issues/{N}`), qualified shorthand (`{owner}/{repo}#{N}`), or issue number alone (`{N}`) when the active workspace resolves `owner/repo` from its GitHub remote. |
+
+The orchestrator normalizes `issue_ref` to a working parent issue before Phase A workspace prep.
+
+#### Phase to node mapping
+
+| Refine phase | Workflow node (`node_id`) | Node type | Primary artifacts |
+|--------------|---------------------------|-----------|-------------------|
+| Parentage normalization (pre-A) | `normalize_issue_parentage` | `activity` | — |
+| A — Workspace prep | `workspace_prep` | `activity` | `issue_context` |
+| B — Ground contracts | `ground_contracts` | `activity` | `issue_context`, optional `domain_report` |
+| B.5 — Triage | `triage_questions` | `activity` | `user_questions`, `assumptions` |
+| B.5 — Triage gate | `validate_triage_artifacts` | `validation` | declares `user_questions`, `assumptions` |
+| C — User verification | `user_verification_batch` | `human_question` | `refinement`, `user_questions` |
+| C — Blocker loop | `check_user_blockers` | `decision` | loops to `user_verification_batch` while `blockers_open` |
+| D — Issue + `.ai` completion | `complete_refinement` | `activity` | `refinement` |
+| D — Exit gate | `validate_exit_criteria` | `validation` | `local.forge.refine_issue.exit_criteria` |
+| D — Commit `.ai` | `commit_ai_contracts` | `activity` | — |
+| E — Handoff | `handoff` | `activity` | — |
+| Complete | `terminal_complete` | `terminal` | — |
+
+Tmp artifact paths use session slug `refine-{repoRef}-{issueNumber}` under `.cursor/.tmp/` at the workspace root. Glob declarations in the workflow JSON use `.cursor/.tmp/refine-*/` so discovery and validators match any target repoRef.
+
+#### Human question steps
+
+Phase C is one declared `human_question` node (`question_id`: `user_verification_batch`). The workflow presents tier-User items from `user_questions.md` in batches of 3–5 (blockers first), records answers in `refinement.md`, and uses `check_user_blockers` to loop until every **blocker** is Answered, Deferred with explicit acceptance, or Superseded.
+
+#### Exit criteria (`local.forge.refine_issue.exit_criteria`)
+
+Runtime validation (not pre-run) passes when all are true:
+
+- Working parent issue body satisfies mandatory ticket format (parent and any sub-issues created).
+- No unanswered tier-User **blocker** remains in `user_questions.md` / `refinement.md`.
+- In-scope `## Open implementation decisions` bullets for the working issue are resolved in `.ai` at the worktree.
+- Completed `.ai` edits are committed and pushed to `main` from the disposable worktree when the run included `.ai` changes.
+
+#### Activity identifiers
+
+| `activity_id` | Binding |
+|---------------|---------|
+| `forge.github.resolve_issue_parentage` | `resources/workflow/skills/resolve-issue-parentage/SKILL.md` |
+| `forge.refine.workspace_prep` | `resources/workflow/agents/technical-writer.md` |
+| `forge.refine.ground_contracts` | `resources/workflow/agents/technical-writer.md` |
+| `forge.refine.triage_questions` | `resources/workflow/agents/technical-writer.md` |
+| `forge.refine.complete_refinement` | `resources/workflow/agents/technical-writer.md` |
+| `forge.refine.commit_ai_contracts` | `resources/workflow/agents/technical-writer.md` |
+| `forge.refine.handoff` | `resources/workflow/agents/technical-writer.md` |

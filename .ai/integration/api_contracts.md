@@ -29,4 +29,15 @@ Implementation-level items not yet fully specified. `/refine-issue` resolves the
 - Define how Cursor SDK run IDs, cancellation state, logs, artifacts, and validation diagnostics are exposed to Temporal and Forge UI.
 
 ### GitHub activity contracts
-- Define the concrete GitHub REST or GraphQL operations used by the `/refine-issue` workflow while keeping them reusable for future workflow definitions.
+
+`/refine-issue` GitHub boundaries reuse script skills and `gh` / GitHub MCP from the Technical Writer loop. Workflow JSON references skills by path; activities do not embed raw REST URLs in definition files.
+
+| Activity / skill | GitHub surface | Purpose in `/refine-issue` |
+|------------------|----------------|----------------------------|
+| `forge.github.resolve_issue_parentage` → `resolve-issue-parentage` | REST sub-issues parent endpoint (`GET .../issues/{n}/parent`) | Normalize sub-issue input to working parent |
+| Technical Writer activities | Issue read (`gh issue view`, MCP), issue edit (`gh issue edit`, MCP) | Refine parent and sub-issue bodies |
+| `pull-milestone-issues` | Issues API filtered by milestone | Milestone peer context in Phase B |
+| `link-subissue-to-issue` | REST sub-issues link | Attach created sub-issues to parent |
+| `gh-project-set-status` | Projects v2 item status | Phase E board hygiene when `github_board` is configured |
+
+Future workflows declare the same pattern: stable `activity_id` plus resolvable `skill_path` or agent binding, with GitHub operations implemented in skill scripts or agent tooling—not in workflow JSON prose.

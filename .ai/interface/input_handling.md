@@ -6,6 +6,7 @@ Forge workflow input handling accepts user intent without bypassing workflow val
 
 - Workflow selection starts from discovered `.ai/workflows/*.json` definitions in the active repository context.
 - Run start input captures the selected workflow, target repository or workspace, required parameters, and confirmed Temporal mode.
+- For `refine-issue`, required run input is `issue_ref` (see `.ai/business_logic/domain_model.md` **Run inputs**). Forge passes the normalized working parent issue to downstream activities after `normalize_issue_parentage`.
 - Human question input is collected only when a workflow run is waiting for a declared question. The answer is submitted through the workflow's declared Temporal signal or update.
 - Retry, cancel, continue, and inspect actions are available only when the current run state supports them.
 - Inputs that affect GitHub, filesystem artifacts, Temporal, or Cursor SDK activity execution must be tied to a visible workflow step and validation path.
