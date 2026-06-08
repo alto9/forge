@@ -1,3 +1,11 @@
+## 3.24.0 (2026-06-08)
+
+* Merge pull request #53 from alto9/feature/issue-16 ([695c340](https://github.com/alto9/forge/commit/695c340)), closes [#53](https://github.com/alto9/forge/issues/53) [#16](https://github.com/alto9/forge/issues/16)
+* Merge pull request #53 from alto9/feature/issue-16 ([a2ed09b](https://github.com/alto9/forge/commit/a2ed09b)), closes [#53](https://github.com/alto9/forge/issues/53) [#16](https://github.com/alto9/forge/issues/16)
+* feat(workflows): add domain validation for workflow definitions ([5788e22](https://github.com/alto9/forge/commit/5788e22)), closes [#31](https://github.com/alto9/forge/issues/31)
+* feat(workflows): add pre-run validation orchestrator and run gate ([effb141](https://github.com/alto9/forge/commit/effb141)), closes [#32](https://github.com/alto9/forge/issues/32)
+* feat(workflows): export pre-run validator scope and public module index ([e4e9565](https://github.com/alto9/forge/commit/e4e9565)), closes [#16](https://github.com/alto9/forge/issues/16)
+
 ## 3.23.0 (2026-06-08)
 
 * Merge pull request #52 from alto9/feature/issue-15 ([badd523](https://github.com/alto9/forge/commit/badd523)), closes [#52](https://github.com/alto9/forge/issues/52) [#15](https://github.com/alto9/forge/issues/15) [#29](https://github.com/alto9/forge/issues/29) [#30](https://github.com/alto9/forge/issues/30)
