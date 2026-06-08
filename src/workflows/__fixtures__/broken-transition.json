@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0.0",
+  "workflow_id": "broken-transition",
+  "name": "Broken Transition",
+  "version": "1.0.0",
+  "entry_node_id": "start",
+  "nodes": [
+    {
+      "node_id": "start",
+      "type": "activity",
+      "name": "Start",
+      "activity_id": "forge.test.start",
+      "agent_path": "resources/workflow/agents/technical-writer.md",
+      "transitions": [
+        { "to_node_id": "missing-node" }
+      ]
+    },
+    {
+      "node_id": "done",
+      "type": "terminal",
+      "name": "Done"
+    }
+  ]
+}
