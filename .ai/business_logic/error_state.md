@@ -5,7 +5,7 @@ Workflow runs expose failures as workflow state, not as hidden agent transcript 
 ## Workflow Error States
 
 - Definition invalid: a workflow JSON file fails schema validation, graph invariants, or references unknown activities, validators, agents, skills, artifacts, or transitions. Diagnostics use the shape in `.ai/data/serialization.md` (`code`, `severity`, `path`, `message`, `validator_id`).
-- Configuration invalid: Forge cannot resolve a required Temporal mode, endpoint, namespace, worker setting, repository path, or credential binding.
+- Configuration invalid: Forge cannot resolve a required Temporal mode, endpoint, namespace, worker setting, repository path, or credential binding. In managed-local mode, `start_failed` dev server startup (port conflict, missing npm-bundled asset, persistence permission error) is configuration invalid until the user fixes the environment or switches mode explicitly; Forge does not auto-fallback to external mode.
 - Activity failed: a bounded Cursor SDK activity or other integration activity failed before producing a valid output envelope.
 - Validation failed: an activity produced output, but schema, artifact, or domain validation rejected it.
 - Human input required: the workflow is intentionally paused until a user answers one or more questions.

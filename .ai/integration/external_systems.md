@@ -4,7 +4,11 @@ Forge workflow execution integrates with Temporal, Cursor SDK, GitHub, and the l
 
 ## Temporal
 
-Forge supports both managed local Temporal and external or Cloud Temporal endpoint modes. Managed local mode may start a local Temporal dev server for single-user workflows. External or Cloud mode connects to a configured endpoint and namespace.
+Forge supports both managed local Temporal and external or Cloud Temporal endpoint modes.
+
+**Managed local:** Forge supervises one npm-bundled Temporal dev server child process per VS Code window. The server starts lazily from extension-shipped Node dependencies; users do not install the Temporal CLI. Connection uses `forge.temporal.managedLocal.grpcPort` (default `7233`) and namespace `forge.temporal.managedLocal.namespace` (default `forge-local`). Startup failure blocks workflow runs without auto-fallback to external mode.
+
+**External or Cloud:** Forge connects to a user-configured endpoint and namespace (#19).
 
 Temporal owns durable workflow state, retries, waits, timers, and recovery. Forge does not implement a competing durable workflow engine.
 
