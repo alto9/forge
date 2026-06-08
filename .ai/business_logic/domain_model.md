@@ -49,6 +49,17 @@ Canonical field names, node types, and versioning are specified in `.ai/data/ser
 
 Repositories may add `local.<repo>.<name>` validator IDs for workflow-specific domain checks. Forge-built validators use the `forge.*` prefix.
 
+### Pre-run vs runtime validation scope
+
+| Phase | When | Validator IDs |
+|-------|------|---------------|
+| Pre-run (definition) | Before a workflow run is created | `forge.workflow.schema`, `forge.workflow.graph`, `forge.workflow.binding`, `forge.workflow.duplicate_id`, `forge.workflow.unsupported_version`, `forge.artifact.declared` |
+| Runtime (validation nodes) | After an activity produces output during a run | `forge.artifact.exists`, `forge.artifact.schema`, `forge.domain.exit_criteria`, plus any `local.*` validators declared on validation nodes |
+
+Pre-run validation also enforces that each file path `.ai/workflows/<workflow_id>.json` has a filename stem equal to `workflow_id` (reported under `forge.workflow.binding`).
+
+Binding checks at pre-run include: `entry_node_id` and all `to_node_id` values resolve; activity nodes declare `activity_id` and exactly one resolvable `agent_path` or `skill_path`; node `validator_id` values match the catalog or `local.*` pattern; `retry_policy` and `timeout_policy` references match declared policies; node `artifact_ids` reference workflow-level artifacts.
+
 ### `/refine-issue` mapping
 
 Mapping `/refine-issue` phases into a concrete workflow definition is owned by issue #17. This contract keeps `/refine-issue` as an ordinary workflow: no bespoke node types, runtime hooks, or validator IDs reserved in application code.

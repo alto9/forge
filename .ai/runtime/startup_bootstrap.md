@@ -5,7 +5,7 @@ On activation, Forge prepares workflow capability without starting arbitrary wor
 ## Startup Responsibilities
 
 - Detect the active repository context and discover `.ai/workflows/*.json` definitions.
-- Validate workflow definition structure enough to show catalog health and prevent invalid starts.
+- Run pre-run validation (`.ai/business_logic/domain_model.md` pre-run scope) via shared workflow modules so discovery can report catalog health and run-start gates can block invalid definitions.
 - Resolve configured Temporal mode and connection readiness.
 - In managed local mode, prepare or start the local Temporal service only when workflow capability needs it.
 - Start or attach to worker supervision outside the VS Code extension host when workflow execution is enabled.

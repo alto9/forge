@@ -79,17 +79,35 @@ Transitions are node-local: `transitions[]` with required `to_node_id` and optio
 - `schema_version` tracks the JSON contract shape. When Forge ships a new major workflow schema, runners report `forge.workflow.unsupported_version` for definitions whose `schema_version` major is not supported.
 - Forge does not auto-migrate workflow files. Authors edit `.ai/workflows/*.json` explicitly when contract changes require it.
 
-## Invalid definition reporting (contract shape)
+## Invalid definition reporting
 
-Diagnostics returned to CLI, commands, and Studio discovery use a stable object shape (validation implementation is issue #16):
+Diagnostics returned to discovery, pre-run gates, commands, and Studio use a stable object shape.
+
+### Diagnostic
 
 | Field | Description |
 |-------|-------------|
-| `code` | Machine-readable code (e.g. `schema.required`, `graph.unreachable_node`). |
-| `severity` | `error` blocks runs; `warning` is visible but non-blocking when warnings are enabled. |
-| `path` | JSON Pointer into the definition file. |
+| `code` | Machine-readable code (e.g. `schema.required`, `graph.unreachable_node`, `binding.missing_agent_path`). |
+| `severity` | `error` or `warning`. |
+| `path` | JSON Pointer into the definition file (or repo-relative path for cross-file rules such as duplicate IDs). |
 | `message` | Human-readable explanation. |
-| `validator_id` | Validator or rule ID that produced the diagnostic. |
+| `validator_id` | Validator or rule ID that produced the diagnostic (from `.ai/business_logic/domain_model.md`). |
+
+### Severity rules
+
+- `severity: error` — run start is blocked until the definition is fixed.
+- `severity: warning` — visible in discovery and validation results; does **not** block run start.
+
+### Validation result (aggregate)
+
+Pre-run validation returns an aggregate suitable for discovery (#30) and run-start gates:
+
+| Field | Description |
+|-------|-------------|
+| `valid` | `true` when no diagnostic has `severity: error`. |
+| `diagnostics` | Ordered array of diagnostic objects. |
+| `workflow_id` | Present when parsed from the definition. |
+| `path` | Repo-relative path to the definition file. |
 
 ## Open implementation decisions
 
