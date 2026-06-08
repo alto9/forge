@@ -17,6 +17,9 @@ export const workspace = {
         delete: vi.fn()
     },
     getWorkspaceFolder: vi.fn(),
+    getConfiguration: vi.fn(() => ({
+        get: vi.fn(),
+    })),
     workspaceFolders: []
 };
 
@@ -44,6 +47,11 @@ export const window = {
 export const commands = {
     registerCommand: vi.fn(),
     executeCommand: vi.fn()
+};
+
+export const env = {
+    sessionId: 'test-session-id',
+    appName: 'Cursor',
 };
 
 export const ViewColumn = {

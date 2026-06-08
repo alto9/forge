@@ -187,6 +187,8 @@
   },
   "dependencies": {
     "@octokit/rest": "^22.0.1",
+    "@temporalio/client": "^1.17.2",
+    "@temporalio/worker": "^1.17.2",
     "ajv": "^8.20.0",
     "gray-matter": "^4.0.3",
     "react": "^18.3.1",
