@@ -1,3 +1,7 @@
+## <small>3.22.2 (2026-06-08)</small>
+
+* docs(ai): forge workflow temporal refactor contract updates ([e839190](https://github.com/alto9/forge/commit/e839190))
+
 ## <small>3.22.1 (2026-05-27)</small>
 
 * docs: forge to ai migration ([7bbd276](https://github.com/alto9/forge/commit/7bbd276))
