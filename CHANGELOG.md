@@ -1,3 +1,12 @@
+## 3.25.0 (2026-06-08)
+
+* Merge pull request #54 from alto9/feature/issue-17 ([699120e](https://github.com/alto9/forge/commit/699120e)), closes [#54](https://github.com/alto9/forge/issues/54) [#33](https://github.com/alto9/forge/issues/33)
+* Merge pull request #55 from alto9/feature/issue-18 ([74ab542](https://github.com/alto9/forge/commit/74ab542)), closes [#55](https://github.com/alto9/forge/issues/55) [#18](https://github.com/alto9/forge/issues/18)
+* feat(temporal): add managed-local dev server supervisor (#34) ([ea9f98d](https://github.com/alto9/forge/commit/ea9f98d)), closes [#34](https://github.com/alto9/forge/issues/34)
+* feat(temporal): add managed-local settings and readiness gate (#35) ([e1d3c11](https://github.com/alto9/forge/commit/e1d3c11)), closes [#35](https://github.com/alto9/forge/issues/35)
+* feat(temporal): surface managed-local health in Output, status bar, and notifications (#36) ([2c94f28](https://github.com/alto9/forge/commit/2c94f28)), closes [#36](https://github.com/alto9/forge/issues/36)
+* test(workflows): add refine-issue pre-run and phase mapping fixtures ([e9f17a9](https://github.com/alto9/forge/commit/e9f17a9))
+
 ## 3.24.0 (2026-06-08)
 
 * Merge pull request #53 from alto9/feature/issue-16 ([695c340](https://github.com/alto9/forge/commit/695c340)), closes [#53](https://github.com/alto9/forge/issues/53) [#16](https://github.com/alto9/forge/issues/16)

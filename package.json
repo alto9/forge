@@ -2,7 +2,7 @@
   "name": "forge-studio",
   "displayName": "Forge Studio",
   "description": "VS Code and Cursor extension for GitHub-centric context engineering: staged agents, Agent Skills, and chat personas aligned with issues, PRs, and milestones.",
-  "version": "3.24.0",
+  "version": "3.25.0",
   "license": "MIT",
   "author": "Alto9",
   "publisher": "alto9",
@@ -125,7 +125,10 @@
         },
         "forge.temporal.mode": {
           "type": "string",
-          "enum": ["managedLocal", "external"],
+          "enum": [
+            "managedLocal",
+            "external"
+          ],
           "default": "managedLocal",
           "description": "Selects managed-local dev server (npm-bundled, window-scoped) vs external Temporal endpoint. See forge/.ai/runtime/configuration.md."
         },
