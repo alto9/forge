@@ -98,6 +98,14 @@
       {
         "command": "forge.showRoadmap",
         "title": "Forge: Roadmap"
+      },
+      {
+        "command": "forge.setTemporalApiKey",
+        "title": "Forge: Set Temporal API Key"
+      },
+      {
+        "command": "forge.clearTemporalApiKey",
+        "title": "Forge: Clear Temporal API Key"
       }
     ],
     "configuration": {
@@ -156,6 +164,37 @@
           "type": "string",
           "default": "forge-workflows",
           "description": "Default task queue for workflow workers in managed-local mode."
+        },
+        "forge.temporal.external.address": {
+          "type": "string",
+          "default": "",
+          "description": "gRPC endpoint for external Temporal as host:port (required when forge.temporal.mode is external)."
+        },
+        "forge.temporal.external.namespace": {
+          "type": "string",
+          "default": "",
+          "description": "Temporal namespace for external mode (required when forge.temporal.mode is external)."
+        },
+        "forge.temporal.external.taskQueue": {
+          "type": "string",
+          "default": "forge-workflows",
+          "description": "Default task queue for workflow workers connecting to the external Temporal endpoint."
+        },
+        "forge.temporal.external.auth.mode": {
+          "type": "string",
+          "enum": ["apiKey", "tlsServer", "insecure"],
+          "default": "apiKey",
+          "description": "Client authentication mode for external Temporal (apiKey, tlsServer, or insecure loopback only)."
+        },
+        "forge.temporal.external.tls.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use TLS for external Temporal gRPC. Required for Temporal Cloud; disable only with insecure auth on loopback."
+        },
+        "forge.temporal.external.tls.serverName": {
+          "type": "string",
+          "default": "",
+          "description": "Optional TLS SNI / server name override for self-hosted external Temporal clusters."
         }
       }
     }

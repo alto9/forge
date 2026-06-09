@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import * as vscode from 'vscode';
+import { ExternalReadinessBlockedError, ExternalTemporalSupervisor } from './ExternalTemporalSupervisor';
 import { TemporalReadinessBlockedError } from './TemporalLocalSupervisor';
 import { TemporalLocalSupervisor } from './TemporalLocalSupervisor';
 import {
@@ -8,13 +9,79 @@ import {
 } from './temporalReadinessGate';
 
 describe('temporalReadinessGate', () => {
-    it('skips readiness when mode is external', async () => {
+    it('validates external configuration before running external preflight', async () => {
         await expect(
             gateTemporalReadiness({
                 resolveMode: () => 'external',
-                getSupervisor: () => undefined,
+                getExternalSupervisor: () => undefined,
+                resolveSettings: () => ({
+                    address: undefined,
+                    namespace: 'forge-external',
+                    taskQueue: 'forge-workflows',
+                    authMode: 'apiKey',
+                    tlsEnabled: true,
+                    tlsServerName: '',
+                }),
+                getStoredApiKey: async () => 'test-key',
+            })
+        ).rejects.toBeInstanceOf(TemporalConfigurationInvalidError);
+    });
+
+    it('runs external preflight when configuration is valid', async () => {
+        const supervisor = {
+            ensureReady: vi.fn(async () => undefined),
+        } as unknown as ExternalTemporalSupervisor;
+
+        await expect(
+            gateTemporalReadiness({
+                resolveMode: () => 'external',
+                getExternalSupervisor: () => supervisor,
+                resolveSettings: () => ({
+                    address: 'localhost:7233',
+                    namespace: 'forge-external',
+                    taskQueue: 'forge-workflows',
+                    authMode: 'insecure',
+                    tlsEnabled: false,
+                    tlsServerName: '',
+                }),
             })
         ).resolves.toBeUndefined();
+
+        expect(supervisor.ensureReady).toHaveBeenCalledOnce();
+    });
+
+    it('blocks workflow run start when external preflight fails', async () => {
+        const supervisor = {
+            ensureReady: vi.fn(async () => {
+                throw new ExternalReadinessBlockedError(
+                    {
+                        remediation: 'auth',
+                        message: 'External Temporal authentication failed.',
+                    },
+                    'connect_failed'
+                );
+            }),
+        } as unknown as ExternalTemporalSupervisor;
+
+        await expect(
+            gateTemporalReadiness({
+                resolveMode: () => 'external',
+                getExternalSupervisor: () => supervisor,
+                resolveSettings: () => ({
+                    address: 'localhost:7233',
+                    namespace: 'forge-external',
+                    taskQueue: 'forge-workflows',
+                    authMode: 'apiKey',
+                    tlsEnabled: true,
+                    tlsServerName: '',
+                }),
+                getStoredApiKey: async () => 'test-key',
+            })
+        ).rejects.toBeInstanceOf(TemporalConfigurationInvalidError);
+
+        expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
+            'Workflow runs are blocked until Temporal is ready. See Forge Temporal output for details.'
+        );
     });
 
     it('blocks workflow run start when supervisor is start_failed', async () => {

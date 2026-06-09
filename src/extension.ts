@@ -2,8 +2,17 @@ import * as vscode from 'vscode';
 import { InitializeAgentsCommand } from './commands/InitializeAgentsCommand';
 import { InitializeProjectCommand } from './commands/InitializeProjectCommand';
 import { RoadmapCommand } from './commands/RoadmapCommand';
+import {
+    ClearTemporalApiKeyCommand,
+    SetTemporalApiKeyCommand,
+} from './commands/SetTemporalApiKeyCommand';
 import { SetupCursorCommand, projectForgeAssetsNeedSync } from './commands/SetupCursorCommand';
 import { ForgeChatParticipant } from './chatParticipant';
+import {
+    clearRegisteredStoredApiKeyReader,
+    createStoredApiKeyReader,
+    registerStoredApiKeyReader,
+} from './temporal/externalCredentials';
 import {
     registerTemporalLocalSupervisor,
     shutdownTemporalLocalSupervisor,
@@ -176,6 +185,29 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(roadmapCommand);
 
     registerProjectSyncPrompt(context, outputChannel);
+
+    registerStoredApiKeyReader(createStoredApiKeyReader(context.secrets));
+    context.subscriptions.push({
+        dispose: () => {
+            clearRegisteredStoredApiKeyReader();
+        },
+    });
+
+    const setTemporalApiKeyCommand = vscode.commands.registerCommand(
+        'forge.setTemporalApiKey',
+        async () => {
+            await SetTemporalApiKeyCommand.execute(context);
+        }
+    );
+    context.subscriptions.push(setTemporalApiKeyCommand);
+
+    const clearTemporalApiKeyCommand = vscode.commands.registerCommand(
+        'forge.clearTemporalApiKey',
+        async () => {
+            await ClearTemporalApiKeyCommand.execute(context);
+        }
+    );
+    context.subscriptions.push(clearTemporalApiKeyCommand);
 
     registerTemporalLocalSupervisor(context);
 
