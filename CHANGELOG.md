@@ -1,3 +1,10 @@
+## 3.27.0 (2026-06-09)
+
+* Merge pull request #63 from alto9/feature/issue-20 ([d8a4a29](https://github.com/alto9/forge/commit/d8a4a29)), closes [#63](https://github.com/alto9/forge/issues/63) [#20](https://github.com/alto9/forge/issues/20)
+* feat(temporal): add out-of-host worker supervisor and packaged entry (#40) ([4f2af62](https://github.com/alto9/forge/commit/4f2af62)), closes [#40](https://github.com/alto9/forge/issues/40)
+* feat(temporal): gate workflow runs on worker config and poll readiness (#41) ([70abe32](https://github.com/alto9/forge/commit/70abe32)), closes [#41](https://github.com/alto9/forge/issues/41)
+* feat(temporal): surface worker health in Output, status bar, and notifications (#42) ([2c24670](https://github.com/alto9/forge/commit/2c24670)), closes [#42](https://github.com/alto9/forge/issues/42)
+
 ## <small>3.26.3 (2026-06-09)</small>
 
 * docs(ai): refine issue #27 contract updates ([cf5397a](https://github.com/alto9/forge/commit/cf5397a)), closes [#27](https://github.com/alto9/forge/issues/27)
