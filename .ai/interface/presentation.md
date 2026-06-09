@@ -10,9 +10,74 @@ React Flow is the visualization layer for workflow definitions and run state. De
 
 The run inspector presents the selected node, activity details, validation outcomes, artifact references, Cursor SDK run identity, retry state, and available user actions. Human question panels use the workflow definition to describe required input and submit answers through Temporal.
 
+## Workflow discovery catalog (#25)
+
+Forge Studio exposes repo-owned workflow definitions through a read-only catalog before run visualization or execution controls.
+
+### Surfaces (v1)
+
+1. **Command palette** — **Forge: Open Workflow Catalog** opens the catalog webview panel.
+2. **Command palette** — **Forge: Refresh Workflow Catalog** re-scans the selected repository folder.
+3. **Command palette** — **Forge: Select Workflow Repository Folder** changes the active folder in multi-root workspaces.
+4. **Catalog webview** — flat list of discovered definitions with validation badges, metadata, and selection highlight.
+
+Run start, graph preview, and Temporal controls are out of scope for the catalog v1 surface (#25). Selected workflow identity is persisted for downstream cockpit milestones.
+
+### List layout and sorting
+
+- **Flat list** — no section grouping in v1. Optional `metadata.tags` or `metadata.milestone` values may appear as secondary text on a row; they do not create group headers.
+- **Sort order** — valid definitions first, then invalid. Within each group, sort by `name` ascending (case-insensitive locale). Tie-break on `workflow_id` ascending.
+- **Row fields** — primary: `name`; secondary: `workflow_id`, semver `version`; optional truncated `description`; validation badge; repo-relative `path` on expand or detail affordance.
+
+### Validation badges and summary copy
+
+Pre-run validation uses the aggregate shape in `.ai/data/serialization.md` **Validation result (aggregate)**. Catalog rows derive badge state from `valid` and diagnostic counts.
+
+| State | Badge label | Row summary (when collapsed) |
+|-------|-------------|--------------------------------|
+| Valid, no warnings | **Valid** | _(no extra summary)_ |
+| Valid with warnings | **Valid with warnings** | "{warningCount} warning(s) — run can start" |
+| Invalid | **Invalid** | "{errorCount} error(s){, {warningCount} warning(s)} — fix before run" |
+
+Expand or open detail to show ordered diagnostics (`code`, `message`, `path`, `severity`, `validator_id`). Do not inline full JSON definition bodies in the list.
+
+| Diagnostic severity in detail | Prefix copy |
+|------------------------------|-------------|
+| `error` | "Error" |
+| `warning` | "Warning" |
+
+Example invalid summary: "3 errors, 1 warning — fix before run". Example warning-only summary: "2 warnings — run can start".
+
+### Selection affordances
+
+- Clicking a row selects it (`aria-selected="true"`, visible focus ring).
+- Selection persists in `workspaceState` as `forge.workflow.catalog.selectedWorkflowId` scoped to the active `repositoryRoot`.
+- Invalid rows (any pre-run diagnostic with `severity: error`) remain selectable for inspection. A disabled **Start run** affordance (or equivalent placeholder control) shows tooltip: "Fix validation errors before starting a run."
+- Valid rows show the same placeholder control enabled with tooltip: "Run start ships in a later milestone." (#25 does not invoke Temporal.)
+
+### Multi-root and missing `.ai` empty states
+
+| Condition | Copy |
+|-----------|------|
+| Multi-root, first open | VS Code quick pick: "Select the repository folder for workflow definitions" (same pattern as Forge Roadmap). |
+| No workspace folder open | "Open a workspace folder to discover workflow definitions." |
+| Selected folder has no `.ai/workflows/` directory | "No workflow definitions found. Add JSON files under `.ai/workflows/` in this repository." |
+| Directory exists but no `*.json` files | "No workflow definitions found in `.ai/workflows/`." |
+| Saved folder removed from workspace | Re-prompt with quick pick on next catalog open. |
+
+Persist the chosen folder per window in `workspaceState` key `forge.workflow.catalog.repositoryRoot`. Single-root workspaces auto-select the sole folder without a prompt.
+
+### Accessibility (catalog)
+
+- List rows expose `name`, validation badge text, and `workflow_id` as accessible names without relying on badge color alone.
+- Diagnostic detail panels preserve heading structure and keyboard focus order when expanding a row.
+- Disabled run affordance exposes the tooltip reason through `aria-disabled` and visible helper text.
+
 ## Primary code pointers (optional)
 
-- Add stable code directories or modules here when known.
+- `src/commands/WorkflowCatalogCommand.ts` — open, refresh, and folder-selection commands.
+- `src/webview/workflows/` — catalog webview UI.
+- `src/workflows/discoverWorkflowDefinitions.ts` — scan, validate, and build catalog entries.
 
 ## Managed-local Temporal surfaces
 

@@ -100,7 +100,7 @@ Diagnostics returned to discovery, pre-run gates, commands, and Studio use a sta
 
 ### Validation result (aggregate)
 
-Pre-run validation returns an aggregate suitable for discovery (#30) and run-start gates:
+Pre-run validation returns an aggregate suitable for discovery (#25) and run-start gates:
 
 | Field | Description |
 |-------|-------------|
@@ -108,6 +108,23 @@ Pre-run validation returns an aggregate suitable for discovery (#30) and run-sta
 | `diagnostics` | Ordered array of diagnostic objects. |
 | `workflow_id` | Present when parsed from the definition. |
 | `path` | Repo-relative path to the definition file. |
+
+### Workflow catalog entry (#25)
+
+Discovery exposes one catalog entry per scanned definition file:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `workflow_id` | yes | Stable ID from the definition (or filename stem when parse fails). |
+| `name` | yes | Human-readable title; falls back to `workflow_id` when missing. |
+| `version` | no | Semver from definition when parse succeeds. |
+| `description` | no | Short summary from definition. |
+| `schema_version` | no | Contract version from definition when parse succeeds. |
+| `path` | yes | Repo-relative path to `.ai/workflows/<workflow_id>.json`. |
+| `repositoryRoot` | yes | Absolute path to the selected workspace folder root. |
+| `validation` | yes | Pre-run aggregate: `valid`, `diagnostics`, `errorCount`, `warningCount`. |
+
+Studio sorting, badges, and copy: `.ai/interface/presentation.md` **Workflow discovery catalog**.
 
 ### Runtime validation result (aggregate)
 

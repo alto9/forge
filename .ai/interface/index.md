@@ -4,12 +4,15 @@ This document defines Forge Studio workflow discovery, graph visualization, run 
 
 ## Scope
 
-- Present workflow definitions and run state with React Flow plus accessible textual summaries.
+- Discover repo-owned workflow definitions from `.ai/workflows/*.json` and present catalog health in Forge Studio (#25).
+- Present workflow definitions and run state with React Flow plus accessible textual summaries (#26+).
 - Show Temporal-backed run state, validation outcomes, artifacts, and available actions.
 - Collect human answers only for declared workflow pause points.
 - Keep `/refine-issue` visible as a proving workflow without one-off UI semantics.
 
 ## Primary code pointers (optional)
 
-- Add stable code directories or modules here when known.
+- `src/commands/WorkflowCatalogCommand.ts` — catalog open, refresh, repository folder selection.
+- `src/webview/workflows/` — workflow catalog webview.
+- `src/workflows/discoverWorkflowDefinitions.ts` — discovery scan and pre-run validation index.
 - Keep entries concise and remove stale pointers.

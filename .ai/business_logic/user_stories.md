@@ -4,6 +4,7 @@ Forge workflow users need a durable way to run staged AI delivery workflows from
 
 ## Current Stories
 
+- As a workflow operator, I can open the Forge workflow catalog, see which repo-owned definitions are valid or invalid, and select a workflow before starting a run (#25).
 - As a maintainer, I can define a workflow in `.ai/workflows/*.json` so the workflow graph, validators, artifacts, and human questions are versioned with the repository.
 - As a maintainer, I can start a configured workflow without requiring Forge to hard-code that workflow's phases into application code.
 - As a workflow operator, I can see where a run is paused, failed, retrying, waiting for a human answer, or complete.
