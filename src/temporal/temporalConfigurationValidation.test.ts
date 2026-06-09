@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import * as vscode from 'vscode';
+import {
+    clearRegisteredStoredApiKeyReader,
+    registerStoredApiKeyReader,
+} from './externalCredentials';
 import type { ResolvedExternalSettings } from './externalSettings';
 import {
     getTemporalConfigurationErrors,
@@ -25,6 +29,7 @@ describe('temporalConfigurationValidation', () => {
 
     afterEach(() => {
         process.env = { ...originalEnv };
+        clearRegisteredStoredApiKeyReader();
         vi.restoreAllMocks();
     });
 
@@ -73,6 +78,17 @@ describe('temporalConfigurationValidation', () => {
 
     it('accepts apiKey mode when env API key is set', async () => {
         process.env.FORGE_TEMPORAL_EXTERNAL_API_KEY = 'env-key';
+
+        const diagnostics = await validateTemporalConfiguration({
+            resolveMode: () => 'external',
+            resolveSettings: () => externalSettings({ authMode: 'apiKey' }),
+        });
+
+        expect(getTemporalConfigurationErrors(diagnostics)).toEqual([]);
+    });
+
+    it('uses the registered SecretStorage reader when no override is provided', async () => {
+        registerStoredApiKeyReader(async () => 'stored-key');
 
         const diagnostics = await validateTemporalConfiguration({
             resolveMode: () => 'external',

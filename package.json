@@ -98,6 +98,14 @@
       {
         "command": "forge.showRoadmap",
         "title": "Forge: Roadmap"
+      },
+      {
+        "command": "forge.setTemporalApiKey",
+        "title": "Forge: Set Temporal API Key"
+      },
+      {
+        "command": "forge.clearTemporalApiKey",
+        "title": "Forge: Clear Temporal API Key"
       }
     ],
     "configuration": {

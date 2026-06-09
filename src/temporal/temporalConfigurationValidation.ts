@@ -1,5 +1,6 @@
 import type { Diagnostic } from '../workflows/types';
 import * as vscode from 'vscode';
+import { getRegisteredStoredApiKeyReader } from './externalCredentials';
 import {
     EXTERNAL_API_KEY_SECRET_KEY,
     resolveExternalApiKey,
@@ -202,7 +203,8 @@ export async function validateTemporalConfiguration(
     }
 
     const settings = options.resolveSettings?.() ?? resolveExternalSettings();
-    const apiKey = await resolveExternalApiKey(options.getStoredApiKey);
+    const getStoredApiKey = options.getStoredApiKey ?? getRegisteredStoredApiKeyReader();
+    const apiKey = await resolveExternalApiKey(getStoredApiKey);
     const errorDiagnostics = validateExternalSettings(settings, apiKey);
 
     return [...infoDiagnostics, ...errorDiagnostics];

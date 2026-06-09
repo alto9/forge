@@ -17,6 +17,25 @@ export {
 } from './externalSettings';
 export type { ExternalAuthMode, ResolvedExternalSettings } from './externalSettings';
 export {
+    EXTERNAL_CLIENT_CERT_SECRET_KEY,
+    EXTERNAL_CLIENT_KEY_SECRET_KEY,
+    RESERVED_EXTERNAL_SECRET_KEYS,
+    clearExternalApiKey,
+    clearRegisteredStoredApiKeyReader,
+    createStoredApiKeyReader,
+    getRegisteredStoredApiKeyReader,
+    hasStoredExternalApiKey,
+    registerStoredApiKeyReader,
+    storeExternalApiKey,
+} from './externalCredentials';
+export type { StoredApiKeyReader } from './externalCredentials';
+export { buildExternalConnectionOptions } from './externalConnection';
+export {
+    formatSafeForLog,
+    redactAuthorizationMaterial,
+    redactKnownSecrets,
+} from './secretRedaction';
+export {
     TEMPORAL_CONFIGURATION_VALIDATOR_ID,
     getTemporalConfigurationErrors,
     isLoopbackHost,
