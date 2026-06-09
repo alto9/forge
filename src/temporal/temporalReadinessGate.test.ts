@@ -3,10 +3,17 @@ import * as vscode from 'vscode';
 import { ExternalReadinessBlockedError, ExternalTemporalSupervisor } from './ExternalTemporalSupervisor';
 import { TemporalReadinessBlockedError } from './TemporalLocalSupervisor';
 import { TemporalLocalSupervisor } from './TemporalLocalSupervisor';
+import { TemporalWorkerSupervisor, WorkerReadinessBlockedError } from './TemporalWorkerSupervisor';
 import {
     TemporalConfigurationInvalidError,
     gateTemporalReadiness,
 } from './temporalReadinessGate';
+
+function createReadyWorkerSupervisor(): TemporalWorkerSupervisor {
+    return {
+        ensureReady: vi.fn(async () => undefined),
+    } as unknown as TemporalWorkerSupervisor;
+}
 
 describe('temporalReadinessGate', () => {
     it('validates external configuration before running external preflight', async () => {
@@ -31,11 +38,13 @@ describe('temporalReadinessGate', () => {
         const supervisor = {
             ensureReady: vi.fn(async () => undefined),
         } as unknown as ExternalTemporalSupervisor;
+        const readyWorkerSupervisor = createReadyWorkerSupervisor();
 
         await expect(
             gateTemporalReadiness({
                 resolveMode: () => 'external',
                 getExternalSupervisor: () => supervisor,
+                getWorkerSupervisor: () => readyWorkerSupervisor,
                 resolveSettings: () => ({
                     address: 'localhost:7233',
                     namespace: 'forge-external',
@@ -48,6 +57,7 @@ describe('temporalReadinessGate', () => {
         ).resolves.toBeUndefined();
 
         expect(supervisor.ensureReady).toHaveBeenCalledOnce();
+        expect(readyWorkerSupervisor.ensureReady).toHaveBeenCalledOnce();
     });
 
     it('blocks workflow run start when external preflight fails', async () => {
@@ -138,14 +148,42 @@ describe('temporalReadinessGate', () => {
         const supervisor = {
             ensureReady: vi.fn(async () => undefined),
         } as unknown as TemporalLocalSupervisor;
+        const readyWorkerSupervisor = createReadyWorkerSupervisor();
 
         await expect(
             gateTemporalReadiness({
                 resolveMode: () => 'managedLocal',
                 getSupervisor: () => supervisor,
+                getWorkerSupervisor: () => readyWorkerSupervisor,
             })
         ).resolves.toBeUndefined();
 
         expect(supervisor.ensureReady).toHaveBeenCalledOnce();
+        expect(readyWorkerSupervisor.ensureReady).toHaveBeenCalledOnce();
+    });
+
+    it('blocks workflow run start when worker supervisor is start_failed', async () => {
+        const supervisor = {
+            ensureReady: vi.fn(async () => undefined),
+        } as unknown as TemporalLocalSupervisor;
+        const workerSupervisor = {
+            ensureReady: vi.fn(async () => {
+                throw new WorkerReadinessBlockedError(
+                    {
+                        remediation: 'crash',
+                        message: 'Forge workflow worker stopped unexpectedly.',
+                    },
+                    'start_failed'
+                );
+            }),
+        } as unknown as TemporalWorkerSupervisor;
+
+        await expect(
+            gateTemporalReadiness({
+                resolveMode: () => 'managedLocal',
+                getSupervisor: () => supervisor,
+                getWorkerSupervisor: () => workerSupervisor,
+            })
+        ).rejects.toBeInstanceOf(TemporalConfigurationInvalidError);
     });
 });

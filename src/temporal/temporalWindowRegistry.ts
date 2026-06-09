@@ -3,6 +3,7 @@ import {
     ExternalTemporalSupervisor,
 } from './ExternalTemporalSupervisor';
 import { TemporalLocalSupervisor } from './TemporalLocalSupervisor';
+import { TemporalWorkerSupervisor } from './TemporalWorkerSupervisor';
 import { getRegisteredStoredApiKeyReader } from './externalCredentials';
 import { resolveExternalApiKey, resolveExternalSettings } from './externalSettings';
 import {
@@ -14,12 +15,18 @@ import {
     createTemporalOutputChannel,
     registerExternalTemporalHealthSurfaces,
     registerManagedLocalTemporalHealthSurfaces,
+    registerWorkerHealthSurfaces,
 } from './temporalHealthSurfaces';
 import { formatPersistencePathForDisplay } from './temporalPresentation';
-import type { ExternalTemporalSupervisorConfig, ManagedLocalSupervisorConfig } from './types';
+import type {
+    ExternalTemporalSupervisorConfig,
+    ManagedLocalSupervisorConfig,
+    TemporalWorkerSupervisorConfig,
+} from './types';
 
 let localSupervisor: TemporalLocalSupervisor | undefined;
 let externalSupervisor: ExternalTemporalSupervisor | undefined;
+let workerSupervisor: TemporalWorkerSupervisor | undefined;
 
 export function getTemporalLocalSupervisor(): TemporalLocalSupervisor | undefined {
     return localSupervisor;
@@ -27,6 +34,63 @@ export function getTemporalLocalSupervisor(): TemporalLocalSupervisor | undefine
 
 export function getExternalTemporalSupervisor(): ExternalTemporalSupervisor | undefined {
     return externalSupervisor;
+}
+
+export function getTemporalWorkerSupervisor(): TemporalWorkerSupervisor | undefined {
+    return workerSupervisor;
+}
+
+function isTemporalConnectionReady(): boolean {
+    if (resolveTemporalMode() === 'external') {
+        return externalSupervisor?.getHealthState() === 'ready';
+    }
+    return localSupervisor?.getHealthState() === 'ready';
+}
+
+function registerWorkerSupervisor(
+    context: vscode.ExtensionContext,
+    outputChannel: vscode.OutputChannel,
+    input: {
+        windowId: string;
+        namespace: string;
+        taskQueue: string;
+        grpcPort?: number;
+    }
+): TemporalWorkerSupervisor {
+    const mode = resolveTemporalMode();
+    const workerConfig: TemporalWorkerSupervisorConfig = {
+        windowId: input.windowId,
+        extensionPath: context.extensionPath,
+        extensionVersion: context.extension.packageJSON.version,
+        globalStoragePath: context.globalStorageUri.fsPath,
+        mode,
+        namespace: input.namespace,
+        taskQueue: input.taskQueue,
+        grpcPort: input.grpcPort,
+        resolveExternalSettings: mode === 'external' ? resolveExternalSettings : undefined,
+        resolveApiKey:
+            mode === 'external'
+                ? () => resolveExternalApiKey(getRegisteredStoredApiKeyReader())
+                : undefined,
+        isTemporalConnectionReady,
+    };
+
+    workerSupervisor = new TemporalWorkerSupervisor(workerConfig, {
+        log: (line) => {
+            outputChannel.appendLine(line);
+        },
+    });
+
+    registerWorkerHealthSurfaces(context, workerSupervisor, workerConfig, outputChannel);
+
+    context.subscriptions.push({
+        dispose: () => {
+            void workerSupervisor?.stop();
+            workerSupervisor = undefined;
+        },
+    });
+
+    return workerSupervisor;
 }
 
 export function registerTemporalLocalSupervisor(
@@ -57,6 +121,13 @@ export function registerTemporalLocalSupervisor(
             resolveExternalSettings,
             outputChannel
         );
+
+        const externalSettings = resolveExternalSettings();
+        registerWorkerSupervisor(context, outputChannel, {
+            windowId,
+            namespace: externalSettings.namespace ?? 'unknown',
+            taskQueue: externalSettings.taskQueue,
+        });
 
         context.subscriptions.push({
             dispose: () => {
@@ -105,6 +176,13 @@ export function registerTemporalLocalSupervisor(
         outputChannel
     );
 
+    registerWorkerSupervisor(context, outputChannel, {
+        windowId,
+        namespace: settings.namespace,
+        taskQueue: settings.taskQueue,
+        grpcPort: settings.grpcPort,
+    });
+
     context.subscriptions.push({
         dispose: () => {
             void localSupervisor?.stop();
@@ -116,6 +194,8 @@ export function registerTemporalLocalSupervisor(
 }
 
 export async function shutdownTemporalLocalSupervisor(): Promise<void> {
+    await workerSupervisor?.stop();
+    workerSupervisor = undefined;
     await localSupervisor?.stop();
     localSupervisor = undefined;
     await externalSupervisor?.stop();

@@ -1,10 +1,15 @@
 import type { Diagnostic } from '../workflows/types';
 import { ExternalReadinessBlockedError, ExternalTemporalSupervisor } from './ExternalTemporalSupervisor';
 import { TemporalLocalSupervisor, TemporalReadinessBlockedError } from './TemporalLocalSupervisor';
-import { notifyWorkflowBlockedByTemporal } from './temporalHealthSurfaces';
+import { TemporalWorkerSupervisor, WorkerReadinessBlockedError } from './TemporalWorkerSupervisor';
+import {
+    notifyWorkflowBlockedByTemporal,
+    notifyWorkflowBlockedByWorker,
+} from './temporalHealthSurfaces';
 import {
     getExternalTemporalSupervisor,
     getTemporalLocalSupervisor,
+    getTemporalWorkerSupervisor,
 } from './temporalWindowRegistry';
 import {
     getTemporalConfigurationErrors,
@@ -28,6 +33,7 @@ export class TemporalConfigurationInvalidError extends Error {
 export interface TemporalReadinessGateOptions extends TemporalConfigurationValidationOptions {
     getSupervisor?: () => TemporalLocalSupervisor | undefined;
     getExternalSupervisor?: () => ExternalTemporalSupervisor | undefined;
+    getWorkerSupervisor?: () => TemporalWorkerSupervisor | undefined;
     resolveMode?: () => ReturnType<typeof resolveTemporalMode>;
 }
 
@@ -57,6 +63,19 @@ function externalConnectRemediationMessage(remediation: string): string {
     }
 }
 
+function workerRemediationMessage(remediation: string): string {
+    switch (remediation) {
+        case 'asset':
+            return 'Reinstall Forge Studio or verify worker assets in the extension package.';
+        case 'permission':
+            return 'Check extension global storage permissions.';
+        case 'crash':
+            return 'See Forge Temporal output and restart the window.';
+        default:
+            return 'See Forge Temporal output for worker startup details.';
+    }
+}
+
 function externalConnectInvalidDiagnostic(
     message: string,
     remediation: string
@@ -69,6 +88,7 @@ function externalConnectInvalidDiagnostic(
         validator_id: TEMPORAL_READINESS_VALIDATOR_ID,
     };
 }
+
 function configurationInvalidDiagnostic(
     message: string,
     remediation: string
@@ -80,6 +100,47 @@ function configurationInvalidDiagnostic(
         message: `${message} ${remediationMessage(remediation)}`,
         validator_id: TEMPORAL_READINESS_VALIDATOR_ID,
     };
+}
+
+function workerInvalidDiagnostic(message: string, remediation: string): Diagnostic {
+    return {
+        code: 'forge.temporal.configuration_invalid',
+        severity: 'error',
+        path: 'forge.temporal.worker',
+        message: `${message} ${workerRemediationMessage(remediation)}`,
+        validator_id: TEMPORAL_READINESS_VALIDATOR_ID,
+    };
+}
+
+async function gateWorkerReadiness(
+    options: TemporalReadinessGateOptions
+): Promise<void> {
+    const workerSupervisor =
+        options.getWorkerSupervisor?.() ?? getTemporalWorkerSupervisor();
+    if (!workerSupervisor) {
+        throw new TemporalConfigurationInvalidError([
+            {
+                code: 'forge.temporal.configuration_invalid',
+                severity: 'error',
+                path: 'forge.temporal.worker',
+                message:
+                    'Forge workflow worker supervisor is not registered for this window. Reload the window and retry.',
+                validator_id: TEMPORAL_READINESS_VALIDATOR_ID,
+            },
+        ]);
+    }
+
+    try {
+        await workerSupervisor.ensureReady();
+    } catch (error) {
+        if (error instanceof WorkerReadinessBlockedError) {
+            notifyWorkflowBlockedByWorker();
+            throw new TemporalConfigurationInvalidError([
+                workerInvalidDiagnostic(error.message, error.remediation),
+            ]);
+        }
+        throw error;
+    }
 }
 
 export async function gateTemporalReadiness(
@@ -121,6 +182,8 @@ export async function gateTemporalReadiness(
             }
             throw error;
         }
+
+        await gateWorkerReadiness(options);
         return;
     }
 
@@ -151,4 +214,6 @@ export async function gateTemporalReadiness(
         }
         throw error;
     }
+
+    await gateWorkerReadiness(options);
 }

@@ -184,16 +184,20 @@ describe('gateWorkflowRunStart', () => {
     it('combines definition validation with managed-local temporal readiness', async () => {
         const ensureReady = vi.fn(async () => undefined);
         const supervisor = { ensureReady };
+        const workerEnsureReady = vi.fn(async () => undefined);
+        const workerSupervisor = { ensureReady: workerEnsureReady };
 
         const result = await gateWorkflowRunStartWithTemporalReadiness({
             workspaceRoots: [process.cwd()],
             workflowId: 'refine-issue',
             resolveMode: () => 'managedLocal',
             getSupervisor: () => supervisor as never,
+            getWorkerSupervisor: () => workerSupervisor as never,
         });
 
         expect(result.valid).toBe(true);
         expect(ensureReady).toHaveBeenCalledOnce();
+        expect(workerEnsureReady).toHaveBeenCalledOnce();
     });
 
     it('blocks combined gate when temporal readiness fails after validation passes', async () => {
