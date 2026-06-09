@@ -1,3 +1,7 @@
+## <small>3.26.2 (2026-06-09)</small>
+
+* docs(ai): refine issue #26 contract updates ([62e590c](https://github.com/alto9/forge/commit/62e590c)), closes [#26](https://github.com/alto9/forge/issues/26)
+
 ## <small>3.26.1 (2026-06-09)</small>
 
 * docs(ai): refine issue #25 contract updates ([1f880c7](https://github.com/alto9/forge/commit/1f880c7)), closes [#25](https://github.com/alto9/forge/issues/25)
