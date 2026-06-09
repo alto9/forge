@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { ExternalTemporalSupervisor } from './ExternalTemporalSupervisor';
 import { TemporalLocalSupervisor } from './TemporalLocalSupervisor';
+import { TemporalWorkerSupervisor } from './TemporalWorkerSupervisor';
 import {
     formatExternalConnectFailedNotification,
     formatExternalReadyNotification,
@@ -13,6 +14,10 @@ import {
     formatReadyNotification,
     formatStartFailedNotification,
     formatStateTransitionLogLine,
+    formatWorkerBlockedNotification,
+    formatWorkerReadyNotification,
+    formatWorkerStartFailedNotification,
+    formatWorkerStateTransitionLogLine,
     formatWorkflowBlockedNotification,
 } from './temporalPresentation';
 import type { ResolvedExternalSettings } from './externalSettings';
@@ -21,6 +26,8 @@ import type {
     ExternalTemporalSupervisorConfig,
     ManagedLocalHealthState,
     ManagedLocalSupervisorConfig,
+    TemporalWorkerSupervisorConfig,
+    WorkerHealthState,
 } from './types';
 
 export const TEMPORAL_OUTPUT_CHANNEL_NAME = 'Forge Temporal';
@@ -28,6 +35,12 @@ export const TEMPORAL_OUTPUT_CHANNEL_NAME = 'Forge Temporal';
 let statusBarItem: vscode.StatusBarItem | undefined;
 let presentationConfig: ManagedLocalSupervisorConfig | undefined;
 let persistencePathDisplay: string | undefined;
+let workerPresentationConfig: TemporalWorkerSupervisorConfig | undefined;
+let managedLocalState: ManagedLocalHealthState = 'idle';
+let externalState: ExternalTemporalHealthState = 'idle';
+let workerState: WorkerHealthState = 'idle';
+let workerReadyNotifiedThisSession = false;
+let statusBarMode: 'managedLocal' | 'external' = 'managedLocal';
 
 export function createTemporalOutputChannel(
     context: vscode.ExtensionContext
@@ -41,6 +54,10 @@ export function notifyWorkflowBlockedByTemporal(): void {
     void vscode.window.showWarningMessage(formatWorkflowBlockedNotification());
 }
 
+export function notifyWorkflowBlockedByWorker(): void {
+    void vscode.window.showWarningMessage(formatWorkerBlockedNotification());
+}
+
 export function registerManagedLocalTemporalHealthSurfaces(
     context: vscode.ExtensionContext,
     supervisor: TemporalLocalSupervisor,
@@ -50,14 +67,16 @@ export function registerManagedLocalTemporalHealthSurfaces(
 ): void {
     presentationConfig = config;
     persistencePathDisplay = persistencePathForDisplay;
+    statusBarMode = 'managedLocal';
 
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
     context.subscriptions.push(statusBarItem);
 
     const applyState = (state: ManagedLocalHealthState) => {
-        updateStatusBar(state);
-        logStateTransition(state, supervisor, outputChannel);
-        notifyForState(state, supervisor);
+        managedLocalState = state;
+        updateStatusBar();
+        logManagedLocalStateTransition(state, supervisor, outputChannel);
+        notifyManagedLocalForState(state, supervisor);
     };
 
     applyState(supervisor.getHealthState());
@@ -68,21 +87,52 @@ export function registerManagedLocalTemporalHealthSurfaces(
     context.subscriptions.push({ dispose: unsubscribe });
 }
 
-function updateStatusBar(state: ManagedLocalHealthState): void {
-    if (!statusBarItem || !presentationConfig || !persistencePathDisplay) {
+export function registerWorkerHealthSurfaces(
+    context: vscode.ExtensionContext,
+    supervisor: TemporalWorkerSupervisor,
+    config: TemporalWorkerSupervisorConfig,
+    outputChannel: vscode.OutputChannel
+): void {
+    workerPresentationConfig = config;
+
+    const applyState = (state: WorkerHealthState) => {
+        workerState = state;
+        updateStatusBar();
+        logWorkerStateTransition(state, supervisor, outputChannel);
+        notifyWorkerForState(state, supervisor);
+    };
+
+    applyState(supervisor.getHealthState());
+
+    const unsubscribe = supervisor.onStateChange((state) => {
+        applyState(state);
+    });
+    context.subscriptions.push({ dispose: unsubscribe });
+}
+
+function updateStatusBar(): void {
+    if (!statusBarItem) {
         return;
     }
 
-    statusBarItem.text = formatManagedLocalStatusBarLabel(state);
-    statusBarItem.tooltip = formatManagedLocalStatusBarTooltip({
-        grpcPort: presentationConfig.grpcPort,
-        namespace: presentationConfig.namespace,
-        persistencePathDisplay,
-    });
+    if (statusBarMode === 'managedLocal') {
+        if (!presentationConfig || !persistencePathDisplay) {
+            return;
+        }
+        statusBarItem.text = formatManagedLocalStatusBarLabel(managedLocalState, workerState);
+        statusBarItem.tooltip = formatManagedLocalStatusBarTooltip({
+            grpcPort: presentationConfig.grpcPort,
+            namespace: presentationConfig.namespace,
+            persistencePathDisplay,
+        });
+    } else {
+        statusBarItem.text = formatExternalStatusBarLabel(externalState, workerState);
+    }
+
     statusBarItem.show();
 }
 
-function logStateTransition(
+function logManagedLocalStateTransition(
     state: ManagedLocalHealthState,
     supervisor: TemporalLocalSupervisor,
     outputChannel: vscode.OutputChannel
@@ -103,7 +153,7 @@ function logStateTransition(
     );
 }
 
-function notifyForState(
+function notifyManagedLocalForState(
     state: ManagedLocalHealthState,
     supervisor: TemporalLocalSupervisor
 ): void {
@@ -131,6 +181,54 @@ function notifyForState(
     }
 }
 
+function logWorkerStateTransition(
+    state: WorkerHealthState,
+    supervisor: TemporalWorkerSupervisor,
+    outputChannel: vscode.OutputChannel
+): void {
+    if (!workerPresentationConfig) {
+        return;
+    }
+
+    const startError = supervisor.getStartError();
+    const pid = supervisor.getWorkerPid();
+    outputChannel.appendLine(
+        formatWorkerStateTransitionLogLine(state, {
+            windowId: workerPresentationConfig.windowId,
+            taskQueue: workerPresentationConfig.taskQueue,
+            namespace: workerPresentationConfig.namespace,
+            mode: workerPresentationConfig.mode,
+            extensionVersion: workerPresentationConfig.extensionVersion,
+            pid,
+            exitCode: startError?.exitCode,
+        })
+    );
+}
+
+function notifyWorkerForState(
+    state: WorkerHealthState,
+    supervisor: TemporalWorkerSupervisor
+): void {
+    if (state === 'ready') {
+        if (workerReadyNotifiedThisSession) {
+            return;
+        }
+        workerReadyNotifiedThisSession = true;
+        void vscode.window.showInformationMessage(formatWorkerReadyNotification());
+        return;
+    }
+
+    if (state === 'start_failed') {
+        const startError = supervisor.getStartError();
+        if (!startError) {
+            return;
+        }
+        void vscode.window.showErrorMessage(
+            formatWorkerStartFailedNotification(startError.remediation)
+        );
+    }
+}
+
 export function registerExternalTemporalHealthSurfaces(
     context: vscode.ExtensionContext,
     supervisor: ExternalTemporalSupervisor,
@@ -138,22 +236,18 @@ export function registerExternalTemporalHealthSurfaces(
     resolveSettings: () => ResolvedExternalSettings,
     outputChannel: vscode.OutputChannel
 ): void {
-    const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    statusBarMode = 'external';
+
+    statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
     context.subscriptions.push(statusBarItem);
 
     const applyState = (state: ExternalTemporalHealthState) => {
+        externalState = state;
+        updateStatusBar();
+
         const settings = resolveSettings();
         const address = settings.address ?? 'unknown';
         const namespace = settings.namespace ?? 'unknown';
-
-        statusBarItem.text = formatExternalStatusBarLabel(state);
-        statusBarItem.tooltip = formatExternalStatusBarTooltip({
-            address,
-            namespace,
-            authMode: settings.authMode,
-            tlsEnabled: settings.tlsEnabled,
-        });
-        statusBarItem.show();
 
         const connectError = supervisor.getConnectError();
         outputChannel.appendLine(

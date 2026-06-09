@@ -1,6 +1,11 @@
 import { EventEmitter } from 'events';
+import { buildExternalConnectionOptions } from './externalConnection';
 import { classifyExternalConnectFailure } from './externalConnectFailure';
-import { probeExternalTemporalHealth, probeExternalTemporalPreflight } from './healthProbe';
+import {
+    probeExternalTemporalHealth,
+    probeExternalTemporalPreflight,
+    probeWorkerTaskQueuePoll,
+} from './healthProbe';
 import { formatSafeForLog } from './secretRedaction';
 import type {
     ExternalConnectError,
@@ -28,6 +33,7 @@ const UNHEALTHY_PROBE_THRESHOLD = 3;
 export interface ExternalTemporalSupervisorOptions {
     preflight?: ExternalPreflightProber;
     probeHealth?: ExternalHealthProber;
+    probeWorkerPoll?: typeof probeWorkerTaskQueuePoll;
     log?: (line: string) => void;
 }
 
@@ -35,6 +41,7 @@ export class ExternalTemporalSupervisor {
     private readonly emitter = new EventEmitter();
     private readonly preflight: ExternalPreflightProber;
     private readonly probeHealth: ExternalHealthProber;
+    private readonly probeWorkerPoll: typeof probeWorkerTaskQueuePoll;
     private readonly log: (line: string) => void;
 
     private state: ExternalTemporalHealthState = 'idle';
@@ -50,6 +57,7 @@ export class ExternalTemporalSupervisor {
     ) {
         this.preflight = options.preflight ?? probeExternalTemporalPreflight;
         this.probeHealth = options.probeHealth ?? probeExternalTemporalHealth;
+        this.probeWorkerPoll = options.probeWorkerPoll ?? probeWorkerTaskQueuePoll;
         this.log = options.log ?? (() => undefined);
     }
 
@@ -127,8 +135,18 @@ export class ExternalTemporalSupervisor {
 
         try {
             await this.preflight({ settings, apiKey });
-            this.transitionTo('ready');
-            this.logExternalState('ready', settings, apiKey);
+            const polling = await this.probeWorkerPoll(
+                this.buildWorkerPollOptions(settings, apiKey)
+            );
+            if (polling) {
+                this.transitionTo('ready');
+            } else {
+                this.transitionTo('unhealthy');
+                this.log(
+                    `[forge.temporal.external] unhealthy windowId=${this.config.windowId} reason=no_worker_poll taskQueue=${settings.taskQueue}`
+                );
+            }
+            this.logExternalState(this.state, settings, apiKey);
             this.startHealthMonitor(settings, apiKey);
         } catch (error) {
             this.failConnect(error, settings, apiKey);
@@ -154,7 +172,11 @@ export class ExternalTemporalSupervisor {
             return;
         }
 
-        const healthy = await this.probeHealth({ settings, apiKey });
+        const serverHealthy = await this.probeHealth({ settings, apiKey });
+        const polling = await this.probeWorkerPoll(
+            this.buildWorkerPollOptions(settings, apiKey)
+        );
+        const healthy = serverHealthy && polling;
 
         if (healthy) {
             this.consecutiveProbeFailures = 0;
@@ -196,6 +218,21 @@ export class ExternalTemporalSupervisor {
                 { knownSecrets: apiKey ? [apiKey] : [] }
             )
         );
+    }
+
+    private buildWorkerPollOptions(
+        settings: ReturnType<ExternalTemporalSupervisorConfig['resolveSettings']>,
+        apiKey: string | undefined
+    ): Parameters<typeof probeWorkerTaskQueuePoll>[0] {
+        return {
+            mode: 'external',
+            address: settings.address ?? '',
+            namespace: settings.namespace ?? '',
+            taskQueue: settings.taskQueue,
+            externalSettings: settings,
+            apiKey,
+            connectionOptions: buildExternalConnectionOptions(settings, apiKey),
+        };
     }
 
     private logExternalState(

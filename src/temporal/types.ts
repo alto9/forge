@@ -6,6 +6,15 @@ export type ManagedLocalHealthState =
     | 'start_failed'
     | 'stopped';
 
+export type WorkerHealthState =
+    | 'idle'
+    | 'starting'
+    | 'ready'
+    | 'unhealthy'
+    | 'start_failed'
+    | 'restarting'
+    | 'stopped';
+
 export type ExternalTemporalHealthState =
     | 'idle'
     | 'connecting'
@@ -46,6 +55,28 @@ export interface ManagedLocalStartError {
     remediation: StartFailureRemediation;
     message: string;
     exitCode?: number;
+}
+
+export type WorkerStartFailureRemediation = StartFailureRemediation | 'crash';
+
+export interface WorkerStartError {
+    remediation: WorkerStartFailureRemediation;
+    message: string;
+    exitCode?: number;
+}
+
+export interface TemporalWorkerSupervisorConfig {
+    windowId: string;
+    extensionPath: string;
+    extensionVersion: string;
+    globalStoragePath: string;
+    mode: import('./temporalSettings').TemporalMode;
+    namespace: string;
+    taskQueue: string;
+    grpcPort?: number;
+    resolveExternalSettings?: () => import('./externalSettings').ResolvedExternalSettings;
+    resolveApiKey?: () => Promise<string | undefined>;
+    isTemporalConnectionReady: () => boolean;
 }
 
 export interface SpawnedChildProcess {

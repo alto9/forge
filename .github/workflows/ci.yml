@@ -37,3 +37,6 @@ jobs:
         run: npm test
         continue-on-error: false
 
+      - name: Verify packaged launch assets
+        run: bash scripts/verify-packaging.sh
+

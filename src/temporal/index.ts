@@ -3,6 +3,10 @@ export {
     TemporalReadinessBlockedError,
 } from './TemporalLocalSupervisor';
 export {
+    TemporalWorkerSupervisor,
+    WorkerReadinessBlockedError,
+} from './TemporalWorkerSupervisor';
+export {
     ExternalTemporalSupervisor,
     ExternalReadinessBlockedError,
 } from './ExternalTemporalSupervisor';
@@ -59,6 +63,19 @@ export {
     buildManagedLocalGrpcAddress,
     resolveManagedLocalDevServerEntry,
 } from './devServerLaunch';
+export {
+    WORKER_ENTRY,
+    assertWorkerEntryExists,
+    buildWorkerSpawnEnv,
+    resolveWorkerEntry,
+    resolveWorkerManifestPath,
+} from './workerLaunch';
+export {
+    readWorkerManifest,
+    writeWorkerManifest,
+    workerManifestVersionMismatch,
+} from './workerManifest';
+export { classifyWorkerStartFailure } from './workerFailureClassification';
 export { classifyStartFailure } from './failureClassification';
 export { classifyExternalConnectFailure } from './externalConnectFailure';
 export {
@@ -72,22 +89,32 @@ export {
     formatReadyNotification,
     formatStartFailedNotification,
     formatWorkflowBlockedNotification,
+    formatWorkerBlockedNotification,
+    formatWorkerReadyNotification,
+    formatWorkerStartFailedNotification,
+    formatWorkerStateTransitionLogLine,
+    formatWorkerStatusBarSegment,
+    formatWorkerUpgradeRestartLogLine,
 } from './temporalPresentation';
 export {
     TEMPORAL_OUTPUT_CHANNEL_NAME,
     createTemporalOutputChannel,
     notifyWorkflowBlockedByTemporal,
+    notifyWorkflowBlockedByWorker,
     registerExternalTemporalHealthSurfaces,
     registerManagedLocalTemporalHealthSurfaces,
+    registerWorkerHealthSurfaces,
 } from './temporalHealthSurfaces';
 export {
     probeExternalTemporalHealth,
     probeExternalTemporalPreflight,
     probeManagedLocalTemporalHealth,
+    probeWorkerTaskQueuePoll,
 } from './healthProbe';
 export {
     getExternalTemporalSupervisor,
     getTemporalLocalSupervisor,
+    getTemporalWorkerSupervisor,
     registerTemporalLocalSupervisor,
     shutdownTemporalLocalSupervisor,
 } from './temporalWindowRegistry';
@@ -106,4 +133,8 @@ export type {
     ManagedLocalSupervisorConfig,
     SpawnedChildProcess,
     StartFailureRemediation,
+    TemporalWorkerSupervisorConfig,
+    WorkerHealthState,
+    WorkerStartError,
+    WorkerStartFailureRemediation,
 } from './types';

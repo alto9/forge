@@ -4,6 +4,8 @@ import type {
     ExternalTemporalHealthState,
     ManagedLocalHealthState,
     StartFailureRemediation,
+    WorkerHealthState,
+    WorkerStartFailureRemediation,
 } from './types';
 
 export interface ManagedLocalPresentationContext {
@@ -24,7 +26,18 @@ export function formatPersistencePathForDisplay(
     return path.basename(persistencePath);
 }
 
-export function formatManagedLocalStatusBarLabel(state: ManagedLocalHealthState): string {
+export function formatManagedLocalStatusBarLabel(
+    state: ManagedLocalHealthState,
+    workerState?: WorkerHealthState
+): string {
+    const temporalLabel = formatTemporalConnectionSegment(state);
+    if (workerState === undefined) {
+        return temporalLabel;
+    }
+    return `${temporalLabel} · ${formatWorkerStatusBarSegment(workerState)}`;
+}
+
+function formatTemporalConnectionSegment(state: ManagedLocalHealthState): string {
     switch (state) {
         case 'idle':
             return '$(pulse) Temporal: idle';
@@ -38,6 +51,53 @@ export function formatManagedLocalStatusBarLabel(state: ManagedLocalHealthState)
             return '$(pulse) Temporal: failed';
         case 'stopped':
             return '$(pulse) Temporal: stopped';
+    }
+}
+
+export function formatWorkerStatusBarSegment(state: WorkerHealthState): string {
+    switch (state) {
+        case 'idle':
+            return 'Worker: idle';
+        case 'starting':
+            return 'Worker: starting…';
+        case 'ready':
+            return 'Worker: ready';
+        case 'unhealthy':
+            return 'Worker: unhealthy';
+        case 'start_failed':
+            return 'Worker: failed';
+        case 'restarting':
+            return 'Worker: restarting…';
+        case 'stopped':
+            return 'Worker: stopped';
+    }
+}
+
+export function formatExternalStatusBarLabel(
+    state: ExternalTemporalHealthState,
+    workerState?: WorkerHealthState
+): string {
+    const temporalLabel = formatExternalConnectionSegment(state);
+    if (workerState === undefined) {
+        return temporalLabel;
+    }
+    return `${temporalLabel} · ${formatWorkerStatusBarSegment(workerState)}`;
+}
+
+function formatExternalConnectionSegment(state: ExternalTemporalHealthState): string {
+    switch (state) {
+        case 'idle':
+            return '$(pulse) Temporal: idle';
+        case 'connecting':
+            return '$(pulse) Temporal: connecting…';
+        case 'ready':
+            return '$(pulse) Temporal: ready';
+        case 'unhealthy':
+            return '$(pulse) Temporal: unhealthy';
+        case 'connect_failed':
+            return '$(pulse) Temporal: failed';
+        case 'disconnected':
+            return '$(pulse) Temporal: disconnected';
     }
 }
 
@@ -94,23 +154,6 @@ export interface ExternalPresentationContext {
     probeErrorCode?: string;
 }
 
-export function formatExternalStatusBarLabel(state: ExternalTemporalHealthState): string {
-    switch (state) {
-        case 'idle':
-            return '$(pulse) Temporal: idle';
-        case 'connecting':
-            return '$(pulse) Temporal: connecting…';
-        case 'ready':
-            return '$(pulse) Temporal: ready';
-        case 'unhealthy':
-            return '$(pulse) Temporal: unhealthy';
-        case 'connect_failed':
-            return '$(pulse) Temporal: failed';
-        case 'disconnected':
-            return '$(pulse) Temporal: disconnected';
-    }
-}
-
 export function formatExternalStatusBarTooltip(context: {
     address: string;
     namespace: string;
@@ -156,4 +199,53 @@ export function formatExternalStateTransitionLogLine(
     const probeErrorPart =
         context.probeErrorCode !== undefined ? ` probeErrorCode=${context.probeErrorCode}` : '';
     return `[forge.temporal.external] state=${state} windowId=${context.windowId} address=${context.address} namespace=${context.namespace} authMode=${context.authMode} tlsEnabled=${context.tlsEnabled}${probeErrorPart}`;
+}
+
+export interface WorkerPresentationContext {
+    windowId: string;
+    taskQueue: string;
+    namespace: string;
+    mode: string;
+    extensionVersion: string;
+    pid?: number;
+    exitCode?: number;
+}
+
+export function formatWorkerReadyNotification(): string {
+    return 'Forge workflow worker is ready.';
+}
+
+export function formatWorkerStartFailedNotification(
+    remediation: WorkerStartFailureRemediation
+): string {
+    switch (remediation) {
+        case 'asset':
+            return 'Forge could not start the workflow worker — worker assets are missing from the extension package. Reinstall Forge Studio.';
+        case 'permission':
+            return 'Forge could not start the workflow worker — cannot write worker state. Check extension global storage permissions.';
+        case 'port':
+            return 'Forge could not start the workflow worker — Temporal connection settings are unavailable.';
+        case 'crash':
+            return 'Forge workflow worker stopped unexpectedly. See Forge Temporal output. Workflow runs are blocked until the worker is healthy.';
+    }
+}
+
+export function formatWorkerBlockedNotification(): string {
+    return 'Workflow runs are blocked until the Forge worker is ready. See Forge Temporal output for details.';
+}
+
+export function formatWorkerUpgradeRestartLogLine(
+    context: Pick<WorkerPresentationContext, 'windowId' | 'extensionVersion'>
+): string {
+    return `[forge.temporal.worker] Forge updated the workflow worker for this window. windowId=${context.windowId} extensionVersion=${context.extensionVersion}`;
+}
+
+export function formatWorkerStateTransitionLogLine(
+    state: WorkerHealthState,
+    context: WorkerPresentationContext
+): string {
+    const pidPart = context.pid !== undefined ? ` pid=${context.pid}` : '';
+    const exitCodePart =
+        context.exitCode !== undefined ? ` exitCode=${context.exitCode}` : '';
+    return `[forge.temporal.worker] state=${state} windowId=${context.windowId} taskQueue=${context.taskQueue} namespace=${context.namespace} mode=${context.mode} extensionVersion=${context.extensionVersion}${pidPart}${exitCodePart}`;
 }

@@ -8,6 +8,12 @@ import {
     formatReadyNotification,
     formatStartFailedNotification,
     formatWorkflowBlockedNotification,
+    formatWorkerBlockedNotification,
+    formatWorkerReadyNotification,
+    formatWorkerStartFailedNotification,
+    formatWorkerStatusBarSegment,
+    formatWorkerStateTransitionLogLine,
+    formatWorkerUpgradeRestartLogLine,
 } from './temporalPresentation';
 import type { ManagedLocalHealthState } from './types';
 
@@ -101,5 +107,73 @@ describe('temporalPresentation', () => {
         expect(formatExternalReadyNotification('forge-ns', 'host:7233')).toBe(
             'Forge Temporal ready — connected to forge-ns at host:7233.'
         );
+    });
+
+    describe('formatWorkerStatusBarSegment', () => {
+        it('maps worker health states to contract labels', () => {
+            expect(formatWorkerStatusBarSegment('starting')).toBe('Worker: starting…');
+            expect(formatWorkerStatusBarSegment('ready')).toBe('Worker: ready');
+            expect(formatWorkerStatusBarSegment('start_failed')).toBe('Worker: failed');
+        });
+    });
+
+    describe('formatManagedLocalStatusBarLabel with worker segment', () => {
+        it('combines Temporal and worker segments', () => {
+            expect(formatManagedLocalStatusBarLabel('ready', 'ready')).toBe(
+                '$(pulse) Temporal: ready · Worker: ready'
+            );
+        });
+    });
+
+    describe('formatWorkerStartFailedNotification', () => {
+        it('uses asset remediation copy', () => {
+            expect(formatWorkerStartFailedNotification('asset')).toBe(
+                'Forge could not start the workflow worker — worker assets are missing from the extension package. Reinstall Forge Studio.'
+            );
+        });
+
+        it('uses crash remediation copy', () => {
+            expect(formatWorkerStartFailedNotification('crash')).toBe(
+                'Forge workflow worker stopped unexpectedly. See Forge Temporal output. Workflow runs are blocked until the worker is healthy.'
+            );
+        });
+    });
+
+    it('uses worker blocked notification copy from contract', () => {
+        expect(formatWorkerBlockedNotification()).toBe(
+            'Workflow runs are blocked until the Forge worker is ready. See Forge Temporal output for details.'
+        );
+    });
+
+    it('uses worker ready notification copy', () => {
+        expect(formatWorkerReadyNotification()).toBe('Forge workflow worker is ready.');
+    });
+
+    it('uses worker upgrade restart output copy from contract', () => {
+        expect(
+            formatWorkerUpgradeRestartLogLine({
+                windowId: 'window-1',
+                extensionVersion: '3.27.0',
+            })
+        ).toBe(
+            '[forge.temporal.worker] Forge updated the workflow worker for this window. windowId=window-1 extensionVersion=3.27.0'
+        );
+    });
+
+    describe('formatWorkerStateTransitionLogLine', () => {
+        it('includes contract fields and pid when provided', () => {
+            expect(
+                formatWorkerStateTransitionLogLine('ready', {
+                    windowId: 'window-1',
+                    taskQueue: 'forge-workflows',
+                    namespace: 'forge-local',
+                    mode: 'managedLocal',
+                    extensionVersion: '3.26.0',
+                    pid: 5151,
+                })
+            ).toBe(
+                '[forge.temporal.worker] state=ready windowId=window-1 taskQueue=forge-workflows namespace=forge-local mode=managedLocal extensionVersion=3.26.0 pid=5151'
+            );
+        });
     });
 });
