@@ -13,6 +13,8 @@ This document defines Forge Studio workflow discovery, graph visualization, run 
 ## Primary code pointers (optional)
 
 - `src/commands/WorkflowCatalogCommand.ts` — catalog open, refresh, repository folder selection.
-- `src/webview/workflows/` — workflow catalog webview.
+- `src/commands/WorkflowGraphCommand.ts` — graph open and refresh (#26).
+- `src/webview/workflows/` — workflow catalog and graph webview.
 - `src/workflows/discoverWorkflowDefinitions.ts` — discovery scan and pre-run validation index.
+- `src/workflows/buildWorkflowGraphModel.ts` — workflow graph model builder (#26).
 - Keep entries concise and remove stale pointers.

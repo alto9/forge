@@ -126,6 +126,66 @@ Discovery exposes one catalog entry per scanned definition file:
 
 Studio sorting, badges, and copy: `.ai/interface/presentation.md` **Workflow discovery catalog**.
 
+## Workflow graph model (#26)
+
+Serialized payload from the extension host to the graph webview. Built by `buildWorkflowGraphModel(definition, projection?)`. Visual states and copy: `.ai/interface/presentation.md` **Workflow Visualization (#26)**.
+
+### Workflow graph model (root)
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `workflow_id` | yes | Stable workflow identifier |
+| `workflow_name` | yes | Human-readable title from definition |
+| `mode` | yes | `definition` or `run` |
+| `nodes` | yes | Non-empty array of graph nodes (see below) |
+| `edges` | yes | Array of directed edges (see below) |
+| `run_summary` | when `mode=run` | Short textual status for header and screen readers |
+| `step_list` | yes | Ordered `{ node_id, name, visual_state, status_label }` for sidebar accessibility |
+| `recoveryState` | when `mode=run` | From `WorkflowRunProjection` (`.ai/operations/observability.md`) |
+| `temporal_ids` | when `mode=run` | `{ workflowId, runId, namespace }` for header copy |
+
+### Graph node
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `node_id` | yes | Workflow graph node ID |
+| `type` | yes | Definition node type (`activity`, `validation`, etc.) |
+| `name` | yes | Human-readable node name |
+| `visual_state` | yes | `pending`, `active`, `completed`, `failed`, `cancelled`, `waiting`, `validating`, `retrying`, `skipped` |
+| `status_label` | yes | Accessible label matching presentation copy table |
+| `position` | yes | `{ x, y }` layout coordinates |
+| `retry_attempt` | when `visual_state=retrying` | Current attempt (1-based) |
+| `retry_max` | when `visual_state=retrying` | Maximum attempts from retry policy |
+| `detail` | no | Secondary line (e.g. question_id, timer label, validation summary) |
+
+### Graph edge
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `edge_id` | yes | Stable ID: `{from_node_id}->{to_node_id}` |
+| `from_node_id` | yes | Source node |
+| `to_node_id` | yes | Target node |
+| `visual_state` | yes | `idle`, `traversed`, `active`, `untaken` |
+| `condition` | no | Transition condition label from definition |
+
+### Run projection fields used for graph overlay
+
+`WorkflowRunProjection` supplies graph overlay inputs (full entity: `.ai/data/data_model.md`):
+
+| Field | Description |
+|-------|-------------|
+| `activeNodeId` | Current orchestration node → `active` visual state |
+| `completedNodeIds` | History of finished nodes → `completed` |
+| `failedNodeId` | Terminal failure node, if any → `failed` |
+| `skippedNodeIds` | Branch nodes not taken → `skipped` |
+| `waitingNodeId` | Paused `human_question` or active `wait` node → `waiting` |
+| `validatingNodeId` | In-flight validation node → `validating` |
+| `retrying` | `{ node_id, attempt, max }` when an activity automatic retry is in progress |
+| `cancelled` | Boolean; when true, active node → `cancelled` |
+| `recoveryState` | Gates live polling and banner copy |
+
+The extension derives edge `traversed`, `active`, and `untaken` states from completed history and the active node.
+
 ### Runtime validation result (aggregate)
 
 Each `validation` node produces one aggregate after all declared validators run. Machine validation: `.ai/schemas/validation-result.schema.json`.

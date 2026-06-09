@@ -2,9 +2,84 @@
 
 Forge Studio presents workflows as both definitions and live runs.
 
-## Workflow Visualization
+## Workflow Visualization (#26)
 
-React Flow is the visualization layer for workflow definitions and run state. Definition views show nodes, transitions, validators, human input points, activities, and artifact outputs. Run views overlay Temporal-backed state such as active step, completed steps, failed steps, retries, waits, validation failures, and pending human questions.
+React Flow (`@xyflow/react`) is the visualization layer for workflow definitions and run state. Definition views show nodes, transitions, validators, human input points, activities, and artifact outputs. Run views overlay Temporal-backed `WorkflowRunProjection` state such as active step, completed steps, failed steps, retries, waits, validation failures, and pending human questions.
+
+### Surfaces (v1)
+
+1. **Command palette** — **Forge: Open Workflow Graph** opens the graph webview for the catalog-selected workflow (see `.ai/interface/input_handling.md`).
+2. **Command palette** — **Forge: Refresh Workflow Graph** re-fetches the current projection when a run is active, or reloads the definition when in definition-only mode.
+3. **Run list** — opening a run from the minimal run list (`.ai/interface/presentation.md` **Run recovery surfaces**) opens the graph webview in run mode for that indexed execution.
+4. **Graph webview** — React Flow canvas plus an ordered textual step list sidebar (accessibility companion per `.ai/interface/accessibility.md`).
+
+Visual graph editing, recovery action implementation, and human question forms are out of scope for #26 (#27, #28, and recovery controls ship in sibling cockpit issues).
+
+### Definition vs run mode
+
+| Mode | When | Data source |
+|------|------|-------------|
+| **Definition** | No indexed non-terminal run for the selected `workflow_id` + `repositoryRoot`, or user opens graph before run start | Parsed `WorkflowDefinition` from `.ai/workflows/*.json` |
+| **Run** | User opens graph from run list, or a non-terminal indexed run exists for the selected workflow | `WorkflowRunProjection` refreshed from Temporal (see **Refresh cadence**) merged onto the definition graph |
+
+Run mode takes precedence when both apply. All nodes use visual state **Pending** and all edges **Idle** in definition mode.
+
+### Layout and edges
+
+- **Layout** — Auto-layout top-to-bottom (entry node at top) with `@dagrejs/dagre` (or equivalent). Positions are computed when the graph model is built; users do not drag-to-save layout in v1.
+- **Edges** — One directed edge per `transitions[]` entry on the source node (`from_node_id` → `to_node_id`). Optional `condition` text appears on edge labels for `decision` nodes.
+- **Node chrome** — Node shape or icon distinguishes `activity`, `validation`, `human_question`, `wait`, `decision`, and `terminal` types from the workflow definition.
+
+### Node visual states
+
+Each graph node carries a `visual_state` and human-readable `status_label`. Status colors pair with text and icons (never color-only).
+
+| `visual_state` | Applies when | `status_label` (default) | Notes |
+|----------------|--------------|--------------------------|-------|
+| `pending` | Definition mode, or run has not reached the node | **Pending** | Default idle state |
+| `active` | Node is the current orchestration step | **Active** | Pulse or focus ring on canvas |
+| `completed` | Node finished successfully in the run history | **Completed** | |
+| `failed` | Activity returned terminal failure, or validation node aggregate `valid=false` | **Failed** | Validation failures do not retry automatically |
+| `cancelled` | Run cancelled while this node was active or pending | **Cancelled** | |
+| `waiting` | `human_question` pause awaiting answers | **Waiting for input** | Detail panel names `question_id` |
+| `waiting` | `wait` node timer or durable wait in progress | **Waiting** | Detail panel may show timer label when available |
+| `validating` | `validation` node activity in flight | **Validating** | |
+| `retrying` | Temporal is scheduling or running an automatic activity retry | **Retrying ({attempt}/{max})** | `max` from retry policy catalog (`.ai/runtime/execution_model.md`); only on `activity` nodes |
+| `skipped` | `decision` branch not taken in completed history | **Skipped** | Muted styling; still listed in step list |
+
+### Edge visual states
+
+| `visual_state` | Applies when |
+|----------------|--------------|
+| `idle` | Definition mode, or edge not yet traversed in the run |
+| `traversed` | Run history includes this transition |
+| `active` | Edge from the last completed node to the current `active` node |
+| `untaken` | Outgoing edge from a `decision` node whose branch was not chosen (pairs with downstream `skipped` nodes) |
+
+### Refresh cadence and data source
+
+- **Authority** — Temporal workflow history and queries are authoritative. Forge builds `WorkflowRunProjection` locally and derives graph node/edge states (`.ai/data/consistency.md`).
+- **Poll interval** — **2 seconds** while the graph webview is visible, the run is non-terminal, and `recoveryState === synced`.
+- **Pause** — Stop polling when the webview panel is not visible (resume on reveal).
+- **Immediate refresh** — On **Forge: Refresh Workflow Graph**, **Forge: Refresh workflow runs**, and when `recoveryState` transitions to `synced`.
+- **Non-synced recovery** — When `recoveryState` is not `synced`, show the recovery banner copy from `.ai/operations/observability.md` **Run recovery states**; do not show live **Active**, **Retrying**, or **Validating** animation from stale cached projections.
+
+Serialized webview payload: `.ai/data/serialization.md` **Workflow graph model**.
+
+### UI copy (cockpit graph)
+
+| Situation | Copy |
+|-----------|------|
+| Definition mode header | "Definition — {workflow name}" |
+| Run mode header | "Run — {workflow name} ({workflowId}/{runId})" |
+| Run starting (placeholder until run index exists) | "Start a workflow run to see live progress." _(disabled in #26 if run-start not yet shipped; graph stays in definition mode)_ |
+| Recovery banner (`recovery_pending`) | "Recovering run state…" |
+| Recovery banner (`refresh_failed`) | "Could not refresh run state. Try **Forge: Refresh Workflow Graph**." |
+| Recovery banner (`unreachable`) | "Waiting for Temporal…" |
+| Validation failed node detail | "Validation failed — see diagnostics in run inspector (#28)." |
+| Retry detail | "Automatic retry {attempt} of {max}" |
+| Pending human question | "Waiting for your answers — continue in the question panel (#27)." |
+| Graph empty / no selection | "Select a workflow in the catalog, then open the graph." |
 
 ## Run Inspector
 
@@ -75,9 +150,12 @@ Persist the chosen folder per window in `workspaceState` key `forge.workflow.cat
 
 ## Primary code pointers (optional)
 
-- `src/commands/WorkflowCatalogCommand.ts` — open, refresh, and folder-selection commands.
-- `src/webview/workflows/` — catalog webview UI.
+- `src/commands/WorkflowCatalogCommand.ts` — catalog open, refresh, and folder-selection commands.
+- `src/commands/WorkflowGraphCommand.ts` — open and refresh graph webview (#26).
+- `src/webview/workflows/` — catalog and graph webview UI (#25, #26).
 - `src/workflows/discoverWorkflowDefinitions.ts` — scan, validate, and build catalog entries.
+- `src/workflows/buildWorkflowGraphModel.ts` — definition + run projection → graph model (#26).
+- `src/workflows/types.ts` — `WorkflowGraphModel`, node/edge visual state types (#26).
 
 ## Managed-local Temporal surfaces
 
@@ -162,6 +240,4 @@ Run recovery (#21) uses the Forge Temporal Output channel and a minimal run list
 
 Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
 
-### Workflow visual states
-- Define node and edge visual states for idle, active, waiting, validating, retrying, failed, cancelled, completed, and skipped states.
-- Define UI copy for workflow start, pending human questions, validation failure, retry approval, and cancellation (cockpit run visualization; out of scope for #19 external connectivity).
+_(Workflow graph visual states and cockpit graph UI copy resolved in **Workflow Visualization (#26)** above.)_
