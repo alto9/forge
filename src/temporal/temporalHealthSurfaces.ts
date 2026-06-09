@@ -1,6 +1,13 @@
 import * as vscode from 'vscode';
+import { ExternalTemporalSupervisor } from './ExternalTemporalSupervisor';
 import { TemporalLocalSupervisor } from './TemporalLocalSupervisor';
 import {
+    formatExternalConnectFailedNotification,
+    formatExternalReadyNotification,
+    formatExternalStateTransitionLogLine,
+    formatExternalStatusBarLabel,
+    formatExternalStatusBarTooltip,
+    formatInsecureModeWarning,
     formatManagedLocalStatusBarLabel,
     formatManagedLocalStatusBarTooltip,
     formatReadyNotification,
@@ -8,7 +15,13 @@ import {
     formatStateTransitionLogLine,
     formatWorkflowBlockedNotification,
 } from './temporalPresentation';
-import type { ManagedLocalHealthState, ManagedLocalSupervisorConfig } from './types';
+import type { ResolvedExternalSettings } from './externalSettings';
+import type {
+    ExternalTemporalHealthState,
+    ExternalTemporalSupervisorConfig,
+    ManagedLocalHealthState,
+    ManagedLocalSupervisorConfig,
+} from './types';
 
 export const TEMPORAL_OUTPUT_CHANNEL_NAME = 'Forge Temporal';
 
@@ -116,4 +129,72 @@ function notifyForState(
             )
         );
     }
+}
+
+export function registerExternalTemporalHealthSurfaces(
+    context: vscode.ExtensionContext,
+    supervisor: ExternalTemporalSupervisor,
+    config: ExternalTemporalSupervisorConfig,
+    resolveSettings: () => ResolvedExternalSettings,
+    outputChannel: vscode.OutputChannel
+): void {
+    const statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Left, 100);
+    context.subscriptions.push(statusBarItem);
+
+    const applyState = (state: ExternalTemporalHealthState) => {
+        const settings = resolveSettings();
+        const address = settings.address ?? 'unknown';
+        const namespace = settings.namespace ?? 'unknown';
+
+        statusBarItem.text = formatExternalStatusBarLabel(state);
+        statusBarItem.tooltip = formatExternalStatusBarTooltip({
+            address,
+            namespace,
+            authMode: settings.authMode,
+            tlsEnabled: settings.tlsEnabled,
+        });
+        statusBarItem.show();
+
+        const connectError = supervisor.getConnectError();
+        outputChannel.appendLine(
+            formatExternalStateTransitionLogLine(state, {
+                windowId: config.windowId,
+                address,
+                namespace,
+                authMode: settings.authMode,
+                tlsEnabled: settings.tlsEnabled,
+                probeErrorCode: connectError?.probeErrorCode,
+            })
+        );
+
+        if (state === 'ready') {
+            void vscode.window.showInformationMessage(
+                formatExternalReadyNotification(namespace, address)
+            );
+            return;
+        }
+
+        if (state === 'connect_failed') {
+            if (!connectError) {
+                return;
+            }
+            void vscode.window.showErrorMessage(
+                formatExternalConnectFailedNotification(connectError.remediation, address)
+            );
+            return;
+        }
+
+        if (state === 'connecting' && settings.authMode === 'insecure') {
+            outputChannel.appendLine(
+                `[forge.temporal.external] warning ${formatInsecureModeWarning(address)}`
+            );
+        }
+    };
+
+    applyState(supervisor.getHealthState());
+
+    const unsubscribe = supervisor.onStateChange((state) => {
+        applyState(state);
+    });
+    context.subscriptions.push({ dispose: unsubscribe });
 }

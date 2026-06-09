@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+    formatExternalConnectFailedNotification,
+    formatExternalReadyNotification,
+    formatExternalStatusBarLabel,
     formatManagedLocalStatusBarLabel,
     formatPersistencePathForDisplay,
     formatReadyNotification,
@@ -66,6 +69,37 @@ describe('temporalPresentation', () => {
     it('uses workflow blocked notification copy from contract', () => {
         expect(formatWorkflowBlockedNotification()).toBe(
             'Workflow runs are blocked until Temporal is ready. See Forge Temporal output for details.'
+        );
+    });
+
+    describe('formatExternalStatusBarLabel', () => {
+        it('maps external health states to contract labels', () => {
+            expect(formatExternalStatusBarLabel('connecting')).toBe(
+                '$(pulse) Temporal: connecting…'
+            );
+            expect(formatExternalStatusBarLabel('connect_failed')).toBe(
+                '$(pulse) Temporal: failed'
+            );
+        });
+    });
+
+    describe('formatExternalConnectFailedNotification', () => {
+        it('uses auth remediation copy', () => {
+            expect(formatExternalConnectFailedNotification('auth', 'host:7233')).toBe(
+                'Forge could not connect to Temporal — authentication failed. Run **Forge: Set Temporal API Key** or check `forge.temporal.external.auth.mode`.'
+            );
+        });
+
+        it('uses address remediation copy', () => {
+            expect(formatExternalConnectFailedNotification('address', 'host:7233')).toBe(
+                'Forge could not connect to Temporal — host:7233 is unreachable. Check `forge.temporal.external.address` and network access.'
+            );
+        });
+    });
+
+    it('uses external ready notification copy from contract', () => {
+        expect(formatExternalReadyNotification('forge-ns', 'host:7233')).toBe(
+            'Forge Temporal ready — connected to forge-ns at host:7233.'
         );
     });
 });

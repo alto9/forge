@@ -6,6 +6,28 @@ export type ManagedLocalHealthState =
     | 'start_failed'
     | 'stopped';
 
+export type ExternalTemporalHealthState =
+    | 'idle'
+    | 'connecting'
+    | 'ready'
+    | 'unhealthy'
+    | 'connect_failed'
+    | 'disconnected';
+
+export type ExternalConnectFailureRemediation = 'auth' | 'tls' | 'address' | 'config';
+
+export interface ExternalConnectError {
+    remediation: ExternalConnectFailureRemediation;
+    message: string;
+    probeErrorCode?: string;
+}
+
+export interface ExternalTemporalSupervisorConfig {
+    windowId: string;
+    resolveSettings: () => import('./externalSettings').ResolvedExternalSettings;
+    resolveApiKey: () => Promise<string | undefined>;
+}
+
 export type StartFailureRemediation = 'port' | 'asset' | 'permission';
 
 export interface ManagedLocalSupervisorConfig {
@@ -48,4 +70,14 @@ export type ChildProcessSpawner = (
 export type HealthProber = (options: {
     address: string;
     namespace: string;
+}) => Promise<boolean>;
+
+export type ExternalPreflightProber = (options: {
+    settings: import('./externalSettings').ResolvedExternalSettings;
+    apiKey: string | undefined;
+}) => Promise<void>;
+
+export type ExternalHealthProber = (options: {
+    settings: import('./externalSettings').ResolvedExternalSettings;
+    apiKey: string | undefined;
 }) => Promise<boolean>;

@@ -1,26 +1,73 @@
 import * as vscode from 'vscode';
+import {
+    ExternalTemporalSupervisor,
+} from './ExternalTemporalSupervisor';
 import { TemporalLocalSupervisor } from './TemporalLocalSupervisor';
+import { getRegisteredStoredApiKeyReader } from './externalCredentials';
+import { resolveExternalApiKey, resolveExternalSettings } from './externalSettings';
 import {
     ensurePersistenceDirectory,
     resolveManagedLocalSettings,
 } from './managedLocalSettings';
+import { resolveTemporalMode } from './temporalSettings';
 import {
     createTemporalOutputChannel,
+    registerExternalTemporalHealthSurfaces,
     registerManagedLocalTemporalHealthSurfaces,
 } from './temporalHealthSurfaces';
 import { formatPersistencePathForDisplay } from './temporalPresentation';
-import type { ManagedLocalSupervisorConfig } from './types';
+import type { ExternalTemporalSupervisorConfig, ManagedLocalSupervisorConfig } from './types';
 
-let supervisor: TemporalLocalSupervisor | undefined;
+let localSupervisor: TemporalLocalSupervisor | undefined;
+let externalSupervisor: ExternalTemporalSupervisor | undefined;
 
 export function getTemporalLocalSupervisor(): TemporalLocalSupervisor | undefined {
-    return supervisor;
+    return localSupervisor;
+}
+
+export function getExternalTemporalSupervisor(): ExternalTemporalSupervisor | undefined {
+    return externalSupervisor;
 }
 
 export function registerTemporalLocalSupervisor(
     context: vscode.ExtensionContext
-): TemporalLocalSupervisor {
+): TemporalLocalSupervisor | ExternalTemporalSupervisor {
     const windowId = vscode.env.sessionId;
+    const outputChannel = createTemporalOutputChannel(context);
+    const mode = resolveTemporalMode();
+
+    if (mode === 'external') {
+        const externalConfig: ExternalTemporalSupervisorConfig = {
+            windowId,
+            resolveSettings: resolveExternalSettings,
+            resolveApiKey: () =>
+                resolveExternalApiKey(getRegisteredStoredApiKeyReader()),
+        };
+
+        externalSupervisor = new ExternalTemporalSupervisor(externalConfig, {
+            log: (line) => {
+                outputChannel.appendLine(line);
+            },
+        });
+
+        registerExternalTemporalHealthSurfaces(
+            context,
+            externalSupervisor,
+            externalConfig,
+            resolveExternalSettings,
+            outputChannel
+        );
+
+        context.subscriptions.push({
+            dispose: () => {
+                void externalSupervisor?.stop();
+                externalSupervisor = undefined;
+            },
+        });
+
+        return externalSupervisor;
+    }
+
     const settings = resolveManagedLocalSettings({
         globalStoragePath: context.globalStorageUri.fsPath,
         windowId,
@@ -44,9 +91,7 @@ export function registerTemporalLocalSupervisor(
         taskQueue: settings.taskQueue,
     };
 
-    const outputChannel = createTemporalOutputChannel(context);
-
-    supervisor = new TemporalLocalSupervisor(config, {
+    localSupervisor = new TemporalLocalSupervisor(config, {
         log: (line) => {
             outputChannel.appendLine(line);
         },
@@ -54,7 +99,7 @@ export function registerTemporalLocalSupervisor(
 
     registerManagedLocalTemporalHealthSurfaces(
         context,
-        supervisor,
+        localSupervisor,
         config,
         persistencePathDisplay,
         outputChannel
@@ -62,15 +107,17 @@ export function registerTemporalLocalSupervisor(
 
     context.subscriptions.push({
         dispose: () => {
-            void supervisor?.stop();
-            supervisor = undefined;
+            void localSupervisor?.stop();
+            localSupervisor = undefined;
         },
     });
 
-    return supervisor;
+    return localSupervisor;
 }
 
 export async function shutdownTemporalLocalSupervisor(): Promise<void> {
-    await supervisor?.stop();
-    supervisor = undefined;
+    await localSupervisor?.stop();
+    localSupervisor = undefined;
+    await externalSupervisor?.stop();
+    externalSupervisor = undefined;
 }

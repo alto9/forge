@@ -3,6 +3,10 @@ export {
     TemporalReadinessBlockedError,
 } from './TemporalLocalSupervisor';
 export {
+    ExternalTemporalSupervisor,
+    ExternalReadinessBlockedError,
+} from './ExternalTemporalSupervisor';
+export {
     computeDefaultPersistencePath,
     ensurePersistenceDirectory,
     resolveManagedLocalSettings,
@@ -56,8 +60,14 @@ export {
     resolveManagedLocalDevServerEntry,
 } from './devServerLaunch';
 export { classifyStartFailure } from './failureClassification';
+export { classifyExternalConnectFailure } from './externalConnectFailure';
 export {
     formatManagedLocalStatusBarLabel,
+    formatExternalConnectFailedNotification,
+    formatExternalReadyNotification,
+    formatExternalStatusBarLabel,
+    formatExternalStatusBarTooltip,
+    formatInsecureModeWarning,
     formatPersistencePathForDisplay,
     formatReadyNotification,
     formatStartFailedNotification,
@@ -67,10 +77,16 @@ export {
     TEMPORAL_OUTPUT_CHANNEL_NAME,
     createTemporalOutputChannel,
     notifyWorkflowBlockedByTemporal,
+    registerExternalTemporalHealthSurfaces,
     registerManagedLocalTemporalHealthSurfaces,
 } from './temporalHealthSurfaces';
-export { probeManagedLocalTemporalHealth } from './healthProbe';
 export {
+    probeExternalTemporalHealth,
+    probeExternalTemporalPreflight,
+    probeManagedLocalTemporalHealth,
+} from './healthProbe';
+export {
+    getExternalTemporalSupervisor,
     getTemporalLocalSupervisor,
     registerTemporalLocalSupervisor,
     shutdownTemporalLocalSupervisor,
@@ -78,6 +94,12 @@ export {
 export type {
     ChildProcessSpawnOptions,
     ChildProcessSpawner,
+    ExternalConnectError,
+    ExternalConnectFailureRemediation,
+    ExternalHealthProber,
+    ExternalPreflightProber,
+    ExternalTemporalHealthState,
+    ExternalTemporalSupervisorConfig,
     HealthProber,
     ManagedLocalHealthState,
     ManagedLocalStartError,
