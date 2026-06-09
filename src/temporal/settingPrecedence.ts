@@ -60,6 +60,39 @@ export function resolveStringSetting(
     return defaultValue;
 }
 
+export function resolveBooleanSetting(
+    inspected: ConfigurationInspectValue<boolean> | undefined,
+    envVar: string,
+    defaultValue: boolean
+): boolean {
+    if (inspected?.workspaceValue !== undefined) {
+        return inspected.workspaceValue;
+    }
+
+    if (inspected?.globalValue !== undefined) {
+        return inspected.globalValue;
+    }
+
+    const envRaw = process.env[envVar];
+    if (envRaw !== undefined && envRaw.trim() !== '') {
+        const normalized = envRaw.trim().toLowerCase();
+        if (normalized === 'true' || normalized === '1') {
+            return true;
+        }
+        if (normalized === 'false' || normalized === '0') {
+            return false;
+        }
+    }
+
+    return defaultValue;
+}
+
+export function isSettingExplicitlyConfigured<T>(
+    inspected: ConfigurationInspectValue<T> | undefined
+): boolean {
+    return inspected?.workspaceValue !== undefined || inspected?.globalValue !== undefined;
+}
+
 export function resolveOptionalStringSetting(
     inspected: ConfigurationInspectValue<string> | undefined,
     envVar: string

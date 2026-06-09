@@ -19,6 +19,7 @@ export const workspace = {
     getWorkspaceFolder: vi.fn(),
     getConfiguration: vi.fn(() => ({
         get: vi.fn(),
+        inspect: vi.fn(() => undefined),
     })),
     workspaceFolders: []
 };

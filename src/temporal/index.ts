@@ -10,6 +10,21 @@ export {
 } from './managedLocalSettings';
 export type { ResolvedManagedLocalSettings, TemporalMode } from './managedLocalSettings';
 export {
+    EXTERNAL_API_KEY_SECRET_KEY,
+    resolveExternalApiKey,
+    resolveExternalAuthMode,
+    resolveExternalSettings,
+} from './externalSettings';
+export type { ExternalAuthMode, ResolvedExternalSettings } from './externalSettings';
+export {
+    TEMPORAL_CONFIGURATION_VALIDATOR_ID,
+    getTemporalConfigurationErrors,
+    isLoopbackHost,
+    parseAddressHost,
+    validateTemporalConfiguration,
+} from './temporalConfigurationValidation';
+export type { TemporalConfigurationValidationOptions } from './temporalConfigurationValidation';
+export {
     TEMPORAL_READINESS_VALIDATOR_ID,
     TemporalConfigurationInvalidError,
     gateTemporalReadiness,

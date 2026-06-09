@@ -1,6 +1,11 @@
 import type { Diagnostic } from '../workflows/types';
 import { TemporalLocalSupervisor, TemporalReadinessBlockedError } from './TemporalLocalSupervisor';
 import { notifyWorkflowBlockedByTemporal } from './temporalHealthSurfaces';
+import {
+    getTemporalConfigurationErrors,
+    validateTemporalConfiguration,
+    type TemporalConfigurationValidationOptions,
+} from './temporalConfigurationValidation';
 import { resolveTemporalMode } from './temporalSettings';
 
 export const TEMPORAL_READINESS_VALIDATOR_ID = 'forge.temporal.readiness';
@@ -15,7 +20,7 @@ export class TemporalConfigurationInvalidError extends Error {
     }
 }
 
-export interface TemporalReadinessGateOptions {
+export interface TemporalReadinessGateOptions extends TemporalConfigurationValidationOptions {
     getSupervisor?: () => TemporalLocalSupervisor | undefined;
     resolveMode?: () => ReturnType<typeof resolveTemporalMode>;
 }
@@ -52,9 +57,16 @@ export async function gateTemporalReadiness(
     const resolveMode = options.resolveMode ?? resolveTemporalMode;
     const mode = resolveMode();
 
-    if (mode !== 'managedLocal') {
+    if (mode === 'external') {
+        const diagnostics = await validateTemporalConfiguration(options);
+        const errors = getTemporalConfigurationErrors(diagnostics);
+        if (errors.length > 0) {
+            throw new TemporalConfigurationInvalidError(errors);
+        }
         return;
     }
+
+    await validateTemporalConfiguration(options);
 
     const supervisor = options.getSupervisor?.();
     if (!supervisor) {

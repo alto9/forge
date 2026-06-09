@@ -8,11 +8,35 @@ import {
 } from './temporalReadinessGate';
 
 describe('temporalReadinessGate', () => {
-    it('skips readiness when mode is external', async () => {
+    it('validates external configuration before skipping managed-local readiness', async () => {
         await expect(
             gateTemporalReadiness({
                 resolveMode: () => 'external',
                 getSupervisor: () => undefined,
+                resolveSettings: () => ({
+                    address: undefined,
+                    namespace: 'forge-external',
+                    taskQueue: 'forge-workflows',
+                    authMode: 'apiKey',
+                    tlsEnabled: true,
+                    tlsServerName: '',
+                }),
+                getStoredApiKey: async () => 'test-key',
+            })
+        ).rejects.toBeInstanceOf(TemporalConfigurationInvalidError);
+
+        await expect(
+            gateTemporalReadiness({
+                resolveMode: () => 'external',
+                getSupervisor: () => undefined,
+                resolveSettings: () => ({
+                    address: 'localhost:7233',
+                    namespace: 'forge-external',
+                    taskQueue: 'forge-workflows',
+                    authMode: 'insecure',
+                    tlsEnabled: false,
+                    tlsServerName: '',
+                }),
             })
         ).resolves.toBeUndefined();
     });
