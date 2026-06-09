@@ -2,7 +2,7 @@
   "name": "forge-studio",
   "displayName": "Forge Studio",
   "description": "VS Code and Cursor extension for GitHub-centric context engineering: staged agents, Agent Skills, and chat personas aligned with issues, PRs, and milestones.",
-  "version": "3.25.0",
+  "version": "3.26.0",
   "license": "MIT",
   "author": "Alto9",
   "publisher": "alto9",
@@ -182,7 +182,11 @@
         },
         "forge.temporal.external.auth.mode": {
           "type": "string",
-          "enum": ["apiKey", "tlsServer", "insecure"],
+          "enum": [
+            "apiKey",
+            "tlsServer",
+            "insecure"
+          ],
           "default": "apiKey",
           "description": "Client authentication mode for external Temporal (apiKey, tlsServer, or insecure loopback only)."
         },

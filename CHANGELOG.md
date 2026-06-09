@@ -1,3 +1,10 @@
+## 3.26.0 (2026-06-09)
+
+* Merge pull request #56 from alto9/feature/issue-19 ([67c443b](https://github.com/alto9/forge/commit/67c443b)), closes [#56](https://github.com/alto9/forge/issues/56) [#19](https://github.com/alto9/forge/issues/19)
+* feat(temporal): add external configuration and mode-aware validation (#37) ([9e0e89c](https://github.com/alto9/forge/commit/9e0e89c)), closes [#37](https://github.com/alto9/forge/issues/37)
+* feat(temporal): add external preflight gate and health surfaces (#39) ([21873ff](https://github.com/alto9/forge/commit/21873ff)), closes [#39](https://github.com/alto9/forge/issues/39)
+* feat(temporal): bind external API keys in VS Code SecretStorage (#38) ([b727501](https://github.com/alto9/forge/commit/b727501)), closes [#38](https://github.com/alto9/forge/issues/38)
+
 ## 3.25.0 (2026-06-08)
 
 * Merge pull request #54 from alto9/feature/issue-17 ([699120e](https://github.com/alto9/forge/commit/699120e)), closes [#54](https://github.com/alto9/forge/issues/54) [#33](https://github.com/alto9/forge/issues/33)
