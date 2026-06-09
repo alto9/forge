@@ -20,6 +20,9 @@ import { resolveTemporalMode } from './temporalSettings';
 
 export const TEMPORAL_READINESS_VALIDATOR_ID = 'forge.temporal.readiness';
 
+const EXTERNAL_POLLING_READY_TIMEOUT_MS = 10_000;
+const EXTERNAL_POLLING_READY_INTERVAL_MS = 200;
+
 export class TemporalConfigurationInvalidError extends Error {
     readonly diagnostics: Diagnostic[];
 
@@ -143,6 +146,43 @@ async function gateWorkerReadiness(
     }
 }
 
+async function awaitExternalWorkerPollingReady(
+    supervisor: ExternalTemporalSupervisor
+): Promise<void> {
+    if (supervisor.getHealthState() === 'ready') {
+        return;
+    }
+
+    const deadline = Date.now() + EXTERNAL_POLLING_READY_TIMEOUT_MS;
+    while (Date.now() < deadline) {
+        const state = supervisor.getHealthState();
+        if (state === 'ready') {
+            return;
+        }
+        if (state === 'connect_failed') {
+            const connectError = supervisor.getConnectError();
+            throw new TemporalConfigurationInvalidError([
+                externalConnectInvalidDiagnostic(
+                    connectError?.message ?? 'External Temporal connection failed.',
+                    connectError?.remediation ?? 'config'
+                ),
+            ]);
+        }
+        await delay(EXTERNAL_POLLING_READY_INTERVAL_MS);
+    }
+
+    throw new TemporalConfigurationInvalidError([
+        {
+            code: 'forge.temporal.configuration_invalid',
+            severity: 'error',
+            path: 'forge.temporal.external',
+            message:
+                'External Temporal task queue has no polling worker. Start the Forge worker and retry.',
+            validator_id: TEMPORAL_READINESS_VALIDATOR_ID,
+        },
+    ]);
+}
+
 export async function gateTemporalReadiness(
     options: TemporalReadinessGateOptions = {}
 ): Promise<void> {
@@ -184,6 +224,7 @@ export async function gateTemporalReadiness(
         }
 
         await gateWorkerReadiness(options);
+        await awaitExternalWorkerPollingReady(supervisor);
         return;
     }
 
@@ -216,4 +257,10 @@ export async function gateTemporalReadiness(
     }
 
     await gateWorkerReadiness(options);
+}
+
+function delay(ms: number): Promise<void> {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
 }

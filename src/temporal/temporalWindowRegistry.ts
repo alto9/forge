@@ -42,7 +42,8 @@ export function getTemporalWorkerSupervisor(): TemporalWorkerSupervisor | undefi
 
 function isTemporalConnectionReady(): boolean {
     if (resolveTemporalMode() === 'external') {
-        return externalSupervisor?.getHealthState() === 'ready';
+        const state = externalSupervisor?.getHealthState();
+        return state === 'ready' || state === 'unhealthy';
     }
     return localSupervisor?.getHealthState() === 'ready';
 }

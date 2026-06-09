@@ -37,6 +37,7 @@ describe('temporalReadinessGate', () => {
     it('runs external preflight when configuration is valid', async () => {
         const supervisor = {
             ensureReady: vi.fn(async () => undefined),
+            getHealthState: vi.fn(() => 'ready' as const),
         } as unknown as ExternalTemporalSupervisor;
         const readyWorkerSupervisor = createReadyWorkerSupervisor();
 

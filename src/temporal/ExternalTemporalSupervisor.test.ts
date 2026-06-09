@@ -17,9 +17,11 @@ const externalSettings: ResolvedExternalSettings = {
 function createSupervisor(options: {
     preflightResults: Array<void | Error>;
     probeResults?: boolean[];
+    workerPollResults?: boolean[];
 }) {
     let preflightIndex = 0;
     let probeIndex = 0;
+    let workerPollIndex = 0;
 
     const supervisor = new ExternalTemporalSupervisor(
         {
@@ -40,6 +42,11 @@ function createSupervisor(options: {
                 probeIndex += 1;
                 return result;
             },
+            probeWorkerPoll: async () => {
+                const result = options.workerPollResults?.[workerPollIndex] ?? true;
+                workerPollIndex += 1;
+                return result;
+            },
         }
     );
 
@@ -48,11 +55,40 @@ function createSupervisor(options: {
 
 describe('ExternalTemporalSupervisor', () => {
     it('starts idle and transitions to ready after preflight succeeds', async () => {
-        const supervisor = createSupervisor({ preflightResults: [undefined] });
+        const supervisor = createSupervisor({
+            preflightResults: [undefined],
+            workerPollResults: [true],
+        });
 
         expect(supervisor.getHealthState()).toBe('idle');
         await supervisor.ensureReady();
         expect(supervisor.getHealthState()).toBe('ready');
+    });
+
+    it('transitions to unhealthy when server is reachable but no worker polls', async () => {
+        const supervisor = createSupervisor({
+            preflightResults: [undefined],
+            workerPollResults: [false],
+        });
+
+        await supervisor.ensureReady();
+        expect(supervisor.getHealthState()).toBe('unhealthy');
+    });
+
+    it('transitions from unhealthy to ready when worker polling starts', async () => {
+        vi.useFakeTimers();
+        const supervisor = createSupervisor({
+            preflightResults: [undefined],
+            workerPollResults: [false, true],
+            probeResults: [true],
+        });
+
+        await supervisor.ensureReady();
+        expect(supervisor.getHealthState()).toBe('unhealthy');
+
+        await vi.advanceTimersByTimeAsync(600);
+        expect(supervisor.getHealthState()).toBe('ready');
+        vi.useRealTimers();
     });
 
     it('transitions to connect_failed on auth failure and blocks subsequent runs', async () => {
@@ -80,6 +116,7 @@ describe('ExternalTemporalSupervisor', () => {
         vi.useFakeTimers();
         const supervisor = createSupervisor({
             preflightResults: [undefined],
+            workerPollResults: [true, false, false, false],
             probeResults: [false, false, false],
         });
 
