@@ -1,3 +1,7 @@
+## <small>3.26.1 (2026-06-09)</small>
+
+* docs(ai): refine issue #25 contract updates ([1f880c7](https://github.com/alto9/forge/commit/1f880c7)), closes [#25](https://github.com/alto9/forge/issues/25)
+
 ## 3.26.0 (2026-06-09)
 
 * Merge pull request #56 from alto9/feature/issue-19 ([67c443b](https://github.com/alto9/forge/commit/67c443b)), closes [#56](https://github.com/alto9/forge/issues/56) [#19](https://github.com/alto9/forge/issues/19)
