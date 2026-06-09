@@ -89,9 +89,12 @@ export {
     formatReadyNotification,
     formatStartFailedNotification,
     formatWorkflowBlockedNotification,
+    formatWorkerBlockedNotification,
+    formatWorkerReadyNotification,
     formatWorkerStartFailedNotification,
     formatWorkerStateTransitionLogLine,
     formatWorkerStatusBarSegment,
+    formatWorkerUpgradeRestartLogLine,
 } from './temporalPresentation';
 export {
     TEMPORAL_OUTPUT_CHANNEL_NAME,

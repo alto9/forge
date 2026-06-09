@@ -211,6 +211,10 @@ export interface WorkerPresentationContext {
     exitCode?: number;
 }
 
+export function formatWorkerReadyNotification(): string {
+    return 'Forge workflow worker is ready.';
+}
+
 export function formatWorkerStartFailedNotification(
     remediation: WorkerStartFailureRemediation
 ): string {
@@ -230,8 +234,10 @@ export function formatWorkerBlockedNotification(): string {
     return 'Workflow runs are blocked until the Forge worker is ready. See Forge Temporal output for details.';
 }
 
-export function formatWorkerUpgradeRestartLogLine(context: Pick<WorkerPresentationContext, 'windowId' | 'extensionVersion'>): string {
-    return `[forge.temporal.worker] upgradeRestart windowId=${context.windowId} extensionVersion=${context.extensionVersion}`;
+export function formatWorkerUpgradeRestartLogLine(
+    context: Pick<WorkerPresentationContext, 'windowId' | 'extensionVersion'>
+): string {
+    return `[forge.temporal.worker] Forge updated the workflow worker for this window. windowId=${context.windowId} extensionVersion=${context.extensionVersion}`;
 }
 
 export function formatWorkerStateTransitionLogLine(

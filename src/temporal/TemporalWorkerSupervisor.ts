@@ -1,6 +1,7 @@
 import { EventEmitter } from 'events';
 import { classifyWorkerStartFailure } from './workerFailureClassification';
 import { probeWorkerTaskQueuePoll } from './healthProbe';
+import { formatWorkerUpgradeRestartLogLine } from './temporalPresentation';
 import {
     assertWorkerEntryExists,
     buildWorkerSpawnEnv,
@@ -93,6 +94,10 @@ export class TemporalWorkerSupervisor {
 
     getStartError(): WorkerStartError | undefined {
         return this.startError;
+    }
+
+    getWorkerPid(): number | undefined {
+        return this.child?.pid;
     }
 
     onStateChange(listener: (state: WorkerHealthState) => void): () => void {
@@ -198,7 +203,10 @@ export class TemporalWorkerSupervisor {
 
         if (this.upgradeRestartPending) {
             this.log(
-                `[forge.temporal.worker] upgradeRestart windowId=${this.config.windowId} extensionVersion=${this.config.extensionVersion}`
+                formatWorkerUpgradeRestartLogLine({
+                    windowId: this.config.windowId,
+                    extensionVersion: this.config.extensionVersion,
+                })
             );
             this.upgradeRestartPending = false;
         }

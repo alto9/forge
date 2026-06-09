@@ -14,6 +14,8 @@ import {
     formatReadyNotification,
     formatStartFailedNotification,
     formatStateTransitionLogLine,
+    formatWorkerBlockedNotification,
+    formatWorkerReadyNotification,
     formatWorkerStartFailedNotification,
     formatWorkerStateTransitionLogLine,
     formatWorkflowBlockedNotification,
@@ -37,6 +39,7 @@ let workerPresentationConfig: TemporalWorkerSupervisorConfig | undefined;
 let managedLocalState: ManagedLocalHealthState = 'idle';
 let externalState: ExternalTemporalHealthState = 'idle';
 let workerState: WorkerHealthState = 'idle';
+let workerReadyNotifiedThisSession = false;
 let statusBarMode: 'managedLocal' | 'external' = 'managedLocal';
 
 export function createTemporalOutputChannel(
@@ -52,9 +55,7 @@ export function notifyWorkflowBlockedByTemporal(): void {
 }
 
 export function notifyWorkflowBlockedByWorker(): void {
-    void vscode.window.showWarningMessage(
-        'Workflow runs are blocked until the Forge worker is ready. See Forge Temporal output for details.'
-    );
+    void vscode.window.showWarningMessage(formatWorkerBlockedNotification());
 }
 
 export function registerManagedLocalTemporalHealthSurfaces(
@@ -190,6 +191,7 @@ function logWorkerStateTransition(
     }
 
     const startError = supervisor.getStartError();
+    const pid = supervisor.getWorkerPid();
     outputChannel.appendLine(
         formatWorkerStateTransitionLogLine(state, {
             windowId: workerPresentationConfig.windowId,
@@ -197,6 +199,7 @@ function logWorkerStateTransition(
             namespace: workerPresentationConfig.namespace,
             mode: workerPresentationConfig.mode,
             extensionVersion: workerPresentationConfig.extensionVersion,
+            pid,
             exitCode: startError?.exitCode,
         })
     );
@@ -206,6 +209,15 @@ function notifyWorkerForState(
     state: WorkerHealthState,
     supervisor: TemporalWorkerSupervisor
 ): void {
+    if (state === 'ready') {
+        if (workerReadyNotifiedThisSession) {
+            return;
+        }
+        workerReadyNotifiedThisSession = true;
+        void vscode.window.showInformationMessage(formatWorkerReadyNotification());
+        return;
+    }
+
     if (state === 'start_failed') {
         const startError = supervisor.getStartError();
         if (!startError) {
