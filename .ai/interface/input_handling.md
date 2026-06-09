@@ -13,7 +13,11 @@ Forge workflow input handling accepts user intent without bypassing workflow val
 - **Graph from run list (#26):** Selecting **View graph** (or equivalent) on a run list row opens the graph webview in run mode for that index entry's `workflow_id`, `repositoryRoot`, and Temporal IDs.
 - Run start input captures the selected workflow, target repository or workspace, required parameters, and confirmed Temporal mode.
 - For `refine-issue`, required run input is `issue_ref` (see `.ai/business_logic/domain_model.md` **Run inputs**). Forge passes the normalized working parent issue to downstream activities after `normalize_issue_parentage`.
-- Human question input is collected only when a workflow run is waiting for a declared question. The answer is submitted through the workflow's declared Temporal signal or update.
+- **Human question input (#27):** collected only when the selected run has `recoveryState === synced`, a `waitingNodeId` on a `human_question` node, and a matching entry in `pendingHumanQuestions`. Submit is disabled otherwise (see **Run recovery surfaces** copy in `.ai/interface/presentation.md`).
+- **Draft input:** textarea and field edits persist to `workspaceState` drafts per run and `question_id` until the operator submits or the question becomes stale.
+- **Submit:** validates required fields, writes declared `artifact_targets` to disk, then sends Temporal workflow update `forge.human_answer.submit` (or node `resume_update` override). See `.ai/data/serialization.md` **Human answer submission**.
+- **markdown_batch mode:** refine-issue `user_verification_batch` presents 3–5 numbered prompts per submit (blockers first), parsed from `user_questions.md`; answers append to `refinement.md` under the matching question headings.
+- **Stale run guard:** when projection refresh shows `waitingNodeId` no longer matches the open question's `node_id`, discard draft and show "This question is no longer active for this run."
 - Retry, cancel, continue, and inspect actions are available only when the current run state supports them.
 - Inputs that affect GitHub, filesystem artifacts, Temporal, or Cursor SDK activity execution must be tied to a visible workflow step and validation path.
 

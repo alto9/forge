@@ -6,7 +6,7 @@ Workflow visualization must remain usable without relying on graph visuals alone
 
 - React Flow graph state has a corresponding textual run summary, ordered step list (`step_list` in `.ai/data/serialization.md` **Workflow graph model**), and detail panel.
 - Graph nodes expose `status_label` as accessible name; `visual_state` changes are announced when the step list selection or active node changes.
-- Pending human questions are reachable by keyboard and expose clear labels, validation messages, and submission state (#27).
+- Pending human questions are reachable by keyboard in the Question panel (#27): each `prompts[]` field exposes its `label` as the accessible name; **Blocker** items include badge text in the name; **Submit answers** exposes busy state during Temporal update.
 - Status colors for nodes, edges, validation, and retry state are paired with text or icons that do not require color perception.
 - **Retrying** nodes include attempt counts in the accessible name (e.g. "Retrying 2 of 3").
 - **Waiting** nodes distinguish "Waiting for input" vs "Waiting" in the status label.

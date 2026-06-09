@@ -83,7 +83,20 @@ Redaction rules: replace values matching API keys, `Authorization` headers, cert
 
 ## Temporal Boundary
 
-The Forge extension starts or connects to workflow runs through a Temporal client. Workers execute workflow and activity code outside the VS Code extension host. Human answers resume waiting workflows through declared Temporal signals or updates.
+The Forge extension starts or connects to workflow runs through a Temporal client. Workers execute workflow and activity code outside the VS Code extension host. Human answers resume waiting workflows through declared Temporal workflow updates (v1 default) or signals when a node overrides `resume_update`.
+
+### Human answer update (v1)
+
+| Aspect | Contract |
+|--------|----------|
+| Handler name | `forge.human_answer.submit` (default); override per `human_question` node via `resume_update` |
+| Caller | VS Code extension host Temporal client |
+| Payload | `.ai/data/serialization.md` **Human answer submission** |
+| Validation | Worker handler rejects mismatched `question_id`, `node_id`, or empty required answers; run stays waiting |
+| Idempotency | Duplicate submit with identical payload is accepted as no-op when the wait already cleared |
+| Artifact writes | Extension writes declared artifact files **before** sending the update; update payload carries answer map only |
+
+Signals remain supported for future workflow definitions that declare a signal name instead of an update handler. v1 Forge Studio and the refine-issue proving workflow use the update contract above.
 
 ## GitHub Boundary
 

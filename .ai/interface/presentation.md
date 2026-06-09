@@ -83,7 +83,48 @@ Serialized webview payload: `.ai/data/serialization.md` **Workflow graph model**
 
 ## Run Inspector
 
-The run inspector presents the selected node, activity details, validation outcomes, artifact references, Cursor SDK run identity, retry state, and available user actions. Human question panels use the workflow definition to describe required input and submit answers through Temporal.
+The run inspector presents the selected node, activity details, validation outcomes, artifact references, Cursor SDK run identity, retry state, and available user actions. Human question UI ships in the **Question panel** section below (#27); the run inspector (#28) links to it but does not duplicate full answer forms.
+
+## Human question panel (#27)
+
+Forge Studio collects operator answers when a run waits on a `human_question` node and resumes the Temporal run through workflow update `forge.human_answer.submit`.
+
+### Surfaces (v1)
+
+1. **Command palette** — **Forge: Open Question Panel** opens the panel for the selected run (or prompts run selection when none selected).
+2. **Run list** — badge **Needs input** on rows with `pendingHumanQuestions` while `recoveryState === synced`; click opens the panel for that run.
+3. **Graph waiting node** — detail link "Answer in question panel" when `visual_state === waiting` on a `human_question` node.
+4. **Question panel webview** — `src/webview/questions/` bundle; shows title, ordered prompts, validation messages, draft fields, and **Submit answers** primary action.
+
+### Panel layout
+
+- **Header** — `{workflow_name} — {node_name} ({question_id})`.
+- **Prompt list** — one control per `prompts[]` entry: multiline textarea for `single_text` and `markdown_batch`; `blocker` items show a **Blocker** badge.
+- **Batch footer** (`markdown_batch`) — "Showing {n} of {total} questions" when more items remain in the artifact source.
+- **Actions** — **Submit answers** (primary), **Discard draft** (secondary, clears `workspaceState` draft only).
+
+### Validation and submit copy
+
+| Situation | Copy |
+|-----------|------|
+| Required field empty | "Answer required for: {label}" |
+| Submit blocked (recovery) | "Submit answers after the run finishes recovering." |
+| Submit success | "Answers submitted — run resuming." |
+| Update rejected | "Could not submit answers — {reason}. Try again." |
+| Stale question | "This question is no longer active for this run." |
+| Run terminal while open | "This run has finished — question panel closed." |
+| No pending question | "No questions are waiting for this run." |
+
+### Polling
+
+Refresh `pendingHumanQuestions` every **2 seconds** while the panel is visible, the run is non-terminal, and `recoveryState === synced`. Pause polling when the panel is hidden.
+
+### Accessibility (question panel)
+
+- Each prompt exposes `label` as the accessible name; **Blocker** badge text is included in the name.
+- **Submit answers** exposes `aria-busy` while the Temporal update is in flight.
+- Focus order: header → prompts top-to-bottom → primary action → secondary action.
+- Disabled submit exposes the recovery or stale reason as visible helper text, not tooltip-only.
 
 ## Workflow discovery catalog (#25)
 
@@ -153,6 +194,10 @@ Persist the chosen folder per window in `workspaceState` key `forge.workflow.cat
 - `src/commands/WorkflowCatalogCommand.ts` — catalog open, refresh, and folder-selection commands.
 - `src/commands/WorkflowGraphCommand.ts` — open and refresh graph webview (#26).
 - `src/webview/workflows/` — catalog and graph webview UI (#25, #26).
+- `src/webview/questions/` — human question panel webview (#27).
+- `src/commands/QuestionPanelCommand.ts` — open question panel, draft/submit orchestration (#27).
+- `src/workflows/resolvePendingHumanQuestions.ts` — artifact prompt resolution and projection fields (#27).
+- `src/temporal/humanAnswerSubmit.ts` — Temporal update client wrapper (#27).
 - `src/workflows/discoverWorkflowDefinitions.ts` — scan, validate, and build catalog entries.
 - `src/workflows/buildWorkflowGraphModel.ts` — definition + run projection → graph model (#26).
 - `src/workflows/types.ts` — `WorkflowGraphModel`, node/edge visual state types (#26).
@@ -241,3 +286,5 @@ Run recovery (#21) uses the Forge Temporal Output channel and a minimal run list
 Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
 
 _(Workflow graph visual states and cockpit graph UI copy resolved in **Workflow Visualization (#26)** above.)_
+
+_(Human question panel surfaces, draft behavior, staleness copy, and submit flow resolved in **Human question panel (#27)** above.)_

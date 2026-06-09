@@ -10,7 +10,7 @@ Forge workflow interaction moves from discovery to validated execution without h
 4. The run view updates from Temporal-backed state and highlights the active node in React Flow.
 5. Cursor SDK activities run as bounded workflow activities and return provisional envelopes.
 6. Deterministic validators accept or reject outputs before downstream steps proceed.
-7. Human question steps pause the run, present required questions, and resume through Temporal signals or updates after the user answers.
+7. Human question steps pause the run. Forge shows the **Question panel** (#27) with prompts resolved from declared artifacts or node metadata. The operator may edit draft answers, submit when `recoveryState === synced`, and the extension writes artifact targets then sends workflow update `forge.human_answer.submit`. Temporal unblocks the wait; projection refresh shows the run advancing. refine-issue loops Phase C until tier-User blockers resolve (`check_user_blockers`).
 8. Completion presents validated artifacts and any GitHub delivery state that the workflow intentionally created or updated.
 
 `/refine-issue` follows this generic flow as the first proving workflow.

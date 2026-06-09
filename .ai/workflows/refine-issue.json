@@ -114,6 +114,7 @@
       "name": "User verification (Phase C)",
       "description": "Collect tier-User answers in batches of 3-5 questions; blockers first. Append to refinement.md.",
       "question_id": "user_verification_batch",
+      "input_mode": "markdown_batch",
       "artifact_ids": ["refinement", "user_questions"],
       "transitions": [
         { "to_node_id": "check_user_blockers" }

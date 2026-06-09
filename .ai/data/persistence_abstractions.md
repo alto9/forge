@@ -11,6 +11,7 @@ Forge uses persistence according to ownership boundaries.
 - Forge local storage caches a **window-scoped run index** at `{extensionGlobalStorage}/temporal/{windowId}/run-index.json`, derived run projections, selected workspace context, artifact indexes, and UI preferences. The run index records Temporal `(namespace, workflowId, runId)` pointers for runs started in that VS Code window; projections are derived from Temporal and can be rebuilt from the index after reconnect.
 - **Completed run retention:** terminal index entries remain for **30 days** from `completedAt` or until the user dismisses them. Forge caps **100** completed entries per window; when over cap, the oldest completed entry by `completedAt` is purged on index load. Non-terminal entries are never auto-purged.
 - GitHub owns issues, milestones, project fields, and delivery records. Forge does not persist a duplicate backlog.
+- **Human answer drafts (#27):** in-progress operator answers for a pending `human_question` wait are cached in VS Code `workspaceState` per window, keyed by run index identity and `question_id`. Drafts are ephemeral support data; Temporal run state and submitted artifact files are authoritative after submit.
 
 ## Primary code pointers (optional)
 

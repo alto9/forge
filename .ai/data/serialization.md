@@ -46,7 +46,7 @@ Each node requires `node_id`, `type`, and `name`. Optional `description`, `trans
 |--------|---------------------------|---------|
 | `activity` | `activity_id` and (`agent_path` or `skill_path`) | Bounded non-deterministic work (Cursor SDK agent or skill). |
 | `validation` | `validators` (min 1) | Deterministic gate before progression. |
-| `human_question` | `question_id` | Pause for user input resumed through Temporal. |
+| `human_question` | `question_id` | Pause for user input resumed through Temporal workflow update (default `forge.human_answer.submit`). Optional `input_mode` (`single_text`, `markdown_batch`, `form_fields` reserved) and `resume_update` override. Optional `artifact_ids` supply prompt sources and answer write targets. |
 | `wait` | — | Durable wait/timer step. |
 | `decision` | `transitions` (min 1) | Branching with optional `condition` on each transition. |
 | `terminal` | — | End state; may omit outgoing transitions. |
@@ -338,3 +338,55 @@ Optional hints consumed by validation nodes (#24). Does not bypass validators.
 | Total serialized response envelope | 256 KiB UTF-8 JSON | Worker returns `status=error`, `failure_class=execution`, diagnostic `forge.envelope.size_exceeded`; activity may retry per policy |
 
 Assistant message text, tool payloads, API keys, and full SDK event streams are never written to the envelope or Temporal activity result.
+
+## Pending human question (#27)
+
+Each non-terminal run with `waitingNodeId` on a `human_question` node exposes zero or one active pending question on `WorkflowRunProjection.pendingHumanQuestions[]` (v1: at most one entry).
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `question_id` | yes | Stable ID from the workflow node |
+| `node_id` | yes | Graph node that is waiting |
+| `node_name` | yes | Human-readable node name from definition |
+| `title` | yes | Panel header title (node `name`) |
+| `input_mode` | yes | `single_text`, `markdown_batch`, or `form_fields` (reserved; not implemented in v1) |
+| `prompts` | yes | Ordered `{ field_id, label, required, blocker? }` items to render |
+| `artifact_targets` | no | `{ artifact_id, path }` pairs the extension writes on successful submit |
+| `batch_policy` | when `markdown_batch` | `{ max_per_submit: 3..5, blockers_first: true }` |
+
+### Prompt resolution (v1)
+
+1. When the node declares `artifact_ids`, parse prompt text from matching artifact files on disk (repo-relative paths from workflow `artifacts[]`). For refine-issue `user_verification_batch`, read `user_questions.md` numbered items; preserve **blocker** tags in `prompts[].blocker`.
+2. When no artifact prompts resolve, use node `description` as a single `single_text` prompt (`field_id`: `answer`).
+3. When `description` is empty, use `name` plus `question_id` as the label.
+
+`follow_up_questions` on activity envelopes do not populate `pendingHumanQuestions`; only declared `human_question` waits do.
+
+## Human answer submission (#27)
+
+Forge resumes a paused run through a Temporal **workflow update** (v1 default). Node-level override: `resume_update` on the `human_question` node; default handler name: `forge.human_answer.submit`.
+
+### Update payload
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `envelope_version` | yes | `"1.0.0"` |
+| `question_id` | yes | Must match active pending question |
+| `node_id` | yes | Must match `waitingNodeId` |
+| `workflow_run_id` | yes | Temporal run identifier for correlation |
+| `answers` | yes | Map of `field_id` → string (UTF-8). Empty strings fail required-field validation |
+| `submitted_at` | yes | ISO-8601 UTC timestamp from extension host |
+
+### Submit sequence (extension host)
+
+1. Validate `recoveryState === synced` and `waitingNodeId === node_id`.
+2. Validate required `prompts` have non-empty `answers[field_id]`.
+3. Write `artifact_targets` to disk when declared (e.g. append refine-issue batch answers to `refinement.md`).
+4. Call Temporal client `workflow.update(resume_update, payload)`.
+5. On acceptance, clear draft from `workspaceState` and refresh projection.
+
+Rejected updates return a validation error to the panel; the run remains waiting and drafts are preserved.
+
+### Draft answer persistence
+
+Drafts are stored in `workspaceState` under `forge.workflow.humanAnswerDraft.{indexKey}.{question_id}` where `indexKey` is `{namespace}:{workflowId}:{runId}`. Drafts survive panel close within the same VS Code window session. Drafts are cleared on successful submit, run terminal, `waitingNodeId` mismatch, orphaned dismissal, or window close. Drafts do not sync across windows or machines in v1.

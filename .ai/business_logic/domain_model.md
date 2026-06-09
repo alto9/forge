@@ -98,7 +98,14 @@ Tmp artifact paths use session slug `refine-{repoRef}-{issueNumber}` under `.cur
 
 #### Human question steps
 
-Phase C is one declared `human_question` node (`question_id`: `user_verification_batch`). The workflow presents tier-User items from `user_questions.md` in batches of 3–5 (blockers first), records answers in `refinement.md`, and uses `check_user_blockers` to loop until every **blocker** is Answered, Deferred with explicit acceptance, or Superseded.
+Phase C is one declared `human_question` node (`question_id`: `user_verification_batch`, `input_mode`: `markdown_batch`). Forge resolves prompts from the `user_questions` artifact, presents tier-User items in batches of 3–5 (blockers first) in the Question panel (#27), writes answers to `refinement.md` on submit, sends `forge.human_answer.submit`, and uses `check_user_blockers` to loop until every **blocker** is Answered, Deferred with explicit acceptance, or Superseded.
+
+#### Generic human_question rules (all workflows)
+
+- Only one active pending question per run in v1 (`pendingHumanQuestions` length ≤ 1).
+- Submit is blocked until `recoveryState === synced` (`.ai/data/consistency.md`).
+- Artifact-backed prompts are authoritative over node `description` when `artifact_ids` resolve on disk.
+- `form_fields` `input_mode` is reserved; workflows needing structured fields use `single_text` or `markdown_batch` in v1.
 
 #### Exit criteria (`local.forge.refine_issue.exit_criteria`)
 

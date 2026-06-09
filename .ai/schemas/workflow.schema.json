@@ -122,6 +122,18 @@
           "type": "string",
           "minLength": 1
         },
+        "input_mode": {
+          "type": "string",
+          "enum": [
+            "single_text",
+            "markdown_batch",
+            "form_fields"
+          ]
+        },
+        "resume_update": {
+          "type": "string",
+          "minLength": 1
+        },
         "validators": {
           "type": "array",
           "items": {
