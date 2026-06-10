@@ -190,6 +190,7 @@ export {
     writeWorkflowRunProjection,
 } from './workflowRunProjection';
 export type {
+    ActivityEnvelopeSummary,
     WorkflowExecutionStatusName,
     WorkflowRunProjection,
     WorkflowRunRetryState,

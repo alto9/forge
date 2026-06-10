@@ -1,4 +1,9 @@
 import type { RecoveryState } from '../temporal/workflowRunIndex';
+import type {
+    ActivityFailureClass,
+    ActivityOutputType,
+    ActivityStatus,
+} from '../worker/activityEnvelope';
 
 export type WorkflowDiagnosticSeverity = 'error' | 'warning';
 
@@ -159,6 +164,113 @@ export interface WorkflowGraphTemporalIds {
     workflowId: string;
     runId: string;
     namespace: string;
+}
+
+export type RunInspectorMode = 'definition' | 'run';
+
+export interface RunInspectorSummary {
+    node_id: string;
+    type: WorkflowNodeType;
+    name: string;
+    status_label: string;
+    detail?: string;
+}
+
+export interface RunInspectorActivityDiagnostic {
+    code: string;
+    message: string;
+    severity: 'error' | 'warning' | 'info';
+    path?: string;
+    source?: 'sdk' | 'worker' | 'validator';
+}
+
+export interface RunInspectorActivitySummary {
+    activity_id: string;
+    cursor_agent_id: string;
+    cursor_run_id: string;
+    status: ActivityStatus;
+    failure_class?: ActivityFailureClass;
+    retryable: boolean;
+    output_type: ActivityOutputType;
+    diagnostics?: RunInspectorActivityDiagnostic[];
+}
+
+export interface RunInspectorRetryBlock {
+    attempt: number;
+    max: number;
+    in_progress: boolean;
+}
+
+export interface RunInspectorValidationOutcome {
+    validator_id: string;
+    type: string;
+    target?: string;
+    passed: boolean;
+    blocking: boolean;
+}
+
+export interface RunInspectorValidationDiagnostic {
+    code: string;
+    severity: string;
+    message: string;
+    path?: string;
+    validator_id: string;
+}
+
+export interface RunInspectorValidationSummary {
+    valid: boolean;
+    validated_at: string;
+    validator_outcomes: RunInspectorValidationOutcome[];
+    diagnostics: RunInspectorValidationDiagnostic[];
+}
+
+export type RunInspectorArtifactPreviewMode =
+    | 'inline'
+    | 'truncated'
+    | 'metadata_only'
+    | 'glob_list';
+
+export interface RunInspectorArtifactPreview {
+    artifact_id: string;
+    path: string;
+    size_bytes: number;
+    sha256_prefix: string;
+    media_type?: string;
+    preview_mode: RunInspectorArtifactPreviewMode;
+    preview_text?: string;
+    truncated?: boolean;
+    glob_matches?: string[];
+    overflow_count?: number;
+}
+
+export type RunInspectorRecoveryActionId =
+    | 'cancel_run'
+    | 'refresh'
+    | 'open_in_editor'
+    | 'copy_path'
+    | 'copy_diagnostic'
+    | 'copy_cursor_run_id'
+    | 'open_question_panel';
+
+export interface RunInspectorRecoveryAction {
+    action_id: RunInspectorRecoveryActionId;
+    label: string;
+    enabled: boolean;
+    disabled_reason?: string;
+}
+
+/** Serialized payload for the graph webview detail panel per `.ai/data/serialization.md`. */
+export interface RunInspectorDetail {
+    mode: RunInspectorMode;
+    selected_node_id: string | null;
+    recoveryState?: RecoveryState;
+    summary?: RunInspectorSummary;
+    activity?: RunInspectorActivitySummary;
+    retry?: RunInspectorRetryBlock;
+    validation?: RunInspectorValidationSummary;
+    artifacts?: RunInspectorArtifactPreview[];
+    recovery_actions?: RunInspectorRecoveryAction[];
+    empty_state?: string;
 }
 
 /** Serialized payload for the workflow graph webview per `.ai/data/serialization.md`. */
