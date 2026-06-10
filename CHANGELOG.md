@@ -1,3 +1,9 @@
+## 3.31.0 (2026-06-10)
+
+* Merge pull request #67 from alto9/feature/issue-24 ([355e83b](https://github.com/alto9/forge/commit/355e83b)), closes [#67](https://github.com/alto9/forge/issues/67) [#24](https://github.com/alto9/forge/issues/24)
+* feat(validation): add runtime validator registry and result types ([0bdabc1](https://github.com/alto9/forge/commit/0bdabc1)), closes [#50](https://github.com/alto9/forge/issues/50)
+* feat(worker): add validation gate activity and refine-issue wiring (#51) ([5b17d7b](https://github.com/alto9/forge/commit/5b17d7b)), closes [#51](https://github.com/alto9/forge/issues/51)
+
 ## 3.30.0 (2026-06-10)
 
 * Merge pull request #66 from alto9/feature/issue-23 ([31a66fa](https://github.com/alto9/forge/commit/31a66fa)), closes [#66](https://github.com/alto9/forge/issues/66) [#23](https://github.com/alto9/forge/issues/23)
