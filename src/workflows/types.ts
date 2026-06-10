@@ -1,3 +1,5 @@
+import type { RecoveryState } from '../temporal/workflowRunIndex';
+
 export type WorkflowDiagnosticSeverity = 'error' | 'warning';
 
 export interface WorkflowDiagnostic {
@@ -63,4 +65,101 @@ export interface WorkflowCatalogResult {
     repositoryRoot: string;
     entries: WorkflowCatalogEntry[];
     emptyState?: WorkflowCatalogEmptyState;
+}
+
+export type WorkflowNodeType =
+    | 'activity'
+    | 'validation'
+    | 'human_question'
+    | 'wait'
+    | 'decision'
+    | 'terminal';
+
+export type WorkflowGraphNodeVisualState =
+    | 'pending'
+    | 'active'
+    | 'completed'
+    | 'failed'
+    | 'cancelled'
+    | 'waiting'
+    | 'validating'
+    | 'retrying'
+    | 'skipped';
+
+export type WorkflowGraphEdgeVisualState = 'idle' | 'traversed' | 'active' | 'untaken';
+
+export interface WorkflowGraphPosition {
+    x: number;
+    y: number;
+}
+
+export interface WorkflowDefinitionTransition {
+    to_node_id: string;
+    condition?: string;
+}
+
+export interface WorkflowDefinitionNode {
+    node_id: string;
+    type: WorkflowNodeType;
+    name: string;
+    description?: string;
+    question_id?: string;
+    transitions?: WorkflowDefinitionTransition[];
+}
+
+/** Parsed workflow definition graph used by the graph model builder (#26). */
+export interface WorkflowDefinition {
+    schema_version: string;
+    workflow_id: string;
+    name: string;
+    version: string;
+    description?: string;
+    entry_node_id: string;
+    nodes: WorkflowDefinitionNode[];
+}
+
+export interface WorkflowGraphNode {
+    node_id: string;
+    type: WorkflowNodeType;
+    name: string;
+    visual_state: WorkflowGraphNodeVisualState;
+    status_label: string;
+    position: WorkflowGraphPosition;
+    retry_attempt?: number;
+    retry_max?: number;
+    detail?: string;
+}
+
+export interface WorkflowGraphEdge {
+    edge_id: string;
+    from_node_id: string;
+    to_node_id: string;
+    visual_state: WorkflowGraphEdgeVisualState;
+    condition?: string;
+}
+
+export interface WorkflowGraphStepListEntry {
+    node_id: string;
+    name: string;
+    visual_state: WorkflowGraphNodeVisualState;
+    status_label: string;
+}
+
+export interface WorkflowGraphTemporalIds {
+    workflowId: string;
+    runId: string;
+    namespace: string;
+}
+
+/** Serialized payload for the workflow graph webview per `.ai/data/serialization.md`. */
+export interface WorkflowGraphModel {
+    workflow_id: string;
+    workflow_name: string;
+    mode: 'definition' | 'run';
+    nodes: WorkflowGraphNode[];
+    edges: WorkflowGraphEdge[];
+    step_list: WorkflowGraphStepListEntry[];
+    run_summary?: string;
+    recoveryState?: RecoveryState;
+    temporal_ids?: WorkflowGraphTemporalIds;
 }

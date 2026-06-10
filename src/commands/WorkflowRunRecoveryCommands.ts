@@ -22,6 +22,7 @@ import {
     type WorkflowRunTreeItem,
 } from '../temporal/WorkflowRunListProvider';
 import type { WorkflowRunIndexEntry } from '../temporal/workflowRunIndex';
+import { WorkflowGraphCommand } from './WorkflowGraphCommand';
 
 function resolveSelectedEntry(
     item?: WorkflowRunTreeItem
@@ -212,6 +213,12 @@ export function registerWorkflowRunRecoveryCommands(context: vscode.ExtensionCon
             void vscode.window.showInformationMessage(
                 `Question panel for run ${indexKey} opens when Forge question panel (#27) is available.`
             );
-        })
+        }),
+        vscode.commands.registerCommand(
+            'forge.viewWorkflowRunGraph',
+            async (item?: WorkflowRunTreeItem) => {
+                await WorkflowGraphCommand.openGraphFromRun(context, item);
+            }
+        )
     );
 }

@@ -1,0 +1,60 @@
+{
+  "schema_version": "1.0.0",
+  "workflow_id": "graph-test",
+  "name": "Graph Test Workflow",
+  "version": "1.0.0",
+  "entry_node_id": "start",
+  "nodes": [
+    {
+      "node_id": "start",
+      "type": "activity",
+      "name": "Start",
+      "transitions": [{ "to_node_id": "decide" }]
+    },
+    {
+      "node_id": "decide",
+      "type": "decision",
+      "name": "Choose branch",
+      "transitions": [
+        { "to_node_id": "branch_a", "condition": "path_a" },
+        { "to_node_id": "branch_b", "condition": "path_b" }
+      ]
+    },
+    {
+      "node_id": "branch_a",
+      "type": "activity",
+      "name": "Branch A",
+      "transitions": [{ "to_node_id": "validate" }]
+    },
+    {
+      "node_id": "branch_b",
+      "type": "activity",
+      "name": "Branch B",
+      "transitions": [{ "to_node_id": "validate" }]
+    },
+    {
+      "node_id": "validate",
+      "type": "validation",
+      "name": "Validate",
+      "transitions": [{ "to_node_id": "question" }]
+    },
+    {
+      "node_id": "question",
+      "type": "human_question",
+      "name": "Ask user",
+      "question_id": "confirm_ready",
+      "transitions": [{ "to_node_id": "retry_activity" }]
+    },
+    {
+      "node_id": "retry_activity",
+      "type": "activity",
+      "name": "Retryable activity",
+      "transitions": [{ "to_node_id": "done" }]
+    },
+    {
+      "node_id": "done",
+      "type": "terminal",
+      "name": "Done"
+    }
+  ]
+}

@@ -20,6 +20,11 @@ export {
 } from './discoverWorkflowDefinitions';
 export { buildWorkflowCatalog, sortWorkflowCatalogEntries } from './buildWorkflowCatalog';
 export {
+    buildDefinitionGraph,
+    buildWorkflowGraphModel,
+    overlayRunProjection,
+} from './buildWorkflowGraphModel';
+export {
     PRE_RUN_VALIDATOR_IDS,
     RUNTIME_ONLY_VALIDATOR_IDS,
     isPreRunValidatorId,
@@ -32,9 +37,21 @@ export type {
     WorkflowCatalogEmptyState,
     WorkflowCatalogResult,
     WorkflowCatalogValidation,
+    WorkflowDefinition,
     WorkflowDefinitionIndexEntry,
+    WorkflowDefinitionNode,
+    WorkflowDefinitionTransition,
     WorkflowDiagnostic,
     WorkflowDiscoveryResult,
+    WorkflowGraphEdge,
+    WorkflowGraphEdgeVisualState,
+    WorkflowGraphModel,
+    WorkflowGraphNode,
+    WorkflowGraphNodeVisualState,
+    WorkflowGraphPosition,
+    WorkflowGraphStepListEntry,
+    WorkflowGraphTemporalIds,
+    WorkflowNodeType,
     WorkflowSchemaValidationResult,
 } from './types';
 export {
