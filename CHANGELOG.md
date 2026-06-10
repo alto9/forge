@@ -1,3 +1,11 @@
+## 3.28.0 (2026-06-10)
+
+* Merge pull request #64 from alto9/feature/issue-21 ([1f73252](https://github.com/alto9/forge/commit/1f73252)), closes [#64](https://github.com/alto9/forge/issues/64) [#21](https://github.com/alto9/forge/issues/21)
+* fix(temporal): share workflow run index store across recovery surfaces ([bae6f4e](https://github.com/alto9/forge/commit/bae6f4e))
+* feat(temporal): automatic recovery scan on combined readiness (#44) ([8f6d5f9](https://github.com/alto9/forge/commit/8f6d5f9)), closes [#44](https://github.com/alto9/forge/issues/44)
+* feat(temporal): persist window-scoped workflow run index (#43) ([5f9de42](https://github.com/alto9/forge/commit/5f9de42)), closes [#43](https://github.com/alto9/forge/issues/43)
+* feat(temporal): surface recovery states and basic recovery actions (#45) ([43c9dd9](https://github.com/alto9/forge/commit/43c9dd9)), closes [#45](https://github.com/alto9/forge/issues/45)
+
 ## 3.27.0 (2026-06-09)
 
 * Merge pull request #63 from alto9/feature/issue-20 ([d8a4a29](https://github.com/alto9/forge/commit/d8a4a29)), closes [#63](https://github.com/alto9/forge/issues/63) [#20](https://github.com/alto9/forge/issues/20)
