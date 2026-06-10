@@ -67,6 +67,7 @@ export function createCursorActivityLogger(
                     status: envelope.status,
                     failure_class: envelope.failure_class,
                     retryable: envelope.retryable,
+                    artifact_ref_paths: envelope.artifact_refs?.map((artifactRef) => artifactRef.path),
                 })
             );
         },
