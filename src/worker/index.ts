@@ -78,6 +78,15 @@ export {
     RUNTIME_CATALOG_VALIDATOR_IDS,
     validateRuntimeValidationResultSchema,
 } from '../validation';
+export {
+    handleHumanAnswerUpdate,
+    HUMAN_ANSWER_UPDATE_HANDLER,
+    validateHumanAnswerUpdatePayload,
+} from './humanAnswerUpdateHandler';
+export type {
+    HumanAnswerUpdateHandlerInput,
+    HumanAnswerUpdateHandlerResult,
+} from './humanAnswerUpdateHandler';
 export type {
     RuntimeValidationDiagnostic,
     RuntimeValidationResult,

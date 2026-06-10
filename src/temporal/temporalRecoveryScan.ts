@@ -9,6 +9,8 @@ import {
     resolveProjectionPath,
     writeWorkflowRunProjection,
 } from './workflowRunProjection';
+import { loadWorkflowDefinition } from '../workflows/loadWorkflowDefinition';
+import { applyPendingHumanQuestionsToProjection } from '../workflows/resolvePendingHumanQuestions';
 import {
     WorkflowRunIndexStore,
     buildRunIndexKey,
@@ -239,14 +241,18 @@ export async function refreshIndexedRunFromTemporal(
         await input.client.fetchHistory(entry.namespace, entry.workflowId, entry.runId);
 
         const projection = buildProjectionFromTemporalDescribe(entry, description, 'synced', syncedAt);
+        const definition = loadWorkflowDefinition(entry.repositoryRoot, entry.workflow_id);
+        const enrichedProjection = definition
+            ? applyPendingHumanQuestionsToProjection(definition, projection, entry.repositoryRoot)
+            : projection;
         const projectionPath = resolveProjectionPath(
             input.globalStoragePath,
             input.windowId,
             key
         );
-        writeWorkflowRunProjection(projectionPath, projection);
+        writeWorkflowRunProjection(projectionPath, enrichedProjection);
 
-        if (projection.terminal) {
+        if (enrichedProjection.terminal) {
             input.indexStore.markTerminal(key, {
                 recoveryState: 'synced',
                 lastSyncedAt: syncedAt,
@@ -272,7 +278,7 @@ export async function refreshIndexedRunFromTemporal(
         return {
             key,
             recoveryState: 'synced',
-            terminal: projection.terminal,
+            terminal: enrichedProjection.terminal,
         };
     } catch (error) {
         const classified = classifyTemporalRefreshError(error);

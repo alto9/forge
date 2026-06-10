@@ -4,6 +4,7 @@ import { InitializeProjectCommand } from './commands/InitializeProjectCommand';
 import { RoadmapCommand } from './commands/RoadmapCommand';
 import { WorkflowCatalogCommand } from './commands/WorkflowCatalogCommand';
 import { WorkflowGraphCommand } from './commands/WorkflowGraphCommand';
+import { QuestionPanelCommand } from './commands/QuestionPanelCommand';
 import {
     ClearTemporalApiKeyCommand,
     SetTemporalApiKeyCommand,
@@ -262,6 +263,8 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
     context.subscriptions.push(clearTemporalApiKeyCommand);
+
+    QuestionPanelCommand.register(context);
 
     registerTemporalLocalSupervisor(context);
 

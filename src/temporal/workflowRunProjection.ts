@@ -17,10 +17,35 @@ export type WorkflowExecutionStatusName =
     | 'PAUSED'
     | 'UNKNOWN';
 
+export type PendingHumanQuestionInputMode = 'single_text' | 'markdown_batch' | 'form_fields';
+
+export interface PendingHumanQuestionPrompt {
+    field_id: string;
+    label: string;
+    required: boolean;
+    blocker?: boolean;
+}
+
+export interface PendingHumanQuestionArtifactTarget {
+    artifact_id: string;
+    path: string;
+}
+
+export interface PendingHumanQuestionBatchPolicy {
+    max_per_submit: number;
+    blockers_first: boolean;
+}
+
 export interface PendingHumanQuestion {
     question_id: string;
     node_id: string;
     node_name: string;
+    title: string;
+    input_mode: PendingHumanQuestionInputMode;
+    prompts: PendingHumanQuestionPrompt[];
+    artifact_targets?: PendingHumanQuestionArtifactTarget[];
+    batch_policy?: PendingHumanQuestionBatchPolicy;
+    resume_update?: string;
 }
 
 export interface WorkflowRunRetryState {

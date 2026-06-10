@@ -13,6 +13,7 @@ import {
 import { refreshIndexedRunFromTemporal } from '../temporal/temporalRecoveryScan';
 import { buildWorkflowGraphModel } from '../workflows/buildWorkflowGraphModel';
 import { buildWorkflowCatalog } from '../workflows/buildWorkflowCatalog';
+import { loadWorkflowDefinition } from '../workflows/loadWorkflowDefinition';
 import type { WorkflowDefinition } from '../workflows/types';
 import {
     WorkflowCatalogCommand,
@@ -321,23 +322,5 @@ export class WorkflowGraphCommand {
                     entry.workflow_id === workflowId &&
                     path.resolve(entry.repositoryRoot) === normalizedRoot
             );
-    }
-}
-
-function loadWorkflowDefinition(
-    repositoryRoot: string,
-    workflowId: string
-): WorkflowDefinition | undefined {
-    const catalog = buildWorkflowCatalog(repositoryRoot);
-    const entry = catalog.entries.find((candidate) => candidate.workflow_id === workflowId);
-    if (!entry) {
-        return undefined;
-    }
-
-    const absolutePath = path.join(repositoryRoot, entry.path);
-    try {
-        return JSON.parse(fs.readFileSync(absolutePath, 'utf8')) as WorkflowDefinition;
-    } catch {
-        return undefined;
     }
 }

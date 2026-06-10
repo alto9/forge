@@ -1,13 +1,11 @@
 import * as vscode from 'vscode';
 import {
     formatCancelConfirmMessage,
-    formatHumanInputBlockedMessage,
     formatRunActionsBlockedMessage,
 } from '../temporal/temporalPresentation';
 import {
     cancelWorkflowRun,
     dismissOrphanedWorkflowRun,
-    evaluateHumanInputSubmit,
     evaluateWorkflowRunAction,
     readProjectionForEntry,
 } from '../temporal/workflowRunActions';
@@ -179,41 +177,6 @@ export function registerWorkflowRunRecoveryCommands(context: vscode.ExtensionCon
                 notifyWorkflowRunIndexChanged();
             }
         ),
-        vscode.commands.registerCommand(
-            'forge.openQuestionPanel',
-            async (item?: WorkflowRunTreeItem) => {
-                const context = getWorkflowRunRecoveryContext();
-                if (!context) {
-                    void vscode.window.showErrorMessage('Workflow run recovery is not initialized.');
-                    return;
-                }
-
-                const selected = resolveSelectedEntry(item) ?? (await pickRunEntry());
-                if (!selected) {
-                    return;
-                }
-
-                const projection = readProjectionForEntry(
-                    selected.entry,
-                    context.globalStoragePath,
-                    context.windowId
-                );
-                const guard = evaluateHumanInputSubmit(selected.entry, projection);
-                if (!guard.allowed) {
-                    void vscode.window.showWarningMessage(
-                        guard.reason ?? formatHumanInputBlockedMessage()
-                    );
-                    return;
-                }
-
-                void vscode.commands.executeCommand('forge.openQuestionPanelForRun', selected.indexKey);
-            }
-        ),
-        vscode.commands.registerCommand('forge.openQuestionPanelForRun', async (indexKey: string) => {
-            void vscode.window.showInformationMessage(
-                `Question panel for run ${indexKey} opens when Forge question panel (#27) is available.`
-            );
-        }),
         vscode.commands.registerCommand(
             'forge.viewWorkflowRunGraph',
             async (item?: WorkflowRunTreeItem) => {
