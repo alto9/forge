@@ -222,7 +222,10 @@ export class TemporalWorkerSupervisor {
 
         const connection = await this.resolveConnection();
         const entryPath = resolveWorkerEntry(this.config.extensionPath);
-        const env = buildWorkerSpawnEnv(this.config, connection);
+        const cursorApiKey = this.config.resolveCursorApiKey
+            ? await this.config.resolveCursorApiKey()
+            : undefined;
+        const env = buildWorkerSpawnEnv(this.config, connection, { cursorApiKey });
 
         this.log(
             `[forge.temporal.worker] starting windowId=${this.config.windowId} mode=${this.config.mode} taskQueue=${connection.taskQueue} namespace=${connection.namespace} extensionVersion=${this.config.extensionVersion}`

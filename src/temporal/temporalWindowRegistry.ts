@@ -5,6 +5,10 @@ import {
 import { TemporalLocalSupervisor } from './TemporalLocalSupervisor';
 import { TemporalWorkerSupervisor } from './TemporalWorkerSupervisor';
 import { getRegisteredStoredApiKeyReader } from './externalCredentials';
+import {
+    getRegisteredStoredCursorApiKeyReader,
+    resolveCursorApiKeyForWorker,
+} from './cursorCredentials';
 import { resolveExternalApiKey, resolveExternalSettings } from './externalSettings';
 import {
     ensurePersistenceDirectory,
@@ -82,6 +86,8 @@ function registerWorkerSupervisor(
             mode === 'external'
                 ? () => resolveExternalApiKey(getRegisteredStoredApiKeyReader())
                 : undefined,
+        resolveCursorApiKey: () =>
+            resolveCursorApiKeyForWorker(getRegisteredStoredCursorApiKeyReader()),
         isTemporalConnectionReady,
     };
 

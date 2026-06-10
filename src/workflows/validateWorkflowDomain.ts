@@ -1,5 +1,11 @@
 import fs from 'fs';
 import path from 'path';
+import {
+    isKnownRetryPolicyId,
+    isKnownTimeoutPolicyId,
+    V1_RETRY_POLICY_IDS,
+    V1_TIMEOUT_POLICY_IDS,
+} from './activityPolicyRegistry';
 import type { WorkflowDiagnostic, WorkflowSchemaValidationResult } from './types';
 
 export const WORKFLOW_GRAPH_VALIDATOR_ID = 'forge.workflow.graph';
@@ -280,28 +286,54 @@ function validateBindings(
         }
     }
 
-    const retryPolicyIds = new Set<string>();
+    const retryPolicyIds = new Set<string>(V1_RETRY_POLICY_IDS);
     const retryPolicies = content.retry_policies;
     if (Array.isArray(retryPolicies)) {
-        for (const policy of retryPolicies) {
+        retryPolicies.forEach((policy, policyIndex) => {
             const record = readRecord(policy);
             const policyId = record ? readString(record.policy_id) : undefined;
-            if (policyId) {
-                retryPolicyIds.add(policyId);
+            if (!policyId) {
+                return;
             }
-        }
+
+            if (!isKnownRetryPolicyId(policyId)) {
+                diagnostics.push({
+                    code: 'binding.unknown_retry_policy_id',
+                    severity: 'error',
+                    path: `/retry_policies/${policyIndex}/policy_id`,
+                    message: `retry policy_id "${policyId}" is not in the v1 catalog (${V1_RETRY_POLICY_IDS.join(', ')})`,
+                    validator_id: WORKFLOW_BINDING_VALIDATOR_ID,
+                });
+                return;
+            }
+
+            retryPolicyIds.add(policyId);
+        });
     }
 
-    const timeoutPolicyIds = new Set<string>();
+    const timeoutPolicyIds = new Set<string>(V1_TIMEOUT_POLICY_IDS);
     const timeoutPolicies = content.timeout_policies;
     if (Array.isArray(timeoutPolicies)) {
-        for (const policy of timeoutPolicies) {
+        timeoutPolicies.forEach((policy, policyIndex) => {
             const record = readRecord(policy);
             const policyId = record ? readString(record.policy_id) : undefined;
-            if (policyId) {
-                timeoutPolicyIds.add(policyId);
+            if (!policyId) {
+                return;
             }
-        }
+
+            if (!isKnownTimeoutPolicyId(policyId)) {
+                diagnostics.push({
+                    code: 'binding.unknown_timeout_policy_id',
+                    severity: 'error',
+                    path: `/timeout_policies/${policyIndex}/policy_id`,
+                    message: `timeout policy_id "${policyId}" is not in the v1 catalog (${V1_TIMEOUT_POLICY_IDS.join(', ')})`,
+                    validator_id: WORKFLOW_BINDING_VALIDATOR_ID,
+                });
+                return;
+            }
+
+            timeoutPolicyIds.add(policyId);
+        });
     }
 
     nodes.forEach((node, nodeIndex) => {

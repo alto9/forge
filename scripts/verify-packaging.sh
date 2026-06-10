@@ -24,6 +24,7 @@ const worker = path.join(process.cwd(), '$WORKER_ENTRY');
 require('@temporalio/worker');
 require.resolve('@temporalio/worker/package.json');
 require.resolve('@temporalio/core-bridge');
+require('@cursor/sdk');
 console.log('dependency closure ok for', devServer, 'and', worker);
 "
 
@@ -52,6 +53,11 @@ grep -Fxq "extension/$DEV_SERVER_ENTRY" <<< "$VSIX_LISTING" || {
 
 grep -Fxq "extension/$WORKER_ENTRY" <<< "$VSIX_LISTING" || {
     echo "verify-packaging: worker entry missing from VSIX" >&2
+    exit 1
+}
+
+grep -Fxq "extension/dist/worker.js" <<< "$VSIX_LISTING" || {
+    echo "verify-packaging: worker bundle missing from VSIX" >&2
     exit 1
 }
 

@@ -76,6 +76,7 @@ export interface TemporalWorkerSupervisorConfig {
     grpcPort?: number;
     resolveExternalSettings?: () => import('./externalSettings').ResolvedExternalSettings;
     resolveApiKey?: () => Promise<string | undefined>;
+    resolveCursorApiKey?: () => Promise<string | undefined>;
     isTemporalConnectionReady: () => boolean;
 }
 

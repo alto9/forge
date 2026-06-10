@@ -1,6 +1,8 @@
 'use strict';
 
+const path = require('path');
 const { NativeConnection, Worker } = require('@temporalio/worker');
+const { createWorkerActivities } = require(path.join(__dirname, '../../../dist/worker.js'));
 
 function resolveSetting(envKey, fallback) {
     const value = process.env[envKey];
@@ -84,7 +86,7 @@ async function main() {
         connection,
         namespace,
         taskQueue,
-        activities: {},
+        activities: createWorkerActivities(),
     });
 
     process.stdout.write(`FORGE_WORKER_READY:taskQueue=${taskQueue}\n`);

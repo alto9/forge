@@ -85,4 +85,18 @@ describe('buildWorkerSpawnEnv', () => {
 
         expect(env.FORGE_TEMPORAL_EXTERNAL_API_KEY).toBeUndefined();
     });
+
+    it('injects Cursor API key into worker env when provided at spawn', () => {
+        const connection = resolveManagedLocalWorkerConnection({
+            grpcPort: 7233,
+            namespace: 'forge-local',
+            taskQueue: 'forge-workflows',
+        });
+
+        const env = buildWorkerSpawnEnv(baseConfig, connection, {
+            cursorApiKey: 'cursor-secret-key',
+        });
+
+        expect(env.CURSOR_API_KEY).toBe('cursor-secret-key');
+    });
 });
