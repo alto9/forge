@@ -14,6 +14,33 @@ export interface ActivityDiagnostic {
     source?: 'sdk' | 'worker' | 'validator';
 }
 
+export interface ActivityEnvelopeValidatorDiagnostic extends ActivityDiagnostic {
+    validator_id: string;
+}
+
+export interface ActivityArtifactRef {
+    artifact_id: string;
+    path: string;
+    size_bytes: number;
+    sha256: string;
+    media_type?: string;
+}
+
+export type ActivityFollowUpSeverity = 'blocker' | 'non-blocker';
+
+export interface ActivityFollowUpQuestion {
+    question_id: string;
+    prompt: string;
+    severity?: ActivityFollowUpSeverity;
+    domain?: string;
+}
+
+export interface ActivityValidationInputs {
+    schema_ref?: string;
+    artifact_ids?: string[];
+    domain_criteria?: string[];
+}
+
 export interface CursorSdkRequestEnvelope {
     envelope_version: string;
     activity_id: string;
@@ -42,7 +69,15 @@ export interface CursorSdkResponseEnvelope {
     failure_class?: ActivityFailureClass;
     retryable: boolean;
     structured_payload?: unknown;
+    artifact_refs?: ActivityArtifactRef[];
+    follow_up_questions?: ActivityFollowUpQuestion[];
     diagnostics?: ActivityDiagnostic[];
+    validation_inputs?: ActivityValidationInputs;
+}
+
+export interface ActivityEnvelopeValidationResult {
+    valid: boolean;
+    diagnostics: ActivityEnvelopeValidatorDiagnostic[];
 }
 
 export interface ExecuteCursorSdkAgentActivityInput {

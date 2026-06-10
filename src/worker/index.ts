@@ -28,7 +28,25 @@ export { executeCursorSdkAgentActivity } from './executeCursorSdkAgentActivity';
 export { buildTemporalActivityOptions } from './temporalActivityPolicyOptions';
 export { mapEnvelopeToActivityFailure } from './mapEnvelopeToActivityFailure';
 export type {
+    ActivityArtifactRef,
+    ActivityEnvelopeValidationResult,
+    ActivityEnvelopeValidatorDiagnostic,
+    ActivityFollowUpQuestion,
+    ActivityValidationInputs,
     CursorSdkRequestEnvelope,
     CursorSdkResponseEnvelope,
     ExecuteCursorSdkAgentActivityInput,
 } from './activityEnvelope';
+export {
+    validateActivityEnvelope,
+    validateEnvelopeSchema,
+    validateEnvelopeUnsupportedVersion,
+    validateEnvelopeSize,
+    ACTIVITY_ENVELOPE_SCHEMA_VALIDATOR_ID,
+    ACTIVITY_ENVELOPE_UNSUPPORTED_VERSION_VALIDATOR_ID,
+    ACTIVITY_ENVELOPE_SIZE_VALIDATOR_ID,
+    INLINE_STRUCTURED_PAYLOAD_MAX_BYTES,
+    TOTAL_ENVELOPE_MAX_BYTES,
+    ENVELOPE_UNSUPPORTED_VERSION_CODE,
+    ENVELOPE_SIZE_EXCEEDED_CODE,
+} from './validateActivityEnvelope';
