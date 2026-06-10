@@ -1,6 +1,10 @@
 import type { ActivityNodePolicyRefs } from '../workflows/activityPolicyRegistry';
 import type { ExecuteCursorSdkAgentActivityInput } from './activityEnvelope';
 import { executeCursorSdkAgentActivity } from './executeCursorSdkAgentActivity';
+import {
+    executeValidationGateActivity,
+    type ExecuteValidationGateActivityInput,
+} from './executeValidationGateActivity';
 import { mapEnvelopeToActivityFailure } from './mapEnvelopeToActivityFailure';
 
 export interface RegisteredCursorSdkAgentActivityInput extends ExecuteCursorSdkAgentActivityInput {
@@ -18,14 +22,30 @@ async function executeRegisteredCursorSdkAgentActivity(
     return response;
 }
 
+async function executeRegisteredValidationGateActivity(
+    input: ExecuteValidationGateActivityInput
+): Promise<ReturnType<typeof executeValidationGateActivity>> {
+    return executeValidationGateActivity(input);
+}
+
 export function createWorkerActivities() {
     return {
         executeCursorSdkAgentActivity: executeRegisteredCursorSdkAgentActivity,
+        executeValidationGate: executeRegisteredValidationGateActivity,
     };
 }
 
 export { executeCursorSdkAgentActivity } from './executeCursorSdkAgentActivity';
-export { buildTemporalActivityOptions } from './temporalActivityPolicyOptions';
+export {
+    executeValidationGateActivity,
+    VALIDATION_GATE_ACTIVITY_ID,
+} from './executeValidationGateActivity';
+export type { ExecuteValidationGateActivityInput } from './executeValidationGateActivity';
+export {
+    buildTemporalActivityOptions,
+    buildValidationGateActivityOptions,
+    VALIDATION_GATE_POLICY_REFS,
+} from './temporalActivityPolicyOptions';
 export { mapEnvelopeToActivityFailure } from './mapEnvelopeToActivityFailure';
 export type {
     ActivityArtifactRef,
@@ -50,3 +70,18 @@ export {
     ENVELOPE_UNSUPPORTED_VERSION_CODE,
     ENVELOPE_SIZE_EXCEEDED_CODE,
 } from './validateActivityEnvelope';
+export {
+    assembleRuntimeValidationResult,
+    executeRegisteredValidator,
+    getValidatorExecutor,
+    isRuntimeCatalogValidatorId,
+    RUNTIME_CATALOG_VALIDATOR_IDS,
+    validateRuntimeValidationResultSchema,
+} from '../validation';
+export type {
+    RuntimeValidationDiagnostic,
+    RuntimeValidationResult,
+    RuntimeValidatorOutcome,
+    ValidatorExecutorContext,
+    WorkflowArtifactDefinition,
+} from '../validation';

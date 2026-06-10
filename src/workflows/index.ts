@@ -53,3 +53,14 @@ export {
     gateWorkflowRunStartWithTemporalReadiness,
     validateWorkflowForRun,
 } from './validateWorkflowForRun';
+export {
+    REFINE_ISSUE_VALIDATION_NODE_IDS,
+    buildRefineIssueValidationGateInput,
+    findValidationNode,
+    resolveValidationTransition,
+    shouldAdvanceAfterValidation,
+} from './runtime/validationGateOrchestration';
+export type {
+    ValidationTransitionResult,
+    WorkflowValidationNode,
+} from './runtime/validationGateOrchestration';

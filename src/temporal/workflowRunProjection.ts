@@ -3,6 +3,7 @@ import path from 'path';
 import type { WorkflowExecutionDescription } from '@temporalio/client';
 import type { TemporalMode } from './temporalSettings';
 import type { RecoveryState, WorkflowRunIndexEntry } from './workflowRunIndex';
+import type { ValidationSummary } from './validationSummaryProjection';
 
 export type WorkflowExecutionStatusName =
     | 'UNSPECIFIED'
@@ -37,7 +38,10 @@ export interface WorkflowRunProjection {
     completedNodeIds: string[];
     skippedNodeIds: string[];
     cancelled: boolean;
-    validationSummaries: [];
+    activeNodeId?: string;
+    failedNodeId?: string;
+    validatingNodeId?: string;
+    validationSummaries: ValidationSummary[];
     pendingHumanQuestions: PendingHumanQuestion[];
 }
 
