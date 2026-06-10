@@ -1,3 +1,10 @@
+## 3.29.0 (2026-06-10)
+
+* Merge pull request #65 from alto9/feature/issue-22 ([a05794a](https://github.com/alto9/forge/commit/a05794a)), closes [#65](https://github.com/alto9/forge/issues/65) [#22](https://github.com/alto9/forge/issues/22)
+* feat(worker): add Cursor SDK agent activity adapter for Temporal ([a46ad02](https://github.com/alto9/forge/commit/a46ad02))
+* feat(worker): map workflow retry and timeout policies to Temporal activities ([710645c](https://github.com/alto9/forge/commit/710645c))
+* fix(ci): verify @cursor/sdk without package.json subpath resolve ([9d0143b](https://github.com/alto9/forge/commit/9d0143b))
+
 ## 3.28.0 (2026-06-10)
 
 * Merge pull request #64 from alto9/feature/issue-21 ([1f73252](https://github.com/alto9/forge/commit/1f73252)), closes [#64](https://github.com/alto9/forge/issues/64) [#21](https://github.com/alto9/forge/issues/21)
