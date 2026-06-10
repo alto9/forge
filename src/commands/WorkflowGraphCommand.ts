@@ -1,20 +1,26 @@
-import fs from 'fs';
 import path from 'path';
 import * as vscode from 'vscode';
-import { readProjectionForEntry } from '../temporal/workflowRunActions';
+import { formatCancelConfirmMessage } from '../temporal/temporalPresentation';
+import { refreshIndexedRunFromTemporal } from '../temporal/temporalRecoveryScan';
+import {
+    cancelWorkflowRun,
+    evaluateWorkflowRunAction,
+    readProjectionForEntry,
+} from '../temporal/workflowRunActions';
 import {
     createRunIndexEntryKey,
     type WorkflowRunIndexEntry,
 } from '../temporal/workflowRunIndex';
 import {
     getWorkflowRunRecoveryContext,
+    notifyWorkflowRunIndexChanged,
     onWorkflowRunIndexChanged,
 } from '../temporal/workflowRunRecoveryService';
-import { refreshIndexedRunFromTemporal } from '../temporal/temporalRecoveryScan';
+import { buildRunInspectorDetail } from '../workflows/buildRunInspectorDetail';
 import { buildWorkflowGraphModel } from '../workflows/buildWorkflowGraphModel';
 import { buildWorkflowCatalog } from '../workflows/buildWorkflowCatalog';
 import { loadWorkflowDefinition } from '../workflows/loadWorkflowDefinition';
-import type { WorkflowDefinition } from '../workflows/types';
+import type { RunInspectorRecoveryActionId } from '../workflows/types';
 import {
     WorkflowCatalogCommand,
     WORKFLOW_CATALOG_SELECTED_WORKFLOW_ID_KEY,
@@ -26,6 +32,7 @@ import {
     GRAPH_VALIDATION_BLOCKED_MESSAGE,
     type WorkflowGraphWebviewModel,
 } from '../webview/workflows/graphPresentation';
+import { QuestionPanelCommand } from './QuestionPanelCommand';
 import { WorkflowGraphPanel } from '../webview/workflows/WorkflowGraphPanel';
 
 export type OpenWorkflowGraphOptions = {
@@ -184,17 +191,212 @@ export class WorkflowGraphCommand {
     private static buildSession(context: vscode.ExtensionContext): {
         refreshModel: (options?: { fromTemporal?: boolean }) => Promise<WorkflowGraphWebviewModel>;
         shouldPoll: () => boolean;
+        buildInspectorDetail: (selectedNodeId: string | null) => Promise<ReturnType<typeof buildRunInspectorDetail>>;
+        handleRecoveryAction: (
+            actionId: RunInspectorRecoveryActionId,
+            selectedNodeId: string | null
+        ) => Promise<void>;
         onDispose: () => void;
     } {
         return {
             refreshModel: (options) => this.refreshModel(context, options),
             shouldPoll: () => this.shouldPoll(),
+            buildInspectorDetail: (selectedNodeId) => this.buildInspectorDetail(selectedNodeId),
+            handleRecoveryAction: (actionId, selectedNodeId) =>
+                this.handleRecoveryAction(context, actionId, selectedNodeId),
             onDispose: () => {
                 if (WorkflowGraphPanel.currentPanel === undefined) {
                     this.sessionState = undefined;
                 }
             },
         };
+    }
+
+    private static async buildInspectorDetail(selectedNodeId: string | null) {
+        const state = this.sessionState;
+        if (!state) {
+            return buildRunInspectorDetail(
+                {
+                    schema_version: '1',
+                    workflow_id: 'unknown',
+                    name: 'Unknown',
+                    version: '0',
+                    entry_node_id: 'start',
+                    nodes: [],
+                },
+                undefined,
+                selectedNodeId,
+                ''
+            );
+        }
+
+        const definition = loadWorkflowDefinition(state.repositoryRoot, state.workflowId);
+        if (!definition) {
+            return buildRunInspectorDetail(
+                {
+                    schema_version: '1',
+                    workflow_id: state.workflowId,
+                    name: state.workflowId,
+                    version: '0',
+                    entry_node_id: 'start',
+                    nodes: [],
+                },
+                undefined,
+                selectedNodeId,
+                state.repositoryRoot
+            );
+        }
+
+        const projection = await this.loadProjection(state, false);
+        return buildRunInspectorDetail(
+            definition,
+            projection,
+            selectedNodeId,
+            state.repositoryRoot
+        );
+    }
+
+    private static async handleRecoveryAction(
+        context: vscode.ExtensionContext,
+        actionId: RunInspectorRecoveryActionId,
+        selectedNodeId: string | null
+    ): Promise<void> {
+        const state = this.sessionState;
+        if (!state) {
+            return;
+        }
+
+        switch (actionId) {
+            case 'refresh':
+                await this.refreshGraph(context);
+                return;
+            case 'cancel_run':
+                await this.cancelCurrentRun();
+                return;
+            case 'open_question_panel':
+                if (state.runIndexKey) {
+                    await QuestionPanelCommand.openForRun(context, state.runIndexKey);
+                }
+                return;
+            case 'open_in_editor':
+            case 'copy_path':
+            case 'copy_diagnostic':
+            case 'copy_cursor_run_id':
+                await this.handleInspectorClipboardAction(
+                    actionId,
+                    selectedNodeId,
+                    state.repositoryRoot,
+                    state.workflowId
+                );
+                return;
+            default:
+                return;
+        }
+    }
+
+    private static async cancelCurrentRun(): Promise<void> {
+        const state = this.sessionState;
+        const recovery = getWorkflowRunRecoveryContext();
+        if (!state?.runIndexKey || !recovery) {
+            return;
+        }
+
+        const entry = recovery.indexStore.getEntry(state.runIndexKey);
+        if (!entry) {
+            return;
+        }
+
+        const projection = readProjectionForEntry(
+            entry,
+            recovery.globalStoragePath,
+            recovery.windowId
+        );
+        const guard = evaluateWorkflowRunAction(entry, 'cancel', projection);
+        if (!guard.allowed) {
+            void vscode.window.showWarningMessage(guard.reason ?? 'Run actions are blocked.');
+            return;
+        }
+
+        const confirmed = await vscode.window.showWarningMessage(
+            formatCancelConfirmMessage(entry.workflowId, entry.runId),
+            { modal: true },
+            'Cancel run'
+        );
+        if (confirmed !== 'Cancel run') {
+            return;
+        }
+
+        const client = await recovery.createRecoveryClient();
+        try {
+            await cancelWorkflowRun(entry, {
+                indexStore: recovery.indexStore,
+                globalStoragePath: recovery.globalStoragePath,
+                windowId: recovery.windowId,
+                client,
+            });
+            notifyWorkflowRunIndexChanged();
+        } finally {
+            await client.close();
+        }
+    }
+
+    private static async handleInspectorClipboardAction(
+        actionId: RunInspectorRecoveryActionId,
+        selectedNodeId: string | null,
+        repositoryRoot: string,
+        workflowId: string
+    ): Promise<void> {
+        const definition = loadWorkflowDefinition(repositoryRoot, workflowId);
+        if (!definition) {
+            return;
+        }
+
+        const state = this.sessionState;
+        const projection = state ? await this.loadProjection(state, false) : undefined;
+        const detail = buildRunInspectorDetail(
+            definition,
+            projection,
+            selectedNodeId,
+            repositoryRoot
+        );
+
+        if (actionId === 'open_in_editor') {
+            const artifactPath = detail.artifacts?.[0]?.path;
+            if (!artifactPath) {
+                return;
+            }
+            const absolutePath = path.join(repositoryRoot, artifactPath);
+            const uri = vscode.Uri.file(absolutePath);
+            await vscode.commands.executeCommand('vscode.open', uri);
+            return;
+        }
+
+        if (actionId === 'copy_path') {
+            const artifactPath = detail.artifacts?.[0]?.path;
+            if (!artifactPath) {
+                return;
+            }
+            await vscode.env.clipboard.writeText(artifactPath);
+            return;
+        }
+
+        if (actionId === 'copy_diagnostic') {
+            const diagnostic =
+                detail.activity?.diagnostics?.[0] ?? detail.validation?.diagnostics?.[0];
+            if (!diagnostic) {
+                return;
+            }
+            await vscode.env.clipboard.writeText(`${diagnostic.code}: ${diagnostic.message}`);
+            return;
+        }
+
+        if (actionId === 'copy_cursor_run_id') {
+            const runId = detail.activity?.cursor_run_id;
+            if (!runId) {
+                return;
+            }
+            await vscode.env.clipboard.writeText(runId);
+        }
     }
 
     private static shouldPoll(): boolean {

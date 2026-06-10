@@ -14,12 +14,17 @@ import {
     type ReactFlowInstance,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import type { WorkflowGraphModel } from '../../../workflows/types';
+import type {
+    RunInspectorDetail,
+    RunInspectorRecoveryActionId,
+    WorkflowGraphModel,
+} from '../../../workflows/types';
 import {
     getNodeTypeLabel,
     nodeVisualStateClass,
     type WorkflowGraphWebviewModel,
 } from '../graphPresentation';
+import { RunInspectorPanel } from './RunInspectorPanel';
 import { StepListSidebar } from './StepListSidebar';
 
 declare const acquireVsCodeApi: () => {
@@ -103,6 +108,7 @@ function WorkflowGraphApp(): React.ReactElement {
         header: 'Workflow Graph',
     });
     const [selectedNodeId, setSelectedNodeId] = useState<string | undefined>();
+    const [inspectorDetail, setInspectorDetail] = useState<RunInspectorDetail | undefined>();
     const [nodes, setNodes, onNodesChange] = useNodesState<Node<WorkflowNodeData>>([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
     const flowRef = useRef<ReactFlowInstance<Node<WorkflowNodeData>, Edge> | null>(null);
@@ -113,11 +119,19 @@ function WorkflowGraphApp(): React.ReactElement {
         const handler = (event: MessageEvent) => {
             const message = event.data as {
                 type?: string;
-                payload?: WorkflowGraphWebviewModel;
+                payload?: WorkflowGraphWebviewModel | RunInspectorDetail;
             };
             if (message?.type === 'init' && message.payload) {
-                setModel(message.payload);
-                setSelectedNodeId(message.payload.selectedNodeId);
+                const graphModel = message.payload as WorkflowGraphWebviewModel;
+                setModel(graphModel);
+                setSelectedNodeId(graphModel.selectedNodeId);
+            }
+            if (message?.type === 'update_inspector' && message.payload) {
+                const detail = message.payload as RunInspectorDetail;
+                setInspectorDetail(detail);
+                if (detail.selected_node_id) {
+                    setSelectedNodeId(detail.selected_node_id);
+                }
             }
         };
 
@@ -146,6 +160,7 @@ function WorkflowGraphApp(): React.ReactElement {
                     selected: node.id === nodeId,
                 }))
             );
+            vscode.postMessage({ type: 'select_node', nodeId });
 
             const instance = flowRef.current;
             const target = instance?.getNode(nodeId);
@@ -158,6 +173,14 @@ function WorkflowGraphApp(): React.ReactElement {
         },
         [setNodes]
     );
+
+    const onRecoveryAction = useCallback((actionId: RunInspectorRecoveryActionId) => {
+        vscode.postMessage({
+            type: 'recovery_action',
+            actionId,
+            nodeId: selectedNodeId ?? null,
+        });
+    }, [selectedNodeId]);
 
     const onSelectStep = useCallback(
         (nodeId: string) => {
@@ -196,6 +219,13 @@ function WorkflowGraphApp(): React.ReactElement {
                     box-sizing: border-box;
                 }
                 .forge-graph-canvas { flex: 1; min-height: 420px; }
+                .forge-graph-inspector {
+                    width: 300px;
+                    flex-shrink: 0;
+                    border-left: 1px solid var(--vscode-panel-border);
+                    overflow: auto;
+                    box-sizing: border-box;
+                }
                 .forge-graph-node {
                     min-width: 160px;
                     max-width: 220px;
@@ -286,6 +316,12 @@ function WorkflowGraphApp(): React.ReactElement {
                             <Controls showInteractive={false} />
                         </ReactFlow>
                     </div>
+                    <aside className="forge-graph-inspector">
+                        <RunInspectorPanel
+                            detail={inspectorDetail}
+                            onRecoveryAction={onRecoveryAction}
+                        />
+                    </aside>
                 </div>
             ) : null}
         </div>
@@ -297,4 +333,4 @@ if (rootElement) {
     createRoot(rootElement).render(<WorkflowGraphApp />);
 }
 
-export { WorkflowGraphApp, StepListSidebar };
+export { WorkflowGraphApp, RunInspectorPanel, StepListSidebar };
