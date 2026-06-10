@@ -1,6 +1,6 @@
 # Release Process
 
-Forge uses automated versioning and publishing based on [Conventional Commits](https://www.conventionalcommits.org/).
+Forge uses [Conventional Commits](https://www.conventionalcommits.org/) and [semantic-release](https://semantic-release.gitbook.io/) to compute versions, update the changelog, create git tags and GitHub releases, and publish the VSIX. **Publishing is manual:** merging to `main` runs CI only; a maintainer runs **Cut Release** when ready to ship.
 
 ## Pre-Publish Checklist
 
@@ -8,102 +8,97 @@ Before your first release, verify the following are configured:
 
 ### Package Configuration
 
-**MCP Server (`packages/mcp-server/package.json`):**
-- ✅ `license` field present (MIT)
-- ✅ `author` field present
-- ✅ `keywords` array present for npm discoverability
-- ✅ `files` array specifies what gets published (`dist`, `README.md`)
-- ✅ `name` is available on npm (check https://www.npmjs.com/package/@forge/mcp-server)
-
-**VSCode Extension (`packages/vscode-extension/package.json`):**
+**VSCode Extension (`package.json`):**
 - ✅ `license` field present (MIT)
 - ✅ `author` field present
 - ✅ `keywords` array present for marketplace discoverability
 - ✅ `categories` set appropriately
 - ✅ `galleryBanner` configured for branding
+- ✅ `bugs` and `homepage` URLs present
 - ✅ `publisher` exists on marketplace (verify at https://marketplace.visualstudio.com/manage/publishers/alto9)
-- ⚠️ `icon` field (optional but recommended - 128x128 PNG at `media/icon.png`)
+- ✅ `icon` at `resources/icons/forge-logo.png`
+
+### Maintainer checklist before clicking "Run workflow"
+
+- Confirm the **latest commit on the branch you are releasing** has a **green CI** run (or rely on **Cut Release**'s own build and test steps).
+- Confirm repository **Actions** allows **workflow_dispatch** for this workflow (org/repo policy).
+- Confirm these **secrets** exist for Actions (manual runs use the same secrets as before):
+  - `GH_APP_ID` and `GH_APP_PRIVATE_KEY` (GitHub App used so semantic-release can push version commits and tags)
+  - `VSCE_PAT` (VS Code Marketplace)
+  - `OVSX_PAT` (Open VSX; optional if you skip that step when unset)
+  - `SLACK_BOT_TOKEN` (Slack notification; step is best-effort if missing)
 
 ### GitHub Secrets
 
-- ✅ `NPM_TOKEN` configured in GitHub repository secrets
 - ✅ `VSCE_PAT` configured in GitHub repository secrets
-- ✅ `GITHUB_TOKEN` (automatically provided by GitHub Actions)
+- ✅ `GITHUB_TOKEN` (automatically provided by GitHub Actions; semantic-release uses the GitHub App token from the workflow step)
 
 ### Local Testing
 
 Before pushing to main, test locally:
 
 ```bash
-# Test what would be published to npm
-cd packages/mcp-server
-npm pack
-# Check the generated .tgz file contents
-
 # Test VSCode extension packaging
-cd packages/vscode-extension
-npx @vscode/vsce package
+npm run package
 # Check the generated .vsix file
 
-# Test semantic-release dry-run (from repo root)
+# Test semantic-release dry-run
 npm run release:dry-run
 ```
 
-## Automated Release Process
+## Manual release process
 
-When you merge commits to the `main` branch, the release workflow automatically:
+Releases are **not** triggered by merges. When you want to publish:
 
-1. Analyzes commit messages to determine the next version
-2. Updates all `package.json` files with the new version
-3. Generates/updates `CHANGELOG.md`
-4. Creates a git tag
-5. Publishes `@forge/mcp-server` to npm
-6. Publishes the VSCode extension to the marketplace
+1. Merge work to `main` (or `master`) using conventional commits as usual.
+2. In GitHub: **Actions** → **Cut Release** → **Run workflow**.
+3. Choose the **branch** to run from (typically `main`). That branch is what gets checked out, versioned, tagged, and published.
+
+The workflow then:
+
+1. Builds and tests the extension
+2. Runs **semantic-release**, which:
+   - Analyzes commit messages since the last release
+   - Determines the next version
+   - Updates `package.json` and `package-lock.json`
+   - Updates `CHANGELOG.md`
+   - Creates a git tag and GitHub release (with VSIX asset per `.releaserc.json`)
+3. Re-packages the VSIX at the new version
+4. Publishes to the VS Code Marketplace and Open VSX
+
+If there are no releasable commits, semantic-release exits without a new version; nothing is published to marketplaces.
 
 ## How It Works
 
 ### Commit Message Analysis
 
-The system uses semantic-release to analyze commit messages and determine version bumps:
+semantic-release analyzes commits (see `.releaserc.json` for exact rules). In general:
 
 - **feat**: New feature → Minor version bump (0.1.0 → 0.2.0)
 - **fix**: Bug fix → Patch version bump (0.1.0 → 0.1.1)
 - **feat!** or **BREAKING CHANGE**: Breaking change → Major version bump (0.1.0 → 1.0.0)
-- **docs**, **style**, **refactor**, **test**, **chore**, **ci**, **build**: No version bump
+- **chore**, **ci**, **docs**, **refactor** (per this repo's `releaseRules`): Patch bump
+- **style**, **test**, **build**: Depends on analyzer defaults and custom rules; see `.releaserc.json`
 
-### Release Workflow
+### Cut Release workflow
 
-The `.github/workflows/release.yml` workflow runs on every push to `main`:
+There is **no staging environment** for this repo: CI on PRs and **`main`** validates builds.
 
-1. **Build**: Compiles all packages
-2. **Package VSCode extension (pre-release)**: Creates initial `.vsix` file with current version
-3. **Release**: Runs semantic-release which:
-   - Analyzes commits since last release
-   - Determines next version
-   - Updates versions in all `package.json` files via `sync-versions.js`
-   - Updates `CHANGELOG.md`
-   - Publishes `@forge/mcp-server` to npm
-   - Creates a git tag and GitHub release with `.vsix` attached
-4. **Re-package VSCode extension (post-release)**: Creates `.vsix` file with the new version
-5. **Publish**: Publishes VSCode extension to marketplace using the versioned `.vsix` file
+The **[.github/workflows/cut-release.yml](.github/workflows/cut-release.yml)** workflow runs **only** when started manually (**`workflow_dispatch`**):
+
+1. **Checkout the default branch**, **build**, **test**, **verify packaging**
+2. **Package** (pre-release `.vsix`)
+3. **semantic-release** (GitHub App token) — **fails** if no new tag
+4. **Checkout the new tag**, **re-package** with released version
+5. **Publish** to VS Code Marketplace and Open VSX
+6. **Slack** notification (optional)
 
 ## Required Secrets
 
 The following secrets are configured in GitHub repository settings:
 
-### NPM_TOKEN
-- **Purpose**: Publishes `@forge/mcp-server` to npm
-- **Status**: ✅ Configured
-- **How to get** (if needed): 
-  1. Go to https://www.npmjs.com/settings/YOUR_USERNAME/tokens
-  2. Create a new "Automation" token
-  3. Copy the token
-  4. In GitHub repo: Settings → Secrets and variables → Actions → New repository secret
-  5. Name: `NPM_TOKEN`, Value: (paste token)
-
 ### VSCE_PAT
 - **Purpose**: Publishes VSCode extension to marketplace
-- **Status**: ✅ Configured
 - **How to get** (if needed):
   1. Go to https://dev.azure.com/YOUR_ORG/_usersSettings/tokens
   2. Create a new token with "Marketplace → Manage" scope (full access)
@@ -112,9 +107,9 @@ The following secrets are configured in GitHub repository settings:
   5. Name: `VSCE_PAT`, Value: (paste token)
 
 ### GITHUB_TOKEN
-- **Purpose**: Creates releases and tags (automatically provided by GitHub Actions)
+- **Purpose**: Used for steps that call `gh` with the default token; semantic-release uses the GitHub App installation token from the workflow
 - **Status**: ✅ Automatic
-- **Note**: No action needed, this is automatically available in all workflows
+- **Note**: The workflow generates a GitHub App token for semantic-release so it can push commits and tags
 
 ## Testing Releases
 
@@ -129,27 +124,15 @@ This shows:
 - Which commits would be included
 - What would be published
 
-## Manual Release (If Needed)
+## Local semantic-release (advanced)
 
-If you need to manually trigger a release or skip the automated process:
+To run semantic-release locally (requires appropriate credentials and a clean git state):
 
 ```bash
-# Set version manually (not recommended)
-npm version patch|minor|major
-
-# Or use semantic-release manually
 npm run release
 ```
 
-## Version Synchronization
-
-All packages in the monorepo share the same version number. The `scripts/sync-versions.js` script ensures:
-
-- Root `package.json`
-- `packages/mcp-server/package.json`
-- `packages/vscode-extension/package.json`
-
-All have the same version after a release.
+Avoid ad-hoc `npm version` unless you have a specific reason; the normal path is **Cut Release** in Actions.
 
 ## Skipping Releases
 
@@ -161,93 +144,74 @@ git commit -m "docs: update README [skip release]"
 
 ## Troubleshooting
 
-### Release didn't trigger
-- Check that commits use conventional commit format (`feat:`, `fix:`, etc.)
-- Verify you're pushing to `main` or `master` branch
-- Check GitHub Actions logs for errors
-- Ensure at least one commit requires a version bump (not just `docs:` or `chore:`)
+### Release did not publish a new version
+- semantic-release found nothing to release (no version-worthy commits since the last tag). Use `npm run release:dry-run` locally to preview.
+- Verify commits use conventional commit format where required (`feat:`, `fix:`, etc.)
+- Look for errors in the "Run semantic-release" step
 
 ### Version not updating
-- Ensure commit messages follow conventional format
-- Check that semantic-release can access the repository
-- Verify `NPM_TOKEN` secret is configured
+- Ensure commit messages follow conventional format and `.releaserc.json` rules
+- Check that semantic-release can push to the repository (GitHub App token and permissions)
 - Look for errors in the "Run semantic-release" step
 
 ### VSCode extension not publishing
 - Verify `VSCE_PAT` secret is configured and has correct permissions
-- Check that the extension builds successfully in the "Build packages" step
-- Verify the `.vsix` file was created in "Re-package VSCode extension" step
+- Check that the extension builds successfully in the "Build" step
+- Verify the `.vsix` file was created in "Re-package extension" step
 - Review workflow logs for publishing errors
 - Check that `vsce publish` command can find the `.vsix` file
 
 ### .vsix file not attached to GitHub release
 - Ensure the `.vsix` file exists before semantic-release runs
-- Check the path pattern in `.releaserc.json` matches the actual file
-- Verify the "Package VSCode extension (pre-release)" step completed successfully
-
-### npm package not publishing
-- Verify `NPM_TOKEN` has correct permissions (must be "Automation" token)
-- Check that the package name is available on npm
-- Ensure `packages/mcp-server/package.json` is valid
-- Review the semantic-release logs for npm-specific errors
+- Check the path pattern in `.releaserc.json` matches the actual file (`forge-studio-*.vsix`)
+- Verify the "Package extension (pre-release)" step completed successfully
 
 ## Examples
 
-### Patch Release (Bug Fix)
+### Patch release (after bug fix merged)
+
 ```bash
-git commit -m "fix(studio): resolve session save issue"
+git commit -m "fix(workflows): resolve catalog refresh issue"
 git push origin main
-# → Releases 0.1.0 → 0.1.1
+# After CI passes, run Cut Release in Actions → Cut Release → Run workflow
+# → e.g. 3.31.0 → 3.31.1
 ```
 
-### Minor Release (New Feature)
+### Minor release (new feature)
+
 ```bash
-git commit -m "feat(studio): add diagram export feature"
+git commit -m "feat(catalog): add workflow graph preview"
 git push origin main
-# → Releases 0.1.0 → 0.2.0
+# Run Cut Release when ready → e.g. 3.31.0 → 3.32.0
 ```
 
-### Major Release (Breaking Change)
+### Major release (breaking change)
+
 ```bash
-git commit -m "feat!: redesign session workflow
+git commit -m "feat!: redesign Temporal configuration API
 
-BREAKING CHANGE: Session file format has changed"
+BREAKING CHANGE: Temporal settings keys have changed"
 git push origin main
-# → Releases 0.1.0 → 1.0.0
+# Run Cut Release when ready → e.g. 3.31.0 → 4.0.0
 ```
-
-## Configuration Files
-
-- `.releaserc.json`: Semantic-release configuration
-- `.github/workflows/release.yml`: GitHub Actions workflow
-- `scripts/sync-versions.js`: Version synchronization script
-- `CHANGELOG.md`: Auto-generated changelog
 
 ## First-Time Publishing Verification
-
-### NPM Package (@forge/mcp-server)
-
-Before the first publish to npm:
-
-1. **Verify package name availability**: Check that `@forge/mcp-server` is available on npmjs.com
-2. **Test local build**: Run `npm run build` from repo root
-3. **Inspect package contents**: Run `npm pack` in `packages/mcp-server/` and check the `.tgz` file
-4. **Verify `files` field**: Ensure only `dist/` and `README.md` are included
-5. **Check npm credentials**: Ensure `NPM_TOKEN` has publish access to `@forge` scope (if scoped)
-
-### VSCode Extension
 
 Before the first publish to marketplace:
 
 1. **Verify publisher**: Ensure publisher "alto9" exists at https://marketplace.visualstudio.com/manage/publishers/alto9
-2. **Test local packaging**: Run `npx @vscode/vsce package` in `packages/vscode-extension/`
-3. **Install locally**: Test the `.vsix` file by installing it in VSCode
+2. **Test local packaging**: Run `npm run package` to create a `.vsix` file
+3. **Install locally**: Test the `.vsix` file by installing it in VSCode or Cursor
 4. **Check VSCE_PAT permissions**: Ensure the token has "Marketplace (Manage)" scope
-5. **Consider icon**: Add a 128x128 PNG icon at `media/icon.png` for better marketplace visibility (optional)
 
 ### Repository Configuration
 
-1. **GitHub secrets configured**: Both `NPM_TOKEN` and `VSCE_PAT` in repository settings
-2. **Branch protection**: Ensure `main`/`master` branch is protected
-3. **Workflow permissions**: Verify GitHub Actions has permission to create releases and push tags
+1. **GitHub secrets configured**: `VSCE_PAT`, GitHub App secrets, and others listed above
+2. **Branch protection**: Ensure `main`/`master` branch is protected as appropriate
+3. **Workflow permissions**: Verify GitHub Actions has permission to create releases; semantic-release uses the GitHub App for pushes
 
+## Configuration Files
+
+- `.releaserc.json`: Semantic-release configuration
+- `.github/workflows/cut-release.yml`: GitHub Actions — **Cut Release** (manual `workflow_dispatch`)
+- `CHANGELOG.md`: Auto-generated changelog
