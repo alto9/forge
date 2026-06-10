@@ -50,6 +50,7 @@ const workerConfig = {
     },
     externals: {
         '@temporalio/activity': 'commonjs @temporalio/activity',
+        '@temporalio/common': 'commonjs @temporalio/common',
         '@temporalio/worker': 'commonjs @temporalio/worker',
         '@cursor/sdk': 'commonjs @cursor/sdk',
     },

@@ -1,4 +1,20 @@
 export {
+    DEFAULT_RETRY_POLICY_ID,
+    DEFAULT_TIMEOUT_POLICY_ID,
+    getRetryPolicyDefinition,
+    getTimeoutPolicyDefinition,
+    isKnownRetryPolicyId,
+    isKnownTimeoutPolicyId,
+    lookupRetryPolicyDefinition,
+    lookupTimeoutPolicyDefinition,
+    resolveRetryPolicyId,
+    resolveTimeoutPolicyId,
+    shouldRetryActivityResponse,
+    V1_RETRY_POLICY_IDS,
+    V1_TIMEOUT_POLICY_IDS,
+} from './activityPolicyRegistry';
+export type { ActivityNodePolicyRefs, V1RetryPolicyId, V1TimeoutPolicyId } from './activityPolicyRegistry';
+export {
     discoverWorkflowDefinitions,
     WORKFLOW_DUPLICATE_ID_VALIDATOR_ID,
 } from './discoverWorkflowDefinitions';

@@ -225,4 +225,64 @@ describe('validateWorkflowDomain', () => {
         expect(result.valid).toBe(true);
         expect(result.diagnostics).toEqual([]);
     });
+
+    it('reports unknown retry and timeout policy references', () => {
+        const content = {
+            schema_version: '1.0.0',
+            workflow_id: 'policy-test',
+            name: 'Policy Test',
+            version: '1.0.0',
+            entry_node_id: 'start',
+            retry_policies: [{ policy_id: 'not-a-policy' }],
+            timeout_policies: [{ policy_id: 'also-unknown' }],
+            nodes: [
+                {
+                    node_id: 'start',
+                    type: 'activity',
+                    name: 'Start',
+                    activity_id: 'forge.test.start',
+                    agent_path: 'resources/workflow/agents/technical-writer.md',
+                    retry_policy: 'missing-retry',
+                    timeout_policy: 'missing-timeout',
+                    transitions: [{ to_node_id: 'done' }],
+                },
+                {
+                    node_id: 'done',
+                    type: 'terminal',
+                    name: 'Done',
+                },
+            ],
+        };
+
+        const result = validateWorkflowDomain(content, {
+            path: '.ai/workflows/policy-test.json',
+            workspaceRoot: process.cwd(),
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    code: 'binding.unknown_retry_policy_id',
+                    path: '/retry_policies/0/policy_id',
+                    validator_id: WORKFLOW_BINDING_VALIDATOR_ID,
+                }),
+                expect.objectContaining({
+                    code: 'binding.unknown_timeout_policy_id',
+                    path: '/timeout_policies/0/policy_id',
+                    validator_id: WORKFLOW_BINDING_VALIDATOR_ID,
+                }),
+                expect.objectContaining({
+                    code: 'binding.unresolved_retry_policy',
+                    path: '/nodes/0/retry_policy',
+                    validator_id: WORKFLOW_BINDING_VALIDATOR_ID,
+                }),
+                expect.objectContaining({
+                    code: 'binding.unresolved_timeout_policy',
+                    path: '/nodes/0/timeout_policy',
+                    validator_id: WORKFLOW_BINDING_VALIDATOR_ID,
+                }),
+            ])
+        );
+    });
 });
