@@ -7,6 +7,15 @@ import {
     type ActivityNodePolicyRefs,
 } from '../workflows/activityPolicyRegistry';
 
+export const VALIDATION_GATE_POLICY_REFS: ActivityNodePolicyRefs = {
+    retry_policy: 'none',
+    timeout_policy: 'agent_short',
+};
+
+export function buildValidationGateActivityOptions(): ActivityOptions {
+    return buildTemporalActivityOptions(VALIDATION_GATE_POLICY_REFS);
+}
+
 export function buildTemporalActivityOptions(policyRefs: ActivityNodePolicyRefs = {}): ActivityOptions {
     const retryPolicyId = resolveRetryPolicyId(policyRefs);
     const timeoutPolicyId = resolveTimeoutPolicyId(policyRefs);

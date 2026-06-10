@@ -175,6 +175,14 @@ export type {
     TemporalRecoveryCoordinatorConfig,
 } from './temporalRecoveryCoordinator';
 export {
+    appendValidationSummary,
+    mapRuntimeValidationResultToSummary,
+} from './validationSummaryProjection';
+export type {
+    ValidationSummary,
+    ValidationSummaryValidatorOutcome,
+} from './validationSummaryProjection';
+export {
     buildProjectionFromTemporalDescribe,
     isTerminalTemporalStatus,
     readWorkflowRunProjection,

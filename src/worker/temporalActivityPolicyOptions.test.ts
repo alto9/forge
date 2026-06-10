@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { buildTemporalActivityOptions } from './temporalActivityPolicyOptions';
+import {
+    buildTemporalActivityOptions,
+    buildValidationGateActivityOptions,
+} from './temporalActivityPolicyOptions';
 
 describe('buildTemporalActivityOptions', () => {
     it('applies agent_default and agent_standard when node policies are omitted', () => {
@@ -26,6 +29,13 @@ describe('buildTemporalActivityOptions', () => {
 
         expect(options.startToCloseTimeout).toBe(5 * 60 * 1_000);
         expect(options.scheduleToCloseTimeout).toBe(10 * 60 * 1_000);
+        expect(options.retry?.maximumAttempts).toBe(1);
+    });
+
+    it('buildValidationGateActivityOptions uses none retry and agent_short timeout', () => {
+        const options = buildValidationGateActivityOptions();
+
+        expect(options.startToCloseTimeout).toBe(5 * 60 * 1_000);
         expect(options.retry?.maximumAttempts).toBe(1);
     });
 });
