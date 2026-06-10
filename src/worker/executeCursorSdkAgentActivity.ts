@@ -15,6 +15,7 @@ import {
     buildResponseShell,
     buildStartupFailureResponse,
     buildSuccessResponse,
+    prepareActivityResponse,
 } from './mapSdkOutcome';
 import { resolveCursorApiKeyFromEnv } from './resolveCursorApiKey';
 
@@ -93,7 +94,7 @@ export async function executeCursorSdkAgentActivity(
 
     const apiKey = resolveCursorApiKeyFromEnv();
     if (!apiKey) {
-        const response = buildMissingApiKeyResponse(envelope);
+        const response = prepareActivityResponse(buildMissingApiKeyResponse(envelope));
         activityLogger.logResponseEnvelope(response);
         return response;
     }
@@ -132,26 +133,31 @@ export async function executeCursorSdkAgentActivity(
         }
 
         if (cancelled || result.status === 'cancelled') {
-            const response = buildCancelledResponse(shell);
+            const response = prepareActivityResponse(buildCancelledResponse(shell));
             activityLogger.logResponseEnvelope(response);
             return response;
         }
 
         if (result.status === 'error') {
-            const response = buildExecutionFailureResponse(shell, result, false);
+            const response = prepareActivityResponse(buildExecutionFailureResponse(shell, result));
             activityLogger.logResponseEnvelope(response);
             return response;
         }
 
-        const response = buildSuccessResponse(shell, result, envelope.output_type);
+        const response = buildSuccessResponse(shell, result, envelope.output_type, {
+            requestEnvelope: envelope,
+            workspaceRoot,
+        });
         activityLogger.logResponseEnvelope(response);
         return response;
     } catch (error) {
         if (error instanceof CursorAgentError) {
-            const response = buildStartupFailureResponse(
-                buildResponseShell(envelope, agent?.agentId ?? 'unavailable', 'unavailable'),
-                error.message,
-                error.isRetryable
+            const response = prepareActivityResponse(
+                buildStartupFailureResponse(
+                    buildResponseShell(envelope, agent?.agentId ?? 'unavailable', 'unavailable'),
+                    error.message,
+                    error.isRetryable
+                )
             );
             activityLogger.logResponseEnvelope(response);
             return response;

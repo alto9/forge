@@ -91,6 +91,43 @@ describe('executeCursorSdkAgentActivity', () => {
         expect(heartbeatMock).toHaveBeenCalledWith({ cursor_run_id: 'run-456' });
     });
 
+    it('writes artifact_refs when node declares artifact_ids', async () => {
+        process.env.CURSOR_API_KEY = 'cursor_test_key';
+
+        const createAgent = vi.fn(async () => ({
+            agentId: 'agent-123',
+            send: vi.fn(async () => ({
+                id: 'run-456',
+                supports: () => true,
+                wait: vi.fn(async () => ({
+                    id: 'run-456',
+                    status: 'finished',
+                    result: '# Artifact output',
+                })),
+            })),
+            close: vi.fn(),
+            [Symbol.asyncDispose]: vi.fn(async () => undefined),
+        }));
+
+        const response = await executeCursorSdkAgentActivity(
+            {
+                envelope: {
+                    ...envelope,
+                    artifact_ids: ['refinement'],
+                },
+                workspaceRoot: '/tmp/workspace',
+            },
+            {
+                createAgent,
+                log: () => undefined,
+            }
+        );
+
+        expect(response.status).toBe('finished');
+        expect(response.structured_payload).toBeUndefined();
+        expect(response.artifact_refs?.[0]?.artifact_id).toBe('refinement');
+    });
+
     it('maps CursorAgentError to startup failure envelope', async () => {
         process.env.CURSOR_API_KEY = 'cursor_test_key';
 
