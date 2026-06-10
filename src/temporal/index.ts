@@ -95,14 +95,24 @@ export {
     formatWorkerStateTransitionLogLine,
     formatWorkerStatusBarSegment,
     formatWorkerUpgradeRestartLogLine,
+    formatRecoveryBadgeLabel,
+    formatCancelConfirmMessage,
+    formatRunActionsBlockedMessage,
+    formatHumanInputBlockedMessage,
+    formatOrphanedRunMessage,
+    formatRefreshFailedRunMessage,
+    formatNeedsInputBadgeLabel,
 } from './temporalPresentation';
 export {
     TEMPORAL_OUTPUT_CHANNEL_NAME,
     createTemporalOutputChannel,
+    getCombinedRecoveryReadinessSnapshot,
+    isCombinedRecoveryReady,
     notifyWorkflowBlockedByTemporal,
     notifyWorkflowBlockedByWorker,
     registerExternalTemporalHealthSurfaces,
     registerManagedLocalTemporalHealthSurfaces,
+    registerRecoveryReadinessListener,
     registerWorkerHealthSurfaces,
 } from './temporalHealthSurfaces';
 export {
@@ -145,6 +155,7 @@ export {
     formatRecoveryLogLine,
     markNonTerminalIndexEntriesUnreachable,
     refreshIndexedRunFromTemporal,
+    runManualRecoveryRefresh,
     runRecoveryScan,
 } from './temporalRecoveryScan';
 export type {
@@ -173,6 +184,7 @@ export {
 export type {
     WorkflowExecutionStatusName,
     WorkflowRunProjection,
+    PendingHumanQuestion,
 } from './workflowRunProjection';
 export type {
     ChildProcessSpawnOptions,

@@ -53,9 +53,54 @@ export const window = {
         dispose: vi.fn(),
     })),
     createWebviewPanel: vi.fn(),
+    createTreeView: vi.fn(() => ({
+        dispose: vi.fn(),
+    })),
     showQuickPick: vi.fn(),
     showInputBox: vi.fn()
 };
+
+export class TreeItem {
+    label?: string;
+    description?: string;
+    tooltip?: string;
+    contextValue?: string;
+    collapsibleState?: number;
+
+    constructor(label: string, collapsibleState: number) {
+        this.label = label;
+        this.collapsibleState = collapsibleState;
+    }
+}
+
+export const TreeItemCollapsibleState = {
+    None: 0,
+    Collapsed: 1,
+    Expanded: 2,
+};
+
+export class EventEmitter<T> {
+    private listeners = new Set<(value: T) => void>();
+
+    event = (listener: (value: T) => void) => {
+        this.listeners.add(listener);
+        return {
+            dispose: () => {
+                this.listeners.delete(listener);
+            },
+        };
+    };
+
+    fire(value: T): void {
+        for (const listener of this.listeners) {
+            listener(value);
+        }
+    }
+
+    dispose(): void {
+        this.listeners.clear();
+    }
+}
 
 export const commands = {
     registerCommand: vi.fn(),

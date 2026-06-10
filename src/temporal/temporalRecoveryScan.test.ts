@@ -38,6 +38,8 @@ function createMockClient(
             closeTime: undefined,
         })),
         fetchHistory: vi.fn(async () => ({ events: [] })),
+        terminateWorkflow: vi.fn(async () => undefined),
+        executeWorkflowUpdate: vi.fn(async () => undefined),
         close: vi.fn(async () => undefined),
         ...behavior,
     };
@@ -207,5 +209,39 @@ describe('temporalRecoveryScan', () => {
         expect(client.describeWorkflow).toHaveBeenCalledOnce();
         expect(client.close).toHaveBeenCalledOnce();
         expect(store.getEntry('forge-local:wf-1:run-1')?.recoveryState).toBe('synced');
+    });
+
+    it('manual refresh re-scans all indexed entries including terminal runs within retention', async () => {
+        const { globalStoragePath, windowId } = createTempGlobalStorage();
+        const store = new WorkflowRunIndexStore(globalStoragePath, windowId);
+        store.appendRunStartEntry({
+            namespace: 'forge-local',
+            workflowId: 'wf-active',
+            runId: 'run-active',
+            taskQueue: 'forge-workflows',
+            workflow_id: 'refine-issue',
+            repositoryRoot: '/repo',
+            mode: 'managedLocal',
+        });
+        store.markTerminal('forge-local:wf-active:run-active', {
+            completedAt: '2026-06-01T00:00:00.000Z',
+            recoveryState: 'synced',
+        });
+
+        const client = createMockClient();
+        const logs: string[] = [];
+
+        const { runManualRecoveryRefresh } = await import('./temporalRecoveryScan');
+        await runManualRecoveryRefresh({
+            windowId,
+            globalStoragePath,
+            indexStore: store,
+            log: (line) => logs.push(line),
+            createClient: async () => client,
+        });
+
+        expect(client.describeWorkflow).toHaveBeenCalledOnce();
+        expect(logs.some((line) => line.includes('Manual refresh started count=1'))).toBe(true);
+        expect(logs.some((line) => line.includes('Recovered 1 workflow run(s).'))).toBe(true);
     });
 });

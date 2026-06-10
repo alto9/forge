@@ -82,6 +82,24 @@ describe('workflowRunIndex', () => {
         expect(reloaded.listEntries()[0]?.repositoryRoot).toBe('/workspace/repo');
     });
 
+    it('removes entries for orphaned dismissal', () => {
+        const { globalStoragePath, windowId } = createTempGlobalStorage();
+        const store = new WorkflowRunIndexStore(globalStoragePath, windowId);
+        store.appendRunStartEntry({
+            namespace: 'forge-local',
+            workflowId: 'wf-remove',
+            runId: 'run-remove',
+            taskQueue: 'forge-workflows',
+            workflow_id: 'refine-issue',
+            repositoryRoot: '/repo',
+            mode: 'managedLocal',
+        });
+
+        expect(store.removeEntry('forge-local:wf-remove:run-remove')).toBe(true);
+        expect(store.listEntries()).toHaveLength(0);
+        expect(store.removeEntry('forge-local:wf-remove:run-remove')).toBe(false);
+    });
+
     it('rejects duplicate index keys on insert', () => {
         const { globalStoragePath, windowId } = createTempGlobalStorage();
         const store = new WorkflowRunIndexStore(globalStoragePath, windowId);

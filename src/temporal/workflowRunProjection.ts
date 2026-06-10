@@ -16,6 +16,12 @@ export type WorkflowExecutionStatusName =
     | 'PAUSED'
     | 'UNKNOWN';
 
+export interface PendingHumanQuestion {
+    question_id: string;
+    node_id: string;
+    node_name: string;
+}
+
 export interface WorkflowRunProjection {
     namespace: string;
     workflowId: string;
@@ -32,7 +38,7 @@ export interface WorkflowRunProjection {
     skippedNodeIds: string[];
     cancelled: boolean;
     validationSummaries: [];
-    pendingHumanQuestions: [];
+    pendingHumanQuestions: PendingHumanQuestion[];
 }
 
 const TERMINAL_TEMPORAL_STATUSES = new Set<WorkflowExecutionStatusName>([

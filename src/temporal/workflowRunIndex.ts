@@ -239,6 +239,16 @@ export class WorkflowRunIndexStore {
         return updated;
     }
 
+    removeEntry(key: string): boolean {
+        if (!this.index.entries[key]) {
+            return false;
+        }
+
+        delete this.index.entries[key];
+        this.persist();
+        return true;
+    }
+
     reload(): void {
         this.index = readWorkflowRunIndexFile(this.indexPath);
         this.applyRetentionPurge();

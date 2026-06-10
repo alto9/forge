@@ -11,6 +11,7 @@ import {
     type TemporalRecoveryClient,
 } from './temporalRecoveryScan';
 import { WorkflowRunIndexStore } from './workflowRunIndex';
+import { notifyWorkflowRunIndexChanged } from './workflowRunRecoveryService';
 
 export interface CombinedReadinessSnapshot {
     temporalReady: boolean;
@@ -104,6 +105,7 @@ export function registerTemporalRecoveryCoordinator(
         })
             .then(() => {
                 recoveryScanCompletedThisSession = true;
+                notifyWorkflowRunIndexChanged();
             })
             .catch((error) => {
                 const message = error instanceof Error ? error.message : String(error);

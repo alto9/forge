@@ -25,6 +25,8 @@ function createMockClient(): TemporalRecoveryClient {
             closeTime: undefined,
         })),
         fetchHistory: vi.fn(async () => ({ events: [] })),
+        terminateWorkflow: vi.fn(async () => undefined),
+        executeWorkflowUpdate: vi.fn(async () => undefined),
         close: vi.fn(async () => undefined),
     };
 }

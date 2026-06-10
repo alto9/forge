@@ -249,3 +249,48 @@ export function formatWorkerStateTransitionLogLine(
         context.exitCode !== undefined ? ` exitCode=${context.exitCode}` : '';
     return `[forge.temporal.worker] state=${state} windowId=${context.windowId} taskQueue=${context.taskQueue} namespace=${context.namespace} mode=${context.mode} extensionVersion=${context.extensionVersion}${pidPart}${exitCodePart}`;
 }
+
+export function formatRecoveryBadgeLabel(
+    recoveryState: import('./workflowRunIndex').RecoveryState
+): string {
+    switch (recoveryState) {
+        case 'synced':
+            return 'Synced';
+        case 'recovery_pending':
+            return 'Recovering…';
+        case 'refresh_failed':
+            return 'Refresh failed';
+        case 'orphaned':
+            return 'Stale';
+        case 'unreachable':
+            return 'Waiting for Temporal…';
+    }
+}
+
+export function formatCancelConfirmMessage(workflowId: string, runId: string): string {
+    return `Cancel workflow run ${workflowId}/${runId}? This terminates execution in Temporal.`;
+}
+
+export function formatRunActionsBlockedMessage(): string {
+    return 'Run actions are unavailable until recovery finishes. See Forge Temporal output.';
+}
+
+export function formatHumanInputBlockedMessage(): string {
+    return 'Submit answers after the run finishes recovering.';
+}
+
+export function formatOrphanedRunMessage(): string {
+    return 'This run is no longer in Temporal. You can dismiss it from the run list.';
+}
+
+export function formatRefreshFailedRunMessage(
+    workflowId: string,
+    runId: string,
+    reason: string
+): string {
+    return `Could not refresh run ${workflowId}/${runId} — ${reason}. Try **Forge: Refresh workflow runs**.`;
+}
+
+export function formatNeedsInputBadgeLabel(): string {
+    return 'Needs input';
+}

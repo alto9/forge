@@ -20,11 +20,17 @@ import {
 } from './temporalHealthSurfaces';
 import { registerTemporalRecoveryCoordinator } from './temporalRecoveryCoordinator';
 import { formatPersistencePathForDisplay } from './temporalPresentation';
+import { isCombinedRecoveryReady } from './temporalHealthSurfaces';
+import {
+    createWorkflowRunRecoveryContext,
+    registerWorkflowRunRecoveryContext,
+} from './workflowRunRecoveryService';
 import type {
     ExternalTemporalSupervisorConfig,
     ManagedLocalSupervisorConfig,
     TemporalWorkerSupervisorConfig,
 } from './types';
+import { registerWorkflowRunRecoveryCommands } from '../commands/WorkflowRunRecoveryCommands';
 
 let localSupervisor: TemporalLocalSupervisor | undefined;
 let externalSupervisor: ExternalTemporalSupervisor | undefined;
@@ -115,6 +121,16 @@ export function registerTemporalLocalSupervisor(
         recoveryCoordinator.onReadinessChanged(snapshot);
     });
     context.subscriptions.push({ dispose: disposeRecoveryListener });
+
+    registerWorkflowRunRecoveryContext(
+        createWorkflowRunRecoveryContext(context, {
+            log: (line) => {
+                outputChannel.appendLine(line);
+            },
+            isReady: isCombinedRecoveryReady,
+        })
+    );
+    registerWorkflowRunRecoveryCommands(context);
 
     if (mode === 'external') {
         const externalConfig: ExternalTemporalSupervisorConfig = {

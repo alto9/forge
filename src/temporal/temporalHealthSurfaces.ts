@@ -71,6 +71,21 @@ function notifyRecoveryReadinessChanged(): void {
     });
 }
 
+export function getCombinedRecoveryReadinessSnapshot(): {
+    temporalReady: boolean;
+    workerReady: boolean;
+} {
+    return {
+        temporalReady: isTemporalReadyForRecovery(),
+        workerReady: workerState === 'ready',
+    };
+}
+
+export function isCombinedRecoveryReady(): boolean {
+    const snapshot = getCombinedRecoveryReadinessSnapshot();
+    return snapshot.temporalReady && snapshot.workerReady;
+}
+
 export function createTemporalOutputChannel(
     context: vscode.ExtensionContext
 ): vscode.OutputChannel {

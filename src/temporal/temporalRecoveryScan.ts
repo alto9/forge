@@ -38,6 +38,19 @@ export interface TemporalRecoveryClient {
         workflowId: string,
         runId: string
     ): Promise<unknown>;
+    terminateWorkflow(
+        namespace: string,
+        workflowId: string,
+        runId: string,
+        reason?: string
+    ): Promise<void>;
+    executeWorkflowUpdate(
+        namespace: string,
+        workflowId: string,
+        runId: string,
+        updateName: string,
+        payload: unknown
+    ): Promise<void>;
     close(): Promise<void>;
 }
 
@@ -162,6 +175,22 @@ export async function createTemporalRecoveryClient(
                     : new Client({ connection: connection!, namespace });
             const handle = scopedClient.workflow.getHandle(workflowId, runId);
             return handle.fetchHistory();
+        },
+        async terminateWorkflow(namespace, workflowId, runId, reason) {
+            const scopedClient =
+                namespace === options.namespace
+                    ? client
+                    : new Client({ connection: connection!, namespace });
+            const handle = scopedClient.workflow.getHandle(workflowId, runId);
+            await handle.terminate(reason);
+        },
+        async executeWorkflowUpdate(namespace, workflowId, runId, updateName, payload) {
+            const scopedClient =
+                namespace === options.namespace
+                    ? client
+                    : new Client({ connection: connection!, namespace });
+            const handle = scopedClient.workflow.getHandle(workflowId, runId);
+            await handle.executeUpdate(updateName, { args: [payload] });
         },
         async close() {
             await connection?.close().catch(() => undefined);
@@ -302,6 +331,75 @@ export function markNonTerminalIndexEntriesUnreachable(
     return updated;
 }
 
+function summarizeRefreshOutcomes(outcomes: TemporalRefreshOutcome[]): Record<RecoveryState, number> {
+    return outcomes.reduce(
+        (counts, outcome) => {
+            counts[outcome.recoveryState] += 1;
+            return counts;
+        },
+        {
+            synced: 0,
+            orphaned: 0,
+            refresh_failed: 0,
+            recovery_pending: 0,
+            unreachable: 0,
+        } as Record<RecoveryState, number>
+    );
+}
+
+function logRecoveryScanSummary(
+    windowId: string,
+    summary: Record<RecoveryState, number>,
+    log: (line: string) => void,
+    options?: { manualRefresh?: boolean }
+): void {
+    log(
+        formatSafeForLog(
+            `${RECOVERY_LOG_PREFIX} windowId=${windowId} message=Recovery scan complete synced=${summary.synced} orphaned=${summary.orphaned} refresh_failed=${summary.refresh_failed}`
+        )
+    );
+
+    if (options?.manualRefresh && summary.synced > 0) {
+        log(
+            formatSafeForLog(
+                `${RECOVERY_LOG_PREFIX} windowId=${windowId} message=Recovered ${summary.synced} workflow run(s).`
+            )
+        );
+    }
+}
+
+async function refreshIndexedEntries(
+    entries: WorkflowRunIndexEntry[],
+    options: TemporalRecoveryScanOptions
+): Promise<TemporalRefreshOutcome[]> {
+    if (entries.length === 0) {
+        return [];
+    }
+
+    const client = await (options.createClient?.() ??
+        Promise.reject(new Error('Temporal recovery client factory is not configured.')));
+
+    const outcomes: TemporalRefreshOutcome[] = [];
+    try {
+        for (const entry of entries) {
+            outcomes.push(
+                await refreshIndexedRunFromTemporal(entry, {
+                    indexStore: options.indexStore,
+                    globalStoragePath: options.globalStoragePath,
+                    windowId: options.windowId,
+                    client,
+                    log: options.log,
+                    now: options.now,
+                })
+            );
+        }
+    } finally {
+        await client.close();
+    }
+
+    return outcomes;
+}
+
 export async function runRecoveryScan(
     options: TemporalRecoveryScanOptions
 ): Promise<TemporalRefreshOutcome[]> {
@@ -319,46 +417,36 @@ export async function runRecoveryScan(
         return [];
     }
 
-    const client = await (options.createClient?.() ??
-        Promise.reject(new Error('Temporal recovery client factory is not configured.')));
+    const outcomes = await refreshIndexedEntries(nonTerminalEntries, options);
+    const summary = summarizeRefreshOutcomes(outcomes);
+    logRecoveryScanSummary(options.windowId, summary, options.log);
 
-    const outcomes: TemporalRefreshOutcome[] = [];
-    try {
-        for (const entry of nonTerminalEntries) {
-            outcomes.push(
-                await refreshIndexedRunFromTemporal(entry, {
-                    indexStore: options.indexStore,
-                    globalStoragePath: options.globalStoragePath,
-                    windowId: options.windowId,
-                    client,
-                    log: options.log,
-                    now: options.now,
-                })
-            );
-        }
-    } finally {
-        await client.close();
-    }
+    return outcomes;
+}
 
-    const summary = outcomes.reduce(
-        (counts, outcome) => {
-            counts[outcome.recoveryState] += 1;
-            return counts;
-        },
-        {
-            synced: 0,
-            orphaned: 0,
-            refresh_failed: 0,
-            recovery_pending: 0,
-            unreachable: 0,
-        } as Record<RecoveryState, number>
-    );
+export async function runManualRecoveryRefresh(
+    options: TemporalRecoveryScanOptions
+): Promise<TemporalRefreshOutcome[]> {
+    const entries = options.indexStore.listEntries();
 
     options.log(
         formatSafeForLog(
-            `${RECOVERY_LOG_PREFIX} windowId=${options.windowId} message=Recovery scan complete synced=${summary.synced} orphaned=${summary.orphaned} refresh_failed=${summary.refresh_failed}`
+            `${RECOVERY_LOG_PREFIX} windowId=${options.windowId} message=Manual refresh started count=${entries.length}`
         )
     );
+
+    if (entries.length === 0) {
+        options.log(
+            formatSafeForLog(
+                `${RECOVERY_LOG_PREFIX} windowId=${options.windowId} message=No indexed workflow runs to refresh.`
+            )
+        );
+        return [];
+    }
+
+    const outcomes = await refreshIndexedEntries(entries, options);
+    const summary = summarizeRefreshOutcomes(outcomes);
+    logRecoveryScanSummary(options.windowId, summary, options.log, { manualRefresh: true });
 
     return outcomes;
 }
