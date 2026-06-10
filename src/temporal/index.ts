@@ -95,14 +95,24 @@ export {
     formatWorkerStateTransitionLogLine,
     formatWorkerStatusBarSegment,
     formatWorkerUpgradeRestartLogLine,
+    formatRecoveryBadgeLabel,
+    formatCancelConfirmMessage,
+    formatRunActionsBlockedMessage,
+    formatHumanInputBlockedMessage,
+    formatOrphanedRunMessage,
+    formatRefreshFailedRunMessage,
+    formatNeedsInputBadgeLabel,
 } from './temporalPresentation';
 export {
     TEMPORAL_OUTPUT_CHANNEL_NAME,
     createTemporalOutputChannel,
+    getCombinedRecoveryReadinessSnapshot,
+    isCombinedRecoveryReady,
     notifyWorkflowBlockedByTemporal,
     notifyWorkflowBlockedByWorker,
     registerExternalTemporalHealthSurfaces,
     registerManagedLocalTemporalHealthSurfaces,
+    registerRecoveryReadinessListener,
     registerWorkerHealthSurfaces,
 } from './temporalHealthSurfaces';
 export {
@@ -118,6 +128,64 @@ export {
     registerTemporalLocalSupervisor,
     shutdownTemporalLocalSupervisor,
 } from './temporalWindowRegistry';
+export {
+    RUN_INDEX_MAX_COMPLETED_ENTRIES,
+    RUN_INDEX_RETENTION_DAYS,
+    RunIndexDuplicateKeyError,
+    WorkflowRunIndexStore,
+    buildRunIndexKey,
+    createRunIndexEntryKey,
+    purgeCompletedRunIndexEntries,
+    readWorkflowRunIndexFile,
+    resolveRunIndexPath,
+    writeWorkflowRunIndexFile,
+} from './workflowRunIndex';
+export type {
+    AppendWorkflowRunIndexEntryInput,
+    MarkWorkflowRunIndexTerminalInput,
+    RecoveryState,
+    WorkflowRunIndexEntry,
+    WorkflowRunIndexFile,
+} from './workflowRunIndex';
+export {
+    RECOVERY_LOG_PREFIX,
+    buildExternalRecoveryConnectionOptions,
+    classifyTemporalRefreshError,
+    createTemporalRecoveryClient,
+    formatRecoveryLogLine,
+    markNonTerminalIndexEntriesUnreachable,
+    refreshIndexedRunFromTemporal,
+    runManualRecoveryRefresh,
+    runRecoveryScan,
+} from './temporalRecoveryScan';
+export type {
+    TemporalRecoveryClient,
+    TemporalRecoveryConnectionOptions,
+    TemporalRecoveryScanOptions,
+    TemporalRefreshOutcome,
+} from './temporalRecoveryScan';
+export {
+    hasRecoveryScanCompletedThisSession,
+    registerTemporalRecoveryCoordinator,
+    resetRecoveryScanSessionForTests,
+} from './temporalRecoveryCoordinator';
+export type {
+    CombinedReadinessSnapshot,
+    TemporalRecoveryCoordinator,
+    TemporalRecoveryCoordinatorConfig,
+} from './temporalRecoveryCoordinator';
+export {
+    buildProjectionFromTemporalDescribe,
+    isTerminalTemporalStatus,
+    readWorkflowRunProjection,
+    resolveProjectionPath,
+    writeWorkflowRunProjection,
+} from './workflowRunProjection';
+export type {
+    WorkflowExecutionStatusName,
+    WorkflowRunProjection,
+    PendingHumanQuestion,
+} from './workflowRunProjection';
 export type {
     ChildProcessSpawnOptions,
     ChildProcessSpawner,

@@ -41,6 +41,50 @@ let externalState: ExternalTemporalHealthState = 'idle';
 let workerState: WorkerHealthState = 'idle';
 let workerReadyNotifiedThisSession = false;
 let statusBarMode: 'managedLocal' | 'external' = 'managedLocal';
+let recoveryReadinessListener:
+    | ((snapshot: { temporalReady: boolean; workerReady: boolean }) => void)
+    | undefined;
+
+export function registerRecoveryReadinessListener(
+    listener: (snapshot: { temporalReady: boolean; workerReady: boolean }) => void
+): () => void {
+    recoveryReadinessListener = listener;
+    notifyRecoveryReadinessChanged();
+    return () => {
+        if (recoveryReadinessListener === listener) {
+            recoveryReadinessListener = undefined;
+        }
+    };
+}
+
+function isTemporalReadyForRecovery(): boolean {
+    if (statusBarMode === 'managedLocal') {
+        return managedLocalState === 'ready';
+    }
+    return externalState === 'ready';
+}
+
+function notifyRecoveryReadinessChanged(): void {
+    recoveryReadinessListener?.({
+        temporalReady: isTemporalReadyForRecovery(),
+        workerReady: workerState === 'ready',
+    });
+}
+
+export function getCombinedRecoveryReadinessSnapshot(): {
+    temporalReady: boolean;
+    workerReady: boolean;
+} {
+    return {
+        temporalReady: isTemporalReadyForRecovery(),
+        workerReady: workerState === 'ready',
+    };
+}
+
+export function isCombinedRecoveryReady(): boolean {
+    const snapshot = getCombinedRecoveryReadinessSnapshot();
+    return snapshot.temporalReady && snapshot.workerReady;
+}
 
 export function createTemporalOutputChannel(
     context: vscode.ExtensionContext
@@ -77,6 +121,7 @@ export function registerManagedLocalTemporalHealthSurfaces(
         updateStatusBar();
         logManagedLocalStateTransition(state, supervisor, outputChannel);
         notifyManagedLocalForState(state, supervisor);
+        notifyRecoveryReadinessChanged();
     };
 
     applyState(supervisor.getHealthState());
@@ -100,6 +145,7 @@ export function registerWorkerHealthSurfaces(
         updateStatusBar();
         logWorkerStateTransition(state, supervisor, outputChannel);
         notifyWorkerForState(state, supervisor);
+        notifyRecoveryReadinessChanged();
     };
 
     applyState(supervisor.getHealthState());
@@ -244,6 +290,7 @@ export function registerExternalTemporalHealthSurfaces(
     const applyState = (state: ExternalTemporalHealthState) => {
         externalState = state;
         updateStatusBar();
+        notifyRecoveryReadinessChanged();
 
         const settings = resolveSettings();
         const address = settings.address ?? 'unknown';

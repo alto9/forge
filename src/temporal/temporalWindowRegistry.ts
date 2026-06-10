@@ -15,14 +15,23 @@ import {
     createTemporalOutputChannel,
     registerExternalTemporalHealthSurfaces,
     registerManagedLocalTemporalHealthSurfaces,
+    registerRecoveryReadinessListener,
     registerWorkerHealthSurfaces,
 } from './temporalHealthSurfaces';
+import { registerTemporalRecoveryCoordinator } from './temporalRecoveryCoordinator';
 import { formatPersistencePathForDisplay } from './temporalPresentation';
+import { isCombinedRecoveryReady } from './temporalHealthSurfaces';
+import { WorkflowRunIndexStore } from './workflowRunIndex';
+import {
+    createWorkflowRunRecoveryContext,
+    registerWorkflowRunRecoveryContext,
+} from './workflowRunRecoveryService';
 import type {
     ExternalTemporalSupervisorConfig,
     ManagedLocalSupervisorConfig,
     TemporalWorkerSupervisorConfig,
 } from './types';
+import { registerWorkflowRunRecoveryCommands } from '../commands/WorkflowRunRecoveryCommands';
 
 let localSupervisor: TemporalLocalSupervisor | undefined;
 let externalSupervisor: ExternalTemporalSupervisor | undefined;
@@ -100,6 +109,34 @@ export function registerTemporalLocalSupervisor(
     const windowId = vscode.env.sessionId;
     const outputChannel = createTemporalOutputChannel(context);
     const mode = resolveTemporalMode();
+
+    const globalStoragePath = context.globalStorageUri.fsPath;
+    const workflowRunIndexStore = new WorkflowRunIndexStore(globalStoragePath, windowId);
+
+    const recoveryCoordinator = registerTemporalRecoveryCoordinator(context, {
+        windowId,
+        globalStoragePath,
+        indexStore: workflowRunIndexStore,
+        log: (line) => {
+            outputChannel.appendLine(line);
+        },
+    });
+
+    const disposeRecoveryListener = registerRecoveryReadinessListener((snapshot) => {
+        recoveryCoordinator.onReadinessChanged(snapshot);
+    });
+    context.subscriptions.push({ dispose: disposeRecoveryListener });
+
+    registerWorkflowRunRecoveryContext(
+        createWorkflowRunRecoveryContext(context, {
+            log: (line) => {
+                outputChannel.appendLine(line);
+            },
+            isReady: isCombinedRecoveryReady,
+            indexStore: workflowRunIndexStore,
+        })
+    );
+    registerWorkflowRunRecoveryCommands(context);
 
     if (mode === 'external') {
         const externalConfig: ExternalTemporalSupervisorConfig = {

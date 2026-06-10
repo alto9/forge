@@ -176,4 +176,29 @@ describe('temporalPresentation', () => {
             );
         });
     });
+
+    describe('run recovery presentation copy', () => {
+        it('maps recovery states to run list badge labels and action copy', async () => {
+            const {
+                formatRecoveryBadgeLabel,
+                formatCancelConfirmMessage,
+                formatRunActionsBlockedMessage,
+                formatHumanInputBlockedMessage,
+                formatOrphanedRunMessage,
+                formatNeedsInputBadgeLabel,
+            } = await import('./temporalPresentation');
+
+            expect(formatRecoveryBadgeLabel('recovery_pending')).toBe('Recovering…');
+            expect(formatRecoveryBadgeLabel('refresh_failed')).toBe('Refresh failed');
+            expect(formatRecoveryBadgeLabel('orphaned')).toBe('Stale');
+            expect(formatRecoveryBadgeLabel('unreachable')).toBe('Waiting for Temporal…');
+            expect(formatCancelConfirmMessage('wf-1', 'run-1')).toContain('wf-1/run-1');
+            expect(formatRunActionsBlockedMessage()).toContain('Run actions are unavailable');
+            expect(formatHumanInputBlockedMessage()).toContain(
+                'Submit answers after the run finishes recovering'
+            );
+            expect(formatOrphanedRunMessage()).toContain('dismiss it from the run list');
+            expect(formatNeedsInputBadgeLabel()).toBe('Needs input');
+        });
+    });
 });

@@ -106,8 +106,64 @@
       {
         "command": "forge.clearTemporalApiKey",
         "title": "Forge: Clear Temporal API Key"
+      },
+      {
+        "command": "forge.refreshWorkflowRuns",
+        "title": "Forge: Refresh workflow runs"
+      },
+      {
+        "command": "forge.openWorkflowRunList",
+        "title": "Forge: Open Workflow Run List"
+      },
+      {
+        "command": "forge.cancelWorkflowRun",
+        "title": "Forge: Cancel Workflow Run"
+      },
+      {
+        "command": "forge.dismissOrphanedWorkflowRun",
+        "title": "Forge: Dismiss Orphaned Workflow Run"
+      },
+      {
+        "command": "forge.openQuestionPanel",
+        "title": "Forge: Open Question Panel"
       }
     ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "forge",
+          "title": "Forge",
+          "icon": "resources/icons/forge-logo.png"
+        }
+      ]
+    },
+    "views": {
+      "forge": [
+        {
+          "id": "forge.workflowRunList",
+          "name": "Workflow Runs"
+        }
+      ]
+    },
+    "menus": {
+      "view/item/context": [
+        {
+          "command": "forge.cancelWorkflowRun",
+          "when": "view == forge.workflowRunList && viewItem == syncedActive",
+          "group": "runActions@1"
+        },
+        {
+          "command": "forge.openQuestionPanel",
+          "when": "view == forge.workflowRunList && viewItem == needsInput",
+          "group": "runActions@2"
+        },
+        {
+          "command": "forge.dismissOrphanedWorkflowRun",
+          "when": "view == forge.workflowRunList && viewItem == orphaned",
+          "group": "runActions@3"
+        }
+      ]
+    },
     "configuration": {
       "title": "Forge",
       "properties": {
