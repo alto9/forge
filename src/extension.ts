@@ -3,6 +3,7 @@ import { InitializeAgentsCommand } from './commands/InitializeAgentsCommand';
 import { InitializeProjectCommand } from './commands/InitializeProjectCommand';
 import { RoadmapCommand } from './commands/RoadmapCommand';
 import { WorkflowCatalogCommand } from './commands/WorkflowCatalogCommand';
+import { WorkflowGraphCommand } from './commands/WorkflowGraphCommand';
 import {
     ClearTemporalApiKeyCommand,
     SetTemporalApiKeyCommand,
@@ -213,6 +214,22 @@ export function activate(context: vscode.ExtensionContext) {
         }
     );
     context.subscriptions.push(selectWorkflowRepositoryFolderCommand);
+
+    const openWorkflowGraphCommand = vscode.commands.registerCommand(
+        'forge.openWorkflowGraph',
+        async () => {
+            await WorkflowGraphCommand.openGraph(context);
+        }
+    );
+    context.subscriptions.push(openWorkflowGraphCommand);
+
+    const refreshWorkflowGraphCommand = vscode.commands.registerCommand(
+        'forge.refreshWorkflowGraph',
+        async () => {
+            await WorkflowGraphCommand.refreshGraph(context);
+        }
+    );
+    context.subscriptions.push(refreshWorkflowGraphCommand);
 
     registerProjectSyncPrompt(context, outputChannel);
 

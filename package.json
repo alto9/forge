@@ -138,6 +138,18 @@
       {
         "command": "forge.selectWorkflowRepositoryFolder",
         "title": "Forge: Select Workflow Repository Folder"
+      },
+      {
+        "command": "forge.openWorkflowGraph",
+        "title": "Forge: Open Workflow Graph"
+      },
+      {
+        "command": "forge.refreshWorkflowGraph",
+        "title": "Forge: Refresh Workflow Graph"
+      },
+      {
+        "command": "forge.viewWorkflowRunGraph",
+        "title": "View graph"
       }
     ],
     "viewsContainers": {
@@ -173,6 +185,11 @@
           "command": "forge.dismissOrphanedWorkflowRun",
           "when": "view == forge.workflowRunList && viewItem == orphaned",
           "group": "runActions@3"
+        },
+        {
+          "command": "forge.viewWorkflowRunGraph",
+          "when": "view == forge.workflowRunList",
+          "group": "runActions@4"
         }
       ]
     },
@@ -277,7 +294,7 @@
     "build": "webpack && npm run build:webview",
     "watch": "concurrently \"webpack --watch\" \"npm run dev:webview\"",
     "package": "npx @vscode/vsce package --no-dependencies",
-    "build:webview": "esbuild src/webview/roadmap/index.tsx --bundle --outfile=media/roadmap/main.js --platform=browser --format=iife --target=es2020 --minify && esbuild src/webview/workflows/index.tsx --bundle --outfile=media/workflows/main.js --platform=browser --format=iife --target=es2020 --minify",
+    "build:webview": "esbuild src/webview/roadmap/index.tsx --bundle --outfile=media/roadmap/main.js --platform=browser --format=iife --target=es2020 --minify && esbuild src/webview/workflows/index.tsx --bundle --outfile=media/workflows/main.js --platform=browser --format=iife --target=es2020 --minify && esbuild src/webview/workflows/graph/index.tsx --bundle --outfile=media/workflows/graph/main.js --platform=browser --format=iife --target=es2020 --minify",
     "dev:webview": "esbuild src/webview/roadmap/index.tsx --bundle --outfile=media/roadmap/main.js --platform=browser --format=iife --target=es2020 --watch",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
@@ -336,6 +353,7 @@
     "@octokit/rest": "^22.0.1",
     "@temporalio/client": "^1.17.2",
     "@temporalio/worker": "^1.17.2",
+    "@xyflow/react": "^12.11.0",
     "ajv": "^8.20.0",
     "gray-matter": "^4.0.3",
     "react": "^18.3.1",
