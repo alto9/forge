@@ -1,3 +1,8 @@
+## 3.32.0 (2026-06-10)
+
+* Merge pull request #70 from alto9/feature/issue-25 ([08942c8](https://github.com/alto9/forge/commit/08942c8)), closes [#70](https://github.com/alto9/forge/issues/70) [#25](https://github.com/alto9/forge/issues/25)
+* feat(catalog): add workflow discovery catalog UI for #25 ([f0e3537](https://github.com/alto9/forge/commit/f0e3537)), closes [#25](https://github.com/alto9/forge/issues/25) [#25](https://github.com/alto9/forge/issues/25) [#57](https://github.com/alto9/forge/issues/57) [#58](https://github.com/alto9/forge/issues/58)
+
 ## <small>3.31.1 (2026-06-10)</small>
 
 * docs(ai): refine issue #28 contract updates ([5ac05c0](https://github.com/alto9/forge/commit/5ac05c0)), closes [#28](https://github.com/alto9/forge/issues/28)
