@@ -118,6 +118,25 @@ export {
     registerTemporalLocalSupervisor,
     shutdownTemporalLocalSupervisor,
 } from './temporalWindowRegistry';
+export {
+    RUN_INDEX_MAX_COMPLETED_ENTRIES,
+    RUN_INDEX_RETENTION_DAYS,
+    RunIndexDuplicateKeyError,
+    WorkflowRunIndexStore,
+    buildRunIndexKey,
+    createRunIndexEntryKey,
+    purgeCompletedRunIndexEntries,
+    readWorkflowRunIndexFile,
+    resolveRunIndexPath,
+    writeWorkflowRunIndexFile,
+} from './workflowRunIndex';
+export type {
+    AppendWorkflowRunIndexEntryInput,
+    MarkWorkflowRunIndexTerminalInput,
+    RecoveryState,
+    WorkflowRunIndexEntry,
+    WorkflowRunIndexFile,
+} from './workflowRunIndex';
 export type {
     ChildProcessSpawnOptions,
     ChildProcessSpawner,
