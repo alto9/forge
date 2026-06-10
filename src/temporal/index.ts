@@ -137,6 +137,43 @@ export type {
     WorkflowRunIndexEntry,
     WorkflowRunIndexFile,
 } from './workflowRunIndex';
+export {
+    RECOVERY_LOG_PREFIX,
+    buildExternalRecoveryConnectionOptions,
+    classifyTemporalRefreshError,
+    createTemporalRecoveryClient,
+    formatRecoveryLogLine,
+    markNonTerminalIndexEntriesUnreachable,
+    refreshIndexedRunFromTemporal,
+    runRecoveryScan,
+} from './temporalRecoveryScan';
+export type {
+    TemporalRecoveryClient,
+    TemporalRecoveryConnectionOptions,
+    TemporalRecoveryScanOptions,
+    TemporalRefreshOutcome,
+} from './temporalRecoveryScan';
+export {
+    hasRecoveryScanCompletedThisSession,
+    registerTemporalRecoveryCoordinator,
+    resetRecoveryScanSessionForTests,
+} from './temporalRecoveryCoordinator';
+export type {
+    CombinedReadinessSnapshot,
+    TemporalRecoveryCoordinator,
+    TemporalRecoveryCoordinatorConfig,
+} from './temporalRecoveryCoordinator';
+export {
+    buildProjectionFromTemporalDescribe,
+    isTerminalTemporalStatus,
+    readWorkflowRunProjection,
+    resolveProjectionPath,
+    writeWorkflowRunProjection,
+} from './workflowRunProjection';
+export type {
+    WorkflowExecutionStatusName,
+    WorkflowRunProjection,
+} from './workflowRunProjection';
 export type {
     ChildProcessSpawnOptions,
     ChildProcessSpawner,

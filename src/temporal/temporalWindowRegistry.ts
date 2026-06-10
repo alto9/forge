@@ -15,8 +15,10 @@ import {
     createTemporalOutputChannel,
     registerExternalTemporalHealthSurfaces,
     registerManagedLocalTemporalHealthSurfaces,
+    registerRecoveryReadinessListener,
     registerWorkerHealthSurfaces,
 } from './temporalHealthSurfaces';
+import { registerTemporalRecoveryCoordinator } from './temporalRecoveryCoordinator';
 import { formatPersistencePathForDisplay } from './temporalPresentation';
 import type {
     ExternalTemporalSupervisorConfig,
@@ -100,6 +102,19 @@ export function registerTemporalLocalSupervisor(
     const windowId = vscode.env.sessionId;
     const outputChannel = createTemporalOutputChannel(context);
     const mode = resolveTemporalMode();
+
+    const recoveryCoordinator = registerTemporalRecoveryCoordinator(context, {
+        windowId,
+        globalStoragePath: context.globalStorageUri.fsPath,
+        log: (line) => {
+            outputChannel.appendLine(line);
+        },
+    });
+
+    const disposeRecoveryListener = registerRecoveryReadinessListener((snapshot) => {
+        recoveryCoordinator.onReadinessChanged(snapshot);
+    });
+    context.subscriptions.push({ dispose: disposeRecoveryListener });
 
     if (mode === 'external') {
         const externalConfig: ExternalTemporalSupervisorConfig = {
