@@ -23,6 +23,12 @@ export interface PendingHumanQuestion {
     node_name: string;
 }
 
+export interface WorkflowRunRetryState {
+    node_id: string;
+    attempt: number;
+    max: number;
+}
+
 export interface WorkflowRunProjection {
     namespace: string;
     workflowId: string;
@@ -40,7 +46,9 @@ export interface WorkflowRunProjection {
     cancelled: boolean;
     activeNodeId?: string;
     failedNodeId?: string;
+    waitingNodeId?: string;
     validatingNodeId?: string;
+    retrying?: WorkflowRunRetryState;
     validationSummaries: ValidationSummary[];
     pendingHumanQuestions: PendingHumanQuestion[];
 }

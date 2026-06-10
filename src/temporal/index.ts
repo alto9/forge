@@ -192,6 +192,7 @@ export {
 export type {
     WorkflowExecutionStatusName,
     WorkflowRunProjection,
+    WorkflowRunRetryState,
     PendingHumanQuestion,
 } from './workflowRunProjection';
 export type {
