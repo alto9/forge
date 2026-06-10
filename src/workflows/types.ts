@@ -35,3 +35,32 @@ export interface WorkflowDiscoveryResult {
     entries: WorkflowDefinitionIndexEntry[];
     diagnostics: WorkflowDiagnostic[];
 }
+
+export interface WorkflowCatalogValidation {
+    valid: boolean;
+    diagnostics: WorkflowDiagnostic[];
+    errorCount: number;
+    warningCount: number;
+}
+
+/** Discovery catalog row per `.ai/data/serialization.md` **Workflow catalog entry**. */
+export interface WorkflowCatalogEntry {
+    workflow_id: string;
+    name: string;
+    version?: string;
+    description?: string;
+    schema_version?: string;
+    path: string;
+    repositoryRoot: string;
+    validation: WorkflowCatalogValidation;
+}
+
+export type WorkflowCatalogEmptyState =
+    | 'no_workflows_dir'
+    | 'no_json_files';
+
+export interface WorkflowCatalogResult {
+    repositoryRoot: string;
+    entries: WorkflowCatalogEntry[];
+    emptyState?: WorkflowCatalogEmptyState;
+}

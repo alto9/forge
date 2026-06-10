@@ -18,6 +18,7 @@ export {
     discoverWorkflowDefinitions,
     WORKFLOW_DUPLICATE_ID_VALIDATOR_ID,
 } from './discoverWorkflowDefinitions';
+export { buildWorkflowCatalog, sortWorkflowCatalogEntries } from './buildWorkflowCatalog';
 export {
     PRE_RUN_VALIDATOR_IDS,
     RUNTIME_ONLY_VALIDATOR_IDS,
@@ -27,6 +28,10 @@ export type { PreRunValidatorId } from './preRunValidatorScope';
 export type {
     Diagnostic,
     ValidationResult,
+    WorkflowCatalogEntry,
+    WorkflowCatalogEmptyState,
+    WorkflowCatalogResult,
+    WorkflowCatalogValidation,
     WorkflowDefinitionIndexEntry,
     WorkflowDiagnostic,
     WorkflowDiscoveryResult,

@@ -126,6 +126,18 @@
       {
         "command": "forge.openQuestionPanel",
         "title": "Forge: Open Question Panel"
+      },
+      {
+        "command": "forge.openWorkflowCatalog",
+        "title": "Forge: Open Workflow Catalog"
+      },
+      {
+        "command": "forge.refreshWorkflowCatalog",
+        "title": "Forge: Refresh Workflow Catalog"
+      },
+      {
+        "command": "forge.selectWorkflowRepositoryFolder",
+        "title": "Forge: Select Workflow Repository Folder"
       }
     ],
     "viewsContainers": {
@@ -265,7 +277,7 @@
     "build": "webpack && npm run build:webview",
     "watch": "concurrently \"webpack --watch\" \"npm run dev:webview\"",
     "package": "npx @vscode/vsce package --no-dependencies",
-    "build:webview": "esbuild src/webview/roadmap/index.tsx --bundle --outfile=media/roadmap/main.js --platform=browser --format=iife --target=es2020 --minify",
+    "build:webview": "esbuild src/webview/roadmap/index.tsx --bundle --outfile=media/roadmap/main.js --platform=browser --format=iife --target=es2020 --minify && esbuild src/webview/workflows/index.tsx --bundle --outfile=media/workflows/main.js --platform=browser --format=iife --target=es2020 --minify",
     "dev:webview": "esbuild src/webview/roadmap/index.tsx --bundle --outfile=media/roadmap/main.js --platform=browser --format=iife --target=es2020 --watch",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",

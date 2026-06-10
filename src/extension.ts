@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { InitializeAgentsCommand } from './commands/InitializeAgentsCommand';
 import { InitializeProjectCommand } from './commands/InitializeProjectCommand';
 import { RoadmapCommand } from './commands/RoadmapCommand';
+import { WorkflowCatalogCommand } from './commands/WorkflowCatalogCommand';
 import {
     ClearTemporalApiKeyCommand,
     SetTemporalApiKeyCommand,
@@ -188,6 +189,30 @@ export function activate(context: vscode.ExtensionContext) {
         await RoadmapCommand.execute(context);
     });
     context.subscriptions.push(roadmapCommand);
+
+    const openWorkflowCatalogCommand = vscode.commands.registerCommand(
+        'forge.openWorkflowCatalog',
+        async () => {
+            await WorkflowCatalogCommand.openCatalog(context);
+        }
+    );
+    context.subscriptions.push(openWorkflowCatalogCommand);
+
+    const refreshWorkflowCatalogCommand = vscode.commands.registerCommand(
+        'forge.refreshWorkflowCatalog',
+        async () => {
+            await WorkflowCatalogCommand.refreshCatalog(context);
+        }
+    );
+    context.subscriptions.push(refreshWorkflowCatalogCommand);
+
+    const selectWorkflowRepositoryFolderCommand = vscode.commands.registerCommand(
+        'forge.selectWorkflowRepositoryFolder',
+        async () => {
+            await WorkflowCatalogCommand.selectRepositoryFolder(context);
+        }
+    );
+    context.subscriptions.push(selectWorkflowRepositoryFolderCommand);
 
     registerProjectSyncPrompt(context, outputChannel);
 
