@@ -19,6 +19,13 @@ export {
     WORKFLOW_DUPLICATE_ID_VALIDATOR_ID,
 } from './discoverWorkflowDefinitions';
 export { buildWorkflowCatalog, sortWorkflowCatalogEntries } from './buildWorkflowCatalog';
+export { loadWorkflowDefinition } from './loadWorkflowDefinition';
+export {
+    applyPendingHumanQuestionsToProjection,
+    parseNumberedUserQuestions,
+    readAnsweredFieldIds,
+    resolvePendingHumanQuestions,
+} from './resolvePendingHumanQuestions';
 export {
     buildDefinitionGraph,
     buildWorkflowGraphModel,

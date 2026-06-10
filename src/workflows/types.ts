@@ -98,12 +98,21 @@ export interface WorkflowDefinitionTransition {
     condition?: string;
 }
 
+export interface WorkflowDefinitionArtifact {
+    artifact_id: string;
+    path: string;
+    description?: string;
+}
+
 export interface WorkflowDefinitionNode {
     node_id: string;
     type: WorkflowNodeType;
     name: string;
     description?: string;
     question_id?: string;
+    input_mode?: 'single_text' | 'markdown_batch' | 'form_fields';
+    resume_update?: string;
+    artifact_ids?: string[];
     transitions?: WorkflowDefinitionTransition[];
 }
 
@@ -115,6 +124,7 @@ export interface WorkflowDefinition {
     version: string;
     description?: string;
     entry_node_id: string;
+    artifacts?: WorkflowDefinitionArtifact[];
     nodes: WorkflowDefinitionNode[];
 }
 
