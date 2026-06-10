@@ -275,6 +275,45 @@ export function resolvePendingHumanQuestions(
     ];
 }
 
+export function countUnansweredMarkdownQuestions(
+    repositoryRoot: string,
+    definition: WorkflowDefinition,
+    node: WorkflowDefinitionNode
+): number {
+    const promptArtifactId = resolvePromptArtifactId(node);
+    if (!promptArtifactId) {
+        return 0;
+    }
+
+    const artifactPath = resolveArtifactFilePath(
+        repositoryRoot,
+        definition.artifacts,
+        promptArtifactId
+    );
+    if (!artifactPath) {
+        return 0;
+    }
+
+    const absolutePath = path.join(repositoryRoot, artifactPath);
+    if (!fs.existsSync(absolutePath)) {
+        return 0;
+    }
+
+    const markdown = fs.readFileSync(absolutePath, 'utf8');
+    const refinementPath = resolveArtifactFilePath(repositoryRoot, definition.artifacts, 'refinement');
+    const answered = refinementPath
+        ? readAnsweredFieldIds(
+              fs.existsSync(path.join(repositoryRoot, refinementPath))
+                  ? fs.readFileSync(path.join(repositoryRoot, refinementPath), 'utf8')
+                  : ''
+          )
+        : new Set<string>();
+
+    return parseNumberedUserQuestions(markdown).filter(
+        (question) => !answered.has(question.field_id.toLowerCase())
+    ).length;
+}
+
 export function applyPendingHumanQuestionsToProjection(
     definition: WorkflowDefinition,
     projection: WorkflowRunProjection,
