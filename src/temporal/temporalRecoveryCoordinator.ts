@@ -22,6 +22,7 @@ export interface TemporalRecoveryCoordinatorConfig {
     windowId: string;
     globalStoragePath: string;
     log: (line: string) => void;
+    indexStore?: WorkflowRunIndexStore;
     resolveMode?: () => ReturnType<typeof resolveTemporalMode>;
     createRecoveryClient?: () => Promise<TemporalRecoveryClient>;
 }
@@ -77,7 +78,8 @@ export function registerTemporalRecoveryCoordinator(
     _context: vscode.ExtensionContext,
     config: TemporalRecoveryCoordinatorConfig
 ): TemporalRecoveryCoordinator {
-    const indexStore = new WorkflowRunIndexStore(config.globalStoragePath, config.windowId);
+    const indexStore =
+        config.indexStore ?? new WorkflowRunIndexStore(config.globalStoragePath, config.windowId);
     const createClient = config.createRecoveryClient ?? (() => defaultCreateRecoveryClient(config));
 
     const onReadinessChanged = (snapshot: CombinedReadinessSnapshot): void => {

@@ -77,11 +77,13 @@ export function createWorkflowRunRecoveryContext(
     input: {
         log: (line: string) => void;
         isReady: () => boolean;
+        indexStore?: WorkflowRunIndexStore;
     }
 ): WorkflowRunRecoveryContext {
     const windowId = vscode.env.sessionId;
     const globalStoragePath = extensionContext.globalStorageUri.fsPath;
-    const indexStore = new WorkflowRunIndexStore(globalStoragePath, windowId);
+    const indexStore =
+        input.indexStore ?? new WorkflowRunIndexStore(globalStoragePath, windowId);
 
     return {
         windowId,

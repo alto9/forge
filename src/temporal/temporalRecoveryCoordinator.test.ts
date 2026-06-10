@@ -9,6 +9,10 @@ import {
 } from './temporalRecoveryCoordinator';
 import type { TemporalRecoveryClient } from './temporalRecoveryScan';
 import { WorkflowRunIndexStore } from './workflowRunIndex';
+import {
+    getWorkflowRunRecoveryContext,
+    registerWorkflowRunRecoveryContext,
+} from './workflowRunRecoveryService';
 
 const tempDirs: string[] = [];
 
@@ -86,5 +90,58 @@ describe('temporalRecoveryCoordinator', () => {
         coordinator.onReadinessChanged({ temporalReady: true, workerReady: true });
         await new Promise((resolve) => setTimeout(resolve, 20));
         expect(createRecoveryClient).toHaveBeenCalledOnce();
+    });
+
+    it('updates the shared recovery context index store after automatic scan', async () => {
+        const { globalStoragePath, windowId } = createTempGlobalStorage();
+        const sharedIndexStore = new WorkflowRunIndexStore(globalStoragePath, windowId);
+        sharedIndexStore.appendRunStartEntry({
+            namespace: 'forge-local',
+            workflowId: 'wf-shared',
+            runId: 'run-shared',
+            taskQueue: 'forge-workflows',
+            workflow_id: 'refine-issue',
+            repositoryRoot: '/repo',
+            mode: 'managedLocal',
+        });
+
+        registerWorkflowRunRecoveryContext({
+            windowId,
+            globalStoragePath,
+            log: () => undefined,
+            indexStore: sharedIndexStore,
+            isReady: () => true,
+            createRecoveryClient: async () => createMockClient(),
+        });
+
+        const coordinator = registerTemporalRecoveryCoordinator(
+            {
+                subscriptions: [],
+            } as import('vscode').ExtensionContext,
+            {
+                windowId,
+                globalStoragePath,
+                indexStore: sharedIndexStore,
+                log: () => undefined,
+                createRecoveryClient: async () => createMockClient(),
+            }
+        );
+
+        coordinator.onReadinessChanged({ temporalReady: false, workerReady: false });
+        expect(
+            getWorkflowRunRecoveryContext()?.indexStore.getEntry('forge-local:wf-shared:run-shared')
+                ?.recoveryState
+        ).toBe('unreachable');
+
+        coordinator.onReadinessChanged({ temporalReady: true, workerReady: true });
+        await vi.waitFor(() => {
+            expect(
+                getWorkflowRunRecoveryContext()?.indexStore.getEntry(
+                    'forge-local:wf-shared:run-shared'
+                )?.recoveryState
+            ).toBe('synced');
+        });
+
+        expect(getWorkflowRunRecoveryContext()?.indexStore).toBe(sharedIndexStore);
     });
 });

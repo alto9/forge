@@ -21,6 +21,7 @@ import {
 import { registerTemporalRecoveryCoordinator } from './temporalRecoveryCoordinator';
 import { formatPersistencePathForDisplay } from './temporalPresentation';
 import { isCombinedRecoveryReady } from './temporalHealthSurfaces';
+import { WorkflowRunIndexStore } from './workflowRunIndex';
 import {
     createWorkflowRunRecoveryContext,
     registerWorkflowRunRecoveryContext,
@@ -109,9 +110,13 @@ export function registerTemporalLocalSupervisor(
     const outputChannel = createTemporalOutputChannel(context);
     const mode = resolveTemporalMode();
 
+    const globalStoragePath = context.globalStorageUri.fsPath;
+    const workflowRunIndexStore = new WorkflowRunIndexStore(globalStoragePath, windowId);
+
     const recoveryCoordinator = registerTemporalRecoveryCoordinator(context, {
         windowId,
-        globalStoragePath: context.globalStorageUri.fsPath,
+        globalStoragePath,
+        indexStore: workflowRunIndexStore,
         log: (line) => {
             outputChannel.appendLine(line);
         },
@@ -128,6 +133,7 @@ export function registerTemporalLocalSupervisor(
                 outputChannel.appendLine(line);
             },
             isReady: isCombinedRecoveryReady,
+            indexStore: workflowRunIndexStore,
         })
     );
     registerWorkflowRunRecoveryCommands(context);
