@@ -1,3 +1,9 @@
+## 3.30.0 (2026-06-10)
+
+* Merge pull request #66 from alto9/feature/issue-23 ([31a66fa](https://github.com/alto9/forge/commit/31a66fa)), closes [#66](https://github.com/alto9/forge/issues/66) [#23](https://github.com/alto9/forge/issues/23)
+* feat(worker): add activity envelope types and schema validation ([ef70021](https://github.com/alto9/forge/commit/ef70021))
+* feat(worker): map SDK outcomes to full activity response envelopes ([021defc](https://github.com/alto9/forge/commit/021defc))
+
 ## 3.29.0 (2026-06-10)
 
 * Merge pull request #65 from alto9/feature/issue-22 ([a05794a](https://github.com/alto9/forge/commit/a05794a)), closes [#65](https://github.com/alto9/forge/issues/65) [#22](https://github.com/alto9/forge/issues/22)
