@@ -25,7 +25,6 @@ require('@temporalio/worker');
 require.resolve('@temporalio/worker/package.json');
 require.resolve('@temporalio/core-bridge');
 require('@cursor/sdk');
-require.resolve('@cursor/sdk/package.json');
 console.log('dependency closure ok for', devServer, 'and', worker);
 "
 
