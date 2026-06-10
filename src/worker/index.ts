@@ -50,3 +50,18 @@ export {
     ENVELOPE_UNSUPPORTED_VERSION_CODE,
     ENVELOPE_SIZE_EXCEEDED_CODE,
 } from './validateActivityEnvelope';
+export {
+    assembleRuntimeValidationResult,
+    executeRegisteredValidator,
+    getValidatorExecutor,
+    isRuntimeCatalogValidatorId,
+    RUNTIME_CATALOG_VALIDATOR_IDS,
+    validateRuntimeValidationResultSchema,
+} from '../validation';
+export type {
+    RuntimeValidationDiagnostic,
+    RuntimeValidationResult,
+    RuntimeValidatorOutcome,
+    ValidatorExecutorContext,
+    WorkflowArtifactDefinition,
+} from '../validation';
