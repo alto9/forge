@@ -3,7 +3,27 @@ import path from 'path';
 import type { WorkflowExecutionDescription } from '@temporalio/client';
 import type { TemporalMode } from './temporalSettings';
 import type { RecoveryState, WorkflowRunIndexEntry } from './workflowRunIndex';
+import type {
+    ActivityArtifactRef,
+    ActivityDiagnostic,
+    ActivityFailureClass,
+    ActivityOutputType,
+    ActivityStatus,
+} from '../worker/activityEnvelope';
 import type { ValidationSummary } from './validationSummaryProjection';
+
+export interface ActivityEnvelopeSummary {
+    node_id: string;
+    activity_id: string;
+    cursor_agent_id: string;
+    cursor_run_id: string;
+    status: ActivityStatus;
+    failure_class?: ActivityFailureClass;
+    retryable: boolean;
+    output_type: ActivityOutputType;
+    diagnostics?: ActivityDiagnostic[];
+    artifact_refs?: ActivityArtifactRef[];
+}
 
 export type WorkflowExecutionStatusName =
     | 'UNSPECIFIED'
@@ -74,6 +94,7 @@ export interface WorkflowRunProjection {
     waitingNodeId?: string;
     validatingNodeId?: string;
     retrying?: WorkflowRunRetryState;
+    activitySummaries?: ActivityEnvelopeSummary[];
     validationSummaries: ValidationSummary[];
     pendingHumanQuestions: PendingHumanQuestion[];
 }

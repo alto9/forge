@@ -1,4 +1,5 @@
 import * as vscode from 'vscode';
+import type { RunInspectorDetail, RunInspectorRecoveryActionId } from '../../workflows/types';
 import type { WorkflowGraphWebviewModel } from './graphPresentation';
 
 const POLL_INTERVAL_MS = 2000;
@@ -12,9 +13,23 @@ function getNonce(): string {
     return text;
 }
 
+export type WorkflowGraphWebviewMessage =
+    | { type: 'ready' }
+    | { type: 'select_node'; nodeId: string }
+    | {
+          type: 'recovery_action';
+          actionId: RunInspectorRecoveryActionId;
+          nodeId: string | null;
+      };
+
 export type WorkflowGraphPanelSession = {
     refreshModel: (options?: { fromTemporal?: boolean }) => Promise<WorkflowGraphWebviewModel>;
     shouldPoll: () => boolean;
+    buildInspectorDetail?: (selectedNodeId: string | null) => Promise<RunInspectorDetail>;
+    handleRecoveryAction?: (
+        actionId: RunInspectorRecoveryActionId,
+        selectedNodeId: string | null
+    ) => Promise<void>;
     onDispose?: () => void;
 };
 
@@ -63,9 +78,18 @@ export class WorkflowGraphPanel {
 </body>
 </html>`;
 
-        panel.webview.onDidReceiveMessage((message: { type?: string }) => {
+        panel.webview.onDidReceiveMessage((message: WorkflowGraphWebviewMessage) => {
             if (message.type === 'ready') {
                 void this.pushModel();
+                return;
+            }
+            if (message.type === 'select_node') {
+                this.selectedNodeId = message.nodeId;
+                void this.pushInspectorDetail();
+                return;
+            }
+            if (message.type === 'recovery_action') {
+                void this.session.handleRecoveryAction?.(message.actionId, message.nodeId);
             }
         });
 
@@ -127,7 +151,13 @@ export class WorkflowGraphPanel {
     update(model: WorkflowGraphWebviewModel): void {
         if (model.selectedNodeId) {
             this.selectedNodeId = model.selectedNodeId;
+        } else if (model.graph) {
+            const nodeIds = new Set(model.graph.nodes.map((node) => node.node_id));
+            if (this.selectedNodeId && !nodeIds.has(this.selectedNodeId)) {
+                this.selectedNodeId = undefined;
+            }
         }
+
         this.panel.webview.postMessage({
             type: 'init',
             payload: {
@@ -135,6 +165,7 @@ export class WorkflowGraphPanel {
                 selectedNodeId: model.selectedNodeId ?? this.selectedNodeId,
             },
         });
+        void this.pushInspectorDetail();
     }
 
     async refreshFromHost(): Promise<void> {
@@ -154,6 +185,19 @@ export class WorkflowGraphPanel {
         } finally {
             this.refreshing = false;
         }
+    }
+
+    private async pushInspectorDetail(): Promise<void> {
+        if (!this.session.buildInspectorDetail) {
+            return;
+        }
+
+        const nodeId = this.selectedNodeId ?? null;
+        const detail = await this.session.buildInspectorDetail(nodeId);
+        this.panel.webview.postMessage({
+            type: 'update_inspector',
+            payload: detail,
+        });
     }
 
     private syncPollTimer(): void {

@@ -31,6 +31,8 @@ export {
     buildWorkflowGraphModel,
     overlayRunProjection,
 } from './buildWorkflowGraphModel';
+export { buildRunInspectorDetail } from './buildRunInspectorDetail';
+export { redactInspectorText } from './redactInspectorText';
 export {
     PRE_RUN_VALIDATOR_IDS,
     RUNTIME_ONLY_VALIDATOR_IDS,
@@ -58,6 +60,12 @@ export type {
     WorkflowGraphPosition,
     WorkflowGraphStepListEntry,
     WorkflowGraphTemporalIds,
+    RunInspectorActivitySummary,
+    RunInspectorArtifactPreview,
+    RunInspectorDetail,
+    RunInspectorRecoveryAction,
+    RunInspectorRetryBlock,
+    RunInspectorValidationSummary,
     WorkflowNodeType,
     WorkflowSchemaValidationResult,
 } from './types';
