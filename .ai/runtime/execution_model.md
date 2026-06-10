@@ -5,12 +5,29 @@ Forge workflow execution is Temporal-backed and data-defined.
 ## Execution Rules
 
 - A workflow run starts from a validated `.ai/workflows/*.json` definition.
+- Run start validates declared `run_inputs[]` and runtime readiness before Temporal creates durable execution history.
 - Temporal workflow code owns deterministic orchestration, durable state, waits, timers, retries, and recovery.
 - Activities perform non-deterministic work such as Cursor SDK agent runs, GitHub API calls, filesystem reads or writes, and validation checks.
 - Agent activities are bounded by workflow definition inputs and Cursor SDK integration contracts (`.ai/integration/api_contracts.md`).
 - Human question points suspend the workflow until Forge sends the declared Temporal signal or update.
 - Validation gates run before downstream steps consume agent output or produced artifacts. Each `validation` node invokes a deterministic worker activity that evaluates declared validators and returns a `ValidationResult` aggregate (`.ai/data/serialization.md`). The workflow orchestrator advances only when `valid=true`.
 - Forge UI state is a projection of Temporal run state plus validated artifacts and local display metadata.
+
+## Run start orchestration
+
+The extension host owns run-start coordination up to the Temporal start call. Worker code owns workflow and activity execution after Temporal accepts the run.
+
+1. Resolve the selected repository root and workflow definition.
+2. Run pre-run validation for schema, graph, bindings, duplicate IDs, unsupported versions, and declared artifacts.
+3. Collect and validate submitted values for the selected definition's `run_inputs[]`.
+4. Resolve active Temporal mode and run the connection readiness gate.
+5. Start or attach to the supervised worker and confirm it polls the configured task queue.
+6. Call Temporal start with the serialized workflow run start payload.
+7. Append the run index entry from returned Temporal identifiers.
+8. Notify the left-panel Workflow Runs view to refresh and show Start Run success feedback.
+9. Let the user open run-mode graph visualization from the new run row.
+
+If steps 1-5 fail, Forge reports a pre-run diagnostic and does not create a Temporal run. If Temporal start succeeds but local index write or notification fails, Temporal remains authoritative; recovery scan can rediscover the run only when an index entry or explicit Temporal identity is available.
 
 ## Cursor SDK agent activities
 
@@ -54,3 +71,13 @@ Worker maps `retryable` from the SDK response envelope before Temporal schedules
 ## Primary code pointers (optional)
 
 - Add stable code directories or modules here when known.
+
+## Open implementation decisions
+
+Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
+
+### Run start orchestration
+- Define workflow ID naming and idempotency expectations for repeated starts.
+- Specify how start orchestration handles Temporal start success followed by local index write, notification, or run-list refresh failure.
+- Define whether the initial run projection is queried immediately after start or waits for the normal recovery and refresh cadence.
+- Define cancellation behavior for a run started from the catalog before the first projection reaches `synced`.

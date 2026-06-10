@@ -11,6 +11,7 @@ Forge workflow security protects credentials, limits execution authority, and va
 - `insecure` external mode (plaintext gRPC) is permitted only for loopback addresses and emits an explicit security warning in the Output channel when selected.
 - Cursor SDK access stays inside the active Cursor execution boundary and is not replaced by direct provider calls.
 - Workflow definitions reference stable activity IDs, validators, agents, and skills. They do not grant arbitrary command execution authority.
+- Workflow run inputs are treated as user data, not secrets. They may be passed to Temporal workflow start and workflow activities, but they are excluded from logs and notifications by default; only input key names may appear in diagnostics.
 - Agent output is untrusted until deterministic schema, artifact, and domain validators accept it.
 - Artifacts and diagnostics shown in Forge UI must avoid leaking tokens, connection material, or private session state.
 

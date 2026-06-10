@@ -12,6 +12,7 @@ Forge workflow authorization follows the authority of each external system.
 - Cursor SDK activity access uses the active Cursor execution context and must not expose broader model or provider credentials through workflow JSON.
 - Cursor SDK **API keys** are stored in VS Code SecretStorage under `forge.cursor.apiKey`, set via **Forge: Set Cursor API Key**, or supplied through `CURSOR_API_KEY` for worker automation. Settings and workflow JSON never contain API key values.
 - Workflow definitions may reference agents, skills, validators, and artifacts, but those references do not grant filesystem, network, or GitHub authority by themselves.
+- Workflow run inputs are user-supplied execution parameters, not credential carriers. GitHub tokens, Temporal credentials, Cursor keys, and provider secrets remain in their configured auth boundaries and must not be submitted as run inputs.
 - Sensitive connection material, tokens, and session details are operational secrets and are not serialized into workflow definitions or accepted artifacts.
 
 ## Primary code pointers (optional)

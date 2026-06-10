@@ -17,13 +17,15 @@ Forge supports both managed local Temporal and external or Cloud Temporal endpoi
 
 Temporal owns durable workflow state, retries, waits, timers, and recovery. Forge does not implement a competing durable workflow engine.
 
+Workflow start is an extension-host Temporal client operation. It is allowed only after definition validation, run input validation, Temporal readiness, and worker readiness pass. Workers continue execution after start; the extension host does not execute workflow or activity code.
+
 ## Cursor SDK
 
 Cursor SDK (`@cursor/sdk`, TypeScript) performs bounded agent activity work in the supervised Temporal worker. v1 uses **local** runtime with `cwd` set to the run-selected workspace root. Forge activity contracts (`.ai/integration/api_contracts.md`) constrain the requested work, capture SDK run identity in response envelopes, and hand outputs to validators before continuing. Cloud agent activities are deferred.
 
 ## GitHub
 
-GitHub remains authoritative for issues, milestones, project fields, pull requests, and delivery records. Workflow activities use GitHub APIs when a workflow needs to read or update delivery state.
+GitHub remains authoritative for issues, milestones, project fields, pull requests, and delivery records. Workflow activities use GitHub APIs when a workflow needs to read or update delivery state. For `/refine-issue`, start input may identify work by issue URL or by GitHub Projects v2 project identifier plus issue number; GitHub normalization resolves the working parent issue before delivery steps mutate issue bodies or project state.
 
 ## Workspace Files
 

@@ -6,6 +6,7 @@ On activation, Forge prepares workflow capability without starting arbitrary wor
 
 - Detect the active repository context and discover `.ai/workflows/*.json` definitions.
 - Run pre-run validation (`.ai/business_logic/domain_model.md` pre-run scope) via shared workflow modules so discovery can report catalog health and run-start gates can block invalid definitions.
+- Make declared `run_inputs[]` available to catalog and Start Run surfaces so required inputs can be collected before Temporal start.
 - Resolve configured Temporal mode (`forge.temporal.mode`) and connection readiness for the current VS Code window.
 - In managed local mode, start or attach to the **window-scoped** npm-bundled Temporal dev server only when workflow capability needs it (first workflow run or explicit readiness check). Do not start a dev server per workspace folder in multi-root windows.
 - In external mode, run connection preflight (settings, SecretStorage credential binding, gRPC/TLS/auth probe) lazily on first workflow run or explicit readiness check. Do not connect on every activation.

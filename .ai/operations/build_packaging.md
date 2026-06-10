@@ -41,6 +41,14 @@ Before release, CI must verify:
 - Workflow schema assets under `.ai/schemas/` are present in the packaged extension (or referenced consistently by validation modules)
 - The managed-local dev server launch script and its npm dependency closure resolve from a clean `npm ci && npm run build && npm run package` artifact
 - Worker launch entry under `resources/workflow/worker/` and its npm dependency closure resolve from a clean `npm ci && npm run build && npm run package` artifact
+- Workflow start orchestration modules can load the workflow schema, run input declaration support, Temporal client, and run-index writer from the packaged extension artifact
+
+## Open implementation decisions
+
+Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
+
+### Packaging checks
+- Define the exact CI packaging check that verifies Start Run orchestration modules and schema validation assets resolve from the packaged extension.
 
 ## Primary code pointers (optional)
 

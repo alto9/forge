@@ -85,6 +85,20 @@ Redaction rules: replace values matching API keys, `Authorization` headers, cert
 
 The Forge extension starts or connects to workflow runs through a Temporal client. Workers execute workflow and activity code outside the VS Code extension host. Human answers resume waiting workflows through declared Temporal workflow updates (v1 default) or signals when a node overrides `resume_update`.
 
+### Workflow start (v1)
+
+| Aspect | Contract |
+|--------|----------|
+| Caller | VS Code extension host Temporal client |
+| Preconditions | Workflow definition validation has no errors; declared run inputs validate; Temporal connection and supervised worker are `ready` |
+| Workflow type | Resolved from the selected Forge workflow definition and worker registry, not arbitrary user text |
+| Task queue | Active mode task queue from `forge.temporal.managedLocal.taskQueue` or `forge.temporal.external.taskQueue` |
+| Payload | `.ai/data/serialization.md` **Workflow run start payload** |
+| Identity | Temporal `workflowId` and `runId` returned by start become the run index identity |
+| Post-start | Extension appends the run index entry, refreshes the left-panel run list, and leaves graph opening to the run row action |
+
+Temporal start failures are surfaced as start feedback and diagnostics. They do not create a `WorkflowRunIndexEntry` unless Temporal returns a durable run identity.
+
 ### Human answer update (v1)
 
 | Aspect | Contract |
@@ -102,11 +116,28 @@ Signals remain supported for future workflow definitions that declare a signal n
 
 GitHub APIs remain the boundary for issue, milestone, project, pull request, and planning state. Workflow definitions can reference GitHub activities, but GitHub remains the source of truth for delivery records.
 
+### `/refine-issue` issue input
+
+`/refine-issue` accepts GitHub issue context through its declared run input, not workflow-specific UI metadata. v1 accepts a full GitHub issue URL or a GitHub Projects v2 project identifier plus issue number. GitHub lookup and parentage normalization happen through explicit workflow activity or skill boundaries before workspace prep; workflow JSON does not carry GitHub tokens.
+
 ## Primary code pointers (optional)
 
 - Add stable code directories or modules here when known.
 
 ## Open implementation decisions
+
+Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
+
+### Temporal workflow start
+- Define the concrete worker registry mapping from `workflow_id` to Temporal workflow type.
+- Define the Temporal `workflowId` naming format and idempotency behavior for repeated starts.
+- Specify task queue override behavior if a future workflow definition needs a non-default queue.
+- Define how Temporal start errors are converted to user-facing diagnostics without exposing raw server payloads.
+
+### GitHub issue normalization
+- Define the exact payload shape for the GitHub Projects v2 project identifier plus issue number input form.
+- Specify whether the project identifier is only used for issue lookup or is retained for later board hygiene.
+- Define diagnostics for unresolved issue URLs, missing issue numbers, inaccessible projects, and parentage lookup failures.
 
 ### GitHub activity contracts
 

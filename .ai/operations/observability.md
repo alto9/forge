@@ -11,6 +11,7 @@ Forge observability makes workflow health, validation state, and recovery action
 - Validator outcomes for schema, artifact, and domain checks (`ValidationResult` aggregates on `WorkflowRunProjection.validationSummaries`).
 - GitHub activity failures and rate or auth blockers.
 - Recovery actions after extension restart, worker restart, or Temporal reconnect.
+- Workflow start attempts, blocked starts, successful starts, and failed starts without exposing run input values or credentials.
 
 ## Managed-local Temporal health states
 
@@ -87,6 +88,18 @@ Automatic recovery runs **once per window session** when Temporal connection and
 
 Diagnostic log lines for recovery use prefix `[forge.temporal.recovery]` and include `windowId`, `namespace`, `workflowId`, `runId`, `recoveryState`, and error codes. Secrets are never logged.
 
+## Workflow start diagnostics
+
+Workflow start feedback uses existing Forge Temporal output, notifications, status, and run-list surfaces.
+
+| Event | User-visible surface | Log metadata |
+|-------|----------------------|--------------|
+| Start requested | Optional Output channel info | `workflow_id`, `repositoryRoot`, declared input key names only |
+| Start blocked by definition or input validation | Catalog/helper text and notification when command-driven | diagnostic `code`, `path`, `severity`; no submitted values |
+| Start blocked by readiness | Notification and status bar health state | Temporal and worker health states |
+| Start succeeded | Notification or catalog feedback plus Workflow Runs refresh | `workflow_id`, `namespace`, `workflowId`, `runId`, `taskQueue` |
+| Start failed before run identity | Error notification and Output channel diagnostic | redacted Temporal or validation error code |
+
 ## Primary code pointers (optional)
 
 - Add stable code directories or modules here when known.
@@ -147,5 +160,7 @@ Implementation-level items not yet fully specified. `/refine-issue` resolves the
 
 ### Health and diagnostics (remaining)
 - Define log redaction rules for GitHub activity diagnostics inside worker-executed activities.
+- Define exact observability copy and log metadata for successful run start, blocked start, and failed start.
+- Specify whether run input key names may appear in logs while values remain excluded or redacted.
 
 _(Run inspector artifact preview limits, recovery action catalog, and UI redaction rules resolved in **Run inspector behavior (v1)** and **UI redaction (run inspector)** above.)_

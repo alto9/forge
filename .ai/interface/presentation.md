@@ -72,7 +72,7 @@ Serialized webview payload: `.ai/data/serialization.md` **Workflow graph model**
 |-----------|------|
 | Definition mode header | "Definition — {workflow name}" |
 | Run mode header | "Run — {workflow name} ({workflowId}/{runId})" |
-| Run starting (placeholder until run index exists) | "Start a workflow run to see live progress." _(disabled in #26 if run-start not yet shipped; graph stays in definition mode)_ |
+| Run starting before graph open | "Start a workflow run to see live progress." |
 | Recovery banner (`recovery_pending`) | "Recovering run state…" |
 | Recovery banner (`refresh_failed`) | "Could not refresh run state. Try **Forge: Refresh Workflow Graph**." |
 | Recovery banner (`unreachable`) | "Waiting for Temporal…" |
@@ -213,7 +213,7 @@ Forge Studio exposes repo-owned workflow definitions through a read-only catalog
 3. **Command palette** — **Forge: Select Workflow Repository Folder** changes the active folder in multi-root workspaces.
 4. **Catalog webview** — flat list of discovered definitions with validation badges, metadata, and selection highlight.
 
-Run start, graph preview, and Temporal controls are out of scope for the catalog v1 surface (#25). Selected workflow identity is persisted for downstream cockpit milestones.
+Run start is available from valid catalog rows. Graph preview remains a separate cockpit surface; selected workflow identity is persisted for downstream graph and run-start flows.
 
 ### List layout and sorting
 
@@ -244,8 +244,24 @@ Example invalid summary: "3 errors, 1 warning — fix before run". Example warni
 
 - Clicking a row selects it (`aria-selected="true"`, visible focus ring).
 - Selection persists in `workspaceState` as `forge.workflow.catalog.selectedWorkflowId` scoped to the active `repositoryRoot`.
-- Invalid rows (any pre-run diagnostic with `severity: error`) remain selectable for inspection. A disabled **Start run** affordance (or equivalent placeholder control) shows tooltip: "Fix validation errors before starting a run."
-- Valid rows show the same placeholder control enabled with tooltip: "Run start ships in a later milestone." (#25 does not invoke Temporal.)
+- Invalid rows (any pre-run diagnostic with `severity: error`) remain selectable for inspection. A disabled **Start run** affordance shows visible helper text: "Fix validation errors before starting a run."
+- Valid rows show an enabled **Start run** affordance. When the definition declares required `run_inputs[]`, the action opens input collection before Temporal start. When no required inputs exist, the action follows the no-parameters fast path.
+
+### Start Run (v1)
+
+The catalog row Start Run affordance is the first workflow-definition execution surface. It does not auto-open the monitoring graph after success.
+
+| Situation | Copy / behavior |
+|-----------|-----------------|
+| Required input missing | "Complete required inputs before starting this workflow." |
+| Definition invalid | "Fix validation errors before starting a run." |
+| Temporal not ready | "Workflow runs are blocked until Temporal is ready. See Forge Temporal output for details." |
+| Worker not ready | "Workflow runs are blocked until the Forge worker is ready. See Forge Temporal output for details." |
+| Start in progress | "Starting workflow run…" |
+| Start succeeded | "Workflow run started." Refresh the Workflow Runs view. |
+| Start failed before run creation | "Could not start workflow run — {reason}." |
+
+After success, the left-panel Workflow Runs view refreshes and the new row exposes **View graph**. Users open the graph from that row when they want to monitor the run.
 
 ### Multi-root and missing `.ai` empty states
 
@@ -361,6 +377,12 @@ Run recovery (#21) uses the Forge Temporal Output channel and a minimal run list
 ## Open implementation decisions
 
 Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
+
+### Start Run UX
+- Define the exact parameter collection surface for workflows with required inputs: inline catalog form, quick input flow, modal webview, or staged command flow.
+- Define disabled reasons, validation message placement, and success notification copy for Start Run.
+- Define the no-parameters fast path interaction, including whether a confirmation is needed before Temporal start.
+- Define accessible labels and keyboard order for parameter inputs and Start Run actions.
 
 _(Workflow graph visual states and cockpit graph UI copy resolved in **Workflow Visualization (#26)** above.)_
 

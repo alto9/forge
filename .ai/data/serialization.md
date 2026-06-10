@@ -31,12 +31,28 @@ Workflow definitions are JSON objects validated by `.ai/schemas/workflow.schema.
 | `name` | yes | Human-readable workflow title for Studio and CLI lists. |
 | `version` | yes | Semver (`MAJOR.MINOR.PATCH`) for the workflow definition content. |
 | `description` | no | Short summary of workflow purpose. |
+| `run_inputs` | no | Workflow-definition-level input declarations Forge collects before Temporal run creation. See **Run input declarations**. |
 | `entry_node_id` | yes | `node_id` of the first node executed after a run starts. |
 | `nodes` | yes | Non-empty array of graph nodes (see below). |
 | `artifacts` | no | Declared artifact outputs the workflow may produce or inspect. |
 | `retry_policies` | no | Named retry policy classes referenced by nodes. |
 | `timeout_policies` | no | Named timeout policy classes referenced by nodes. |
 | `metadata` | no | Repo-local tags (`owner`, `milestone`, `tags`, `deprecated`, etc.) with string, number, boolean, or null values. |
+
+### Run input declarations
+
+`run_inputs[]` is an optional top-level array. When omitted or empty, Start Run uses the no-parameters path after definition validation and readiness checks pass. When present, Forge collects and validates submitted values before it calls Temporal start.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `input_id` | yes | Stable key used in the start payload and activity inputs. Must be unique within the workflow definition. |
+| `type` | yes | v1 supports `string`. Future types require additive schema changes and matching UI rendering. |
+| `label` | yes | Human-readable label shown by Start Run input collection. |
+| `description` | no | Helper text for the input prompt. |
+| `required` | no | When `true`, empty submitted values block run creation. Default is `false`. |
+| `validation_hint` | no | Workflow-specific hint used for display or custom validation diagnostics. It is not executable code. |
+
+Submitted run input values serialize as a JSON object whose keys match declared `input_id` values and whose values are strings. Forge rejects undeclared keys and missing required values before creating a durable Temporal run.
 
 ### Graph nodes
 
@@ -123,8 +139,24 @@ Discovery exposes one catalog entry per scanned definition file:
 | `path` | yes | Repo-relative path to `.ai/workflows/<workflow_id>.json`. |
 | `repositoryRoot` | yes | Absolute path to the selected workspace folder root. |
 | `validation` | yes | Pre-run aggregate: `valid`, `diagnostics`, `errorCount`, `warningCount`. |
+| `run_inputs` | no | Declared run input descriptors needed to render Start Run input collection. |
 
 Studio sorting, badges, and copy: `.ai/interface/presentation.md` **Workflow discovery catalog**.
+
+## Workflow run start payload
+
+The extension host sends this payload to the Temporal start boundary after workflow-definition validation, run-input validation, Temporal readiness, and worker readiness all pass.
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `workflow_id` | yes | Selected workflow definition ID. |
+| `definition_version` | yes | Selected workflow definition `version`. |
+| `repositoryRoot` | yes | Absolute workspace folder root selected for this run. |
+| `run_inputs` | yes | Object of submitted run input values keyed by declared `input_id`; empty object when no inputs are declared or submitted. |
+| `started_by` | no | Local actor label when available; never a credential or token. |
+| `started_at` | yes | ISO-8601 UTC timestamp from the extension host. |
+
+For `/refine-issue`, `run_inputs.issue_ref` carries either a GitHub issue URL or a GitHub Projects v2 project identifier plus issue number encoded by the implementation contract resolved in `/refine-issue`.
 
 ## Workflow graph model (#26)
 
@@ -460,4 +492,14 @@ Preview content is read from disk at `repositoryRoot`; never from inline envelop
 | `label` | yes | Button or link text |
 | `enabled` | yes | Whether the action is interactive |
 | `disabled_reason` | when not enabled | Visible helper copy |
+
+## Open implementation decisions
+
+Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
+
+### Run start input serialization
+- Define the exact TypeScript shape for `WorkflowRunInputDefinition`, `WorkflowRunStartInput`, and the Temporal start payload.
+- Decide whether `WorkflowRunIndexEntry.startInputSummary` stores a non-secret display label for accepted input values, such as the normalized `/refine-issue` issue reference, or whether all row copy is derived on demand.
+- Specify diagnostics for invalid input declarations, missing required submitted values, and undeclared submitted input keys.
+- Define how `/refine-issue` input normalization artifacts, if any, are represented after a run starts.
 

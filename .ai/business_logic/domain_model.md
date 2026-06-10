@@ -5,6 +5,7 @@ Forge models workflow automation as a repo-owned control plane for durable agent
 ## Core Concepts
 
 - A workflow definition is the declarative contract for a repeatable Forge workflow. It names stable steps, transitions, required artifacts, validators, human questions, and integration bindings.
+- A run input is a workflow-definition-level value Forge collects before creating a Temporal run. Run inputs are declared generically on the workflow definition and are validated before run creation.
 - A workflow run is one execution of a workflow definition for a selected workspace, repository, and delivery target. Temporal owns durable execution state, waits, retries, and recovery for each run.
 - An activity is bounded non-deterministic work performed outside the deterministic Temporal workflow function. Agent activities call the Cursor SDK and return typed outputs for validation.
 - A validator is deterministic logic that accepts or rejects agent outputs before the workflow advances. Validation covers schema shape, declared artifacts, and domain-specific exit criteria.
@@ -58,12 +59,14 @@ Repositories may add `local.<repo>.<name>` validator IDs for workflow-specific d
 
 | Phase | When | Validator IDs |
 |-------|------|---------------|
-| Pre-run (definition) | Before a workflow run is created | `forge.workflow.schema`, `forge.workflow.graph`, `forge.workflow.binding`, `forge.workflow.duplicate_id`, `forge.workflow.unsupported_version`, `forge.artifact.declared` |
+| Pre-run (definition and start input) | Before a workflow run is created | `forge.workflow.schema`, `forge.workflow.graph`, `forge.workflow.binding`, `forge.workflow.duplicate_id`, `forge.workflow.unsupported_version`, `forge.artifact.declared` |
 | Runtime (validation nodes) | After an activity produces output during a run | `forge.envelope.schema`, `forge.envelope.unsupported_version`, `forge.envelope.size`, `forge.artifact.exists`, `forge.artifact.integrity`, `forge.artifact.schema`, `forge.domain.exit_criteria`, plus any `local.*` validators declared on validation nodes |
 
 Pre-run validation also enforces that each file path `.ai/workflows/<workflow_id>.json` has a filename stem equal to `workflow_id` (reported under `forge.workflow.binding`).
 
 Binding checks at pre-run include: `entry_node_id` and all `to_node_id` values resolve; activity nodes declare `activity_id` and exactly one resolvable `agent_path` or `skill_path`; node `validator_id` values match the catalog or `local.*` pattern; `retry_policy` and `timeout_policy` references match declared policies; node `artifact_ids` reference workflow-level artifacts.
+
+Run-start checks also validate that every required `run_inputs[]` declaration has a non-empty submitted value and that no submitted input key falls outside the selected workflow definition's declared inputs. Missing or invalid run input values fail before Temporal creates a durable run.
 
 ### `/refine-issue` mapping
 
@@ -73,7 +76,7 @@ Canonical definition: `.ai/workflows/refine-issue.json` (`workflow_id`: `refine-
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `issue_ref` | yes | GitHub issue reference: full URL (`https://github.com/{owner}/{repo}/issues/{N}`), qualified shorthand (`{owner}/{repo}#{N}`), or issue number alone (`{N}`) when the active workspace resolves `owner/repo` from its GitHub remote. |
+| `issue_ref` | yes | GitHub issue reference declared as a workflow run input. Accepted forms are a full issue URL (`https://github.com/{owner}/{repo}/issues/{N}`) or a GitHub Projects v2 project identifier plus issue number. Existing shorthand forms may remain descriptive metadata until `/refine-issue` resolves compatibility behavior. |
 
 The orchestrator normalizes `issue_ref` to a working parent issue before Phase A workspace prep.
 
@@ -144,3 +147,16 @@ Implementation wires runtime validation in this order:
 | **Advisory** | Pre-run diagnostics with `severity: warning` only | Recorded in discovery and pre-run aggregate; does **not** block run start |
 
 Individual validator entries may declare `blocking: false` in a future workflow schema MINOR. v1 treats every runtime catalog validator as blocking.
+
+## Open implementation decisions
+
+Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
+
+### Run start lifecycle
+- Define the high-level run lifecycle labels for start requested, run created, blocked before creation, waiting for input, validation failed, cancelled, and terminal states.
+- Decide whether duplicate Start Run clicks for the same selected workflow and submitted inputs create distinct Temporal runs or are guarded while a start request is in flight.
+- Map user-facing start failure classes to the existing error-state taxonomy without creating a separate non-Temporal run state.
+
+### Refine issue input normalization
+- Specify how `/refine-issue` normalizes a GitHub issue URL and a GitHub Projects v2 project identifier plus issue number into the working parent issue before Phase A starts.
+- Decide whether legacy descriptive shorthand in `metadata.run_input_issue_ref` remains accepted after the first-class `run_inputs[]` field is implemented.
