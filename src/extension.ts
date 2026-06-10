@@ -14,6 +14,11 @@ import {
     registerStoredApiKeyReader,
 } from './temporal/externalCredentials';
 import {
+    clearRegisteredStoredCursorApiKeyReader,
+    createStoredCursorApiKeyReader,
+    registerStoredCursorApiKeyReader,
+} from './temporal/cursorCredentials';
+import {
     registerTemporalLocalSupervisor,
     shutdownTemporalLocalSupervisor,
 } from './temporal';
@@ -190,6 +195,13 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push({
         dispose: () => {
             clearRegisteredStoredApiKeyReader();
+        },
+    });
+
+    registerStoredCursorApiKeyReader(createStoredCursorApiKeyReader(context.secrets));
+    context.subscriptions.push({
+        dispose: () => {
+            clearRegisteredStoredCursorApiKeyReader();
         },
     });
 

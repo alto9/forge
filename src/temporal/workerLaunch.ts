@@ -35,7 +35,8 @@ export function buildWorkerSpawnEnv(
         taskQueue: string;
         externalSettings?: ResolvedExternalSettings;
         apiKey?: string;
-    }
+    },
+    options: { cursorApiKey?: string } = {}
 ): NodeJS.ProcessEnv {
     const env: NodeJS.ProcessEnv = {
         ...process.env,
@@ -64,6 +65,11 @@ export function buildWorkerSpawnEnv(
         if (connection.apiKey) {
             env.FORGE_TEMPORAL_EXTERNAL_API_KEY = connection.apiKey;
         }
+    }
+
+    const cursorApiKey = options.cursorApiKey?.trim() || process.env.CURSOR_API_KEY?.trim();
+    if (cursorApiKey) {
+        env.CURSOR_API_KEY = cursorApiKey;
     }
 
     return env;
