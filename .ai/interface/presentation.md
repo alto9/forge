@@ -81,9 +81,85 @@ Serialized webview payload: `.ai/data/serialization.md` **Workflow graph model**
 | Pending human question | "Waiting for your answers — continue in the question panel (#27)." |
 | Graph empty / no selection | "Select a workflow in the catalog, then open the graph." |
 
-## Run Inspector
+## Run Inspector (#28)
 
-The run inspector presents the selected node, activity details, validation outcomes, artifact references, Cursor SDK run identity, retry state, and available user actions. Human question UI ships in the **Question panel** section below (#27); the run inspector (#28) links to it but does not duplicate full answer forms.
+The run inspector is the **node detail panel** in the graph webview when `mode=run` and the operator selects a node from the canvas or step list. It presents activity summaries, validation outcomes, artifact references with bounded previews, Cursor SDK run identity, retry and failure state, and contextual recovery actions. Human question UI ships in the **Question panel** section below (#27); the run inspector links to it but does not duplicate answer forms.
+
+### Surfaces (v1)
+
+1. **Graph webview detail panel** — primary inspector surface; visible when a run-mode graph is open and a node is selected.
+2. **Step list selection** — selecting a row in the accessibility step list updates the same detail panel and focuses the corresponding canvas node.
+3. **Definition mode** — selecting a node shows definition metadata only (type, description, declared validators, declared artifact IDs); no live envelopes, validation summaries, or recovery actions.
+
+Serialized payload: `.ai/data/serialization.md` **Run inspector detail**.
+
+### Detail panel sections (run mode)
+
+Sections appear in this order when data exists; omit empty sections.
+
+| Section | When shown | Content |
+|---------|------------|---------|
+| **Summary** | Always | Node `name`, `type`, `status_label`, optional one-line `detail` from graph model |
+| **Activity** | `activity` node with envelope summary | `activity_id`, `cursor_agent_id`, `cursor_run_id`, `status`, `failure_class`, `retryable`, `output_type` |
+| **Retry** | `visual_state=retrying` or terminal activity failure with retry history | "Automatic retry {attempt} of {max}" or last failure diagnostic |
+| **Validation** | `validation` node or upstream validation summary for selected node | Pass: **Validated** + validator ID list. Fail: **Validation failed** + expandable redacted diagnostics |
+| **Artifacts** | Node declares `artifact_ids` or envelope includes `artifact_refs` | List with preview, metadata, and actions (see **Artifact preview**) |
+| **Recovery actions** | Run mode | Contextual buttons/links (see **Recovery action catalog**) |
+
+When `recoveryState !== synced`, show the recovery banner from **Workflow Visualization (#26)** and disable recovery actions except **Refresh** (which re-triggers projection fetch).
+
+### Artifact preview (v1)
+
+| Condition | Display |
+|-----------|---------|
+| Text, markdown, or JSON (`media_type` hint or extension) | Syntax-highlighted preview up to **32 KiB UTF-8** |
+| File size > 32 KiB | Truncated preview + banner: "Showing first 32 KiB — open in editor for full file." |
+| Binary or unknown type | Metadata only: `artifact_id`, repo-relative `path`, `size_bytes`, first 8 hex chars of `sha256` |
+| Glob artifact path | Up to **20** matching repo-relative paths; overflow: "+ {n} more — open in editor." |
+
+Never render raw activity envelope `structured_payload` in the panel; read file content from disk via `artifact_refs` only. Apply UI redaction (`.ai/operations/observability.md` **UI redaction (run inspector)**) before rendering previews.
+
+### Recovery action catalog (v1)
+
+Actions appear in the detail panel footer when enabled; disabled actions show visible helper text (not tooltip-only).
+
+| Action | Enabled when | Notes |
+|--------|--------------|-------|
+| **Cancel run** | Non-terminal run, `recoveryState === synced` | Confirm copy from **Run recovery surfaces** |
+| **Refresh** | Run mode | Same as **Forge: Refresh Workflow Graph** for the displayed run |
+| **Open in editor** | Resolvable `artifact_refs[].path` for selected node | `vscode.open` on repo-relative path |
+| **Copy path** | Artifact ref present | Clipboard repo-relative path |
+| **Copy diagnostic** | Activity or validation diagnostic visible | Clipboard `{code}: {message}` |
+| **Copy Cursor run ID** | Activity envelope summary includes `cursor_run_id` | Clipboard run ID |
+| **Answer in question panel** | `human_question` node, `visual_state=waiting`, synced | Opens question panel (#27) |
+
+Out of scope v1: manual activity retry, restart from node, dismiss orphaned (run list only), automated remediation.
+
+### UI copy (run inspector)
+
+| Situation | Copy |
+|-----------|------|
+| No node selected | "Select a step to inspect activity output, validation, and artifacts." |
+| Definition mode node | "Definition — select a run to inspect live activity and validation results." |
+| Activity success | "Activity finished" |
+| Activity failed | "Activity failed — {failure_class}" |
+| Validation passed | "Validated" |
+| Validation failed header | "Validation failed" |
+| Empty artifacts | "No artifacts for this step." |
+| Integrity mismatch | "Hash mismatch — expected {expectedPrefix}…, got {actualPrefix}…" |
+| Actions blocked (recovery) | "Run actions are unavailable until recovery finishes." |
+| Waiting human question link | "Answer in question panel" |
+
+### Polling
+
+Detail content refreshes with the graph webview poll (**2 seconds** while visible, non-terminal, `recoveryState === synced`). Node selection is preserved across refreshes when the node still exists.
+
+### Accessibility (run inspector)
+
+- Detail panel sections use heading structure (`h3` section titles) and preserve focus order when switching step list items.
+- Expandable validation diagnostics use `aria-expanded`; diagnostic list items include severity prefix in accessible name.
+- Recovery actions expose disabled reasons as visible helper text per `.ai/interface/accessibility.md`.
+- Artifact previews expose truncated state in accessible description when the 32 KiB cap applies.
 
 ## Human question panel (#27)
 
@@ -200,7 +276,8 @@ Persist the chosen folder per window in `workspaceState` key `forge.workflow.cat
 - `src/temporal/humanAnswerSubmit.ts` — Temporal update client wrapper (#27).
 - `src/workflows/discoverWorkflowDefinitions.ts` — scan, validate, and build catalog entries.
 - `src/workflows/buildWorkflowGraphModel.ts` — definition + run projection → graph model (#26).
-- `src/workflows/types.ts` — `WorkflowGraphModel`, node/edge visual state types (#26).
+- `src/workflows/buildRunInspectorDetail.ts` — selected node + projection → inspector payload (#28).
+- `src/workflows/types.ts` — `WorkflowGraphModel`, `RunInspectorDetail`, node/edge visual state types (#26, #28).
 
 ## Managed-local Temporal surfaces
 
@@ -288,3 +365,5 @@ Implementation-level items not yet fully specified. `/refine-issue` resolves the
 _(Workflow graph visual states and cockpit graph UI copy resolved in **Workflow Visualization (#26)** above.)_
 
 _(Human question panel surfaces, draft behavior, staleness copy, and submit flow resolved in **Human question panel (#27)** above.)_
+
+_(Run inspector surfaces, artifact preview limits, recovery action catalog, UI copy, and redaction rules resolved in **Run Inspector (#28)** above.)_

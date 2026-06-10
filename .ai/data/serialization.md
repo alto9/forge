@@ -390,3 +390,74 @@ Rejected updates return a validation error to the panel; the run remains waiting
 ### Draft answer persistence
 
 Drafts are stored in `workspaceState` under `forge.workflow.humanAnswerDraft.{indexKey}.{question_id}` where `indexKey` is `{namespace}:{workflowId}:{runId}`. Drafts survive panel close within the same VS Code window session. Drafts are cleared on successful submit, run terminal, `waitingNodeId` mismatch, orphaned dismissal, or window close. Drafts do not sync across windows or machines in v1.
+
+## Run inspector detail (#28)
+
+Serialized payload from the extension host to the graph webview detail panel. Built by `buildRunInspectorDetail(definition, projection?, selectedNodeId, repositoryRoot)`. Presentation copy and action enablement: `.ai/interface/presentation.md` **Run Inspector (#28)**.
+
+### Run inspector detail (root)
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `mode` | yes | `definition` or `run` (mirrors graph `mode`) |
+| `selected_node_id` | yes | Workflow graph node ID under inspection |
+| `recoveryState` | when `mode=run` | From `WorkflowRunProjection` |
+| `summary` | yes | `{ node_id, type, name, status_label, detail? }` from graph model |
+| `activity` | no | Activity envelope summary when node is `activity` and run data exists |
+| `retry` | no | `{ attempt, max, in_progress }` when retrying or showing last retry context |
+| `validation` | no | Validation summary for `validation` nodes or linked upstream gate |
+| `artifacts` | no | Array of artifact preview entries (see below) |
+| `recovery_actions` | when `mode=run` | Enabled/disabled action descriptors for the panel footer |
+| `empty_state` | no | Copy when no node selected (webview initial state) |
+
+### Activity summary
+
+Subset of activity response envelope fields safe for UI display (no `structured_payload`).
+
+| Field | Description |
+|-------|-------------|
+| `activity_id` | Declared activity identifier |
+| `cursor_agent_id` | SDK agent ID |
+| `cursor_run_id` | SDK run ID |
+| `status` | `finished`, `error`, or `cancelled` |
+| `failure_class` | When not success: `startup`, `execution`, or `cancelled` |
+| `retryable` | Whether automatic retry may apply |
+| `output_type` | `json`, `markdown`, or `text` |
+| `diagnostics` | Redacted activity diagnostics (same shape as envelope `diagnostics`) |
+
+### Validation summary (inspector)
+
+Maps from `WorkflowRunProjection.validationSummaries[]` for the selected `validation` node, or from the validation gate that failed the selected activity's output.
+
+| Field | Description |
+|-------|-------------|
+| `valid` | Aggregate pass/fail |
+| `validated_at` | ISO-8601 UTC |
+| `validator_outcomes` | `{ validator_id, type, target, passed, blocking }[]` |
+| `diagnostics` | Redacted diagnostic list for expandable detail |
+
+### Artifact preview entry
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `artifact_id` | yes | Workflow artifact ID |
+| `path` | yes | Repo-relative path (literal file or glob match entry) |
+| `size_bytes` | yes | File size at read time |
+| `sha256_prefix` | yes | First 8 lowercase hex chars of SHA-256 |
+| `media_type` | no | MIME hint when known |
+| `preview_mode` | yes | `inline`, `truncated`, `metadata_only`, or `glob_list` |
+| `preview_text` | when inline/truncated | Redacted UTF-8 preview (max 32 KiB before truncation flag) |
+| `truncated` | when preview_text present | `true` when file exceeds 32 KiB cap |
+| `glob_matches` | when `preview_mode=glob_list` | Up to 20 repo-relative paths; `overflow_count` when more exist |
+
+Preview content is read from disk at `repositoryRoot`; never from inline envelope bodies.
+
+### Recovery action descriptor
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `action_id` | yes | `cancel_run`, `refresh`, `open_in_editor`, `copy_path`, `copy_diagnostic`, `copy_cursor_run_id`, `open_question_panel` |
+| `label` | yes | Button or link text |
+| `enabled` | yes | Whether the action is interactive |
+| `disabled_reason` | when not enabled | Visible helper copy |
+

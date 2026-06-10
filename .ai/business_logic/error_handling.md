@@ -5,7 +5,7 @@ Forge handles workflow errors by preserving durable state, exposing the next saf
 ## Handling Rules
 
 - Definition and configuration errors fail before a run starts. Forge reports diagnostics with `severity: error` and does not create a durable workflow run until those errors are resolved. Warnings are reported but do not block run start.
-- Activity failures are recorded by Temporal and follow the workflow's retry policy. Forge can present retry, cancel, and inspect actions, but Temporal owns retry state and recovery.
+- Activity failures are recorded by Temporal and follow the workflow's retry policy. Forge can present retry, cancel, and inspect actions, but Temporal owns retry state and recovery. The **run inspector** detail panel (#28) exposes inspect affordances and contextual recovery actions per `.ai/interface/presentation.md` **Recovery action catalog (v1)**.
 - Validation failures stop progression at the validation gate. The rejected output remains available for inspection, but downstream steps cannot consume it as accepted workflow state. The workflow orchestrator records a runtime `ValidationResult` aggregate (`.ai/data/serialization.md`) with `valid=false` and per-validator `validator_outcomes`. Validation gate execution is deterministic and does not consume Temporal activity retry budget.
 - Human input pauses are expected workflow states. Forge asks the user for the required information and resumes the run only through the workflow's declared Temporal signal or update.
 - Restart and reconnect handling rebuilds Forge's visible run projection from Temporal state before allowing user actions against an in-flight run.

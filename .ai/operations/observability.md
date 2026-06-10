@@ -127,9 +127,19 @@ Forge projects runtime validation outcomes onto `WorkflowRunProjection` without 
 
 ### Run inspector behavior (v1)
 
-- Failed validation nodes show status **Validation failed** with expandable diagnostics.
+- Failed validation nodes show status **Validation failed** with expandable redacted diagnostics.
 - Passed validation nodes show **Validated** with validator ID list; no artifact content inline.
 - When `forge.artifact.integrity` fails, surface expected vs actual hash prefix (first 8 hex chars) only; full paths are repo-relative, not absolute.
+- Activity nodes show envelope summary metadata only; `structured_payload` is never rendered in the inspector.
+- Artifact previews follow `.ai/interface/presentation.md` **Artifact preview (v1)**: 32 KiB UTF-8 inline cap, metadata-only binary, glob list cap of 20 paths.
+
+### UI redaction (run inspector)
+
+All user-visible diagnostic messages and artifact preview text pass a redaction pass before render:
+
+- Replace values matching API keys, `Authorization` headers, certificate material, and environment variables whose names contain `KEY`, `TOKEN`, or `SECRET` with `[REDACTED]` (same rules as **Cursor SDK activity diagnostics** above).
+- Do not display raw SDK transcripts, tool payloads, or full envelope JSON in the inspector.
+- `validationSummaries[].diagnostics` are redacted when the projection is built; the inspector displays them without additional mutation except preview-file reads (which also pass redaction).
 
 ## Open implementation decisions
 
@@ -137,3 +147,5 @@ Implementation-level items not yet fully specified. `/refine-issue` resolves the
 
 ### Health and diagnostics (remaining)
 - Define log redaction rules for GitHub activity diagnostics inside worker-executed activities.
+
+_(Run inspector artifact preview limits, recovery action catalog, and UI redaction rules resolved in **Run inspector behavior (v1)** and **UI redaction (run inspector)** above.)_

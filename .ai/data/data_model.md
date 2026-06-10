@@ -12,6 +12,7 @@ Forge workflow data separates repo-owned definitions, Temporal-owned durable exe
 - HumanQuestion: a workflow-defined pause point identified by `question_id` on a `human_question` node. Forge resolves prompt text from declared `artifact_ids` (when present), else node `description` or `name`. The operator submits answers through Temporal workflow update `forge.human_answer.submit` (or node override `resume_update`). See `.ai/data/serialization.md` **Pending human question** and **Human answer submission**.
 - PendingHumanQuestion: the active question Forge presents for a non-terminal run when `waitingNodeId` references a `human_question` node and `recoveryState === synced`. Carries prompts, `input_mode`, artifact write targets, and batch policy for the question panel (#27).
 - ArtifactRecord: a pointer to a generated or inspected artifact, its producing activity, validation status, and storage location.
+- RunInspectorDetail: serialized detail-panel payload for a selected graph node in run or definition mode. Built from `WorkflowDefinition`, optional `WorkflowRunProjection`, and on-disk artifact content with redaction and preview limits. See `.ai/data/serialization.md` **Run inspector detail**.
 
 Temporal owns the durable event history for workflow execution. Forge projections and artifact indexes are support data for display, restart recovery, and user actions; they are not a replacement execution ledger.
 

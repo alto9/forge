@@ -12,6 +12,9 @@ Workflow visualization must remain usable without relying on graph visuals alone
 - **Waiting** nodes distinguish "Waiting for input" vs "Waiting" in the status label.
 - Retry, cancel, continue, and inspect actions expose disabled reasons when the current workflow state does not permit the action.
 - Artifact and validation panels preserve heading structure and focus order as users move between graph, details, and question forms (#28).
+- Run inspector detail panel sections expose `h3` headings for Summary, Activity, Retry, Validation, Artifacts, and Recovery actions; focus order follows section order top-to-bottom.
+- Expandable validation diagnostics in the inspector include severity prefix ("Error", "Warning") in the accessible name.
+- Truncated artifact previews include "Showing first 32 KiB" in the accessible description when the cap applies.
 - Keyboard users can move focus between the step list sidebar and the React Flow canvas; selecting a step list item focuses the corresponding node.
 
 ## Primary code pointers (optional)
