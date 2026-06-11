@@ -149,4 +149,72 @@ describe('startWorkflowRun', () => {
         fs.rmSync(root, { recursive: true, force: true });
     });
 
+    it('blocks before Temporal readiness when required run inputs are missing', async () => {
+        const { store: indexStore, root, windowId } = createIndexStore();
+        const startClient = vi.fn(async () => createMockStartClient());
+
+        const outcome = await startWorkflowRun({
+            repositoryRoot: process.cwd(),
+            workflowId: 'refine-issue',
+            submittedRunInputs: {},
+            globalStoragePath: root,
+            windowId,
+            indexStore,
+            createStartClient: startClient,
+        });
+
+        expect(outcome).toEqual({
+            ok: false,
+            diagnostics: expect.arrayContaining([
+                expect.objectContaining({
+                    code: 'run_input.required_missing',
+                    path: '/run_inputs/issue_ref',
+                }),
+            ]),
+        });
+        expect(gateTemporalReadiness).not.toHaveBeenCalled();
+        expect(startClient).not.toHaveBeenCalled();
+        expect(indexStore.listEntries()).toEqual([]);
+
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('blocks undeclared submitted keys before Temporal start without creating run index state', async () => {
+        const { store: indexStore, root, windowId } = createIndexStore();
+        const startClient = vi.fn(async () => createMockStartClient());
+        const secretValue = 'undeclared-secret-value-xyz';
+
+        const outcome = await startWorkflowRun({
+            repositoryRoot: process.cwd(),
+            workflowId: 'refine-issue',
+            submittedRunInputs: {
+                issue_ref: 'https://github.com/alto9/forge/issues/76',
+                rogue_key: secretValue,
+            },
+            globalStoragePath: root,
+            windowId,
+            indexStore,
+            createStartClient: startClient,
+        });
+
+        expect(outcome.ok).toBe(false);
+        if (outcome.ok) {
+            return;
+        }
+
+        expect(outcome.diagnostics).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    code: 'run_input.undeclared_key',
+                    path: '/run_inputs/rogue_key',
+                }),
+            ])
+        );
+        expect(JSON.stringify(outcome.diagnostics)).not.toContain(secretValue);
+        expect(gateTemporalReadiness).not.toHaveBeenCalled();
+        expect(startClient).not.toHaveBeenCalled();
+        expect(indexStore.listEntries()).toEqual([]);
+
+        fs.rmSync(root, { recursive: true, force: true });
+    });
 });
