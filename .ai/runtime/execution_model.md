@@ -29,6 +29,18 @@ The extension host owns run-start coordination up to the Temporal start call. Wo
 
 If steps 1-5 fail, Forge reports a pre-run diagnostic and does not create a Temporal run. If Temporal start succeeds but local index write or notification fails, Temporal remains authoritative; recovery scan can rediscover the run only when an index entry or explicit Temporal identity is available.
 
+### Run start identity and repeat starts
+
+Each accepted Start Run submission creates a distinct Temporal run unless the same catalog row and submitted input payload are already in a local start request in flight. While a start request is in flight, Forge disables the matching Start Run action and presents "Starting workflow run..." instead of issuing another Temporal start.
+
+Temporal `workflowId` uses the selected workflow definition ID plus a generated unique suffix suitable for the active namespace. The returned `(namespace, workflowId, runId)` tuple is the authoritative identity recorded in `WorkflowRunIndexEntry`.
+
+After Temporal start succeeds, Forge appends the run index entry before notifying views. If index write fails after Temporal accepted the run, Forge reports a post-start recovery diagnostic and includes the Temporal identity when available. It does not retry by issuing a second start automatically.
+
+After the index entry is written, Forge refreshes the left-panel run list immediately. Run graph projection may wait for the normal recovery and refresh cadence unless the user opens the graph from the new row.
+
+Before the first projection reaches `synced`, cancellation is available only when Forge has a recorded run index entry with Temporal identity. If recovery is pending or identity is unavailable, cancel actions are disabled with the standard recovery helper copy.
+
 ## Cursor SDK agent activities
 
 - Each agent activity node maps to one Temporal activity function on the window-scoped worker.
@@ -77,7 +89,5 @@ Worker maps `retryable` from the SDK response envelope before Temporal schedules
 Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
 
 ### Run start orchestration
-- Define workflow ID naming and idempotency expectations for repeated starts.
-- Specify how start orchestration handles Temporal start success followed by local index write, notification, or run-list refresh failure.
-- Define whether the initial run projection is queried immediately after start or waits for the normal recovery and refresh cadence.
-- Define cancellation behavior for a run started from the catalog before the first projection reaches `synced`.
+
+Resolved for v1. Run start identity, in-flight duplicate guarding, post-start local failure behavior, projection refresh timing, and pre-`synced` cancellation behavior are defined in **Run start identity and repeat starts**.

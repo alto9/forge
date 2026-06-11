@@ -263,6 +263,16 @@ The catalog row Start Run affordance is the first workflow-definition execution 
 
 After success, the left-panel Workflow Runs view refreshes and the new row exposes **View graph**. Users open the graph from that row when they want to monitor the run.
 
+### Start Run input collection (v1)
+
+The catalog row owns the first input collection surface. When a valid workflow declares required `run_inputs[]`, selecting **Start run** expands an inline form for that catalog row before Temporal readiness checks start. Optional inputs may appear in the same form when rendered, but v1 only requires collecting required string inputs.
+
+Each input control uses the declaration `label` as the visible and accessible label, `description` as helper copy, and `validation_hint` as non-executable guidance. Required inputs are marked as required in visible text and accessibility metadata. Keyboard order is row summary, diagnostics/detail controls, input controls in declaration order, **Start run**, then secondary row actions.
+
+Workflows with no required inputs use the no-parameters fast path: selecting **Start run** begins readiness checks immediately without a confirmation step. The start payload still contains `run_inputs: {}`.
+
+While a matching start request is in flight for the selected workflow and submitted payload, the row disables the Start Run action and shows "Starting workflow run...". A different submitted payload can be started only after the current request resolves.
+
 ### Multi-root and missing `.ai` empty states
 
 | Condition | Copy |
@@ -379,10 +389,8 @@ Run recovery (#21) uses the Forge Temporal Output channel and a minimal run list
 Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
 
 ### Start Run UX
-- Define the exact parameter collection surface for workflows with required inputs: inline catalog form, quick input flow, modal webview, or staged command flow.
-- Define disabled reasons, validation message placement, and success notification copy for Start Run.
-- Define the no-parameters fast path interaction, including whether a confirmation is needed before Temporal start.
-- Define accessible labels and keyboard order for parameter inputs and Start Run actions.
+
+Resolved for v1. Required workflow inputs are collected through the inline catalog row form described in **Start Run input collection (v1)**. Disabled reasons, validation message placement, success copy, no-parameters fast path behavior, accessible labels, and keyboard order are defined in **Workflow discovery catalog (#25)** and **Start Run input collection (v1)**.
 
 _(Workflow graph visual states and cockpit graph UI copy resolved in **Workflow Visualization (#26)** above.)_
 

@@ -99,6 +99,16 @@ The Forge extension starts or connects to workflow runs through a Temporal clien
 
 Temporal start failures are surfaced as start feedback and diagnostics. They do not create a `WorkflowRunIndexEntry` unless Temporal returns a durable run identity.
 
+### Workflow start identity and diagnostics
+
+The worker registry maps a selected `workflow_id` to a known Temporal workflow type. v1 ships only registry entries owned by Forge; arbitrary workflow type names from workflow JSON are not accepted as start authority.
+
+Temporal `workflowId` is generated from the selected `workflow_id` plus a unique suffix for the active namespace. Forge treats repeated accepted Start Run submissions as distinct runs, while the extension UI guards duplicate in-flight submissions for the same selected workflow and submitted payload.
+
+Task queue comes from the active Temporal mode configuration. Workflow-definition-level task queue override is out of scope for v1 and must be added through a future additive contract before use.
+
+Temporal start errors are converted into redacted diagnostics with `code`, `severity`, `message`, and optional `source: "temporal"`. Raw server payloads, connection strings containing credentials, headers, and tokens are never shown in issue artifacts, workflow JSON, or UI diagnostics.
+
 ### Human answer update (v1)
 
 | Aspect | Contract |
@@ -120,6 +130,17 @@ GitHub APIs remain the boundary for issue, milestone, project, pull request, and
 
 `/refine-issue` accepts GitHub issue context through its declared run input, not workflow-specific UI metadata. v1 accepts a full GitHub issue URL or a GitHub Projects v2 project identifier plus issue number. GitHub lookup and parentage normalization happen through explicit workflow activity or skill boundaries before workspace prep; workflow JSON does not carry GitHub tokens.
 
+The project identifier form is a structured value that includes the Projects v2 project identity and the issue number. Implementations may serialize it as a compact string for `run_inputs.issue_ref`, but must parse it into `{ project, issue_number }` before GitHub lookup. The project identifier is used to resolve and verify issue context and may be retained in `issue_context.md` for board hygiene; the normalized working issue URL remains the primary downstream reference.
+
+Diagnostics for this boundary use the standard diagnostic shape:
+
+| Code | When |
+|------|------|
+| `github.issue_url_unresolved` | The supplied issue URL cannot be parsed or fetched. |
+| `github.issue_number_missing` | The project identifier form does not include a usable issue number. |
+| `github.project_unavailable` | The project identifier cannot be accessed with the available GitHub authority. |
+| `github.parentage_lookup_failed` | Parent/sub-issue normalization cannot determine the working parent. |
+
 ## Primary code pointers (optional)
 
 - Add stable code directories or modules here when known.
@@ -129,15 +150,12 @@ GitHub APIs remain the boundary for issue, milestone, project, pull request, and
 Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
 
 ### Temporal workflow start
-- Define the concrete worker registry mapping from `workflow_id` to Temporal workflow type.
-- Define the Temporal `workflowId` naming format and idempotency behavior for repeated starts.
-- Specify task queue override behavior if a future workflow definition needs a non-default queue.
-- Define how Temporal start errors are converted to user-facing diagnostics without exposing raw server payloads.
+
+Resolved for v1 in **Workflow start identity and diagnostics**. Future task queue override behavior requires an additive contract before workflow definitions can request a non-default task queue.
 
 ### GitHub issue normalization
-- Define the exact payload shape for the GitHub Projects v2 project identifier plus issue number input form.
-- Specify whether the project identifier is only used for issue lookup or is retained for later board hygiene.
-- Define diagnostics for unresolved issue URLs, missing issue numbers, inaccessible projects, and parentage lookup failures.
+
+Resolved for the issue #75 contract boundary in **`/refine-issue` issue input**. Command-entry migration and legacy shorthand compatibility remain #77 scope.
 
 ### GitHub activity contracts
 

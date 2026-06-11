@@ -148,15 +148,38 @@ Implementation wires runtime validation in this order:
 
 Individual validator entries may declare `blocking: false` in a future workflow schema MINOR. v1 treats every runtime catalog validator as blocking.
 
+### Run start lifecycle labels
+
+Forge uses the following high-level lifecycle labels around workflow start and execution:
+
+| Label | Meaning |
+|-------|---------|
+| `start_requested` | The user submitted Start Run and Forge is running pre-start gates. No durable Temporal run exists yet. |
+| `blocked_before_creation` | Definition, submitted input, configuration, Temporal readiness, or worker readiness checks failed before Temporal start. No durable Temporal run exists. |
+| `run_created` | Temporal accepted start and returned run identity. Forge records a run index entry when possible. |
+| `waiting_for_input` | A created run is paused on a `human_question` node and awaits operator answers. |
+| `validation_failed` | A runtime validation node rejected output or artifacts. The Temporal run remains durable at the failed gate. |
+| `cancelled` | The user or runtime cancelled/terminated a created run through Temporal. |
+| `terminal` | The Temporal run reached completed, failed, cancelled, or terminated final state. |
+
+Start failures before `run_created` map to existing error-state categories: definition invalid, run input invalid, configuration invalid, or external dependency unavailable. Forge does not create a separate non-Temporal run state for pre-creation failures.
+
+Duplicate Start Run clicks for the same selected workflow and submitted input payload are guarded while `start_requested` is in flight. Separate accepted submissions after the in-flight request resolves may create distinct Temporal runs.
+
+### `/refine-issue` input normalization boundary
+
+`/refine-issue` declares `issue_ref` as a required workflow run input. v1 accepted forms are a full GitHub issue URL or a GitHub Projects v2 project identifier plus issue number. Parentage normalization resolves the working parent issue before Phase A workspace prep and records the normalized parent in `issue_context.md`.
+
+Legacy descriptive shorthand such as `metadata.run_input_issue_ref` may remain in workflow metadata only as documentation until #77 migrates command wiring. Runtime start uses declared `run_inputs[]` as the authoritative contract.
+
 ## Open implementation decisions
 
 Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
 
 ### Run start lifecycle
-- Define the high-level run lifecycle labels for start requested, run created, blocked before creation, waiting for input, validation failed, cancelled, and terminal states.
-- Decide whether duplicate Start Run clicks for the same selected workflow and submitted inputs create distinct Temporal runs or are guarded while a start request is in flight.
-- Map user-facing start failure classes to the existing error-state taxonomy without creating a separate non-Temporal run state.
+
+Resolved for v1. Labels, duplicate start handling, and failure mapping are defined in **Run start lifecycle labels**.
 
 ### Refine issue input normalization
-- Specify how `/refine-issue` normalizes a GitHub issue URL and a GitHub Projects v2 project identifier plus issue number into the working parent issue before Phase A starts.
-- Decide whether legacy descriptive shorthand in `metadata.run_input_issue_ref` remains accepted after the first-class `run_inputs[]` field is implemented.
+
+Resolved for the issue #75 contract boundary. `/refine-issue` uses required `run_inputs.issue_ref`; parentage normalization happens before Phase A; metadata shorthand remains descriptive only until #77 handles migration compatibility.

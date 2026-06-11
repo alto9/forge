@@ -54,6 +54,34 @@ Workflow definitions are JSON objects validated by `.ai/schemas/workflow.schema.
 
 Submitted run input values serialize as a JSON object whose keys match declared `input_id` values and whose values are strings. Forge rejects undeclared keys and missing required values before creating a durable Temporal run.
 
+### Run input implementation shapes
+
+Implementation types use the workflow schema field names at the boundary.
+
+```ts
+type WorkflowRunInputDefinition = {
+  input_id: string;
+  type: "string";
+  label: string;
+  description?: string;
+  required?: boolean;
+  validation_hint?: string;
+};
+
+type WorkflowRunStartInput = Record<string, string>;
+
+type WorkflowRunStartPayload = {
+  workflow_id: string;
+  definition_version: string;
+  repositoryRoot: string;
+  run_inputs: WorkflowRunStartInput;
+  started_by?: string;
+  started_at: string;
+};
+```
+
+`WorkflowRunStartInput` is normalized before Temporal start. Missing optional keys are omitted. Missing required keys, empty required values, and undeclared keys are reported by the pre-start validation contract (#76) and do not create a durable run.
+
 ### Graph nodes
 
 Each node requires `node_id`, `type`, and `name`. Optional `description`, `transitions`, `retry_policy`, `timeout_policy`, and `artifact_ids` apply per type.
@@ -157,6 +185,8 @@ The extension host sends this payload to the Temporal start boundary after workf
 | `started_at` | yes | ISO-8601 UTC timestamp from the extension host. |
 
 For `/refine-issue`, `run_inputs.issue_ref` carries either a GitHub issue URL or a GitHub Projects v2 project identifier plus issue number encoded by the implementation contract resolved in `/refine-issue`.
+
+`WorkflowRunIndexEntry.startInputSummary` may store a redacted display-only summary after start succeeds. The summary is optional, non-authoritative, and derived from accepted `run_inputs` only after secret-pattern redaction. For `/refine-issue`, it may contain the normalized issue reference. Full submitted input values are not required for recovery and must not be treated as durable workflow state.
 
 ## Workflow graph model (#26)
 
@@ -498,8 +528,6 @@ Preview content is read from disk at `repositoryRoot`; never from inline envelop
 Implementation-level items not yet fully specified. `/refine-issue` resolves these into timeless contract prose and removes or collapses bullets when done.
 
 ### Run start input serialization
-- Define the exact TypeScript shape for `WorkflowRunInputDefinition`, `WorkflowRunStartInput`, and the Temporal start payload.
-- Decide whether `WorkflowRunIndexEntry.startInputSummary` stores a non-secret display label for accepted input values, such as the normalized `/refine-issue` issue reference, or whether all row copy is derived on demand.
-- Specify diagnostics for invalid input declarations, missing required submitted values, and undeclared submitted input keys.
-- Define how `/refine-issue` input normalization artifacts, if any, are represented after a run starts.
+
+Resolved for v1. The workflow schema owns `WorkflowRunInputDefinition`, submitted values use `WorkflowRunStartInput = Record<string, string>`, and the Temporal start payload is defined above. Invalid input declarations, missing required submitted values, and undeclared submitted keys use pre-start diagnostics from the validation contract (#76). `/refine-issue` normalization produces the working parent issue used by downstream activities; any durable artifacts from that normalization are workflow activity outputs, not part of the run input declaration contract (#77).
 
