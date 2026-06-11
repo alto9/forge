@@ -194,14 +194,15 @@ export class WorkflowCatalogCommand {
                     submittedRunInputs: runInputs,
                     globalStoragePath: recoveryContext.globalStoragePath,
                     windowId: recoveryContext.windowId,
-                    indexStore: recoveryContext.indexStore,
                 });
 
                 if (!outcome.ok) {
                     const firstDiagnostic = outcome.diagnostics[0];
                     return {
                         ok: false,
-                        message: firstDiagnostic?.message,
+                        message: outcome.inFlight
+                            ? 'Starting workflow run…'
+                            : firstDiagnostic?.message,
                     };
                 }
 
