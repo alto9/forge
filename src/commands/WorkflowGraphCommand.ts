@@ -177,6 +177,12 @@ export class WorkflowGraphCommand {
             return;
         }
 
+        const guard = evaluateWorkflowRunAction(entry, 'viewGraph');
+        if (!guard.allowed) {
+            void vscode.window.showWarningMessage(guard.reason ?? 'Run actions are blocked.');
+            return;
+        }
+
         this.sessionState = {
             repositoryRoot: path.resolve(entry.repositoryRoot),
             workflowId: entry.workflow_id,
