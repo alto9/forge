@@ -56,7 +56,6 @@ export class RefineIssueCommand {
             },
             globalStoragePath: recoveryContext.globalStoragePath,
             windowId: recoveryContext.windowId,
-            indexStore: recoveryContext.indexStore,
             startedBy: 'refine-issue-command',
         });
 

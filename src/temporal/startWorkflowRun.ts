@@ -6,14 +6,17 @@ import {
     validateSubmittedRunInputs,
     WORKFLOW_RUN_INPUT_VALIDATOR_ID,
 } from '../workflows/validateSubmittedRunInputs';
-import { gateWorkflowRunStart } from '../workflows/validateWorkflowForRun';
+import { validateWorkflowForRun } from '../workflows/validateWorkflowForRun';
 import type {
     Diagnostic,
     WorkflowRunStartInput,
     WorkflowRunStartPayload,
 } from '../workflows/types';
 import { loadWorkflowDefinition } from '../workflows/loadWorkflowDefinition';
-import { gateTemporalReadiness } from './temporalReadinessGate';
+import {
+    gateTemporalReadiness,
+    TemporalConfigurationInvalidError,
+} from './temporalReadinessGate';
 import { formatSafeForLog } from './secretRedaction';
 import { resolveTemporalMode } from './temporalSettings';
 import { resolveManagedLocalSettings } from './managedLocalSettings';
@@ -26,8 +29,6 @@ import {
     tryAcquireWorkflowStartInFlight,
 } from './workflowStartInFlightGuard';
 import { isKnownTemporalWorkflowType, resolveTemporalWorkflowType } from './workflowTypeRegistry';
-import { notifyWorkflowRunIndexChanged } from './workflowRunRecoveryService';
-import type { WorkflowRunIndexStore } from './workflowRunIndex';
 import type { TemporalMode } from './temporalSettings';
 
 export const WORKFLOW_START_IN_FLIGHT_VALIDATOR_ID = 'forge.workflow.start_in_flight';
@@ -48,7 +49,6 @@ export interface StartWorkflowRunInput {
     submittedRunInputs?: Record<string, unknown>;
     globalStoragePath: string;
     windowId: string;
-    indexStore: WorkflowRunIndexStore;
     startedBy?: string;
     createStartClient?: () => Promise<TemporalWorkflowStartClient>;
     now?: () => Date;
@@ -62,7 +62,12 @@ export type StartWorkflowRunOutcome =
           namespace: string;
           taskQueue: string;
           mode: TemporalMode;
+          definitionVersion: string;
+          repositoryRoot: string;
+          run_inputs: WorkflowRunStartInput;
+          startedAt: string;
           startInputSummary?: string;
+          started_by?: string;
       }
     | {
           ok: false;
@@ -154,10 +159,14 @@ export async function startWorkflowRun(input: StartWorkflowRunInput): Promise<St
     const workflowId = input.workflowId;
     const submitted = input.submittedRunInputs ?? {};
 
-    gateWorkflowRunStart({
+    const definitionValidation = validateWorkflowForRun({
         workspaceRoots: [repositoryRoot],
         workflowId,
     });
+
+    if (!definitionValidation.valid) {
+        return { ok: false, diagnostics: definitionValidation.diagnostics };
+    }
 
     const definition = loadWorkflowDefinition(repositoryRoot, workflowId);
     if (!definition) {
@@ -204,8 +213,6 @@ export async function startWorkflowRun(input: StartWorkflowRunInput): Promise<St
         };
     }
 
-    await gateTemporalReadiness();
-
     const inFlightKey = buildWorkflowStartInFlightKey(
         workflowId,
         repositoryRoot,
@@ -228,76 +235,78 @@ export async function startWorkflowRun(input: StartWorkflowRunInput): Promise<St
         };
     }
 
-    const connection = resolveTemporalConnection(input.globalStoragePath, input.windowId);
-    const temporalWorkflowType = resolveTemporalWorkflowType(workflowId)!;
-    const temporalWorkflowId = buildTemporalWorkflowId(workflowId);
-    const startedAt = (input.now ?? (() => new Date()))().toISOString();
-
-    const payload: WorkflowRunStartPayload = {
-        workflow_id: workflowId,
-        definition_version: definition.version,
-        repositoryRoot,
-        run_inputs: normalizedRunInputs,
-        started_at: startedAt,
-        ...(input.startedBy ? { started_by: input.startedBy } : {}),
-    };
-
-    const startClient =
-        input.createStartClient ??
-        (() => createTemporalWorkflowStartClient(input.globalStoragePath, input.windowId));
-
     try {
-        const client = await startClient();
         try {
-            const started = await client.startWorkflow({
-                workflowType: temporalWorkflowType,
-                workflowId: temporalWorkflowId,
-                taskQueue: connection.taskQueue,
-                args: [payload],
-            });
-
-            const startInputSummary = buildStartInputSummary(declarations, normalizedRunInputs);
-
-            input.indexStore.appendRunStartEntry({
-                namespace: connection.namespace,
-                workflowId: started.workflowId,
-                runId: started.runId,
-                taskQueue: connection.taskQueue,
-                workflow_id: workflowId,
-                repositoryRoot,
-                mode: connection.mode,
-                startedAt,
-                ...(startInputSummary ? { startInputSummary } : {}),
-            });
-
-            notifyWorkflowRunIndexChanged();
-
-            return {
-                ok: true,
-                workflowId: started.workflowId,
-                runId: started.runId,
-                namespace: connection.namespace,
-                taskQueue: connection.taskQueue,
-                mode: connection.mode,
-                startInputSummary,
-            };
-        } finally {
-            await client.close();
+            await gateTemporalReadiness();
+        } catch (error) {
+            if (error instanceof TemporalConfigurationInvalidError) {
+                return { ok: false, diagnostics: error.diagnostics };
+            }
+            throw error;
         }
-    } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        return {
-            ok: false,
-            diagnostics: [
-                {
-                    code: 'forge.temporal.start_failed',
-                    severity: 'error',
-                    path: 'forge.temporal',
-                    message: formatSafeForLog(message),
-                    validator_id: 'forge.temporal.readiness',
-                },
-            ],
+
+        const connection = resolveTemporalConnection(input.globalStoragePath, input.windowId);
+        const temporalWorkflowType = resolveTemporalWorkflowType(workflowId)!;
+        const temporalWorkflowId = buildTemporalWorkflowId(workflowId);
+        const startedAt = (input.now ?? (() => new Date()))().toISOString();
+
+        const payload: WorkflowRunStartPayload = {
+            workflow_id: workflowId,
+            definition_version: definition.version,
+            repositoryRoot,
+            run_inputs: normalizedRunInputs,
+            started_at: startedAt,
+            ...(input.startedBy ? { started_by: input.startedBy } : {}),
         };
+
+        const startClient =
+            input.createStartClient ??
+            (() => createTemporalWorkflowStartClient(input.globalStoragePath, input.windowId));
+
+        try {
+            const client = await startClient();
+            try {
+                const started = await client.startWorkflow({
+                    workflowType: temporalWorkflowType,
+                    workflowId: temporalWorkflowId,
+                    taskQueue: connection.taskQueue,
+                    args: [payload],
+                });
+
+                const startInputSummary = buildStartInputSummary(declarations, normalizedRunInputs);
+
+                return {
+                    ok: true,
+                    workflowId: started.workflowId,
+                    runId: started.runId,
+                    namespace: connection.namespace,
+                    taskQueue: connection.taskQueue,
+                    mode: connection.mode,
+                    definitionVersion: definition.version,
+                    repositoryRoot,
+                    run_inputs: normalizedRunInputs,
+                    startedAt,
+                    startInputSummary,
+                    ...(input.startedBy ? { started_by: input.startedBy } : {}),
+                };
+            } finally {
+                await client.close();
+            }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            return {
+                ok: false,
+                diagnostics: [
+                    {
+                        code: 'forge.temporal.start_failed',
+                        severity: 'error',
+                        path: 'forge.temporal',
+                        message: formatSafeForLog(message),
+                        validator_id: 'forge.temporal.readiness',
+                    },
+                ],
+            };
+        }
     } finally {
         releaseWorkflowStartInFlight(inFlightKey);
     }

@@ -2,36 +2,37 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { WorkflowRunIndexStore } from './workflowRunIndex';
 import {
     resetWorkflowStartInFlightGuardForTests,
 } from './workflowStartInFlightGuard';
 import { startWorkflowRun } from './startWorkflowRun';
 import type { TemporalWorkflowStartClient } from './startWorkflowRun';
-import { gateTemporalReadiness } from './temporalReadinessGate';
-import { gateWorkflowRunStart } from '../workflows/validateWorkflowForRun';
+import {
+    gateTemporalReadiness,
+    TemporalConfigurationInvalidError,
+} from './temporalReadinessGate';
+import { validateWorkflowForRun } from '../workflows/validateWorkflowForRun';
 
-vi.mock('./temporalReadinessGate', () => ({
-    gateTemporalReadiness: vi.fn(async () => undefined),
-}));
-
-vi.mock('../workflows/validateWorkflowForRun', () => ({
-    gateWorkflowRunStart: vi.fn(() => ({
-        valid: true,
-        diagnostics: [],
-        workflow_id: 'refine-issue',
-        path: '.ai/workflows/refine-issue.json',
-    })),
-}));
-
-function createIndexStore(): { store: WorkflowRunIndexStore; root: string; windowId: string } {
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'forge-start-run-index-'));
-    const windowId = `window-${path.basename(root)}`;
+vi.mock('./temporalReadinessGate', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('./temporalReadinessGate')>();
     return {
-        store: new WorkflowRunIndexStore(root, windowId),
-        root,
-        windowId,
+        ...actual,
+        gateTemporalReadiness: vi.fn(async () => undefined),
     };
+});
+
+vi.mock('../workflows/validateWorkflowForRun', async (importOriginal) => {
+    const actual = await importOriginal<typeof import('../workflows/validateWorkflowForRun')>();
+    return {
+        ...actual,
+        validateWorkflowForRun: vi.fn(actual.validateWorkflowForRun),
+    };
+});
+
+function createTempGlobalStorage(): { root: string; windowId: string } {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'forge-start-run-'));
+    const windowId = `window-${path.basename(root)}`;
+    return { root, windowId };
 }
 
 function createMockStartClient(): TemporalWorkflowStartClient {
@@ -63,8 +64,8 @@ afterEach(() => {
 });
 
 describe('startWorkflowRun', () => {
-    it('passes normalized run_inputs to Temporal and appends a run index entry', async () => {
-        const { store: indexStore, root, windowId } = createIndexStore();
+    it('passes normalized run_inputs to Temporal and returns Temporal identity', async () => {
+        const { root, windowId } = createTempGlobalStorage();
 
         const outcome = await startWorkflowRun({
             repositoryRoot: process.cwd(),
@@ -74,7 +75,6 @@ describe('startWorkflowRun', () => {
             },
             globalStoragePath: root,
             windowId,
-            indexStore,
             createStartClient: async () => createMockStartClient(),
             now: () => new Date('2026-06-11T12:00:00.000Z'),
         });
@@ -84,18 +84,21 @@ describe('startWorkflowRun', () => {
             return;
         }
 
-        expect(outcome.runId).toBe('run-test-1');
-        expect(outcome.startInputSummary).toContain('issue_ref:');
-        expect(gateWorkflowRunStart).toHaveBeenCalled();
-        expect(gateTemporalReadiness).toHaveBeenCalled();
-
-        const entries = indexStore.listEntries();
-        expect(entries).toHaveLength(1);
-        expect(entries[0]).toMatchObject({
-            workflow_id: 'refine-issue',
+        expect(outcome).toMatchObject({
             runId: 'run-test-1',
-            startInputSummary: expect.stringContaining('issue_ref:'),
+            namespace: expect.any(String),
+            taskQueue: expect.any(String),
+            mode: expect.any(String),
+            definitionVersion: expect.any(String),
+            repositoryRoot: process.cwd(),
+            run_inputs: {
+                issue_ref: 'https://github.com/alto9/forge/issues/75',
+            },
+            startedAt: '2026-06-11T12:00:00.000Z',
         });
+        expect(outcome.startInputSummary).toContain('issue_ref:');
+        expect(validateWorkflowForRun).toHaveBeenCalled();
+        expect(gateTemporalReadiness).toHaveBeenCalled();
 
         fs.rmSync(root, { recursive: true, force: true });
     });
@@ -116,7 +119,7 @@ describe('startWorkflowRun', () => {
             'utf8'
         );
 
-        const { store: indexStore, root, windowId } = createIndexStore();
+        const { root, windowId } = createTempGlobalStorage();
         const startClient = vi.fn(async () => ({
             async startWorkflow(input: {
                 args: [{ run_inputs: Record<string, string> }];
@@ -135,13 +138,13 @@ describe('startWorkflowRun', () => {
             submittedRunInputs: {},
             globalStoragePath: root,
             windowId,
-            indexStore,
             createStartClient: startClient,
         });
 
         expect(outcome).toEqual(
             expect.objectContaining({
                 ok: true,
+                runId: 'run-empty-1',
             })
         );
         expect(startClient).toHaveBeenCalled();
@@ -150,7 +153,7 @@ describe('startWorkflowRun', () => {
     });
 
     it('blocks before Temporal readiness when required run inputs are missing', async () => {
-        const { store: indexStore, root, windowId } = createIndexStore();
+        const { root, windowId } = createTempGlobalStorage();
         const startClient = vi.fn(async () => createMockStartClient());
 
         const outcome = await startWorkflowRun({
@@ -159,7 +162,6 @@ describe('startWorkflowRun', () => {
             submittedRunInputs: {},
             globalStoragePath: root,
             windowId,
-            indexStore,
             createStartClient: startClient,
         });
 
@@ -174,13 +176,12 @@ describe('startWorkflowRun', () => {
         });
         expect(gateTemporalReadiness).not.toHaveBeenCalled();
         expect(startClient).not.toHaveBeenCalled();
-        expect(indexStore.listEntries()).toEqual([]);
 
         fs.rmSync(root, { recursive: true, force: true });
     });
 
-    it('blocks undeclared submitted keys before Temporal start without creating run index state', async () => {
-        const { store: indexStore, root, windowId } = createIndexStore();
+    it('blocks undeclared submitted keys before Temporal start', async () => {
+        const { root, windowId } = createTempGlobalStorage();
         const startClient = vi.fn(async () => createMockStartClient());
         const secretValue = 'undeclared-secret-value-xyz';
 
@@ -193,7 +194,6 @@ describe('startWorkflowRun', () => {
             },
             globalStoragePath: root,
             windowId,
-            indexStore,
             createStartClient: startClient,
         });
 
@@ -213,7 +213,129 @@ describe('startWorkflowRun', () => {
         expect(JSON.stringify(outcome.diagnostics)).not.toContain(secretValue);
         expect(gateTemporalReadiness).not.toHaveBeenCalled();
         expect(startClient).not.toHaveBeenCalled();
-        expect(indexStore.listEntries()).toEqual([]);
+
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('returns readiness diagnostics instead of throwing when Temporal readiness fails', async () => {
+        const { root, windowId } = createTempGlobalStorage();
+        vi.mocked(gateTemporalReadiness).mockRejectedValueOnce(
+            new TemporalConfigurationInvalidError([
+                {
+                    code: 'forge.temporal.configuration_invalid',
+                    severity: 'error',
+                    path: 'forge.temporal.worker',
+                    message: 'Worker is not ready.',
+                    validator_id: 'forge.temporal.readiness',
+                },
+            ])
+        );
+
+        const outcome = await startWorkflowRun({
+            repositoryRoot: process.cwd(),
+            workflowId: 'refine-issue',
+            submittedRunInputs: {
+                issue_ref: 'https://github.com/alto9/forge/issues/75',
+            },
+            globalStoragePath: root,
+            windowId,
+            createStartClient: async () => createMockStartClient(),
+        });
+
+        expect(outcome).toEqual({
+            ok: false,
+            diagnostics: [
+                expect.objectContaining({
+                    code: 'forge.temporal.configuration_invalid',
+                    path: 'forge.temporal.worker',
+                }),
+            ],
+        });
+
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('blocks duplicate in-flight starts for the same workflow and payload', async () => {
+        const { root, windowId } = createTempGlobalStorage();
+        let resolveStart: (() => void) | undefined;
+        const startGate = new Promise<void>((resolve) => {
+            resolveStart = resolve;
+        });
+
+        vi.mocked(gateTemporalReadiness).mockImplementationOnce(async () => {
+            await startGate;
+        });
+
+        const firstStart = startWorkflowRun({
+            repositoryRoot: process.cwd(),
+            workflowId: 'refine-issue',
+            submittedRunInputs: {
+                issue_ref: 'https://github.com/alto9/forge/issues/75',
+            },
+            globalStoragePath: root,
+            windowId,
+            createStartClient: async () => createMockStartClient(),
+        });
+
+        const duplicate = await startWorkflowRun({
+            repositoryRoot: process.cwd(),
+            workflowId: 'refine-issue',
+            submittedRunInputs: {
+                issue_ref: 'https://github.com/alto9/forge/issues/75',
+            },
+            globalStoragePath: root,
+            windowId,
+            createStartClient: async () => createMockStartClient(),
+        });
+
+        expect(duplicate).toEqual({
+            ok: false,
+            inFlight: true,
+            diagnostics: [
+                expect.objectContaining({
+                    code: 'forge.workflow.start_in_flight',
+                }),
+            ],
+        });
+
+        resolveStart?.();
+        await firstStart;
+
+        fs.rmSync(root, { recursive: true, force: true });
+    });
+
+    it('returns definition validation diagnostics without calling Temporal readiness', async () => {
+        const { root, windowId } = createTempGlobalStorage();
+        vi.mocked(validateWorkflowForRun).mockReturnValueOnce({
+            valid: false,
+            diagnostics: [
+                {
+                    code: 'forge.workflow.schema_invalid',
+                    severity: 'error',
+                    path: '.ai/workflows/broken.json',
+                    message: 'Schema validation failed.',
+                    validator_id: 'forge.workflow.schema',
+                },
+            ],
+            workflow_id: 'broken',
+            path: '.ai/workflows/broken.json',
+        });
+
+        const outcome = await startWorkflowRun({
+            repositoryRoot: process.cwd(),
+            workflowId: 'broken',
+            submittedRunInputs: {},
+            globalStoragePath: root,
+            windowId,
+        });
+
+        expect(outcome.ok).toBe(false);
+        if (outcome.ok) {
+            return;
+        }
+
+        expect(outcome.diagnostics[0]?.code).toBe('forge.workflow.schema_invalid');
+        expect(gateTemporalReadiness).not.toHaveBeenCalled();
 
         fs.rmSync(root, { recursive: true, force: true });
     });
