@@ -95,11 +95,31 @@ Workflow start feedback uses existing Forge Temporal output, notifications, stat
 | Event | User-visible surface | Log metadata |
 |-------|----------------------|--------------|
 | Start requested | Optional Output channel info | `workflow_id`, `repositoryRoot`, declared input key names only |
-| Start blocked by definition or input validation | Catalog/helper text and notification when command-driven | diagnostic `code`, `path`, `severity`; no submitted values |
+| Start blocked by definition validation | Catalog disabled reason/helper text and notification when command-driven | diagnostic `code`, `path`, `severity`; no submitted values |
+| Start blocked by run input validation | Inline catalog input validation and notification when command-driven | diagnostic `code`, `path`, `severity`, declared input key names only; no submitted values |
 | Start blocked by readiness | Notification and status bar health state | Temporal and worker health states |
 | Start succeeded | Notification or catalog feedback plus Workflow Runs refresh | `workflow_id`, `namespace`, `workflowId`, `runId`, `taskQueue` |
 | Start failed before run identity | Error notification and Output channel diagnostic | redacted Temporal or validation error code |
 | Start accepted, index write failed | Error notification and Output channel recovery diagnostic | `workflow_id`, `namespace`, `workflowId`, `runId`, `taskQueue`, local write error code; no submitted input values |
+
+### Blocked versus failed starts
+
+Blocked starts are failures before the Temporal start call. They include invalid or unresolved workflow definitions, invalid submitted `run_inputs[]`, Temporal configuration or readiness failures, worker readiness failures, and duplicate in-flight start suppression. Blocked starts do not create Temporal history and do not create or mutate a `WorkflowRunIndexEntry`.
+
+Failed starts are failures from the Temporal start call before Temporal returns `(namespace, workflowId, runId)`. They reuse the Forge Temporal error notification and Output channel diagnostic path, include redacted Temporal error classification when available, and do not create or mutate a `WorkflowRunIndexEntry`.
+
+### Start diagnostic copy
+
+| Situation | User-facing copy |
+|-----------|------------------|
+| Definition invalid | "Fix validation errors before starting a run." |
+| Required input missing or invalid | "Complete required inputs before starting this workflow." |
+| Temporal not ready | "Workflow runs are blocked until Temporal is ready. See Forge Temporal output for details." |
+| Worker not ready | "Workflow runs are blocked until the Forge worker is ready. See Forge Temporal output for details." |
+| Duplicate matching start in flight | "Starting workflow run…" |
+| Temporal start failed before identity | "Could not start workflow run — {reason}." |
+
+`{reason}` is a redacted, user-actionable summary. It may include Temporal error class, namespace, task queue, or remediation hint, but it must not include submitted input values, API keys, certificates, authorization headers, raw Temporal payloads, or full stack traces.
 
 ## Primary code pointers (optional)
 
@@ -161,6 +181,5 @@ Implementation-level items not yet fully specified. `/refine-issue` resolves the
 
 ### Health and diagnostics (remaining)
 - Define log redaction rules for GitHub activity diagnostics inside worker-executed activities.
-- Define exact user-facing diagnostic copy for blocked and failed starts in the start-diagnostics issue scope.
 
-_(Run input key-name logging and post-acceptance run identity metadata are resolved in **Workflow start diagnostics**: declared input key names and Temporal identity metadata may appear in logs; submitted values remain excluded. Run inspector artifact preview limits, recovery action catalog, and UI redaction rules resolved in **Run inspector behavior (v1)** and **UI redaction (run inspector)** above.)_
+_(Run input key-name logging, blocked and failed start copy, and post-acceptance run identity metadata are resolved in **Workflow start diagnostics**: declared input key names and Temporal identity metadata may appear in logs; submitted values remain excluded. Run inspector artifact preview limits, recovery action catalog, and UI redaction rules resolved in **Run inspector behavior (v1)** and **UI redaction (run inspector)** above.)_

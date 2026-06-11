@@ -28,6 +28,10 @@ The start-orchestration boundary is the successful Temporal start result. Run-in
 
 If steps 1-5 fail, Forge reports a pre-run diagnostic and does not create a Temporal run. If step 6 fails before Temporal returns identity, Forge reports a failed start through the existing Temporal diagnostic path and does not create a local run-index entry. When step 6 succeeds, the returned Temporal identity is handed to the run-index persistence path and success feedback path.
 
+Pre-run diagnostics are blocked starts. They are represented by existing validation aggregates and Temporal readiness diagnostics, not by a separate start-error model. The implementation preserves the source diagnostic shape when available: workflow definition and run-input blockers use the diagnostic shape from `.ai/data/serialization.md`; Temporal and worker readiness blockers use `forge.temporal.configuration_invalid` diagnostics from the readiness gate.
+
+Temporal start-call failures before identity is returned are failed starts. They surface through the same Forge Temporal notification and Output channel path as other Temporal diagnostics, with redaction rules from `.ai/operations/observability.md`. Because Temporal did not return identity, Forge does not append a run-index entry and does not offer run-scoped actions.
+
 ### Downstream after accepted start
 
 After Temporal accepts the run, Forge appends the run index entry from returned Temporal identifiers and start context, notifies the left-panel Workflow Runs view to refresh, shows Start Run success feedback, and lets the user open run-mode graph visualization from the new run row. Those post-start persistence and presentation details are downstream of the start-orchestration boundary.

@@ -263,6 +263,8 @@ The catalog row Start Run affordance is the first workflow-definition execution 
 
 After success, the left-panel Workflow Runs view refreshes and the new row exposes **View graph**. Users open the graph from that row when they want to monitor the run.
 
+Blocked starts keep the user on the catalog row and do not add a Workflow Runs entry. Definition and input blockers show row-level helper or validation copy; readiness blockers use the existing Forge Temporal notification, status bar, and Output channel health surfaces. Failed starts after readiness passes but before Temporal returns identity use the same catalog failure copy and Forge Temporal Output channel diagnostic path, with `{reason}` redacted per `.ai/operations/observability.md` **Start diagnostic copy**.
+
 ### Start Run input collection (v1)
 
 The catalog row owns the first input collection surface. When a valid workflow declares required `run_inputs[]`, selecting **Start run** expands an inline form for that catalog row before Temporal readiness checks start. Optional inputs may appear in the same form when rendered, but v1 only requires collecting required string inputs.
