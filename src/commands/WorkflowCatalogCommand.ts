@@ -1,9 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { persistAcceptedWorkflowRun } from '../temporal/persistAcceptedWorkflowRun';
-import { startWorkflowRun } from '../temporal/startWorkflowRun';
-import { presentWorkflowRunStartFailure } from '../temporal/workflowRunStartPresentation';
+import { executeCatalogStartRun } from './catalogStartRun';
 import { getWorkflowRunRecoveryContext } from '../temporal/workflowRunRecoveryService';
 import { buildWorkflowCatalog } from '../workflows/buildWorkflowCatalog';
 import type { WorkflowCatalogEmptyState } from '../workflows/types';
@@ -190,47 +188,12 @@ export class WorkflowCatalogCommand {
                     };
                 }
 
-                const outcome = await startWorkflowRun({
+                return executeCatalogStartRun({
                     repositoryRoot: targetFolder.uri.fsPath,
                     workflowId,
-                    submittedRunInputs: runInputs,
-                    globalStoragePath: recoveryContext.globalStoragePath,
-                    windowId: recoveryContext.windowId,
+                    runInputs,
+                    recoveryContext,
                 });
-
-                if (!outcome.ok) {
-                    const presentation = presentWorkflowRunStartFailure({
-                        workflowId,
-                        outcome,
-                        log: recoveryContext.log,
-                    });
-                    return {
-                        ok: false,
-                        message: presentation.catalogMessage,
-                        inFlight: presentation.inFlight,
-                    };
-                }
-
-                const persistOutcome = persistAcceptedWorkflowRun({
-                    workflow_id: workflowId,
-                    startOutcome: outcome,
-                    indexStore: recoveryContext.indexStore,
-                    log: recoveryContext.log,
-                });
-
-                if (!persistOutcome.ok) {
-                    const firstDiagnostic = persistOutcome.diagnostics[0];
-                    const message = firstDiagnostic?.message;
-                    if (message) {
-                        void vscode.window.showErrorMessage(message);
-                    }
-                    return {
-                        ok: false,
-                        message,
-                    };
-                }
-
-                return { ok: true };
             },
             onDispose: () => {
                 this.disposeWatcher();
