@@ -19,7 +19,7 @@ import {
 } from './temporalPresentation';
 import type { TemporalRecoveryClient } from './temporalRecoveryScan';
 
-export type WorkflowRunAction = 'cancel' | 'dismiss' | 'humanInput';
+export type WorkflowRunAction = 'cancel' | 'dismiss' | 'humanInput' | 'viewGraph';
 
 const BLOCKED_RECOVERY_STATES = new Set<RecoveryState>([
     'recovery_pending',
@@ -43,6 +43,31 @@ export function evaluateWorkflowRunAction(
                 reason: formatOrphanedRunMessage(),
             };
         }
+        return { allowed: true };
+    }
+
+    if (action === 'viewGraph') {
+        if (entry.recoveryState === 'orphaned') {
+            return {
+                allowed: false,
+                reason: formatOrphanedRunMessage(),
+            };
+        }
+
+        if (BLOCKED_RECOVERY_STATES.has(entry.recoveryState)) {
+            return {
+                allowed: false,
+                reason: formatRunActionsBlockedMessage(),
+            };
+        }
+
+        if (entry.recoveryState !== 'synced') {
+            return {
+                allowed: false,
+                reason: formatRunActionsBlockedMessage(),
+            };
+        }
+
         return { allowed: true };
     }
 

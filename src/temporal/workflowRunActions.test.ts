@@ -14,6 +14,7 @@ import { WorkflowRunIndexStore } from './workflowRunIndex';
 import type { TemporalRecoveryClient } from './temporalRecoveryScan';
 import {
     formatHumanInputBlockedMessage,
+    formatOrphanedRunMessage,
     formatRunActionsBlockedMessage,
 } from './temporalPresentation';
 
@@ -60,6 +61,42 @@ afterEach(() => {
 });
 
 describe('workflowRunActions', () => {
+    it('allows view graph only for synced indexed runs', () => {
+        const { globalStoragePath, windowId } = createTempGlobalStorage();
+        const store = new WorkflowRunIndexStore(globalStoragePath, windowId);
+        const entry = createEntry(store);
+
+        expect(evaluateWorkflowRunAction(entry, 'viewGraph').allowed).toBe(false);
+
+        store.updateEntry('forge-local:wf-1:run-1', { recoveryState: 'synced' });
+        const synced = store.getEntry('forge-local:wf-1:run-1')!;
+        expect(evaluateWorkflowRunAction(synced, 'viewGraph').allowed).toBe(true);
+
+        store.updateEntry('forge-local:wf-1:run-1', { recoveryState: 'recovery_pending' });
+        const recoveryPending = store.getEntry('forge-local:wf-1:run-1')!;
+        expect(evaluateWorkflowRunAction(recoveryPending, 'viewGraph').reason).toBe(
+            formatRunActionsBlockedMessage()
+        );
+
+        store.updateEntry('forge-local:wf-1:run-1', { recoveryState: 'refresh_failed' });
+        const refreshFailed = store.getEntry('forge-local:wf-1:run-1')!;
+        expect(evaluateWorkflowRunAction(refreshFailed, 'viewGraph').reason).toBe(
+            formatRunActionsBlockedMessage()
+        );
+
+        store.updateEntry('forge-local:wf-1:run-1', { recoveryState: 'unreachable' });
+        const unreachable = store.getEntry('forge-local:wf-1:run-1')!;
+        expect(evaluateWorkflowRunAction(unreachable, 'viewGraph').reason).toBe(
+            formatRunActionsBlockedMessage()
+        );
+
+        store.updateEntry('forge-local:wf-1:run-1', { recoveryState: 'orphaned' });
+        const orphaned = store.getEntry('forge-local:wf-1:run-1')!;
+        expect(evaluateWorkflowRunAction(orphaned, 'viewGraph').reason).toBe(
+            formatOrphanedRunMessage()
+        );
+    });
+
     it('blocks cancel, dismiss, and human input while recovery is pending', () => {
         const entry = {
             namespace: 'forge-local',
