@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { persistAcceptedWorkflowRun } from '../temporal/persistAcceptedWorkflowRun';
 import { startWorkflowRun } from '../temporal/startWorkflowRun';
 import { getWorkflowRunRecoveryContext } from '../temporal/workflowRunRecoveryService';
 import { buildWorkflowCatalog } from '../workflows/buildWorkflowCatalog';
@@ -203,6 +204,25 @@ export class WorkflowCatalogCommand {
                         message: outcome.inFlight
                             ? 'Starting workflow run…'
                             : firstDiagnostic?.message,
+                    };
+                }
+
+                const persistOutcome = persistAcceptedWorkflowRun({
+                    workflow_id: workflowId,
+                    startOutcome: outcome,
+                    indexStore: recoveryContext.indexStore,
+                    log: recoveryContext.log,
+                });
+
+                if (!persistOutcome.ok) {
+                    const firstDiagnostic = persistOutcome.diagnostics[0];
+                    const message = firstDiagnostic?.message;
+                    if (message) {
+                        void vscode.window.showErrorMessage(message);
+                    }
+                    return {
+                        ok: false,
+                        message,
                     };
                 }
 

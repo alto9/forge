@@ -4,12 +4,17 @@ import path from 'path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { RefineIssueCommand, REFINE_ISSUE_WORKFLOW_ID } from '../commands/RefineIssueCommand';
 import { WorkflowCatalogCommand } from '../commands/WorkflowCatalogCommand';
+import { persistAcceptedWorkflowRun } from '../temporal/persistAcceptedWorkflowRun';
 import { startWorkflowRun } from '../temporal/startWorkflowRun';
 import { getWorkflowRunRecoveryContext } from '../temporal/workflowRunRecoveryService';
 import * as vscode from 'vscode';
 
 vi.mock('../temporal/startWorkflowRun', () => ({
     startWorkflowRun: vi.fn(),
+}));
+
+vi.mock('../temporal/persistAcceptedWorkflowRun', () => ({
+    persistAcceptedWorkflowRun: vi.fn(),
 }));
 
 vi.mock('../temporal/workflowRunRecoveryService', () => ({
@@ -23,6 +28,7 @@ vi.mock('../commands/WorkflowCatalogCommand', () => ({
 }));
 
 const mockedStartWorkflowRun = vi.mocked(startWorkflowRun);
+const mockedPersistAcceptedWorkflowRun = vi.mocked(persistAcceptedWorkflowRun);
 const mockedGetWorkflowRunRecoveryContext = vi.mocked(getWorkflowRunRecoveryContext);
 const mockedResolveRepositoryFolder = vi.mocked(WorkflowCatalogCommand.resolveRepositoryFolder);
 
@@ -65,7 +71,17 @@ describe('RefineIssueCommand', () => {
             runId: 'run-1',
             namespace: 'default',
             taskQueue: 'forge',
-            mode: 'managed-local',
+            mode: 'managedLocal',
+            definitionVersion: '1.0.0',
+            repositoryRoot: tempRoot,
+            run_inputs: {
+                issue_ref: 'https://github.com/alto9/forge/issues/77',
+            },
+            startedAt: '2026-06-11T12:00:00.000Z',
+        });
+        mockedPersistAcceptedWorkflowRun.mockReturnValue({
+            ok: true,
+            indexKey: 'default:refine-issue-run:run-1',
         });
 
         await RefineIssueCommand.execute(
@@ -80,6 +96,11 @@ describe('RefineIssueCommand', () => {
                 submittedRunInputs: {
                     issue_ref: 'https://github.com/alto9/forge/issues/77',
                 },
+            })
+        );
+        expect(mockedPersistAcceptedWorkflowRun).toHaveBeenCalledWith(
+            expect.objectContaining({
+                workflow_id: REFINE_ISSUE_WORKFLOW_ID,
             })
         );
     });
@@ -177,7 +198,17 @@ describe('RefineIssueCommand', () => {
             runId: 'run-1',
             namespace: 'default',
             taskQueue: 'forge',
-            mode: 'managed-local',
+            mode: 'managedLocal',
+            definitionVersion: '1.0.0',
+            repositoryRoot: tempRoot,
+            run_inputs: {
+                issue_ref: 'https://github.com/alto9/forge/issues/77',
+            },
+            startedAt: '2026-06-11T12:00:00.000Z',
+        });
+        mockedPersistAcceptedWorkflowRun.mockReturnValue({
+            ok: true,
+            indexKey: 'default:refine-issue-run:run-1',
         });
 
         await RefineIssueCommand.execute({} as vscode.ExtensionContext, 'alto9/forge#77');
@@ -188,6 +219,68 @@ describe('RefineIssueCommand', () => {
                     issue_ref: 'https://github.com/alto9/forge/issues/77',
                 },
             })
+        );
+    });
+
+    it('surfaces post-start index persistence failures without starting Temporal again', async () => {
+        tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'forge-refine-issue-command-'));
+        fs.mkdirSync(path.join(tempRoot, '.ai'), { recursive: true });
+        fs.writeFileSync(
+            path.join(tempRoot, '.ai/project.json'),
+            JSON.stringify({ github_url: 'https://github.com/alto9/forge' })
+        );
+
+        mockedResolveRepositoryFolder.mockResolvedValue({
+            uri: vscode.Uri.file(tempRoot),
+            name: 'forge',
+            index: 0,
+        } as vscode.WorkspaceFolder);
+
+        mockedGetWorkflowRunRecoveryContext.mockReturnValue({
+            globalStoragePath: tempRoot,
+            windowId: 'window-test',
+            indexStore: {} as never,
+            log: vi.fn(),
+            createRecoveryClient: vi.fn(),
+            isReady: () => true,
+        });
+
+        mockedStartWorkflowRun.mockResolvedValue({
+            ok: true,
+            workflowId: 'refine-issue-run',
+            runId: 'run-1',
+            namespace: 'default',
+            taskQueue: 'forge',
+            mode: 'managedLocal',
+            definitionVersion: '1.0.0',
+            repositoryRoot: tempRoot,
+            run_inputs: {
+                issue_ref: 'https://github.com/alto9/forge/issues/77',
+            },
+            startedAt: '2026-06-11T12:00:00.000Z',
+        });
+        mockedPersistAcceptedWorkflowRun.mockReturnValue({
+            ok: false,
+            diagnostics: [
+                {
+                    code: 'forge.workflow.run_index.write_failed',
+                    severity: 'error',
+                    path: 'forge.workflow.run_index',
+                    message:
+                        'Workflow run started in Temporal, but Forge could not save the local run index. List, graph, cancel, and recovery actions are unavailable until the run is indexed.',
+                    validator_id: 'forge.workflow.run_index',
+                },
+            ],
+        });
+
+        await RefineIssueCommand.execute(
+            {} as vscode.ExtensionContext,
+            'https://github.com/alto9/forge/issues/77'
+        );
+
+        expect(mockedStartWorkflowRun).toHaveBeenCalledTimes(1);
+        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
+            expect.stringContaining('could not save the local run index')
         );
     });
 });
