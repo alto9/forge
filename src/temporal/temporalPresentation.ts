@@ -136,6 +136,35 @@ export function formatWorkflowBlockedNotification(): string {
     return 'Workflow runs are blocked until Temporal is ready. See Forge Temporal output for details.';
 }
 
+export function formatWorkflowRunStartDefinitionBlockedCatalogMessage(): string {
+    return 'Fix validation errors before starting a run.';
+}
+
+export function formatWorkflowRunStartInputBlockedCatalogMessage(): string {
+    return 'Complete required inputs before starting this workflow.';
+}
+
+export function formatWorkflowRunStartTemporalBlockedCatalogMessage(): string {
+    return formatWorkflowBlockedNotification();
+}
+
+export function formatWorkflowRunStartWorkerBlockedCatalogMessage(): string {
+    return formatWorkerBlockedNotification();
+}
+
+export function formatWorkflowRunStartInFlightCatalogMessage(): string {
+    return 'Starting workflow run…';
+}
+
+export function formatWorkflowRunStartFailedCatalogMessage(reason: string): string {
+    const normalizedReason = reason.replace(/\.\s*$/, '').trim() || 'Temporal start failed';
+    return `Could not start workflow run — ${normalizedReason}.`;
+}
+
+export function formatWorkflowRunStartFailedNotification(reason: string): string {
+    return formatWorkflowRunStartFailedCatalogMessage(reason);
+}
+
 export function formatStateTransitionLogLine(
     state: ManagedLocalHealthState,
     context: ManagedLocalPresentationContext

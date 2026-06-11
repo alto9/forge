@@ -90,6 +90,13 @@ export {
     formatStartFailedNotification,
     formatWorkflowBlockedNotification,
     formatWorkerBlockedNotification,
+    formatWorkflowRunStartDefinitionBlockedCatalogMessage,
+    formatWorkflowRunStartFailedCatalogMessage,
+    formatWorkflowRunStartFailedNotification,
+    formatWorkflowRunStartInFlightCatalogMessage,
+    formatWorkflowRunStartInputBlockedCatalogMessage,
+    formatWorkflowRunStartTemporalBlockedCatalogMessage,
+    formatWorkflowRunStartWorkerBlockedCatalogMessage,
     formatWorkerReadyNotification,
     formatWorkerStartFailedNotification,
     formatWorkerStateTransitionLogLine,
@@ -144,6 +151,11 @@ export {
     createTemporalWorkflowStartClient,
     startWorkflowRun,
 } from './startWorkflowRun';
+export {
+    classifyWorkflowRunStartFailure,
+    formatWorkflowRunStartCatalogMessage,
+    presentWorkflowRunStartFailure,
+} from './workflowRunStartPresentation';
 export {
     WORKFLOW_RUN_INDEX_VALIDATOR_ID,
     persistAcceptedWorkflowRun,

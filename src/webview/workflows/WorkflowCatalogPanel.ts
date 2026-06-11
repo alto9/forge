@@ -15,7 +15,7 @@ export type WorkflowCatalogPanelCallbacks = {
     onStartRun?: (input: {
         workflowId: string;
         runInputs: Record<string, string>;
-    }) => Promise<{ ok: boolean; message?: string }>;
+    }) => Promise<{ ok: boolean; message?: string; inFlight?: boolean }>;
     onDispose?: () => void;
 };
 
@@ -85,6 +85,7 @@ export class WorkflowCatalogPanel {
                         workflowId: message.workflowId,
                         ok: result.ok,
                         message: result.message,
+                        inFlight: result.inFlight,
                     });
                 }
             }

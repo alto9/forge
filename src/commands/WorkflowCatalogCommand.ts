@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { persistAcceptedWorkflowRun } from '../temporal/persistAcceptedWorkflowRun';
 import { startWorkflowRun } from '../temporal/startWorkflowRun';
+import { presentWorkflowRunStartFailure } from '../temporal/workflowRunStartPresentation';
 import { getWorkflowRunRecoveryContext } from '../temporal/workflowRunRecoveryService';
 import { buildWorkflowCatalog } from '../workflows/buildWorkflowCatalog';
 import type { WorkflowCatalogEmptyState } from '../workflows/types';
@@ -198,12 +199,15 @@ export class WorkflowCatalogCommand {
                 });
 
                 if (!outcome.ok) {
-                    const firstDiagnostic = outcome.diagnostics[0];
+                    const presentation = presentWorkflowRunStartFailure({
+                        workflowId,
+                        outcome,
+                        log: recoveryContext.log,
+                    });
                     return {
                         ok: false,
-                        message: outcome.inFlight
-                            ? 'Starting workflow run…'
-                            : firstDiagnostic?.message,
+                        message: presentation.catalogMessage,
+                        inFlight: presentation.inFlight,
                     };
                 }
 
