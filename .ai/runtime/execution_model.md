@@ -30,7 +30,7 @@ If steps 1-5 fail, Forge reports a pre-run diagnostic and does not create a Temp
 
 ### Downstream after accepted start
 
-After Temporal accepts the run, Forge appends the run index entry from returned Temporal identifiers, notifies the left-panel Workflow Runs view to refresh, shows Start Run success feedback, and lets the user open run-mode graph visualization from the new run row. Those post-start persistence and presentation details are downstream of the start-orchestration boundary.
+After Temporal accepts the run, Forge appends the run index entry from returned Temporal identifiers and start context, notifies the left-panel Workflow Runs view to refresh, shows Start Run success feedback, and lets the user open run-mode graph visualization from the new run row. Those post-start persistence and presentation details are downstream of the start-orchestration boundary.
 
 ### Run start identity and repeat starts
 
@@ -38,7 +38,7 @@ Each accepted Start Run submission creates a distinct Temporal run unless the sa
 
 Temporal `workflowId` uses the selected workflow definition ID plus a generated unique suffix suitable for the active namespace. The returned `(namespace, workflowId, runId)` tuple is the authoritative identity recorded in `WorkflowRunIndexEntry`.
 
-After Temporal start succeeds, Forge appends the run index entry before notifying views. If index write fails after Temporal accepted the run, Forge reports a post-start recovery diagnostic and includes the Temporal identity when available. It does not retry by issuing a second start automatically.
+After Temporal start succeeds, Forge appends the run index entry before notifying views or enabling run-scoped actions. New entries start as `recovery_pending`; list, graph, cancel, human-input, and diagnostics consumers use the persisted `(namespace, workflowId, runId)` tuple to refresh from Temporal. If index write fails after Temporal accepted the run, Forge reports a post-start recovery diagnostic and includes the Temporal identity when available. It does not retry by issuing a second start automatically.
 
 After the index entry is written, Forge refreshes the left-panel run list immediately. Run graph projection may wait for the normal recovery and refresh cadence unless the user opens the graph from the new row.
 

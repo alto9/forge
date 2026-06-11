@@ -99,6 +99,7 @@ Workflow start feedback uses existing Forge Temporal output, notifications, stat
 | Start blocked by readiness | Notification and status bar health state | Temporal and worker health states |
 | Start succeeded | Notification or catalog feedback plus Workflow Runs refresh | `workflow_id`, `namespace`, `workflowId`, `runId`, `taskQueue` |
 | Start failed before run identity | Error notification and Output channel diagnostic | redacted Temporal or validation error code |
+| Start accepted, index write failed | Error notification and Output channel recovery diagnostic | `workflow_id`, `namespace`, `workflowId`, `runId`, `taskQueue`, local write error code; no submitted input values |
 
 ## Primary code pointers (optional)
 
@@ -160,6 +161,6 @@ Implementation-level items not yet fully specified. `/refine-issue` resolves the
 
 ### Health and diagnostics (remaining)
 - Define log redaction rules for GitHub activity diagnostics inside worker-executed activities.
-- Define exact observability copy and log metadata for successful run start, blocked start, and failed start.
+- Define exact user-facing diagnostic copy for blocked and failed starts in the start-diagnostics issue scope.
 
-_(Run input key-name logging is resolved in **Workflow start diagnostics**: declared input key names may appear in metadata; submitted values remain excluded. Run inspector artifact preview limits, recovery action catalog, and UI redaction rules resolved in **Run inspector behavior (v1)** and **UI redaction (run inspector)** above.)_
+_(Run input key-name logging and post-acceptance run identity metadata are resolved in **Workflow start diagnostics**: declared input key names and Temporal identity metadata may appear in logs; submitted values remain excluded. Run inspector artifact preview limits, recovery action catalog, and UI redaction rules resolved in **Run inspector behavior (v1)** and **UI redaction (run inspector)** above.)_

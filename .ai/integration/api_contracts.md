@@ -101,6 +101,8 @@ Submitted run input validation happens before Temporal readiness and start. Vali
 
 Temporal start failures are surfaced as start feedback and diagnostics. They do not create a `WorkflowRunIndexEntry` unless Temporal returns a durable run identity.
 
+The accepted start result is the only cross-boundary authority for post-start persistence. Forge combines returned `workflowId` and `runId` with the active namespace, active task queue, selected workflow definition ID, selected repository root, active Temporal mode, and start timestamp to append the `WorkflowRunIndexEntry`. Downstream list, graph, recovery, cancel, human-answer, and diagnostic consumers address the run through that persisted identity.
+
 ### Workflow start identity and diagnostics
 
 The worker registry maps a selected `workflow_id` to a known Temporal workflow type. v1 ships only registry entries owned by Forge; arbitrary workflow type names from workflow JSON are not accepted as start authority.
