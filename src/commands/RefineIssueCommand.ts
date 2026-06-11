@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { inferRepositoryFromRoot } from '../github/inferRepositoryFromRoot';
 import { parseRefineIssueRef } from '../github/parseRefineIssueRef';
+import { persistAcceptedWorkflowRun } from '../temporal/persistAcceptedWorkflowRun';
 import { startWorkflowRun } from '../temporal/startWorkflowRun';
 import { getWorkflowRunRecoveryContext } from '../temporal/workflowRunRecoveryService';
 import { WorkflowCatalogCommand } from './WorkflowCatalogCommand';
@@ -63,6 +64,21 @@ export class RefineIssueCommand {
             const message =
                 outcome.diagnostics[0]?.message ??
                 'Failed to start refine-issue through the generic workflow Start Run path.';
+            void vscode.window.showErrorMessage(message);
+            return;
+        }
+
+        const persistOutcome = persistAcceptedWorkflowRun({
+            workflow_id: REFINE_ISSUE_WORKFLOW_ID,
+            startOutcome: outcome,
+            indexStore: recoveryContext.indexStore,
+            log: recoveryContext.log,
+        });
+
+        if (!persistOutcome.ok) {
+            const message =
+                persistOutcome.diagnostics[0]?.message ??
+                'Workflow run started in Temporal, but Forge could not save the local run index.';
             void vscode.window.showErrorMessage(message);
         }
     }

@@ -144,6 +144,14 @@ export {
     createTemporalWorkflowStartClient,
     startWorkflowRun,
 } from './startWorkflowRun';
+export {
+    WORKFLOW_RUN_INDEX_VALIDATOR_ID,
+    persistAcceptedWorkflowRun,
+} from './persistAcceptedWorkflowRun';
+export type {
+    PersistAcceptedWorkflowRunInput,
+    PersistAcceptedWorkflowRunOutcome,
+} from './persistAcceptedWorkflowRun';
 export type {
     StartWorkflowRunInput,
     StartWorkflowRunOutcome,
