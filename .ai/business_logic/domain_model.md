@@ -43,6 +43,7 @@ Canonical field names, node types, and versioning are specified in `.ai/data/ser
 | `forge.workflow.binding` | domain | `activity_id`, `agent_path`, `skill_path`, and policy references resolve. |
 | `forge.workflow.duplicate_id` | domain | `workflow_id` unique across discovered files. |
 | `forge.workflow.unsupported_version` | domain | `schema_version` or definition `version` major not supported by the runner. |
+| `forge.workflow.run_input` | domain | Submitted run input payload matches declared `run_inputs[]` before Temporal start. |
 | `forge.artifact.declared` | artifact | Node `artifact_ids` reference declared workflow artifacts. |
 | `forge.artifact.exists` | artifact | Declared artifact `path` (including globs) resolves to at least one existing file at validation time. |
 | `forge.artifact.integrity` | artifact | On-disk file at `artifact_refs[].path` matches declared `sha256` when the preceding activity envelope includes both fields. |
@@ -59,14 +60,14 @@ Repositories may add `local.<repo>.<name>` validator IDs for workflow-specific d
 
 | Phase | When | Validator IDs |
 |-------|------|---------------|
-| Pre-run (definition and start input) | Before a workflow run is created | `forge.workflow.schema`, `forge.workflow.graph`, `forge.workflow.binding`, `forge.workflow.duplicate_id`, `forge.workflow.unsupported_version`, `forge.artifact.declared` |
+| Pre-run (definition and start input) | Before a workflow run is created | `forge.workflow.schema`, `forge.workflow.graph`, `forge.workflow.binding`, `forge.workflow.duplicate_id`, `forge.workflow.unsupported_version`, `forge.workflow.run_input`, `forge.artifact.declared` |
 | Runtime (validation nodes) | After an activity produces output during a run | `forge.envelope.schema`, `forge.envelope.unsupported_version`, `forge.envelope.size`, `forge.artifact.exists`, `forge.artifact.integrity`, `forge.artifact.schema`, `forge.domain.exit_criteria`, plus any `local.*` validators declared on validation nodes |
 
 Pre-run validation also enforces that each file path `.ai/workflows/<workflow_id>.json` has a filename stem equal to `workflow_id` (reported under `forge.workflow.binding`).
 
 Binding checks at pre-run include: `entry_node_id` and all `to_node_id` values resolve; activity nodes declare `activity_id` and exactly one resolvable `agent_path` or `skill_path`; node `validator_id` values match the catalog or `local.*` pattern; `retry_policy` and `timeout_policy` references match declared policies; node `artifact_ids` reference workflow-level artifacts.
 
-Run-start checks also validate that every required `run_inputs[]` declaration has a non-empty submitted value and that no submitted input key falls outside the selected workflow definition's declared inputs. Missing or invalid run input values fail before Temporal creates a durable run.
+Run-start checks also validate the submitted input payload against the selected workflow definition's `run_inputs[]` declarations. Every submitted key must be declared, every submitted value must be a string, and every required declaration must have a non-empty submitted value after trimming for emptiness. Optional missing values are omitted from the normalized payload. Optional empty strings are also omitted. Accepted values are not coerced. Any run input diagnostic with `severity: error` blocks Temporal start before a durable run or run index entry exists.
 
 ### `/refine-issue` mapping
 

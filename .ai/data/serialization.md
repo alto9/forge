@@ -52,7 +52,7 @@ Workflow definitions are JSON objects validated by `.ai/schemas/workflow.schema.
 | `required` | no | When `true`, empty submitted values block run creation. Default is `false`. |
 | `validation_hint` | no | Workflow-specific hint used for display or custom validation diagnostics. It is not executable code. |
 
-Submitted run input values serialize as a JSON object whose keys match declared `input_id` values and whose values are strings. Forge rejects undeclared keys and missing required values before creating a durable Temporal run.
+Submitted run input values serialize as a JSON object whose keys match declared `input_id` values and whose values are strings. Forge rejects undeclared keys, non-string values, and missing or empty required values before creating a durable Temporal run.
 
 ### Run input implementation shapes
 
@@ -80,7 +80,7 @@ type WorkflowRunStartPayload = {
 };
 ```
 
-`WorkflowRunStartInput` is normalized before Temporal start. Missing optional keys are omitted. Missing required keys, empty required values, and undeclared keys are reported by the pre-start validation contract (#76) and do not create a durable run.
+`WorkflowRunStartInput` is normalized before Temporal start. Missing optional keys are omitted. Optional submitted empty strings are omitted. Required submitted values are checked after trimming for emptiness, but accepted strings are passed through without coercion. Missing required keys, empty required values, non-string submitted values, and undeclared keys are reported by the pre-start validation contract (#76) and do not create a durable run.
 
 ### Graph nodes
 
@@ -136,6 +136,19 @@ Diagnostics returned to discovery, pre-run gates, commands, and Studio use a sta
 | `path` | JSON Pointer into the definition file (or repo-relative path for cross-file rules such as duplicate IDs). |
 | `message` | Human-readable explanation. |
 | `validator_id` | Validator or rule ID that produced the diagnostic (from `.ai/business_logic/domain_model.md`). |
+
+### Run input validation diagnostics (#76)
+
+Submitted input validation uses the same diagnostic object shape as workflow definition validation and reports `validator_id: "forge.workflow.run_input"`.
+
+| Code | Severity | Path | When |
+|------|----------|------|------|
+| `run_input.undeclared_key` | `error` | `/run_inputs/<key>` | The submitted payload contains a key that does not match a declared `input_id`. |
+| `run_input.required_missing` | `error` | `/run_inputs/<input_id>` | A required declaration is absent from the submitted payload. |
+| `run_input.required_empty` | `error` | `/run_inputs/<input_id>` | A required declaration is present but empty after trimming for emptiness. |
+| `run_input.invalid_type` | `error` | `/run_inputs/<input_id>` | A submitted value is not a string. |
+
+Diagnostics may include submitted key names and declaration identifiers. They must not include raw submitted values.
 
 ### Severity rules
 

@@ -97,6 +97,8 @@ The Forge extension starts or connects to workflow runs through a Temporal clien
 | Identity | Temporal `workflowId` and `runId` returned by start become the run index identity |
 | Post-start | Extension appends the run index entry, refreshes the left-panel run list, and leaves graph opening to the run row action |
 
+Submitted run input validation happens before Temporal readiness and start. Validation failures use the pre-run diagnostic shape with `validator_id: "forge.workflow.run_input"` and do not call Temporal or create a `WorkflowRunIndexEntry`.
+
 Temporal start failures are surfaced as start feedback and diagnostics. They do not create a `WorkflowRunIndexEntry` unless Temporal returns a durable run identity.
 
 ### Workflow start identity and diagnostics

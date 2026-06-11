@@ -6,7 +6,7 @@ Forge keeps workflow consistency by deriving local views from authoritative sour
 
 - Workflow definitions are valid only when their JSON schema (`schema_version` + `.ai/schemas/workflow.schema.json`), graph invariants (entry node, transition targets, terminal reachability), referenced activities, validators, agents, skills, artifact declarations, and policy references resolve at pre-run.
 - Pre-run validation runs before Temporal creates a durable run. Any diagnostic with `severity: error` blocks run start; warnings do not block.
-- Submitted run input values must match the selected workflow definition's `run_inputs[]` declarations. Required inputs must be non-empty, undeclared keys are rejected, and validation diagnostics are reported before Temporal creates a durable run.
+- Submitted run input values must match the selected workflow definition's `run_inputs[]` declarations. Required inputs must be present and non-empty after trimming for emptiness, optional empty values are omitted, undeclared keys and non-string values are rejected, and validation diagnostics are reported before Temporal creates a durable run.
 - Pre-run checks exclude artifact existence on disk and workflow-specific exit criteria; those run at validation nodes during execution.
 - Discovery scans workspace roots for `.ai/workflows/*.json` and indexes definitions by `workflow_id`. Duplicate IDs across files are errors.
 - Filename stem must equal `workflow_id` for each definition file.
