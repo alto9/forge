@@ -64,6 +64,36 @@ describe('buildWorkflowCatalog', () => {
         expect(result.entries).toEqual([]);
     });
 
+    it('includes declared run_inputs on catalog entries', () => {
+        const workspaceRoot = createTempWorkspace({
+            'with-inputs.json': {
+                schema_version: '1.0.0',
+                workflow_id: 'with-inputs',
+                name: 'With Inputs',
+                version: '1.0.0',
+                entry_node_id: 'start',
+                run_inputs: [
+                    {
+                        input_id: 'param_a',
+                        type: 'string',
+                        label: 'Param A',
+                    },
+                ],
+                nodes: [{ node_id: 'start', type: 'terminal', name: 'Done' }],
+            },
+        });
+
+        const result = buildWorkflowCatalog(workspaceRoot);
+
+        expect(result.entries[0].run_inputs).toEqual([
+            expect.objectContaining({
+                input_id: 'param_a',
+                type: 'string',
+                label: 'Param A',
+            }),
+        ]);
+    });
+
     it('builds valid catalog entries with validation aggregates', () => {
         const workspaceRoot = createTempWorkspace({
             'test-minimal.json': readFixture('valid-minimal.json'),

@@ -28,6 +28,26 @@ export interface WorkflowSchemaValidationResult {
 /** Aggregate pre-run validation result per `.ai/data/serialization.md`. */
 export type ValidationResult = WorkflowSchemaValidationResult;
 
+export interface WorkflowRunInputDefinition {
+    input_id: string;
+    type: 'string';
+    label: string;
+    description?: string;
+    required?: boolean;
+    validation_hint?: string;
+}
+
+export type WorkflowRunStartInput = Record<string, string>;
+
+export interface WorkflowRunStartPayload {
+    workflow_id: string;
+    definition_version: string;
+    repositoryRoot: string;
+    run_inputs: WorkflowRunStartInput;
+    started_by?: string;
+    started_at: string;
+}
+
 export interface WorkflowDefinitionIndexEntry {
     workflow_id: string;
     name: string;
@@ -36,6 +56,7 @@ export interface WorkflowDefinitionIndexEntry {
     schema_version: string;
     path: string;
     schema_valid?: boolean;
+    run_inputs?: WorkflowRunInputDefinition[];
 }
 
 export interface WorkflowDiscoveryResult {
@@ -60,6 +81,7 @@ export interface WorkflowCatalogEntry {
     path: string;
     repositoryRoot: string;
     validation: WorkflowCatalogValidation;
+    run_inputs?: WorkflowRunInputDefinition[];
 }
 
 export type WorkflowCatalogEmptyState =
@@ -129,6 +151,7 @@ export interface WorkflowDefinition {
     version: string;
     description?: string;
     entry_node_id: string;
+    run_inputs?: WorkflowRunInputDefinition[];
     artifacts?: WorkflowDefinitionArtifact[];
     nodes: WorkflowDefinitionNode[];
 }

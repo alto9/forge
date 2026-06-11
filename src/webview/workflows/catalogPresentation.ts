@@ -1,3 +1,4 @@
+import { workflowRequiresRunInputCollection } from '../../workflows/parseRunInputs';
 import type {
     WorkflowCatalogEmptyState,
     WorkflowCatalogEntry,
@@ -65,5 +66,13 @@ export const CATALOG_EMPTY_STATE_COPY = {
 
 export const CATALOG_RUN_TOOLTIP = {
     invalid: 'Fix validation errors before starting a run.',
-    valid: 'Run start ships in a later milestone.',
+    valid: 'Start a workflow run.',
+    requiresInputs: 'Complete required inputs before starting this workflow.',
+    inFlight: 'Starting workflow run…',
+    succeeded: 'Workflow run started.',
+    failed: 'Could not start workflow run',
 } as const;
+
+export function catalogEntryRequiresRunInputCollection(entry: WorkflowCatalogEntry): boolean {
+    return workflowRequiresRunInputCollection(entry.run_inputs);
+}

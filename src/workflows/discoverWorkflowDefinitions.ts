@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import { parseRunInputsFromRecord } from './parseRunInputs';
 import { validateWorkflowDefinitionJson } from './validateWorkflowSchema';
 import type {
     WorkflowDefinitionIndexEntry,
@@ -87,6 +88,11 @@ function parseWorkflowFile(absolutePath: string, workspaceRoot: string): ParsedW
     const description = readStringField(record, 'description');
     if (description !== undefined) {
         entry.description = description;
+    }
+
+    const runInputs = parseRunInputsFromRecord(record);
+    if (runInputs.length > 0) {
+        entry.run_inputs = runInputs;
     }
 
     return {

@@ -3,10 +3,12 @@ import { createRoot } from 'react-dom/client';
 import {
     CATALOG_EMPTY_STATE_COPY,
     CATALOG_RUN_TOOLTIP,
+    catalogEntryRequiresRunInputCollection,
     getCatalogBadgeLabel,
     getCatalogRowSummary,
     type WorkflowCatalogWebviewModel,
 } from './catalogPresentation';
+import type { WorkflowRunInputDefinition } from '../../workflows/types';
 
 declare const acquireVsCodeApi: () => {
     postMessage: (message: unknown) => void;
@@ -67,6 +69,21 @@ function badgeStyle(valid: boolean, hasWarnings: boolean): React.CSSProperties {
     };
 }
 
+type RowRunState = {
+    collectingInputs: boolean;
+    inputValues: Record<string, string>;
+    inFlight: boolean;
+    statusMessage?: string;
+};
+
+function initialInputValues(runInputs: WorkflowRunInputDefinition[] | undefined): Record<string, string> {
+    const values: Record<string, string> = {};
+    for (const descriptor of runInputs ?? []) {
+        values[descriptor.input_id] = '';
+    }
+    return values;
+}
+
 function WorkflowCatalogApp(): React.ReactElement {
     const [model, setModel] = useState<WorkflowCatalogWebviewModel>({
         repositoryRoot: '',
@@ -74,12 +91,35 @@ function WorkflowCatalogApp(): React.ReactElement {
         entries: [],
     });
     const [expandedWorkflowId, setExpandedWorkflowId] = useState<string | undefined>();
+    const [rowRunState, setRowRunState] = useState<Record<string, RowRunState>>({});
 
     useEffect(() => {
         const handler = (event: MessageEvent) => {
-            const message = event.data as { type?: string; payload?: WorkflowCatalogWebviewModel };
+            const message = event.data as {
+                type?: string;
+                payload?: WorkflowCatalogWebviewModel;
+                workflowId?: string;
+                ok?: boolean;
+                message?: string;
+            };
+
             if (message?.type === 'init' && message.payload) {
                 setModel(message.payload);
+                return;
+            }
+
+            if (message?.type === 'startRunResult' && typeof message.workflowId === 'string') {
+                setRowRunState((current) => ({
+                    ...current,
+                    [message.workflowId!]: {
+                        collectingInputs: false,
+                        inputValues: current[message.workflowId!]?.inputValues ?? {},
+                        inFlight: false,
+                        statusMessage: message.ok
+                            ? CATALOG_RUN_TOOLTIP.succeeded
+                            : `${CATALOG_RUN_TOOLTIP.failed}${message.message ? ` — ${message.message}` : '.'}`,
+                    },
+                }));
             }
         };
 
@@ -97,6 +137,90 @@ function WorkflowCatalogApp(): React.ReactElement {
     const selectWorkflow = (workflowId: string) => {
         vscode.postMessage({ type: 'selectWorkflow', workflowId });
         setModel((current) => ({ ...current, selectedWorkflowId: workflowId }));
+    };
+
+    const getRowState = (workflowId: string, runInputs: WorkflowRunInputDefinition[] | undefined): RowRunState => {
+        return (
+            rowRunState[workflowId] ?? {
+                collectingInputs: false,
+                inputValues: initialInputValues(runInputs),
+                inFlight: false,
+            }
+        );
+    };
+
+    const updateRowInput = (workflowId: string, inputId: string, value: string) => {
+        setRowRunState((current) => {
+            const existing = current[workflowId] ?? {
+                collectingInputs: true,
+                inputValues: {},
+                inFlight: false,
+            };
+            return {
+                ...current,
+                [workflowId]: {
+                    ...existing,
+                    inputValues: {
+                        ...existing.inputValues,
+                        [inputId]: value,
+                    },
+                },
+            };
+        });
+    };
+
+    const submitStartRun = (workflowId: string, runInputs: Record<string, string>) => {
+        setRowRunState((current) => ({
+            ...current,
+            [workflowId]: {
+                collectingInputs: false,
+                inputValues: runInputs,
+                inFlight: true,
+                statusMessage: CATALOG_RUN_TOOLTIP.inFlight,
+            },
+        }));
+        vscode.postMessage({ type: 'startRun', workflowId, runInputs });
+    };
+
+    const handleStartRunClick = (
+        workflowId: string,
+        requiresInputCollection: boolean,
+        runInputs: WorkflowRunInputDefinition[] | undefined
+    ) => {
+        const state = getRowState(workflowId, runInputs);
+
+        if (requiresInputCollection && !state.collectingInputs) {
+            setRowRunState((current) => ({
+                ...current,
+                [workflowId]: {
+                    collectingInputs: true,
+                    inputValues: initialInputValues(runInputs),
+                    inFlight: false,
+                    statusMessage: undefined,
+                },
+            }));
+            return;
+        }
+
+        if (requiresInputCollection) {
+            const missingRequired = (runInputs ?? []).some(
+                (descriptor) =>
+                    descriptor.required === true &&
+                    (state.inputValues[descriptor.input_id] ?? '').trim().length === 0
+            );
+            if (missingRequired) {
+                setRowRunState((current) => ({
+                    ...current,
+                    [workflowId]: {
+                        ...state,
+                        statusMessage: CATALOG_RUN_TOOLTIP.requiresInputs,
+                    },
+                }));
+                return;
+            }
+        }
+
+        submitStartRun(workflowId, state.inputValues);
     };
 
     return (
@@ -118,9 +242,14 @@ function WorkflowCatalogApp(): React.ReactElement {
                         const summary = getCatalogRowSummary(entry);
                         const expanded = expandedWorkflowId === entry.workflow_id;
                         const runDisabled = !entry.validation.valid;
+                        const requiresInputCollection = catalogEntryRequiresRunInputCollection(entry);
+                        const rowState = getRowState(entry.workflow_id, entry.run_inputs);
+                        const startDisabled = runDisabled || rowState.inFlight;
                         const runTooltip = runDisabled
                             ? CATALOG_RUN_TOOLTIP.invalid
-                            : CATALOG_RUN_TOOLTIP.valid;
+                            : rowState.inFlight
+                              ? CATALOG_RUN_TOOLTIP.inFlight
+                              : CATALOG_RUN_TOOLTIP.valid;
 
                         return (
                             <li key={entry.workflow_id}>
@@ -169,6 +298,14 @@ function WorkflowCatalogApp(): React.ReactElement {
                                                     {summary}
                                                 </div>
                                             ) : null}
+                                            {rowState.statusMessage ? (
+                                                <div
+                                                    style={{ fontSize: '12px', marginTop: '4px' }}
+                                                    aria-live="polite"
+                                                >
+                                                    {rowState.statusMessage}
+                                                </div>
+                                            ) : null}
                                         </div>
                                         <span
                                             aria-label={`Validation status: ${badgeLabel}`}
@@ -189,6 +326,72 @@ function WorkflowCatalogApp(): React.ReactElement {
                                     </div>
                                 </button>
 
+                                {rowState.collectingInputs && entry.run_inputs?.length ? (
+                                    <div
+                                        role="form"
+                                        aria-label={`Run inputs for ${entry.name}`}
+                                        style={{
+                                            marginTop: '8px',
+                                            padding: '8px 12px',
+                                            border: '1px solid var(--vscode-panel-border)',
+                                            borderRadius: '4px',
+                                        }}
+                                    >
+                                        {entry.run_inputs.map((descriptor) => (
+                                            <label
+                                                key={descriptor.input_id}
+                                                style={{
+                                                    display: 'block',
+                                                    marginBottom: '10px',
+                                                }}
+                                            >
+                                                <div style={{ fontWeight: 600, marginBottom: '4px' }}>
+                                                    {descriptor.label}
+                                                    {descriptor.required ? ' (required)' : ''}
+                                                </div>
+                                                {descriptor.description ? (
+                                                    <div
+                                                        style={{
+                                                            fontSize: '12px',
+                                                            opacity: 0.85,
+                                                            marginBottom: '4px',
+                                                        }}
+                                                    >
+                                                        {descriptor.description}
+                                                    </div>
+                                                ) : null}
+                                                <input
+                                                    type="text"
+                                                    aria-required={descriptor.required === true}
+                                                    value={rowState.inputValues[descriptor.input_id] ?? ''}
+                                                    onChange={(event) =>
+                                                        updateRowInput(
+                                                            entry.workflow_id,
+                                                            descriptor.input_id,
+                                                            event.target.value
+                                                        )
+                                                    }
+                                                    style={{
+                                                        width: '100%',
+                                                        boxSizing: 'border-box',
+                                                    }}
+                                                />
+                                                {descriptor.validation_hint ? (
+                                                    <div
+                                                        style={{
+                                                            fontSize: '11px',
+                                                            opacity: 0.8,
+                                                            marginTop: '4px',
+                                                        }}
+                                                    >
+                                                        {descriptor.validation_hint}
+                                                    </div>
+                                                ) : null}
+                                            </label>
+                                        ))}
+                                    </div>
+                                ) : null}
+
                                 <div style={{ margin: '8px 0 0 4px', display: 'flex', gap: '8px' }}>
                                     <button
                                         type="button"
@@ -203,10 +406,17 @@ function WorkflowCatalogApp(): React.ReactElement {
                                     </button>
                                     <button
                                         type="button"
-                                        aria-disabled={runDisabled}
-                                        disabled={runDisabled}
+                                        aria-disabled={startDisabled}
+                                        disabled={startDisabled}
                                         title={runTooltip}
-                                        style={{ opacity: runDisabled ? 0.6 : 1 }}
+                                        style={{ opacity: startDisabled ? 0.6 : 1 }}
+                                        onClick={() =>
+                                            handleStartRunClick(
+                                                entry.workflow_id,
+                                                requiresInputCollection,
+                                                entry.run_inputs
+                                            )
+                                        }
                                     >
                                         Start run
                                     </button>

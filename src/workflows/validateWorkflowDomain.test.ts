@@ -41,6 +41,44 @@ describe('validateWorkflowDomain', () => {
         expect(result.workflow_id).toBe('refine-issue');
     });
 
+    it('reports duplicate run input input_id values', () => {
+        const content = {
+            schema_version: '1.0.0',
+            workflow_id: 'duplicate-inputs',
+            name: 'Duplicate Inputs',
+            version: '1.0.0',
+            entry_node_id: 'start',
+            run_inputs: [
+                {
+                    input_id: 'shared',
+                    type: 'string',
+                    label: 'Shared',
+                },
+                {
+                    input_id: 'shared',
+                    type: 'string',
+                    label: 'Shared again',
+                },
+            ],
+            nodes: [{ node_id: 'start', type: 'terminal', name: 'Done' }],
+        };
+
+        const result = validateWorkflowDomain(content, {
+            path: '.ai/workflows/duplicate-inputs.json',
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    code: 'run_input.duplicate_id',
+                    path: '/run_inputs/1/input_id',
+                    validator_id: WORKFLOW_BINDING_VALIDATOR_ID,
+                }),
+            ])
+        );
+    });
+
     it('reports broken transition targets as graph errors', () => {
         const content = readFixture('broken-transition.json');
         const result = validateWorkflowDomain(content, {

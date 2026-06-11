@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+    catalogEntryRequiresRunInputCollection,
     getCatalogBadgeLabel,
     getCatalogRowSummary,
 } from './catalogPresentation';
@@ -75,5 +76,23 @@ describe('catalogPresentation', () => {
                 })
             )
         ).toBe('3 errors, 1 warning — fix before run');
+    });
+
+    it('detects when a catalog entry requires run input collection', () => {
+        expect(catalogEntryRequiresRunInputCollection(entry())).toBe(false);
+        expect(
+            catalogEntryRequiresRunInputCollection(
+                entry({
+                    run_inputs: [
+                        {
+                            input_id: 'issue_ref',
+                            type: 'string',
+                            label: 'Issue',
+                            required: true,
+                        },
+                    ],
+                })
+            )
+        ).toBe(true);
     });
 });

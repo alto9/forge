@@ -18,6 +18,7 @@ export interface WorkflowRunIndexEntry {
     repositoryRoot: string;
     mode: TemporalMode;
     startedAt: string;
+    startInputSummary?: string;
     completedAt?: string;
     lastSyncedAt?: string;
     recoveryState: RecoveryState;
@@ -142,6 +143,7 @@ export interface AppendWorkflowRunIndexEntryInput {
     repositoryRoot: string;
     mode: TemporalMode;
     startedAt?: string;
+    startInputSummary?: string;
 }
 
 export interface MarkWorkflowRunIndexTerminalInput {
@@ -189,6 +191,7 @@ export class WorkflowRunIndexStore {
             startedAt: input.startedAt ?? new Date().toISOString(),
             recoveryState: 'recovery_pending',
             terminal: false,
+            ...(input.startInputSummary ? { startInputSummary: input.startInputSummary } : {}),
         };
 
         this.index.entries[key] = entry;
