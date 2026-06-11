@@ -17,17 +17,20 @@ Forge workflow execution is Temporal-backed and data-defined.
 
 The extension host owns run-start coordination up to the Temporal start call. Worker code owns workflow and activity execution after Temporal accepts the run.
 
+The start-orchestration boundary is the successful Temporal start result. Run-index persistence and detailed diagnostic presentation consume that result but are separate responsibilities.
+
 1. Resolve the selected repository root and workflow definition.
 2. Run pre-run validation for schema, graph, bindings, duplicate IDs, unsupported versions, and declared artifacts.
 3. Collect and validate submitted values for the selected definition's `run_inputs[]`.
 4. Resolve active Temporal mode and run the connection readiness gate.
 5. Start or attach to the supervised worker and confirm it polls the configured task queue.
 6. Call Temporal start with the serialized workflow run start payload.
-7. Append the run index entry from returned Temporal identifiers.
-8. Notify the left-panel Workflow Runs view to refresh and show Start Run success feedback.
-9. Let the user open run-mode graph visualization from the new run row.
 
-If steps 1-5 fail, Forge reports a pre-run diagnostic and does not create a Temporal run. If Temporal start succeeds but local index write or notification fails, Temporal remains authoritative; recovery scan can rediscover the run only when an index entry or explicit Temporal identity is available.
+If steps 1-5 fail, Forge reports a pre-run diagnostic and does not create a Temporal run. If step 6 fails before Temporal returns identity, Forge reports a failed start through the existing Temporal diagnostic path and does not create a local run-index entry. When step 6 succeeds, the returned Temporal identity is handed to the run-index persistence path and success feedback path.
+
+### Downstream after accepted start
+
+After Temporal accepts the run, Forge appends the run index entry from returned Temporal identifiers, notifies the left-panel Workflow Runs view to refresh, shows Start Run success feedback, and lets the user open run-mode graph visualization from the new run row. Those post-start persistence and presentation details are downstream of the start-orchestration boundary.
 
 ### Run start identity and repeat starts
 
@@ -90,4 +93,4 @@ Implementation-level items not yet fully specified. `/refine-issue` resolves the
 
 ### Run start orchestration
 
-Resolved for v1. Run start identity, in-flight duplicate guarding, post-start local failure behavior, projection refresh timing, and pre-`synced` cancellation behavior are defined in **Run start identity and repeat starts**.
+Resolved for v1. Start orchestration covers repository and workflow resolution, pre-run validation, run input validation, Temporal readiness, worker readiness, in-flight duplicate guarding, and the Temporal start call. Post-start run-index persistence and detailed diagnostics consume the accepted start result through the downstream paths described above.
