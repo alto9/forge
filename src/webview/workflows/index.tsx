@@ -4,6 +4,7 @@ import {
     CATALOG_EMPTY_STATE_COPY,
     CATALOG_RUN_TOOLTIP,
     catalogEntryRequiresRunInputCollection,
+    clearSucceededStatusFromOtherRows,
     getCatalogBadgeLabel,
     getCatalogRowSummary,
     type WorkflowCatalogWebviewModel,
@@ -138,6 +139,7 @@ function WorkflowCatalogApp(): React.ReactElement {
     const selectWorkflow = (workflowId: string) => {
         vscode.postMessage({ type: 'selectWorkflow', workflowId });
         setModel((current) => ({ ...current, selectedWorkflowId: workflowId }));
+        setRowRunState((current) => clearSucceededStatusFromOtherRows(current, workflowId));
     };
 
     const getRowState = (workflowId: string, runInputs: WorkflowRunInputDefinition[] | undefined): RowRunState => {

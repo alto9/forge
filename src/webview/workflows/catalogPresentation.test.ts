@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+    CATALOG_RUN_TOOLTIP,
     catalogEntryRequiresRunInputCollection,
+    clearSucceededStatusFromOtherRows,
     getCatalogBadgeLabel,
     getCatalogRowSummary,
 } from './catalogPresentation';
@@ -94,5 +96,24 @@ describe('catalogPresentation', () => {
                 })
             )
         ).toBe(true);
+    });
+
+    it('clears succeeded status from other rows when selection changes', () => {
+        const next = clearSucceededStatusFromOtherRows(
+            {
+                'flow-a': {
+                    inFlight: false,
+                    statusMessage: CATALOG_RUN_TOOLTIP.succeeded,
+                },
+                'flow-b': {
+                    inFlight: false,
+                    statusMessage: 'Could not start workflow run',
+                },
+            },
+            'flow-b'
+        );
+
+        expect(next['flow-a']?.statusMessage).toBeUndefined();
+        expect(next['flow-b']?.statusMessage).toBe('Could not start workflow run');
     });
 });

@@ -76,3 +76,23 @@ export const CATALOG_RUN_TOOLTIP = {
 export function catalogEntryRequiresRunInputCollection(entry: WorkflowCatalogEntry): boolean {
     return workflowRequiresRunInputCollection(entry.run_inputs);
 }
+
+export function clearSucceededStatusFromOtherRows<T extends { statusMessage?: string }>(
+    rowRunState: Record<string, T>,
+    selectedWorkflowId: string
+): Record<string, T> {
+    const next: Record<string, T> = {};
+
+    for (const [workflowId, state] of Object.entries(rowRunState)) {
+        if (
+            workflowId !== selectedWorkflowId &&
+            state.statusMessage === CATALOG_RUN_TOOLTIP.succeeded
+        ) {
+            next[workflowId] = { ...state, statusMessage: undefined };
+        } else {
+            next[workflowId] = state;
+        }
+    }
+
+    return next;
+}
