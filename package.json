@@ -128,6 +128,10 @@
         "title": "Forge: Open Question Panel"
       },
       {
+        "command": "forge.refineIssue",
+        "title": "Forge: Refine Issue"
+      },
+      {
         "command": "forge.openWorkflowCatalog",
         "title": "Forge: Open Workflow Catalog"
       },

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import { InitializeAgentsCommand } from './commands/InitializeAgentsCommand';
 import { InitializeProjectCommand } from './commands/InitializeProjectCommand';
 import { RoadmapCommand } from './commands/RoadmapCommand';
+import { RefineIssueCommand } from './commands/RefineIssueCommand';
 import { WorkflowCatalogCommand } from './commands/WorkflowCatalogCommand';
 import { WorkflowGraphCommand } from './commands/WorkflowGraphCommand';
 import { QuestionPanelCommand } from './commands/QuestionPanelCommand';
@@ -191,6 +192,14 @@ export function activate(context: vscode.ExtensionContext) {
         await RoadmapCommand.execute(context);
     });
     context.subscriptions.push(roadmapCommand);
+
+    const refineIssueCommand = vscode.commands.registerCommand(
+        'forge.refineIssue',
+        async (issueInput?: string) => {
+            await RefineIssueCommand.execute(context, issueInput);
+        }
+    );
+    context.subscriptions.push(refineIssueCommand);
 
     const openWorkflowCatalogCommand = vscode.commands.registerCommand(
         'forge.openWorkflowCatalog',
