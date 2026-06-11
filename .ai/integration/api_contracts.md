@@ -130,16 +130,17 @@ GitHub APIs remain the boundary for issue, milestone, project, pull request, and
 
 ### `/refine-issue` issue input
 
-`/refine-issue` accepts GitHub issue context through its declared run input, not workflow-specific UI metadata. v1 accepts a full GitHub issue URL or a GitHub Projects v2 project identifier plus issue number. GitHub lookup and parentage normalization happen through explicit workflow activity or skill boundaries before workspace prep; workflow JSON does not carry GitHub tokens.
+`/refine-issue` accepts GitHub issue context through its declared run input, not workflow-specific UI metadata. v1 accepts a full GitHub issue URL, `owner/repo#N`, a bare issue number when `{owner}/{repo}` can be inferred from the selected repository remote, or a GitHub Projects v2 project identifier plus issue number. GitHub lookup and parentage normalization happen through explicit workflow activity or skill boundaries before workspace prep; workflow JSON does not carry GitHub tokens.
 
-The project identifier form is a structured value that includes the Projects v2 project identity and the issue number. Implementations may serialize it as a compact string for `run_inputs.issue_ref`, but must parse it into `{ project, issue_number }` before GitHub lookup. The project identifier is used to resolve and verify issue context and may be retained in `issue_context.md` for board hygiene; the normalized working issue URL remains the primary downstream reference.
+The command-entry adapter parses legacy shorthand into the declared `run_inputs.issue_ref` value before the generic Start Run path. The project identifier form is a structured value that includes the Projects v2 project identity and the issue number. Implementations may serialize it as a compact string for `run_inputs.issue_ref`, but must parse it into `{ project, issue_number }` before GitHub lookup. The project identifier is used to resolve and verify issue context and may be retained in `issue_context.md` for board hygiene; the normalized working issue URL remains the primary downstream reference.
 
 Diagnostics for this boundary use the standard diagnostic shape:
 
 | Code | When |
 |------|------|
 | `github.issue_url_unresolved` | The supplied issue URL cannot be parsed or fetched. |
-| `github.issue_number_missing` | The project identifier form does not include a usable issue number. |
+| `github.issue_number_missing` | The shorthand or project identifier form does not include a usable issue number. |
+| `github.repository_inference_failed` | A bare issue number was supplied but the selected repository remote cannot resolve `{owner}/{repo}`. |
 | `github.project_unavailable` | The project identifier cannot be accessed with the available GitHub authority. |
 | `github.parentage_lookup_failed` | Parent/sub-issue normalization cannot determine the working parent. |
 
@@ -157,7 +158,7 @@ Resolved for v1 in **Workflow start identity and diagnostics**. Future task queu
 
 ### GitHub issue normalization
 
-Resolved for the issue #75 contract boundary in **`/refine-issue` issue input**. Command-entry migration and legacy shorthand compatibility remain #77 scope.
+Resolved for v1 in **`/refine-issue` issue input**. Command-entry migration and legacy shorthand compatibility parse into declared `run_inputs.issue_ref`; workflow JSON metadata is descriptive only.
 
 ### GitHub activity contracts
 

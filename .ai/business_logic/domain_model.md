@@ -77,9 +77,9 @@ Canonical definition: `.ai/workflows/refine-issue.json` (`workflow_id`: `refine-
 
 | Field | Required | Description |
 |-------|----------|-------------|
-| `issue_ref` | yes | GitHub issue reference declared as a workflow run input. Accepted forms are a full issue URL (`https://github.com/{owner}/{repo}/issues/{N}`) or a GitHub Projects v2 project identifier plus issue number. Existing shorthand forms may remain descriptive metadata until `/refine-issue` resolves compatibility behavior. |
+| `issue_ref` | yes | GitHub issue reference declared as a workflow run input. Accepted command-entry forms are a full issue URL (`https://github.com/{owner}/{repo}/issues/{N}`), `owner/repo#N`, a bare issue number when the selected repository remote resolves `{owner}/{repo}`, or a GitHub Projects v2 project identifier plus issue number. |
 
-The orchestrator normalizes `issue_ref` to a working parent issue before Phase A workspace prep.
+The command-entry adapter converts every accepted form into `run_inputs.issue_ref` and enters the generic Start Run path. The orchestrator normalizes `issue_ref` to a working parent issue before Phase A workspace prep.
 
 #### Phase to node mapping
 
@@ -169,9 +169,11 @@ Duplicate Start Run clicks for the same selected workflow and submitted input pa
 
 ### `/refine-issue` input normalization boundary
 
-`/refine-issue` declares `issue_ref` as a required workflow run input. v1 accepted forms are a full GitHub issue URL or a GitHub Projects v2 project identifier plus issue number. Parentage normalization resolves the working parent issue before Phase A workspace prep and records the normalized parent in `issue_context.md`.
+`/refine-issue` declares `issue_ref` as a required workflow run input. v1 accepted command-entry forms are a full GitHub issue URL, `owner/repo#N`, a bare issue number when the selected repository remote resolves `{owner}/{repo}`, or a GitHub Projects v2 project identifier plus issue number.
 
-Legacy descriptive shorthand such as `metadata.run_input_issue_ref` may remain in workflow metadata only as documentation until #77 migrates command wiring. Runtime start uses declared `run_inputs[]` as the authoritative contract.
+The command-entry adapter is the only compatibility layer: it parses legacy shorthand, infers repository context when required, and submits the normalized value as `run_inputs.issue_ref` to the same pre-start validation and Temporal start path used by catalog workflows. Parentage normalization resolves the working parent issue before Phase A workspace prep and records the normalized parent in `issue_context.md`.
+
+Legacy descriptive metadata such as `metadata.run_input_issue_ref` may remain in workflow JSON only as documentation. Runtime start uses declared `run_inputs[]` as the authoritative contract.
 
 ## Open implementation decisions
 
@@ -183,4 +185,4 @@ Resolved for v1. Labels, duplicate start handling, and failure mapping are defin
 
 ### Refine issue input normalization
 
-Resolved for the issue #75 contract boundary. `/refine-issue` uses required `run_inputs.issue_ref`; parentage normalization happens before Phase A; metadata shorthand remains descriptive only until #77 handles migration compatibility.
+Resolved for v1. `/refine-issue` uses required `run_inputs.issue_ref`; command-entry compatibility normalizes legacy URL, `owner/repo#N`, bare-number, and project-identifier forms into that declared input before the generic Start Run gate; parentage normalization happens before Phase A; metadata shorthand remains descriptive only.

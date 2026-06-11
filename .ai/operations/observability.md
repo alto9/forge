@@ -161,6 +161,5 @@ Implementation-level items not yet fully specified. `/refine-issue` resolves the
 ### Health and diagnostics (remaining)
 - Define log redaction rules for GitHub activity diagnostics inside worker-executed activities.
 - Define exact observability copy and log metadata for successful run start, blocked start, and failed start.
-- Specify whether run input key names may appear in logs while values remain excluded or redacted.
 
-_(Run inspector artifact preview limits, recovery action catalog, and UI redaction rules resolved in **Run inspector behavior (v1)** and **UI redaction (run inspector)** above.)_
+_(Run input key-name logging is resolved in **Workflow start diagnostics**: declared input key names may appear in metadata; submitted values remain excluded. Run inspector artifact preview limits, recovery action catalog, and UI redaction rules resolved in **Run inspector behavior (v1)** and **UI redaction (run inspector)** above.)_

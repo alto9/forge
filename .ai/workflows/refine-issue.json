@@ -2,14 +2,24 @@
   "schema_version": "1.0.0",
   "workflow_id": "refine-issue",
   "name": "Refine Issue",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Forge Step 4 workflow: normalize GitHub issue parentage, ground in .ai contracts, triage tier-User questions, complete issue and contract refinement, and hand off to implementation. Proving workflow for repo-owned workflow definitions.",
+  "run_inputs": [
+    {
+      "input_id": "issue_ref",
+      "type": "string",
+      "label": "GitHub issue",
+      "description": "GitHub issue URL, owner/repo#N, or issue number when the repository can be inferred from the selected workspace remote.",
+      "required": true,
+      "validation_hint": "Use a full issue URL, owner/repo#N, or a bare issue number with repo inference from the selected repository."
+    }
+  ],
   "entry_node_id": "normalize_issue_parentage",
   "metadata": {
     "owner": "forge",
     "forge_command": "refine-issue",
-    "milestone": "Workflow Definition Contracts",
-    "run_input_issue_ref": "GitHub issue URL, owner/repo#N, or N with repo from workspace remote"
+    "milestone": "Workflow Run Inputs",
+    "run_input_issue_ref": "Descriptive compatibility hint only; runtime start uses declared run_inputs.issue_ref."
   },
   "artifacts": [
     {

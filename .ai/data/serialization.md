@@ -197,7 +197,7 @@ The extension host sends this payload to the Temporal start boundary after workf
 | `started_by` | no | Local actor label when available; never a credential or token. |
 | `started_at` | yes | ISO-8601 UTC timestamp from the extension host. |
 
-For `/refine-issue`, `run_inputs.issue_ref` carries either a GitHub issue URL or a GitHub Projects v2 project identifier plus issue number encoded by the implementation contract resolved in `/refine-issue`.
+For `/refine-issue`, `run_inputs.issue_ref` carries the command-entry issue reference after compatibility parsing. Accepted v1 forms are a full GitHub issue URL, `owner/repo#N`, a bare issue number when the selected repository remote resolves `{owner}/{repo}`, or a GitHub Projects v2 project identifier plus issue number. The generic Start Run path validates the required `issue_ref` value before Temporal readiness/start; downstream parentage normalization converts it into the working parent issue.
 
 `WorkflowRunIndexEntry.startInputSummary` may store a redacted display-only summary after start succeeds. The summary is optional, non-authoritative, and derived from accepted `run_inputs` only after secret-pattern redaction. For `/refine-issue`, it may contain the normalized issue reference. Full submitted input values are not required for recovery and must not be treated as durable workflow state.
 
@@ -542,5 +542,5 @@ Implementation-level items not yet fully specified. `/refine-issue` resolves the
 
 ### Run start input serialization
 
-Resolved for v1. The workflow schema owns `WorkflowRunInputDefinition`, submitted values use `WorkflowRunStartInput = Record<string, string>`, and the Temporal start payload is defined above. Invalid input declarations, missing required submitted values, and undeclared submitted keys use pre-start diagnostics from the validation contract (#76). `/refine-issue` normalization produces the working parent issue used by downstream activities; any durable artifacts from that normalization are workflow activity outputs, not part of the run input declaration contract (#77).
+Resolved for v1. The workflow schema owns `WorkflowRunInputDefinition`, submitted values use `WorkflowRunStartInput = Record<string, string>`, and the Temporal start payload is defined above. Invalid input declarations, missing required submitted values, and undeclared submitted keys use pre-start diagnostics from the validation contract (#76). `/refine-issue` command compatibility parses legacy issue-reference forms into `run_inputs.issue_ref`; parentage normalization produces the working parent issue used by downstream activities; any durable artifacts from that normalization are workflow activity outputs, not part of the run input declaration contract (#77).
 
