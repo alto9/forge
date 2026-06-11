@@ -374,6 +374,20 @@ Run recovery (#21) uses the Forge Temporal Output channel and a minimal run list
 2. **Command palette** — **Forge: Refresh workflow runs** for manual re-scan.
 3. **Run list** — per-run recovery badge, cancel, dismiss orphaned, and human-input panel when `synced`.
 
+### Workflow Runs refresh after Start Run (#81)
+
+After Temporal accepts a Start Run request and Forge appends the `WorkflowRunIndexEntry`, the extension immediately notifies the left-panel **Workflow Runs** tree to refresh. The refresh is local to the run index and projection cache; it does not issue a second Temporal start and does not auto-open the graph monitor.
+
+| Situation | Run list behavior |
+|-----------|-------------------|
+| No indexed runs before success | Replace the empty tree with the newly appended run row. |
+| Existing indexed runs before success | Insert the new row according to normal run-list ordering, newest `startedAt` first. |
+| New row before projection sync | Show the existing `recovery_pending` badge copy "Recovering…" and block run-scoped actions. |
+| Projection sync succeeds | Update the row to the synced badge, current status, and allowed actions from recovery-state rules. |
+| Projection refresh fails or Temporal is not ready | Keep the row visible with `refresh_failed` or `unreachable` recovery copy and expose manual refresh where allowed. |
+
+Blocked starts and failed starts that do not return Temporal identity do not append a run-index entry and do not add a Workflow Runs row. If run-index persistence fails after Temporal accepted the start, Forge reports the post-start recovery diagnostic and leaves the run list unchanged because there is no indexed entry to display.
+
 ## UI copy (run recovery)
 
 | Event | Copy |
@@ -392,7 +406,7 @@ Implementation-level items not yet fully specified. `/refine-issue` resolves the
 
 ### Start Run UX
 
-Resolved for v1. Required workflow inputs are collected through the inline catalog row form described in **Start Run input collection (v1)**. Disabled reasons, validation message placement, success copy, no-parameters fast path behavior, accessible labels, and keyboard order are defined in **Workflow discovery catalog (#25)** and **Start Run input collection (v1)**.
+Resolved for v1. Required workflow inputs are collected through the inline catalog row form described in **Start Run input collection (v1)**. Disabled reasons, validation message placement, success copy, no-parameters fast path behavior, accessible labels, keyboard order, and Workflow Runs refresh behavior after accepted start are defined in **Workflow discovery catalog (#25)**, **Start Run input collection (v1)**, and **Workflow Runs refresh after Start Run (#81)**.
 
 _(Workflow graph visual states and cockpit graph UI copy resolved in **Workflow Visualization (#26)** above.)_
 
