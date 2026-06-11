@@ -164,8 +164,8 @@ describe('RefineIssueCommand', () => {
         );
 
         expect(mockedStartWorkflowRun).toHaveBeenCalled();
-        expect(vscode.window.showErrorMessage).toHaveBeenCalledWith(
-            'Required run input "issue_ref" is missing or empty.'
+        expect(vscode.window.showWarningMessage).toHaveBeenCalledWith(
+            'Complete required inputs before starting this workflow.'
         );
     });
 

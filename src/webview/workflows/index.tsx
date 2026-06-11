@@ -101,6 +101,7 @@ function WorkflowCatalogApp(): React.ReactElement {
                 workflowId?: string;
                 ok?: boolean;
                 message?: string;
+                inFlight?: boolean;
             };
 
             if (message?.type === 'init' && message.payload) {
@@ -114,10 +115,10 @@ function WorkflowCatalogApp(): React.ReactElement {
                     [message.workflowId!]: {
                         collectingInputs: false,
                         inputValues: current[message.workflowId!]?.inputValues ?? {},
-                        inFlight: false,
+                        inFlight: message.inFlight === true,
                         statusMessage: message.ok
                             ? CATALOG_RUN_TOOLTIP.succeeded
-                            : `${CATALOG_RUN_TOOLTIP.failed}${message.message ? ` — ${message.message}` : '.'}`,
+                            : message.message ?? CATALOG_RUN_TOOLTIP.failed,
                     },
                 }));
             }

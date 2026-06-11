@@ -78,6 +78,26 @@ describe('temporalPresentation', () => {
         );
     });
 
+    it('uses workflow start diagnostic catalog copy from contract', async () => {
+        const {
+            formatWorkflowRunStartDefinitionBlockedCatalogMessage,
+            formatWorkflowRunStartFailedCatalogMessage,
+            formatWorkflowRunStartInFlightCatalogMessage,
+            formatWorkflowRunStartInputBlockedCatalogMessage,
+        } = await import('./temporalPresentation');
+
+        expect(formatWorkflowRunStartDefinitionBlockedCatalogMessage()).toBe(
+            'Fix validation errors before starting a run.'
+        );
+        expect(formatWorkflowRunStartInputBlockedCatalogMessage()).toBe(
+            'Complete required inputs before starting this workflow.'
+        );
+        expect(formatWorkflowRunStartInFlightCatalogMessage()).toBe('Starting workflow run…');
+        expect(formatWorkflowRunStartFailedCatalogMessage('Task queue unavailable')).toBe(
+            'Could not start workflow run — Task queue unavailable.'
+        );
+    });
+
     describe('formatExternalStatusBarLabel', () => {
         it('maps external health states to contract labels', () => {
             expect(formatExternalStatusBarLabel('connecting')).toBe(

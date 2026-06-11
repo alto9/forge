@@ -3,6 +3,7 @@ import { inferRepositoryFromRoot } from '../github/inferRepositoryFromRoot';
 import { parseRefineIssueRef } from '../github/parseRefineIssueRef';
 import { persistAcceptedWorkflowRun } from '../temporal/persistAcceptedWorkflowRun';
 import { startWorkflowRun } from '../temporal/startWorkflowRun';
+import { presentWorkflowRunStartFailure } from '../temporal/workflowRunStartPresentation';
 import { getWorkflowRunRecoveryContext } from '../temporal/workflowRunRecoveryService';
 import { WorkflowCatalogCommand } from './WorkflowCatalogCommand';
 
@@ -61,10 +62,11 @@ export class RefineIssueCommand {
         });
 
         if (!outcome.ok) {
-            const message =
-                outcome.diagnostics[0]?.message ??
-                'Failed to start refine-issue through the generic workflow Start Run path.';
-            void vscode.window.showErrorMessage(message);
+            presentWorkflowRunStartFailure({
+                workflowId: REFINE_ISSUE_WORKFLOW_ID,
+                outcome,
+                log: recoveryContext.log,
+            });
             return;
         }
 
