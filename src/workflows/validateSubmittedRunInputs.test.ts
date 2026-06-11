@@ -108,6 +108,85 @@ describe('validateSubmittedRunInputs', () => {
             ])
         );
     });
+
+    it('accepts optional missing inputs when required values are present', () => {
+        const result = validateSubmittedRunInputs({
+            declarations,
+            submitted: {
+                issue_ref: 'https://github.com/alto9/forge/issues/76',
+            },
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.diagnostics).toEqual([]);
+    });
+
+    it('accepts workflows with no declared inputs', () => {
+        const result = validateSubmittedRunInputs({
+            declarations: [],
+            submitted: {},
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.diagnostics).toEqual([]);
+    });
+
+    it('does not include raw submitted values in diagnostics', () => {
+        const secretValue = 'super-secret-token-abc123xyz';
+        const result = validateSubmittedRunInputs({
+            declarations,
+            submitted: {
+                issue_ref: secretValue,
+                secret_token: secretValue,
+            },
+        });
+
+        expect(result.valid).toBe(false);
+        const serialized = JSON.stringify(result.diagnostics);
+        expect(serialized).not.toContain(secretValue);
+        expect(result.diagnostics).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    code: 'run_input.undeclared_key',
+                    path: '/run_inputs/secret_token',
+                }),
+            ])
+        );
+    });
+
+    it('validates required issue_ref for refine-issue style declarations', () => {
+        const refineIssueDeclarations: WorkflowRunInputDefinition[] = [
+            {
+                input_id: 'issue_ref',
+                type: 'string',
+                label: 'GitHub issue',
+                required: true,
+            },
+        ];
+
+        const missing = validateSubmittedRunInputs({
+            declarations: refineIssueDeclarations,
+            submitted: {},
+            workflow_id: 'refine-issue',
+        });
+        expect(missing.valid).toBe(false);
+        expect(missing.diagnostics).toEqual([
+            expect.objectContaining({
+                code: 'run_input.required_missing',
+                path: '/run_inputs/issue_ref',
+                validator_id: WORKFLOW_RUN_INPUT_VALIDATOR_ID,
+            }),
+        ]);
+
+        const accepted = validateSubmittedRunInputs({
+            declarations: refineIssueDeclarations,
+            submitted: {
+                issue_ref: 'https://github.com/alto9/forge/issues/76',
+            },
+            workflow_id: 'refine-issue',
+        });
+        expect(accepted.valid).toBe(true);
+    });
 });
 
 describe('normalizeSubmittedRunInputs', () => {
@@ -120,5 +199,10 @@ describe('normalizeSubmittedRunInputs', () => {
         ).toEqual({
             issue_ref: 'https://github.com/alto9/forge/issues/75',
         });
+    });
+
+    it('normalizes to an empty object when no inputs are declared', () => {
+        expect(normalizeSubmittedRunInputs([], {})).toEqual({});
+        expect(normalizeSubmittedRunInputs([], { stray: 'ignored' })).toEqual({});
     });
 });
