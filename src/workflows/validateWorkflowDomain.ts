@@ -255,6 +255,40 @@ function validateGraph(
     }
 }
 
+function validateRunInputDeclarations(
+    content: Record<string, unknown>,
+    diagnostics: WorkflowDiagnostic[]
+): void {
+    const runInputs = content.run_inputs;
+    if (!Array.isArray(runInputs)) {
+        return;
+    }
+
+    const seenIds = new Map<string, number>();
+
+    runInputs.forEach((item, index) => {
+        const record = readRecord(item);
+        const inputId = record ? readString(record.input_id) : undefined;
+        if (!inputId) {
+            return;
+        }
+
+        const firstIndex = seenIds.get(inputId);
+        if (firstIndex !== undefined) {
+            diagnostics.push({
+                code: 'run_input.duplicate_id',
+                severity: 'error',
+                path: `/run_inputs/${index}/input_id`,
+                message: `duplicate run input input_id "${inputId}" (first declared at index ${firstIndex})`,
+                validator_id: WORKFLOW_BINDING_VALIDATOR_ID,
+            });
+            return;
+        }
+
+        seenIds.set(inputId, index);
+    });
+}
+
 function validateBindings(
     content: Record<string, unknown>,
     nodes: WorkflowNode[],
@@ -464,6 +498,7 @@ export function validateWorkflowDomain(
 
     validateUnsupportedVersion(record, diagnostics);
     validateDuplicateWorkflowId(workflow_id, definitionPath, options.discoveredWorkflowIds, diagnostics);
+    validateRunInputDeclarations(record, diagnostics);
     validateGraph(record, nodes, diagnostics);
     validateBindings(record, nodes, options, diagnostics);
 

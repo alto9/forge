@@ -129,6 +129,27 @@ export {
     shutdownTemporalLocalSupervisor,
 } from './temporalWindowRegistry';
 export {
+    FORGE_DATA_DEFINED_WORKFLOW_TYPE,
+    isKnownTemporalWorkflowType,
+    resolveTemporalWorkflowType,
+} from './workflowTypeRegistry';
+export {
+    buildWorkflowStartInFlightKey,
+    releaseWorkflowStartInFlight,
+    resetWorkflowStartInFlightGuardForTests,
+    tryAcquireWorkflowStartInFlight,
+} from './workflowStartInFlightGuard';
+export {
+    WORKFLOW_START_IN_FLIGHT_VALIDATOR_ID,
+    createTemporalWorkflowStartClient,
+    startWorkflowRun,
+} from './startWorkflowRun';
+export type {
+    StartWorkflowRunInput,
+    StartWorkflowRunOutcome,
+    TemporalWorkflowStartClient,
+} from './startWorkflowRun';
+export {
     RUN_INDEX_MAX_COMPLETED_ENTRIES,
     RUN_INDEX_RETENTION_DAYS,
     RunIndexDuplicateKeyError,

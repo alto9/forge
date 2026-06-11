@@ -57,6 +57,26 @@ describe('workflowRunIndex', () => {
         expect(buildRunIndexKey('ns', 'workflow', 'run')).toBe('ns:workflow:run');
     });
 
+    it('persists optional startInputSummary on run start entries', () => {
+        const { globalStoragePath, windowId } = createTempGlobalStorage();
+        const store = new WorkflowRunIndexStore(globalStoragePath, windowId);
+
+        const entry = store.appendRunStartEntry({
+            namespace: 'forge-local',
+            workflowId: 'wf-summary',
+            runId: 'run-summary',
+            taskQueue: 'forge-workflows',
+            workflow_id: 'refine-issue',
+            repositoryRoot: '/workspace/repo',
+            mode: 'managedLocal',
+            startInputSummary: 'issue_ref: https://github.com/alto9/forge/issues/75',
+        });
+
+        expect(entry.startInputSummary).toBe(
+            'issue_ref: https://github.com/alto9/forge/issues/75'
+        );
+    });
+
     it('appends run start entries with recovery_pending and non-terminal defaults', () => {
         const { globalStoragePath, windowId } = createTempGlobalStorage();
         const store = new WorkflowRunIndexStore(globalStoragePath, windowId);

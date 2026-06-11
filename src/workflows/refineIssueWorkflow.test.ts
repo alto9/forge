@@ -41,6 +41,25 @@ describe('refine-issue workflow definition', () => {
         expect(definition.workflow_id).toBe('refine-issue');
     });
 
+    it('declares required issue_ref run input for generic Start Run collection', () => {
+        const definition = loadRefineIssueDefinition();
+        const runInputs = definition.run_inputs as Array<{
+            input_id: string;
+            type: string;
+            required?: boolean;
+        }>;
+
+        expect(runInputs).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    input_id: 'issue_ref',
+                    type: 'string',
+                    required: true,
+                }),
+            ])
+        );
+    });
+
     it('maps refine phases to documented node IDs and types', () => {
         const definition = loadRefineIssueDefinition();
         const nodes = definition.nodes as Array<{ node_id: string; type: string }>;

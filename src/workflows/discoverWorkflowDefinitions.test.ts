@@ -86,6 +86,45 @@ describe('discoverWorkflowDefinitions', () => {
         expect(result.diagnostics).toEqual([]);
     });
 
+    it('exposes declared run_inputs on discovery index entries', () => {
+        const workspaceRoot = createTempWorkspace({
+            'with-inputs.json': {
+                schema_version: '1.0.0',
+                workflow_id: 'with-inputs',
+                name: 'With Inputs',
+                version: '1.0.0',
+                entry_node_id: 'start',
+                run_inputs: [
+                    {
+                        input_id: 'param_a',
+                        type: 'string',
+                        label: 'Param A',
+                        required: true,
+                    },
+                ],
+                nodes: [{ node_id: 'start', type: 'terminal', name: 'Done' }],
+            },
+        });
+
+        const result = discoverWorkflowDefinitions([workspaceRoot]);
+
+        expect(result.entries).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    workflow_id: 'with-inputs',
+                    run_inputs: [
+                        expect.objectContaining({
+                            input_id: 'param_a',
+                            type: 'string',
+                            label: 'Param A',
+                            required: true,
+                        }),
+                    ],
+                }),
+            ])
+        );
+    });
+
     it('discovers the repo refine-issue workflow definition', () => {
         const result = discoverWorkflowDefinitions([process.cwd()]);
 
@@ -94,10 +133,17 @@ describe('discoverWorkflowDefinitions', () => {
                 expect.objectContaining({
                     workflow_id: 'refine-issue',
                     name: 'Refine Issue',
-                    version: '1.0.1',
+                    version: '1.1.0',
                     schema_version: '1.0.0',
                     path: '.ai/workflows/refine-issue.json',
                     schema_valid: true,
+                    run_inputs: expect.arrayContaining([
+                        expect.objectContaining({
+                            input_id: 'issue_ref',
+                            type: 'string',
+                            required: true,
+                        }),
+                    ]),
                 }),
             ])
         );

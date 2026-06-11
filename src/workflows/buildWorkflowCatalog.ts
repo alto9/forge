@@ -125,6 +125,9 @@ export function buildWorkflowCatalog(repositoryRoot: string): WorkflowCatalogRes
         if (indexEntry.schema_version) {
             catalogEntry.schema_version = indexEntry.schema_version;
         }
+        if (indexEntry.run_inputs && indexEntry.run_inputs.length > 0) {
+            catalogEntry.run_inputs = indexEntry.run_inputs;
+        }
 
         entries.push(catalogEntry);
     }

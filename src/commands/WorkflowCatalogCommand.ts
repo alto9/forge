@@ -1,6 +1,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { startWorkflowRun } from '../temporal/startWorkflowRun';
+import { getWorkflowRunRecoveryContext } from '../temporal/workflowRunRecoveryService';
 import { buildWorkflowCatalog } from '../workflows/buildWorkflowCatalog';
 import type { WorkflowCatalogEmptyState } from '../workflows/types';
 import { WorkflowCatalogPanel } from '../webview/workflows/WorkflowCatalogPanel';
@@ -176,6 +178,34 @@ export class WorkflowCatalogCommand {
                     WORKFLOW_CATALOG_SELECTED_WORKFLOW_ID_KEY,
                     workflowId
                 );
+            },
+            onStartRun: async ({ workflowId, runInputs }) => {
+                const recoveryContext = getWorkflowRunRecoveryContext();
+                if (!recoveryContext) {
+                    return {
+                        ok: false,
+                        message: 'Workflow run recovery is not initialized.',
+                    };
+                }
+
+                const outcome = await startWorkflowRun({
+                    repositoryRoot: targetFolder.uri.fsPath,
+                    workflowId,
+                    submittedRunInputs: runInputs,
+                    globalStoragePath: recoveryContext.globalStoragePath,
+                    windowId: recoveryContext.windowId,
+                    indexStore: recoveryContext.indexStore,
+                });
+
+                if (!outcome.ok) {
+                    const firstDiagnostic = outcome.diagnostics[0];
+                    return {
+                        ok: false,
+                        message: firstDiagnostic?.message,
+                    };
+                }
+
+                return { ok: true };
             },
             onDispose: () => {
                 this.disposeWatcher();

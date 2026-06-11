@@ -19,7 +19,17 @@ export {
     WORKFLOW_DUPLICATE_ID_VALIDATOR_ID,
 } from './discoverWorkflowDefinitions';
 export { buildWorkflowCatalog, sortWorkflowCatalogEntries } from './buildWorkflowCatalog';
+export { buildStartInputSummary } from './buildStartInputSummary';
 export { loadWorkflowDefinition } from './loadWorkflowDefinition';
+export {
+    parseRunInputsFromRecord,
+    workflowRequiresRunInputCollection,
+} from './parseRunInputs';
+export {
+    WORKFLOW_RUN_INPUT_VALIDATOR_ID,
+    normalizeSubmittedRunInputs,
+    validateSubmittedRunInputs,
+} from './validateSubmittedRunInputs';
 export {
     applyPendingHumanQuestionsToProjection,
     parseNumberedUserQuestions,
@@ -67,6 +77,9 @@ export type {
     RunInspectorRetryBlock,
     RunInspectorValidationSummary,
     WorkflowNodeType,
+    WorkflowRunInputDefinition,
+    WorkflowRunStartInput,
+    WorkflowRunStartPayload,
     WorkflowSchemaValidationResult,
 } from './types';
 export {

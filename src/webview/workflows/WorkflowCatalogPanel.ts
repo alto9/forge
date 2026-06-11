@@ -12,6 +12,10 @@ function getNonce(): string {
 
 export type WorkflowCatalogPanelCallbacks = {
     onSelectWorkflow?: (workflowId: string) => void;
+    onStartRun?: (input: {
+        workflowId: string;
+        runInputs: Record<string, string>;
+    }) => Promise<{ ok: boolean; message?: string }>;
     onDispose?: () => void;
 };
 
@@ -56,11 +60,35 @@ export class WorkflowCatalogPanel {
 </body>
 </html>`;
 
-        panel.webview.onDidReceiveMessage((message: { type?: string; workflowId?: string }) => {
-            if (message.type === 'selectWorkflow' && typeof message.workflowId === 'string') {
-                this.callbacks.onSelectWorkflow?.(message.workflowId);
+        panel.webview.onDidReceiveMessage(
+            async (message: {
+                type?: string;
+                workflowId?: string;
+                runInputs?: Record<string, string>;
+            }) => {
+                if (message.type === 'selectWorkflow' && typeof message.workflowId === 'string') {
+                    this.callbacks.onSelectWorkflow?.(message.workflowId);
+                    return;
+                }
+
+                if (
+                    message.type === 'startRun' &&
+                    typeof message.workflowId === 'string' &&
+                    this.callbacks.onStartRun
+                ) {
+                    const result = await this.callbacks.onStartRun({
+                        workflowId: message.workflowId,
+                        runInputs: message.runInputs ?? {},
+                    });
+                    this.panel.webview.postMessage({
+                        type: 'startRunResult',
+                        workflowId: message.workflowId,
+                        ok: result.ok,
+                        message: result.message,
+                    });
+                }
             }
-        });
+        );
 
         panel.onDidDispose(() => {
             if (WorkflowCatalogPanel.currentPanel === this) {
