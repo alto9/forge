@@ -195,7 +195,12 @@ export class WorkflowRunIndexStore {
         };
 
         this.index.entries[key] = entry;
-        this.persist();
+        try {
+            this.persist();
+        } catch (error) {
+            delete this.index.entries[key];
+            throw error;
+        }
         return entry;
     }
 
