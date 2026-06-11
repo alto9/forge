@@ -98,7 +98,7 @@ Workflow start feedback uses existing Forge Temporal output, notifications, stat
 | Start blocked by definition validation | Catalog disabled reason/helper text and notification when command-driven | diagnostic `code`, `path`, `severity`; no submitted values |
 | Start blocked by run input validation | Inline catalog input validation and notification when command-driven | diagnostic `code`, `path`, `severity`, declared input key names only; no submitted values |
 | Start blocked by readiness | Notification and status bar health state | Temporal and worker health states |
-| Start succeeded | Notification or catalog feedback plus Workflow Runs refresh | `workflow_id`, `namespace`, `workflowId`, `runId`, `taskQueue` |
+| Start succeeded | Catalog row feedback ("Workflow run started.") plus Workflow Runs refresh; no VS Code success notification | `workflow_id`, `namespace`, `workflowId`, `runId`, `taskQueue` |
 | Start failed before run identity | Error notification and Output channel diagnostic | redacted Temporal or validation error code |
 | Start accepted, index write failed | Error notification and Output channel recovery diagnostic | `workflow_id`, `namespace`, `workflowId`, `runId`, `taskQueue`, local write error code; no submitted input values |
 
@@ -118,6 +118,7 @@ Failed starts are failures from the Temporal start call before Temporal returns 
 | Worker not ready | "Workflow runs are blocked until the Forge worker is ready. See Forge Temporal output for details." |
 | Duplicate matching start in flight | "Starting workflow run…" |
 | Temporal start failed before identity | "Could not start workflow run — {reason}." |
+| Start succeeded | "Workflow run started." _(catalog row feedback only; see `.ai/interface/presentation.md` **Start Run success without auto-navigation (#83)**)_ |
 
 `{reason}` is a redacted, user-actionable summary. It may include Temporal error class, namespace, task queue, or remediation hint, but it must not include submitted input values, API keys, certificates, authorization headers, raw Temporal payloads, or full stack traces.
 

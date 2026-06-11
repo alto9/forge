@@ -263,6 +263,18 @@ The catalog row Start Run affordance is the first workflow-definition execution 
 
 After success, the left-panel Workflow Runs view refreshes and the new row exposes **View graph**. Users open the graph from that row when they want to monitor the run.
 
+### Start Run success without auto-navigation (#83)
+
+Successful Start Run keeps the operator in the catalog webview. Forge shows row-level success copy only; it does not show a VS Code success notification, auto-open the workflow graph monitor, or shift focus to another editor tab or webview from the catalog start handler.
+
+| Expectation | v1 behavior |
+|-------------|-------------|
+| Success feedback | Row status copy "Workflow run started." on the started catalog row |
+| Success persistence | Remains until another workflow row is selected, another start is attempted from that row, or the catalog webview closes |
+| Graph monitor | Not opened from the catalog Start Run path (`WorkflowGraphCommand.openGraph` / `openGraphFromRun` are not invoked there) |
+| Run list | Refreshes per **Workflow Runs refresh after Start Run (#81)**; does not substitute for graph entry |
+| Graph entry | User-initiated from the new run row **View graph** action per **View graph from Workflow Runs rows (#82)** |
+
 Blocked starts keep the user on the catalog row and do not add a Workflow Runs entry. Definition and input blockers show row-level helper or validation copy; readiness blockers use the existing Forge Temporal notification, status bar, and Output channel health surfaces. Failed starts after readiness passes but before Temporal returns identity use the same catalog failure copy and Forge Temporal Output channel diagnostic path, with `{reason}` redacted per `.ai/operations/observability.md` **Start diagnostic copy**.
 
 ### Start Run input collection (v1)
@@ -419,7 +431,7 @@ Implementation-level items not yet fully specified. `/refine-issue` resolves the
 
 ### Start Run UX
 
-Resolved for v1. Required workflow inputs are collected through the inline catalog row form described in **Start Run input collection (v1)**. Disabled reasons, validation message placement, success copy, no-parameters fast path behavior, accessible labels, keyboard order, Workflow Runs refresh behavior after accepted start, and **View graph** availability from refreshed run rows are defined in **Workflow discovery catalog (#25)**, **Start Run input collection (v1)**, **Workflow Runs refresh after Start Run (#81)**, and **View graph from Workflow Runs rows (#82)**.
+Resolved for v1. Required workflow inputs are collected through the inline catalog row form described in **Start Run input collection (v1)**. Disabled reasons, validation message placement, success copy, no-parameters fast path behavior, accessible labels, keyboard order, non-navigation after success, Workflow Runs refresh behavior after accepted start, and **View graph** availability from refreshed run rows are defined in **Workflow discovery catalog (#25)**, **Start Run input collection (v1)**, **Start Run success without auto-navigation (#83)**, **Workflow Runs refresh after Start Run (#81)**, and **View graph from Workflow Runs rows (#82)**.
 
 _(Workflow graph visual states and cockpit graph UI copy resolved in **Workflow Visualization (#26)** above.)_
 
