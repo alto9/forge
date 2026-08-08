@@ -4,29 +4,23 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
-DEV_SERVER_ENTRY="resources/workflow/temporal/start-dev-server.js"
-WORKER_ENTRY="resources/workflow/worker/start-worker.js"
+HARNESS_MARKER="resources/harness/agents/architect.md"
+WEBVIEW_BUNDLE="media/superrepo/main.js"
 
-if [[ ! -f "$DEV_SERVER_ENTRY" ]]; then
-    echo "verify-packaging: missing dev server entry at $DEV_SERVER_ENTRY" >&2
+if [[ ! -f "$HARNESS_MARKER" ]]; then
+    echo "verify-packaging: missing harness marker at $HARNESS_MARKER" >&2
     exit 1
 fi
 
-if [[ ! -f "$WORKER_ENTRY" ]]; then
-    echo "verify-packaging: missing worker entry at $WORKER_ENTRY" >&2
+if [[ ! -f "dist/extension.js" ]]; then
+    echo "verify-packaging: missing dist/extension.js (run npm run build first)" >&2
     exit 1
 fi
 
-node -e "
-const path = require('path');
-const devServer = path.join(process.cwd(), '$DEV_SERVER_ENTRY');
-const worker = path.join(process.cwd(), '$WORKER_ENTRY');
-require('@temporalio/worker');
-require.resolve('@temporalio/worker/package.json');
-require.resolve('@temporalio/core-bridge');
-require('@cursor/sdk');
-console.log('dependency closure ok for', devServer, 'and', worker);
-"
+if [[ ! -f "$WEBVIEW_BUNDLE" ]]; then
+    echo "verify-packaging: missing webview bundle at $WEBVIEW_BUNDLE" >&2
+    exit 1
+fi
 
 npm run package >/dev/null
 
@@ -46,19 +40,19 @@ fi
 
 VSIX_LISTING="$(zipinfo -1 "$VSIX_PATH")"
 
-grep -Fxq "extension/$DEV_SERVER_ENTRY" <<< "$VSIX_LISTING" || {
-    echo "verify-packaging: dev server entry missing from VSIX" >&2
+grep -Fxq "extension/dist/extension.js" <<< "$VSIX_LISTING" || {
+    echo "verify-packaging: extension bundle missing from VSIX" >&2
     exit 1
 }
 
-grep -Fxq "extension/$WORKER_ENTRY" <<< "$VSIX_LISTING" || {
-    echo "verify-packaging: worker entry missing from VSIX" >&2
+grep -Fxq "extension/$HARNESS_MARKER" <<< "$VSIX_LISTING" || {
+    echo "verify-packaging: harness marker missing from VSIX" >&2
     exit 1
 }
 
-grep -Fxq "extension/dist/worker.js" <<< "$VSIX_LISTING" || {
-    echo "verify-packaging: worker bundle missing from VSIX" >&2
+grep -Fxq "extension/$WEBVIEW_BUNDLE" <<< "$VSIX_LISTING" || {
+    echo "verify-packaging: webview bundle missing from VSIX" >&2
     exit 1
 }
 
-echo "verify-packaging: launch assets present in VSIX ($VSIX_PATH)"
+echo "verify-packaging: forge v4 assets present in VSIX ($VSIX_PATH)"
