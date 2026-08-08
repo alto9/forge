@@ -1,10 +1,10 @@
 ---
-name: build
+name: build-from-github
 description: Build from Issue — branch setup, board In Progress, Engineer implements in build worktree, validation, Change Request, CI-gated board In Review.
 disable-model-invocation: true
 ---
 
-# Build
+# Build from GitHub
 
 Drive **implementation from an Issue**: branch setup → **build worktree** → **Board `In Progress`** → implement → validate → commit/push → **Change Request** → **CI-gated Board `In Review`** → optional retrospective.
 
@@ -37,7 +37,7 @@ Sub-issues **do not** get separate git branches.
 ### 3. Build worktree
 
 1. Resolve **`repo-root`**, **`repoRef`**, superrepo root.
-2. Create **`.cursor/.tmp/build-issue-{branch_owner_issue}/`** with **`session.md`**, **`worktrees.md`**.
+2. Create **`.cursor/.tmp/build-from-github-issue-{branch_owner_issue}/`** with **`session.md`**, **`worktrees.md`**.
 3. **`worktree-workspace.sh create`**:
    - **`--role build`**
    - **`--branch feature/issue-{branch_owner_issue}`**

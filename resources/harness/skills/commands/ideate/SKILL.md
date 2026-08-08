@@ -129,4 +129,4 @@ After CRs are opened (or on abort): **`worktree-workspace.sh remove --role contr
 
 ## Goal
 
-Timeless multi-repo contracts, local **`stories.md`**, and **`.ai`-only Change Requests** ready for merge before downstream **`/refine`** and **`/build`**.
+Timeless multi-repo contracts, local **`stories.md`**, and **`.ai`-only Change Requests** ready for merge before downstream **`/refine`** and **`/build-from-github`**.

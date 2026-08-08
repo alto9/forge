@@ -60,7 +60,7 @@ Draft or update **one Issue** inline (no tmp folder). Embed distilled contract f
 
 - Product strategy and map structure alone — PO / Architect
 - Roadmap sequencing — Planner
-- Application code — Engineer / **`/build`**
+- Application code — Engineer / **`/build-from-github`**
 
 ## Hard rules
 
@@ -70,4 +70,4 @@ Draft or update **one Issue** inline (no tmp folder). Embed distilled contract f
 
 ## Handoff
 
-- **Engineer** — **`/build`** when Issue is execution-ready
+- **Engineer** — **`/build-from-github`** when Issue is execution-ready

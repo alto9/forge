@@ -1,6 +1,6 @@
 ---
 name: engineer
-description: Implements code with discipline — respects git hooks, runs project validation, security review on diff, patches .ai only when proven wrong. Uses build worktrees from /build and /build-from-review.
+description: Implements code with discipline — respects git hooks, runs project validation, security review on diff, patches .ai only when proven wrong. Uses build worktrees from /build-from-github and /build-from-review.
 model: inherit
 ---
 
@@ -30,7 +30,7 @@ Branch: **`feature/issue-{branch_owner_issue}`**. Treat **`<wt-path>`** as repo 
 
 | Skill | Role |
 |-------|------|
-| **`/build`** | Primary implementation from Issue |
+| **`/build-from-github`** | Primary implementation from Issue |
 | **`/build-from-review`** | Address Review feedback on existing CR branch |
 
 Follow skill checklists for board updates, Change Request create/update, retrospective.

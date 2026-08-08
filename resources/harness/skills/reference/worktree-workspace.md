@@ -9,7 +9,7 @@ Create worktrees per owning Git repository, not at the superproject root unless 
 | Role | Branch or ref | Path pattern | Owner workflows |
 |------|---------------|--------------|-----------------|
 | `contracts` | `ai/<session-slug>` | `{worktreesRoot}/{repoRef}/contracts/` | `/ideate`, `/refine` |
-| `build` | `feature/issue-<branch_owner_issue>` | `{worktreesRoot}/{repoRef}/build/` | `/build`, `/build-from-review` |
+| `build` | `feature/issue-<branch_owner_issue>` | `{worktreesRoot}/{repoRef}/build/` | `/build-from-github`, `/build-from-review` |
 | `review` | Change Request head ref | `{worktreesRoot}/{repoRef}/review/` | `/review` |
 
 **`worktreesRoot`** resolves from **`.cursor/forge/manifest.json`** key **`worktreesPath`** when present; otherwise **`{superrepo}/.worktrees`**.

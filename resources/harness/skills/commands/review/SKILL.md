@@ -26,7 +26,7 @@ Invoke **Quality Assurance** (**`.cursor/agents/quality-assurance.md`**) for for
 
 ### 2. Review worktree (when local inspection needed)
 
-1. Read **`.cursor/.tmp/build-issue-*/worktrees.md`** when linked to build session.
+1. Read **`.cursor/.tmp/build-from-github-issue-*/worktrees.md`** when linked to build session.
 2. If no manifest, create **`.cursor/.tmp/review-cr-<N>/worktrees.md`**.
 3. Adapter **`fetch_change_request_head_ref`**
 4. **`worktree-workspace.sh create --role review --branch <adapter-ref>`**
@@ -57,7 +57,7 @@ On **REQUEST_CHANGES**, include build worktree path from manifest when known; el
 
 ### 5. Board self-heal (optional)
 
-When board configured and all sub-issues closed, set parent **`In Review`** if **`/build`** missed it (idempotent).
+When board configured and all sub-issues closed, set parent **`In Review`** if **`/build-from-github`** missed it (idempotent).
 
 ### 6. Retrospective
 

@@ -34,7 +34,7 @@ If CR head branch differs, continue only when CR is source of truth; report mism
 
 ### 3. Build worktree
 
-1. Prefer **`.cursor/.tmp/build-issue-{branch_owner_issue}/worktrees.md`** when present.
+1. Prefer **`.cursor/.tmp/build-from-github-issue-{branch_owner_issue}/worktrees.md`** when present.
 2. If active build worktree exists, refresh:
 
 ```bash
@@ -57,9 +57,9 @@ Inside **`<wt-path>`**:
 
 ### 5. Board — parent `In Review` (optional)
 
-When board configured, apply same **parent ticket complete** rules as **`/build`** after push and green required CI.
+When board configured, apply same **parent ticket complete** rules as **`/build-from-github`** after push and green required CI.
 
-Do not set sub-issues **`Done`** here (that remains **`/build`**).
+Do not set sub-issues **`Done`** here (that remains **`/build-from-github`**).
 
 ### 6. Worktree handoff
 

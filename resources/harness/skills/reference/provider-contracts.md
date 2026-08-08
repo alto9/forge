@@ -43,15 +43,15 @@ Adapters implement provider operations used by command skills:
 
 | Operation | Used by |
 |-----------|---------|
-| Resolve Issue by ref | `/build`, `/refine`, `/intake` |
+| Resolve Issue by ref | `/build-from-github`, `/refine`, `/intake` |
 | Resolve Change Request by ref | `/review`, `/build-from-review` |
-| Create / update Change Request | `/build`, `/ideate` (`.ai`-only CR) |
+| Create / update Change Request | `/build-from-github`, `/ideate` (`.ai`-only CR) |
 | Submit formal Review | `/review` |
 | Fetch Change Request head for review worktree | `/review` |
-| Link branch to Issue | `/build` |
-| List / set Board status | `/build`, `/review`, `/plan-roadmap` |
-| Resolve Issue parentage (parent vs sub-issue) | `/build`, `/refine` |
-| Post retrospective comment | `/build`, `/review`, `retrospective` utility |
+| Link branch to Issue | `/build-from-github` |
+| List / set Board status | `/build-from-github`, `/review`, `/plan-roadmap` |
+| Resolve Issue parentage (parent vs sub-issue) | `/build-from-github`, `/refine` |
+| Post retrospective comment | `/build-from-github`, `/review`, `retrospective` utility |
 
 Command skills call adapters with **`provider:<operation>`** semantics documented in each adapter file. They **do not** embed `pull/<N>/head`, `gh pr create`, or `glab mr` flags directly.
 

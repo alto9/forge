@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Intake (Small scope)
 
-Lightweight orchestration for **one feature or fix** that does not need full **`/ideate`** decomposition. Creates or updates **a single Issue** with enough context for **`/refine`** or direct **`/build`** when already clear.
+Lightweight orchestration for **one feature or fix** that does not need full **`/ideate`** decomposition. Creates or updates **a single Issue** with enough context for **`/refine`** or direct **`/build-from-github`** when already clear.
 
 **Agents:** Product Owner (scope and vision fit), Architect (contract pointers and repo ownership), Technical Writer (Issue structure and acceptance criteria).
 
@@ -37,7 +37,7 @@ Lightweight orchestration for **one feature or fix** that does not need full **`
 1. PO — vision/project fit, scope boundary (inline Q&A if needed)
 2. Architect — resolve repo-root, repoRef, affected .ai domains (read-only)
 3. TW — draft Issue sections on tracker (create or update)
-4. Handoff — /refine when contracts need completion; /build when execution-ready
+4. Handoff — /refine when contracts need completion; /build-from-github when execution-ready
 ```
 
 ---
@@ -79,7 +79,7 @@ Lightweight orchestration for **one feature or fix** that does not need full **`
 ## Output
 
 - **Single Issue URL** with self-contained body
-- Chat summary: recommended next command (`/refine` or `/build`)
+- Chat summary: recommended next command (`/refine` or `/build-from-github`)
 
 ---
 

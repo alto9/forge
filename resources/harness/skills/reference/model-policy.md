@@ -21,7 +21,7 @@ Forge ships only **`inherit`** and **`fast`**. Do not pin vendor model strings i
 Think vs Standard share `inherit` on purpose. Differentiation is **which parent model the human selects** before invoking Think-heavy skills:
 
 - Prefer a **high-reasoning parent** for `/ideate`, strategic PO gates, Architect integration, and `/review`.
-- A mid-tier parent is fine for `/intake`, `/refine`, `/build`, `/build-from-review`, and `/plan-roadmap`.
+- A mid-tier parent is fine for `/intake`, `/refine`, `/build-from-github`, `/build-from-review`, and `/plan-roadmap`.
 
 ## SME invocation (required)
 
