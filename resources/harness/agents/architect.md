@@ -22,13 +22,13 @@ During **`/ideate`**, inquisitiveness applies to contracts and classification (t
 
 ## Worktrees
 
-**`.ai` edits** during **`/ideate`** and ad hoc contract work use **contracts** role worktrees:
+**`.ai` edits** during **`/ideate`** (and contracts work under **`/refine`**) use the commanding skill’s session-scoped contracts worktrees:
 
 ```text
-{worktreesRoot}/{repoRef}/contracts/
+{worktreesRoot}/{repoRef}/contracts-{session}/
 ```
 
-Branch pattern: **`ai/<session-slug>`**. Never edit **`.ai`** in the user's active checkout. Record paths in **`.cursor/.tmp/<session>/worktrees.md`**.
+Branch pattern: **`ai/<session-slug>`**. Never edit **`.ai`** in the user's active checkout. Use **`tmp_dir`** / **`worktree_path`** from the current command session only.
 
 ## When invoked
 

@@ -10,6 +10,14 @@ Drive **implementation from an Issue**: branch setup → **build worktree** → 
 
 Invoke **Engineer** (**`.cursor/agents/engineer.md`**). Branch creation happens here, not during **`/refine`**.
 
+## Session ownership (this command)
+
+- Mint **`session_slug`** (recommended: `build-issue-{branch_owner_issue}`). Create **`.cursor/.tmp/<session_slug>/`**. Engineer and utilities share this session for the run.
+- **Always create** a session-scoped build worktree. Do **not** reuse another command’s or workstation’s build tree. Do **not** read prior `.tmp/build-*` folders.
+- Resolve branch and Issue from the **tracker / `origin`**.
+- Before ending: **always** remove the build worktree (`--session`). Next human runs **`/build-from-review`** or **`/review`** from the Change Request URL.
+- Reference: **`.cursor/skills/reference/worktree-workspace.md`**.
+
 ---
 
 ## Input
@@ -36,12 +44,13 @@ Sub-issues **do not** get separate git branches.
 
 ### 3. Build worktree
 
-1. Resolve **`repo-root`**, **`repoRef`**, superrepo root.
-2. Create **`.cursor/.tmp/build-from-github-issue-{branch_owner_issue}/`** with **`session.md`**, **`worktrees.md`**.
+1. Resolve **`repo-root`**, **`repoRef`**, superrepo root. Set **`session_slug`**.
+2. Create **`.cursor/.tmp/<session_slug>/`** with **`session.md`**, **`worktrees.md`**.
 3. **`worktree-workspace.sh create`**:
    - **`--role build`**
    - **`--branch feature/issue-{branch_owner_issue}`**
-   - Reuse existing build worktree when manifest marks it **`active`** (refresh from origin).
+   - **`--session <session_slug>`**
+   - Use **`--base origin/main`** when the branch does not exist yet
 4. **Rebase on `main`** (mandatory after branch exists):
 
 ```bash
@@ -67,7 +76,7 @@ Skip when board not configured.
 
 ### 5. Implementation (Engineer)
 
-Inside **`<wt-path>`**:
+Inside **`<wt-path>`** from this session:
 
 - Implement **`input_issue`** scope
 - Read peer submodules for cross-system contracts (constitution read-first rule)
@@ -80,7 +89,7 @@ Inside **`<wt-path>`**:
 
 - If open CR exists for head branch, update title/body for current scope
 - Else **`create_change_request`** via adapter
-- Record CR URL in **`worktrees.md`**
+- Record CR URL in **`worktrees.md`** and chat summary
 
 ### 7. Board — `In Review` (CI-gated)
 
@@ -100,9 +109,18 @@ When **`project.json`** has **`doc_repo`** and parent scope is complete, sync do
 
 **`retrospective`** utility in **`issue`** mode on **`input_issue`**.
 
-### 10. Worktree cleanup
+### 10. Teardown (mandatory)
 
-Remove build worktree unless immediate re-review handoff needs it. Update manifest.
+```bash
+worktree-workspace.sh remove \
+  --superrepo "$SUPERREPO" \
+  --repo-root "$REPO_ROOT" \
+  --repo-ref "$REPO_REF" \
+  --role build \
+  --session "$SESSION_SLUG"
+```
+
+Always remove on success and on abort. Do not leave the tree for another person or for `/build-from-review`.
 
 ---
 
@@ -114,4 +132,4 @@ Remove build worktree unless immediate re-review handoff needs it. Update manife
 
 ## Goal
 
-Change Request ready for **`/review`**, validation green, board updated when configured, build worktree documented.
+Change Request ready for **`/review`**, validation green, board updated when configured, session build worktree removed. Handoff is the CR URL.

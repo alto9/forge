@@ -12,6 +12,13 @@ Orchestration contract for **Issue refinement**. Delegates execution to **Techni
 
 **No `feature/issue-*` branches.** **`.ai`** edits use a **contracts** worktree (`ai/refine-<repoRef>-<issue#>`) and land in a **`.ai`-only Change Request** when complete.
 
+## Session ownership (this command)
+
+- Mint **`session_slug`** (recommended: `refine-<repoRef>-<issue#>`). Create **`.cursor/.tmp/<session_slug>/`**. TW / Architect share this session for the run.
+- Do **not** read `/ideate` or other command tmp folders. Load Issue and `.ai` from the tracker and repo (contracts worktree from `origin/main`).
+- Before ending: **always** remove the contracts worktree with **`--session`**. Later humans use the Issue URL and any open `.ai` CR.
+- Reference: **`.cursor/skills/reference/worktree-workspace.md`**.
+
 ---
 
 ## Input
@@ -38,7 +45,7 @@ Phase B   Ground .ai/specs + questions
 Phase B.5 Triage                      user_questions.md + assumptions.md
 Phase C   User verification           refinement.md
 Phase D   Issue + .ai completion      tracker + .ai in worktree (.ai-only CR)
-Phase E   Cleanup                     remove contracts worktree after CR opened
+Phase E   Teardown                    remove contracts worktree
 ```
 
 ---
@@ -46,12 +53,12 @@ Phase E   Cleanup                     remove contracts worktree after CR opened
 ## Phase A — Workspace prep
 
 1. **`detect-provider`**; **`resolve_issue`**; **`resolve_issue_parentage`** when sub-issues exist.
-2. Create **`.cursor/.tmp/refine-<repoRef>-<issue#>/`** with **`session.md`**, **`worktrees.md`**, **`issue_context.md`**.
+2. Create **`.cursor/.tmp/<session_slug>/`** with **`session.md`**, **`worktrees.md`**, **`issue_context.md`**.
 3. **`worktree-workspace.sh create`**:
    - **`--role contracts`**
-   - **`--branch ai/refine-<repoRef>-<issue#>`**
-   - **`--session refine-<repoRef>-<issue#>`**
-4. All **`.ai` reads/writes** use the contracts worktree path.
+   - **`--branch ai/refine-<repoRef>-<issue#>`** (or `ai/<session_slug>`)
+   - **`--session <session_slug>`**
+4. All **`.ai` reads/writes** use the contracts worktree path from this session.
 
 ---
 
@@ -71,12 +78,22 @@ Technical Writer:
 2. Updates Issue body (and sub-Issues on tracker only when splitting helps).
 3. **`git add -A .ai`** in worktree; commit; push; **`.ai`-only Change Request** via provider adapter when diff non-empty.
 4. Issue must stand alone: concrete steps, cited prerequisites, no discovery placeholders.
+5. Put CR URL in chat summary and **`worktrees.md`**.
 
 ---
 
-## Phase E — Cleanup
+## Phase E — Teardown (mandatory)
 
-**`worktree-workspace.sh remove --role contracts`** after CR opened (or on abort). Update manifest status.
+```bash
+worktree-workspace.sh remove \
+  --superrepo "$SUPERREPO" \
+  --repo-root "$REPO_ROOT" \
+  --repo-ref "$REPO_REF" \
+  --role contracts \
+  --session "$SESSION_SLUG"
+```
+
+Run on success and on abort. Update manifest status.
 
 ---
 
@@ -88,4 +105,4 @@ docs(ai): refine issue #<N> contract updates
 
 ## Goal
 
-Execution-ready Issue(s), resolved open implementation decisions in **`.ai`**, optional **`.ai`-only Change Request**, no implementation branch.
+Execution-ready Issue(s), optional **`.ai`-only Change Request**, no implementation branch, session worktree removed. Next command starts from remote Issue/CR only.

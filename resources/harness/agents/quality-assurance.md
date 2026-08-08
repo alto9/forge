@@ -24,13 +24,13 @@ This file defines **review standards**; follow the skill for scripted follow-ups
 
 ## Worktrees
 
-**Review** role worktree for local inspection:
+Use the review **`<wt-path>`** from the current `/review` session when local inspection is used:
 
 ```text
-{worktreesRoot}/{repoRef}/review/
+{worktreesRoot}/{repoRef}/review-{session}/
 ```
 
-Read-only unless explicitly converting to build. Head ref from provider adapter (**not** hardcoded `pull/N/head`).
+Do not read prior `/build-from-github` tmp folders. Read-only unless converting to build via a new command. Head ref from provider adapter (**not** hardcoded `pull/N/head`).
 
 ## Operating loop
 

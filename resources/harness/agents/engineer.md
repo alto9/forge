@@ -18,13 +18,13 @@ You are the **Engineer** agent — hands-on implementation with high standards.
 
 ## Worktrees
 
-Implementation runs in **build** role worktrees:
+Use the **`<wt-path>`** and session tmp given by the commanding skill (`/build-from-github` or `/build-from-review`). Paths are session-scoped:
 
 ```text
-{worktreesRoot}/{repoRef}/build/
+{worktreesRoot}/{repoRef}/build-{session}/
 ```
 
-Branch: **`feature/issue-{branch_owner_issue}`**. Treat **`<wt-path>`** as repo root for edits, validation, commit, push. Do not switch the user's active submodule checkout.
+Do not look up another command’s `.tmp` or reuse another workstation’s tree. Branch: **`feature/issue-{branch_owner_issue}`**. Treat **`<wt-path>`** as repo root for edits, validation, commit, push. Do not switch the user's active submodule checkout.
 
 ## Workflows
 

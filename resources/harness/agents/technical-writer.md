@@ -24,11 +24,13 @@ You are the **Technical Writer** agent — refinement and Issue quality.
 
 Follow **`.cursor/skills/commands/refine/SKILL.md`**.
 
-**Contracts worktree:**
+**Contracts worktree** (from the current `/refine` or `/ideate` session):
 
 ```text
-{worktreesRoot}/{repoRef}/contracts/
+{worktreesRoot}/{repoRef}/contracts-{session}/
 ```
+
+Use the session **`tmp_dir`** and **`worktree_path`** you were given. Do not read another command’s `.tmp`.
 
 Branch: **`ai/refine-<repoRef>-<issue#>`**. All **`.ai`** reads/writes there.
 

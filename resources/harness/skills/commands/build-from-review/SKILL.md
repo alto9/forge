@@ -8,6 +8,14 @@ disable-model-invocation: true
 
 **Engineer** second pass: apply **Review** feedback on an existing Change Request branch while preserving original Issue intent.
 
+## Session ownership (this command)
+
+- Mint **`session_slug`** (recommended: `build-from-review-cr-<N>`). Create **`.cursor/.tmp/<session_slug>/`**.
+- **Do not** read `.tmp` from a prior `/build-from-github` or `/review` on this or another workstation.
+- Create a **new** session-scoped build worktree from the CR head / `feature/issue-{N}` via provider + **`origin`**.
+- Before ending: **always** remove that build worktree. Next `/review` starts from the CR URL.
+- Reference: **`.cursor/skills/reference/worktree-workspace.md`**.
+
 ---
 
 ## Input
@@ -34,20 +42,21 @@ If CR head branch differs, continue only when CR is source of truth; report mism
 
 ### 3. Build worktree
 
-1. Prefer **`.cursor/.tmp/build-from-github-issue-{branch_owner_issue}/worktrees.md`** when present.
-2. If active build worktree exists, refresh:
+1. Create **`.cursor/.tmp/<session_slug>/`** with **`session.md`**, **`worktrees.md`**.
+2. Resolve head branch from the CR (remote). Fetch as needed.
+3. **`worktree-workspace.sh create --role build --branch <cr-head-or-feature-branch> --session <session_slug>`**.
+4. Refresh from origin inside the new tree:
 
 ```bash
 git -C <wt-path> fetch origin
 git -C <wt-path> pull --rebase
 ```
 
-3. Else **`worktree-workspace.sh create --role build --branch <cr-head-branch>`**.
-4. Do not checkout CR branch in user's active submodule checkout.
+5. Do not checkout the CR branch in the user's active submodule checkout.
 
 ### 4. Engineer handoff
 
-Inside **`<wt-path>`**:
+Inside **`<wt-path>`** from this session:
 
 - Address Review feedback; preserve Issue acceptance scope
 - Run validation; all must pass before commit
@@ -61,9 +70,18 @@ When board configured, apply same **parent ticket complete** rules as **`/build-
 
 Do not set sub-issues **`Done`** here (that remains **`/build-from-github`**).
 
-### 6. Worktree handoff
+### 6. Teardown (mandatory)
 
-Keep build worktree **`active`** when re-review is imminent; else **`worktree-workspace.sh remove --role build`**.
+```bash
+worktree-workspace.sh remove \
+  --superrepo "$SUPERREPO" \
+  --repo-root "$REPO_ROOT" \
+  --repo-ref "$REPO_REF" \
+  --role build \
+  --session "$SESSION_SLUG"
+```
+
+Always remove on success and on abort.
 
 ---
 
@@ -73,4 +91,4 @@ Use adapter **`fetch_change_request_head_ref`** only through **`provider/github`
 
 ## Goal
 
-Updated Change Request ready for QA re-review; board repaired when configured and completion criteria met.
+Updated Change Request ready for QA re-review; session build worktree removed; board repaired when configured.
