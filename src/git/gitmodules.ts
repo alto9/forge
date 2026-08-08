@@ -1,50 +1,122 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import { detectProviderFromUrl } from './provider';
+import type { SubmoduleEntry, SubmoduleView } from './types';
 
 /**
- * Parse submodule relative paths from .gitmodules contents (Git config format).
- * Only collects `path = …` keys inside `[submodule "…"]` sections.
+ * Parse full submodule entries from .gitmodules contents (Git config format).
  */
-export function parseSubmodulePaths(contents: string): string[] {
-    const ordered: string[] = [];
-    const seen = new Set<string>();
-    let inSubmoduleSection = false;
+export function parseSubmodules(contents: string): SubmoduleEntry[] {
+    const entries: SubmoduleEntry[] = [];
+    let currentName: string | null = null;
+    let current: Partial<SubmoduleEntry> | null = null;
+
+    const flush = () => {
+        if (!current || !currentName) {
+            return;
+        }
+        const submodulePath = (current.path ?? '').trim();
+        const url = (current.url ?? '').trim();
+        if (!submodulePath || !url) {
+            currentName = null;
+            current = null;
+            return;
+        }
+        entries.push({
+            name: currentName,
+            path: submodulePath,
+            url,
+            branch: (current.branch ?? 'main').trim() || 'main'
+        });
+        currentName = null;
+        current = null;
+    };
 
     for (const rawLine of contents.split(/\r?\n/)) {
         const line = rawLine.trim();
-        if (!line || line.startsWith('#')) {
+        if (!line || line.startsWith('#') || line.startsWith(';')) {
             continue;
         }
-        if (line.startsWith('[submodule')) {
-            inSubmoduleSection = true;
+        const sectionMatch = line.match(/^\[submodule\s+"([^"]+)"\]$/i);
+        if (sectionMatch) {
+            flush();
+            currentName = sectionMatch[1];
+            current = { name: currentName };
             continue;
         }
         if (line.startsWith('[')) {
-            inSubmoduleSection = false;
+            flush();
             continue;
         }
-        if (!inSubmoduleSection) {
+        if (!current) {
             continue;
         }
-        const pathMatch = line.match(/^\s*path\s*=\s*(.+)$/i);
-        if (!pathMatch) {
+        const kv = line.match(/^([^=]+)=(.*)$/);
+        if (!kv) {
             continue;
         }
-        let value = pathMatch[1].trim();
+        const key = kv[1].trim().toLowerCase();
+        let value = kv[2].trim();
         if (
             (value.startsWith('"') && value.endsWith('"')) ||
             (value.startsWith("'") && value.endsWith("'"))
         ) {
-            value = value.slice(1, -1).trim();
+            value = value.slice(1, -1);
         }
-        if (!value || seen.has(value)) {
-            continue;
+        if (key === 'path') {
+            current.path = value;
+        } else if (key === 'url') {
+            current.url = value;
+        } else if (key === 'branch') {
+            current.branch = value;
         }
-        seen.add(value);
-        ordered.push(value);
     }
+    flush();
+    return entries;
+}
 
-    return ordered;
+/** @deprecated Prefer parseSubmodules; kept for path-only callers. */
+export function parseSubmodulePaths(contents: string): string[] {
+    return parseSubmodules(contents).map((e) => e.path);
+}
+
+export function serializeSubmodules(entries: SubmoduleEntry[]): string {
+    if (entries.length === 0) {
+        return '';
+    }
+    const blocks = entries.map((entry) => {
+        const name = entry.name || path.basename(entry.path);
+        return [
+            `[submodule "${name}"]`,
+            `\tpath = ${entry.path}`,
+            `\turl = ${entry.url}`,
+            `\tbranch = ${entry.branch || 'main'}`
+        ].join('\n');
+    });
+    return `${blocks.join('\n')}\n`;
+}
+
+export function readSubmodules(repoRoot: string): SubmoduleView[] {
+    const gitmodulesPath = path.join(repoRoot, '.gitmodules');
+    if (!fs.existsSync(gitmodulesPath)) {
+        return [];
+    }
+    const contents = fs.readFileSync(gitmodulesPath, 'utf8');
+    return parseSubmodules(contents).map((entry) => ({
+        ...entry,
+        provider: detectProviderFromUrl(entry.url)
+    }));
+}
+
+export function writeSubmodulesFile(repoRoot: string, entries: SubmoduleEntry[]): void {
+    const gitmodulesPath = path.join(repoRoot, '.gitmodules');
+    if (entries.length === 0) {
+        if (fs.existsSync(gitmodulesPath)) {
+            fs.unlinkSync(gitmodulesPath);
+        }
+        return;
+    }
+    fs.writeFileSync(gitmodulesPath, serializeSubmodules(entries), 'utf8');
 }
 
 function isDirectoryInsideParent(parentResolved: string, candidateResolved: string): boolean {
@@ -56,46 +128,24 @@ function isDirectoryInsideParent(parentResolved: string, candidateResolved: stri
 }
 
 /**
- * Returns roots for Forge sync: superproject first, then each checked-out submodule directory.
- * If .gitmodules is missing, returns [repoRoot]. Paths escaping repoRoot are skipped.
+ * Returns checked-out submodule directories under repoRoot (does not include superproject).
  */
-export function resolveForgeSyncRoots(repoRoot: string): string[] {
+export function listCheckedOutSubmoduleDirs(repoRoot: string): string[] {
     const rootResolved = path.resolve(repoRoot);
-    const gitmodulesPath = path.join(rootResolved, '.gitmodules');
-    if (!fs.existsSync(gitmodulesPath)) {
-        return [rootResolved];
-    }
-
-    let contents: string;
-    try {
-        contents = fs.readFileSync(gitmodulesPath, 'utf8');
-    } catch {
-        return [rootResolved];
-    }
-
-    const relativePaths = parseSubmodulePaths(contents);
-    const roots: string[] = [rootResolved];
-    const seenAbs = new Set<string>([rootResolved]);
-
-    for (const rel of relativePaths) {
-        const abs = path.resolve(rootResolved, rel);
+    const entries = readSubmodules(rootResolved);
+    const dirs: string[] = [];
+    for (const entry of entries) {
+        const abs = path.resolve(rootResolved, entry.path);
         if (!isDirectoryInsideParent(rootResolved, abs)) {
             continue;
         }
-        if (seenAbs.has(abs)) {
-            continue;
-        }
         try {
-            const st = fs.statSync(abs);
-            if (!st.isDirectory()) {
-                continue;
+            if (fs.statSync(abs).isDirectory()) {
+                dirs.push(abs);
             }
         } catch {
-            continue;
+            // skip missing
         }
-        seenAbs.add(abs);
-        roots.push(abs);
     }
-
-    return roots;
+    return dirs;
 }

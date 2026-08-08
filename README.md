@@ -1,127 +1,94 @@
 # Forge Studio
 
-Forge Studio is a **Visual Studio Code** extension; install and use it the same way in **Cursor**. It supports **context engineering** and **agentic development** for software teams whose work already lives on **GitHub**—issues, milestones, branches, pull requests, and (optionally) GitHub Projects—so planning, refinement, and implementation stay tied to the repository you ship from.
+Forge Studio is a **Visual Studio Code** / **Cursor** extension that configures a **git superrepo** for AI-assisted development: submodules, a central worktrees folder, and a project-local agent harness under `.cursor/`.
+
+Product contracts stay in each submodule’s **`.ai/`** tree. Forge does not invent a consumer `.forge/` root.
 
 ## Overview
 
-Forge Studio provides:
+- **Initialize Superrepo** – Pick a root, edit `.gitmodules` entries, set `{superrepo}/.worktrees`, then install the harness into `{superrepo}/.cursor/`.
+- **Update Harness** – Replace managed harness files from the VSIX bundle using `.cursor/forge/manifest.json`.
+- **Open Superrepo Config** – Re-open the same configuration UI after init.
 
-- **Initialize Cursor Agents** – Installs the **complete** agents/skills/hooks bundle to `~/.cursor/` (user-level); script skills and `gh` assume the **GitHub CLI** where they touch issues, PRs, or branches
-- **Initialize Project** – Creates or updates **`.forge/`** in the current project (metadata only: `project.json`, contracts, `skill_registry.json`, etc.); it does **not** write `<repo>/.cursor/`
-- **Forge Help persona** – Workflow explainer for skill/agent guidance and handoff questions
-- **Agent workflow** – Six-step flow: **Product Owner** → **Architect** → **Planner** → **Technical Writer** → **Engineer** → **Quality Assurance**, plus **Forge Help** for workflow questions. Agents install to `~/.cursor/agents/` from `resources/workflow/`. Shared context lives in the project’s **`.forge/`** folder: any agent may update those files when contracts are wrong or unclear; **Product Owner** owns `vision.json` / `project.json`, and **Architect** is the primary steward of `knowledge_map.json` and cross-domain coherence — see `resources/workflow/agents/AGENT_FLOW.md`.
-- **Workflow skills** – Orchestration prompts (ex-commands) live under `resources/workflow/skills/<name>/SKILL.md` and install to `~/.cursor/skills/`; invoke with **`/<skill-name>`** in Agent chat.
-- **Chat participants** – @forge-help, @product-owner, @architect, @planner, @technical-writer, @engineer, @quality-assurance (VS Code chat participants mirror the Cursor agents)
+Harness source of truth ships in this repo at `resources/harness/` and is copied into the superrepo on init/update.
 
-## Quick Start
+## Quick start
 
-1. Open a **Git** working copy of your **GitHub** repository in **VS Code** or **Cursor**
-2. On Cursor startup, Forge checks user-level Cursor agents in `~/.cursor/` and prompts before applying updates when changes are needed
-3. Run **Forge: Initialize Cursor Agents** (Command Palette) once per machine profile so **`~/.cursor/`** receives the **full** Forge bundle (agents, skills, hooks). Nothing is partially installed—every workflow file is copied; individual skills are simply unused when not relevant.
-4. Run **Forge: Initialize Project** to create or update **`.forge/`** in the repository (project metadata: `vision.json`, `project.json`, `skill_registry.json`, `knowledge_map.json`, schemas, mapped contract stubs). This step does **not** write `<repo>/.cursor/`; Cursor agents and workflow skills come from **`~/.cursor/`** in the default layout.
-5. After the steps above you have:
-   - `~/.cursor/` – agents, skills, hooks (user-level, shared across projects)
-   - `~/.cursor/hooks.json` – JSON schema validation on .forge file edits
-   - `.forge/` – vision.json, project.json, skill_registry.json, knowledge_map.json, schemas/ (project-level)
+1. Install the extension (Marketplace or VSIX).
+2. Open your superrepo folder in VS Code or Cursor.
+3. Command Palette → **Forge: Initialize Superrepo**.
+4. Confirm or add submodules (remote, name, path, branch). GitHub and GitLab remotes can coexist.
+5. Confirm the worktrees path (default `.worktrees`).
+6. Click **Initialize Super-Repo**. Progress runs: Submodules → Worktrees → Configuration → Harness.
 
-**Skills path note:** `.forge/skill_registry.json` lists **script** skills with `script_path` under `.cursor/skills/...`. Resolve those against **`~/.cursor/skills/...`** (same path suffix). **Orchestration** skills (`kind`: `orchestration`) have no `script_path`; read **`~/.cursor/skills/<id>/SKILL.md`** (or **`resources/workflow/skills/<id>/SKILL.md`** in the Forge repo). Teams that commit a repo-local `.cursor/skills/` tree may use workspace-relative paths instead.
+After init you have:
 
-## User Flow
-
-After Cursor-agent initialization, use the injected agents and **Agent Skills** in the editor (invoke with **`/<skill-name>`** in Agent chat). Roadmap and delivery steps operate on **GitHub** (milestones, issues, PRs) alongside `.forge` contracts:
-
-- **Architect** (`/architect-this`) – Aligns `.forge/knowledge_map.json` and domain contract docs with product intent; hands off to Planner
-- **Plan Roadmap** (`/plan-roadmap`) – Manages GitHub milestones and issues via pull-milestones, pull-milestone-issues
-- **Refine Issue** (`/refine-issue`) – Step 4 **orchestration** (normalize input, resolve parent when the link is a sub-issue, delegate, verify outputs); the **Technical Writer** agent (**`@technical-writer`**) refines GitHub issue bodies and optional sub-issues — **no** git branches in this phase. Authoritative details: `resources/workflow/skills/refine-issue/SKILL.md` and `resources/workflow/agents/technical-writer.md` (installed to `~/.cursor/agents/technical-writer.md` after **Forge: Initialize Cursor Agents**).
-- **Build from GitHub** (`/build-from-github`) – Runs **`resolve-issue-parentage`**, creates/checks out **`feature/issue-{branch_owner}`**, implements, runs all tests/lint until green, then git commit/push/PR (branches are created **here**, not during refinement)
-- **Build from PR Review** (`/build-from-pr-review`) – Retrieves PR feedback, checks out PR branch, applies requested changes, validates, and pushes updates for re-review
-- **Review PR** (`/review-pr`) – Reviews code, posts review comments
-
-## Chat Participants (VS Code)
-
-In the VS Code **Chat** view, type `@` to use Forge personas (same extension in Cursor):
-
-| Participant | Purpose |
-|-------------|---------|
-| **@forge-help** | Workflow guide for Forge steps, skills, handoffs, and quality gates |
-| **@product-owner** | Step 1: maintain product vision and project direction |
-| **@architect** | Step 2: update technical contracts and knowledge structure |
-| **@planner** | Step 3: align milestones and issues with documented direction |
-| **@technical-writer** | Step 4: Technical Writer agent refines issues into implementation-ready work (invocation contract for `/refine-issue` is in `resources/workflow/skills/refine-issue/SKILL.md`) |
-| **@engineer** | Step 5: implement scoped issue work and prepare PRs |
-| **@quality-assurance** | Step 6: review PRs for correctness and security |
-
-## Project Structure
-
-After setup:
-
-**User-level (~/.cursor/):**
-```
-~/.cursor/
-├── agents/                   # product-owner, architect, planner, technical-writer, engineer, quality-assurance, forge-help (+ AGENT_FLOW.md)
-├── skills/                   # orchestration SKILL.md + script skills (branch, PR, milestone, board, …)
-├── hooks/                    # JSON schema validation on .forge file edits
-└── hooks.json                # Cursor hooks config
+```text
+{superrepo}/
+  .gitmodules
+  .worktrees/                 # gitignored disposable worktrees
+  .cursor/
+    forge/manifest.json       # Forge version + managed paths
+    agents/                   # Architect, PO, Planner, …
+    skills/commands/          # /ideate, /intake, /refine, /build, …
+    skills/provider/          # GitHub + GitLab adapters
+    skills/utilities/         # setup-submodule, worktrees, …
+    rules/                    # constitution, persona, CLI rules
+    .tmp/                     # session state (gitignored)
 ```
 
-**Project-level (.forge/):**
+Each product submodule keeps its own `.ai/` (`vision.json`, `project.json`, `knowledge_map.json`, domains). Use the **SetupSubmodule** skill when a submodule is missing that structure.
+
+## Human-callable skills
+
+Invoke with `/<skill-name>` in Agent chat after the harness is installed:
+
+| Skill | Purpose |
+|-------|---------|
+| `/ideate` | Large initiative: PO + Architect (+ SMEs) + Marketing Manager; session under `.cursor/.tmp/` |
+| `/intake` | Small feature/defect → single issue; inline Q&A; no tmp folder |
+| `/refine` | Technical Writer refines an issue; contracts worktree; no feature branches |
+| `/build` | Implement from ticket in a build worktree; Engineer |
+| `/build-from-review` | Second pass from Change Request review comments |
+| `/review` | Quality Assurance formal review (no merge) |
+
+Supporting utilities include `/plan-roadmap`, `/audit-contracts`, worktree helpers, and provider adapters (GitHub `gh` / GitLab `glab`).
+
+### Models
+
+Agent frontmatter sets `model: inherit` (Think/Standard roles) or `model: fast` (domain SMEs). Policy: `resources/harness/skills/reference/model-policy.md` (installed to `.cursor/skills/reference/model-policy.md`). Architect must invoke SMEs as `Task(subagent_type="*-sme")`, not `generalPurpose`.
+
+## Worktrees
+
+All disposable trees live under the configured worktrees root (default `{superrepo}/.worktrees`):
+
+```text
+.worktrees/{repoRef}/contracts-{session}/
+.worktrees/{repoRef}/build-issue-{N}/
+.worktrees/{repoRef}/pr-{N}-review/
 ```
-your-project/
-└── .forge/
-    ├── vision.json           # Product vision, mission, strategy
-    ├── project.json          # Project config (repo GitHub URL, board links, paths)
-    ├── skill_registry.json   # Skill-to-agent assignments
-    ├── knowledge_map.json    # Domain structure (vision → runtime, business_logic, data, etc.)
-    └── schemas/              # JSON schemas for validation
-```
 
-## Installation
-
-Install the `.vsix` in **VS Code** or **Cursor** (`code` / **Install from VSIX…** in the UI).
-
-### From Source (Development)
-
-```bash
-npm install
-npm run build
-npm run package
-code --install-extension forge-studio-*.vsix
-```
-
-### From VSIX
-
-```bash
-code --install-extension forge-studio-*.vsix
-```
+Active submodule checkouts stay on `main`. Session manifests live in `.cursor/.tmp/<session>/`.
 
 ## Development
 
 ```bash
-npm install
+npm ci
 npm run build
-npm run watch      # Watch mode
-npm run lint
-npm run test
-npm run package    # Package for distribution
+npm test
+bash scripts/verify-packaging.sh
 ```
 
-## Temporal configuration
+Requires Node 22+ (see `.nvmrc`).
 
-Forge workflow runs use Temporal. By default, **managed-local** mode starts a window-scoped dev server from npm-bundled assets (no separate Temporal CLI install).
+## Release
 
-Settings live under **Forge › Temporal** in VS Code settings. Precedence: workspace settings, then user settings, then `FORGE_TEMPORAL_*` environment variables, then built-in defaults (see `forge/.ai/runtime/configuration.md`).
+Publishing is manual via **Actions → Cut Release**. See [RELEASE.md](RELEASE.md).
 
-| Setting | Default | Purpose |
-|---------|---------|---------|
-| `forge.temporal.mode` | `managedLocal` | `managedLocal` or `external` |
-| `forge.temporal.managedLocal.grpcPort` | `7233` | gRPC port for the local dev server |
-| `forge.temporal.managedLocal.uiPort` | `8233` | Temporal Web UI port (diagnostics) |
-| `forge.temporal.managedLocal.persistencePath` | _(computed)_ | Override persistence directory; default is `{extensionGlobalStorage}/temporal/{windowId}/` |
-| `forge.temporal.managedLocal.namespace` | `forge-local` | Temporal namespace |
-| `forge.temporal.managedLocal.taskQueue` | `forge-workflows` | Default worker task queue |
+Use a breaking conventional commit (`feat!: …`) when shipping Forge v4 so semantic-release cuts a major version.
 
-When mode is `managedLocal`, workflow run creation waits until the dev server reports **ready**. Startup failures block runs with remediation guidance; Forge does not auto-fallback to external mode.
+## Links
 
-## License
-
-MIT
+- [GitHub](https://github.com/alto9/forge)
+- [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=alto9.forge-studio)
+- [Open VSX](https://open-vsx.org/extension/alto9/forge-studio)

@@ -1,7 +1,7 @@
 {
   "name": "forge-studio",
   "displayName": "Forge Studio",
-  "description": "VS Code and Cursor extension for GitHub-centric context engineering: staged agents, Agent Skills, and chat personas aligned with issues, PRs, and milestones.",
+  "description": "VS Code and Cursor extension that initializes a git superrepo for AI development: submodules, worktrees, and a project-local agent harness.",
   "version": "3.32.0",
   "license": "MIT",
   "author": "Alto9",
@@ -9,12 +9,15 @@
   "icon": "resources/icons/forge-logo.png",
   "keywords": [
     "forge",
-    "github",
-    "context-engineering",
+    "superrepo",
+    "submodules",
+    "worktrees",
+    "cursor",
     "ai",
     "agentic-development",
     "vscode",
-    "cursor"
+    "github",
+    "gitlab"
   ],
   "repository": {
     "type": "git",
@@ -30,7 +33,6 @@
     "npm": ">=10.0.0"
   },
   "categories": [
-    "Programming Languages",
     "Other"
   ],
   "galleryBanner": {
@@ -42,255 +44,20 @@
     "onStartupFinished"
   ],
   "contributes": {
-    "chatParticipants": [
-      {
-        "id": "forge.help.participant",
-        "name": "forge-help",
-        "fullName": "Forge Help",
-        "description": "Workflow guide: explains Forge commands, steps, and handoffs"
-      },
-      {
-        "id": "forge.product-owner.participant",
-        "name": "product-owner",
-        "fullName": "Product Owner",
-        "description": "Step 1: maintains product vision and project direction"
-      },
-      {
-        "id": "forge.architect.participant",
-        "name": "architect",
-        "fullName": "Architect",
-        "description": "Step 2: enforces knowledge map structure and updates domain contracts"
-      },
-      {
-        "id": "forge.planner.participant",
-        "name": "planner",
-        "fullName": "Planner",
-        "description": "Step 3: plans milestones and issues from validated direction"
-      },
-      {
-        "id": "forge.technical-writer.participant",
-        "name": "technical-writer",
-        "fullName": "Technical Writer",
-        "description": "Step 4: refines issues and sub-issues with clear acceptance criteria"
-      },
-      {
-        "id": "forge.engineer.participant",
-        "name": "engineer",
-        "fullName": "Engineer",
-        "description": "Step 5: implements issues, validates tests, and creates pull requests"
-      },
-      {
-        "id": "forge.quality-assurance.participant",
-        "name": "quality-assurance",
-        "fullName": "Quality Assurance",
-        "description": "Step 6: reviews pull requests for correctness and security"
-      }
-    ],
     "commands": [
       {
-        "command": "forge.initializeAgents",
-        "title": "Forge: Initialize Cursor Agents"
+        "command": "forge.initializeSuperrepo",
+        "title": "Forge: Initialize Superrepo"
       },
       {
-        "command": "forge.initializeProject",
-        "title": "Forge: Initialize Project"
+        "command": "forge.updateHarness",
+        "title": "Forge: Update Harness"
       },
       {
-        "command": "forge.showRoadmap",
-        "title": "Forge: Roadmap"
-      },
-      {
-        "command": "forge.setTemporalApiKey",
-        "title": "Forge: Set Temporal API Key"
-      },
-      {
-        "command": "forge.clearTemporalApiKey",
-        "title": "Forge: Clear Temporal API Key"
-      },
-      {
-        "command": "forge.refreshWorkflowRuns",
-        "title": "Forge: Refresh workflow runs"
-      },
-      {
-        "command": "forge.openWorkflowRunList",
-        "title": "Forge: Open Workflow Run List"
-      },
-      {
-        "command": "forge.cancelWorkflowRun",
-        "title": "Forge: Cancel Workflow Run"
-      },
-      {
-        "command": "forge.dismissOrphanedWorkflowRun",
-        "title": "Forge: Dismiss Orphaned Workflow Run"
-      },
-      {
-        "command": "forge.openQuestionPanel",
-        "title": "Forge: Open Question Panel"
-      },
-      {
-        "command": "forge.refineIssue",
-        "title": "Forge: Refine Issue"
-      },
-      {
-        "command": "forge.openWorkflowCatalog",
-        "title": "Forge: Open Workflow Catalog"
-      },
-      {
-        "command": "forge.refreshWorkflowCatalog",
-        "title": "Forge: Refresh Workflow Catalog"
-      },
-      {
-        "command": "forge.selectWorkflowRepositoryFolder",
-        "title": "Forge: Select Workflow Repository Folder"
-      },
-      {
-        "command": "forge.openWorkflowGraph",
-        "title": "Forge: Open Workflow Graph"
-      },
-      {
-        "command": "forge.refreshWorkflowGraph",
-        "title": "Forge: Refresh Workflow Graph"
-      },
-      {
-        "command": "forge.viewWorkflowRunGraph",
-        "title": "View graph"
+        "command": "forge.openSuperrepoConfig",
+        "title": "Forge: Open Superrepo Config"
       }
-    ],
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "forge",
-          "title": "Forge",
-          "icon": "resources/icons/forge-logo.png"
-        }
-      ]
-    },
-    "views": {
-      "forge": [
-        {
-          "id": "forge.workflowRunList",
-          "name": "Workflow Runs"
-        }
-      ]
-    },
-    "menus": {
-      "view/item/context": [
-        {
-          "command": "forge.cancelWorkflowRun",
-          "when": "view == forge.workflowRunList && viewItem == syncedActive",
-          "group": "runActions@1"
-        },
-        {
-          "command": "forge.openQuestionPanel",
-          "when": "view == forge.workflowRunList && viewItem == needsInput",
-          "group": "runActions@2"
-        },
-        {
-          "command": "forge.dismissOrphanedWorkflowRun",
-          "when": "view == forge.workflowRunList && viewItem == orphaned",
-          "group": "runActions@3"
-        },
-        {
-          "command": "forge.viewWorkflowRunGraph",
-          "when": "view == forge.workflowRunList",
-          "group": "runActions@4"
-        }
-      ]
-    },
-    "configuration": {
-      "title": "Forge",
-      "properties": {
-        "forge.autoProjectSync.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable prompt-based .forge update checks when a workspace opens or folders are added."
-        },
-        "forge.roadmap.statusFieldName": {
-          "type": "string",
-          "default": "Status",
-          "description": "GitHub Projects v2 single-select field name for issue status (used to exclude Done)."
-        },
-        "forge.roadmap.sprintFieldName": {
-          "type": "string",
-          "default": "Sprint",
-          "description": "GitHub Projects v2 field name for sprint (single select or iteration)."
-        },
-        "forge.roadmap.doneStatusName": {
-          "type": "string",
-          "default": "Done",
-          "description": "Status option value that means complete (issues with this status are hidden)."
-        },
-        "forge.temporal.mode": {
-          "type": "string",
-          "enum": [
-            "managedLocal",
-            "external"
-          ],
-          "default": "managedLocal",
-          "description": "Selects managed-local dev server (npm-bundled, window-scoped) vs external Temporal endpoint. See forge/.ai/runtime/configuration.md."
-        },
-        "forge.temporal.managedLocal.grpcPort": {
-          "type": "number",
-          "default": 7233,
-          "description": "gRPC port for the window-scoped managed-local Temporal dev server."
-        },
-        "forge.temporal.managedLocal.uiPort": {
-          "type": "number",
-          "default": 8233,
-          "description": "Temporal Web UI port for managed-local mode (diagnostics only in v1)."
-        },
-        "forge.temporal.managedLocal.persistencePath": {
-          "type": "string",
-          "default": "",
-          "description": "Override for managed-local dev server persistence directory. When empty, Forge uses {extensionGlobalStorage}/temporal/{windowId}/."
-        },
-        "forge.temporal.managedLocal.namespace": {
-          "type": "string",
-          "default": "forge-local",
-          "description": "Temporal namespace for managed-local workflow runs in this window."
-        },
-        "forge.temporal.managedLocal.taskQueue": {
-          "type": "string",
-          "default": "forge-workflows",
-          "description": "Default task queue for workflow workers in managed-local mode."
-        },
-        "forge.temporal.external.address": {
-          "type": "string",
-          "default": "",
-          "description": "gRPC endpoint for external Temporal as host:port (required when forge.temporal.mode is external)."
-        },
-        "forge.temporal.external.namespace": {
-          "type": "string",
-          "default": "",
-          "description": "Temporal namespace for external mode (required when forge.temporal.mode is external)."
-        },
-        "forge.temporal.external.taskQueue": {
-          "type": "string",
-          "default": "forge-workflows",
-          "description": "Default task queue for workflow workers connecting to the external Temporal endpoint."
-        },
-        "forge.temporal.external.auth.mode": {
-          "type": "string",
-          "enum": [
-            "apiKey",
-            "tlsServer",
-            "insecure"
-          ],
-          "default": "apiKey",
-          "description": "Client authentication mode for external Temporal (apiKey, tlsServer, or insecure loopback only)."
-        },
-        "forge.temporal.external.tls.enabled": {
-          "type": "boolean",
-          "default": true,
-          "description": "Use TLS for external Temporal gRPC. Required for Temporal Cloud; disable only with insecure auth on loopback."
-        },
-        "forge.temporal.external.tls.serverName": {
-          "type": "string",
-          "default": "",
-          "description": "Optional TLS SNI / server name override for self-hosted external Temporal clusters."
-        }
-      }
-    }
+    ]
   },
   "scripts": {
     "vscode:prepublish": "webpack --mode production --devtool hidden-source-map && npm run build:webview",
@@ -298,8 +65,8 @@
     "build": "webpack && npm run build:webview",
     "watch": "concurrently \"webpack --watch\" \"npm run dev:webview\"",
     "package": "npx @vscode/vsce package --no-dependencies",
-    "build:webview": "esbuild src/webview/roadmap/index.tsx --bundle --outfile=media/roadmap/main.js --platform=browser --format=iife --target=es2020 --minify && esbuild src/webview/workflows/index.tsx --bundle --outfile=media/workflows/main.js --platform=browser --format=iife --target=es2020 --minify && esbuild src/webview/workflows/graph/index.tsx --bundle --outfile=media/workflows/graph/main.js --platform=browser --format=iife --target=es2020 --minify && esbuild src/webview/questions/index.tsx --bundle --outfile=media/questions/main.js --platform=browser --format=iife --target=es2020 --minify",
-    "dev:webview": "esbuild src/webview/roadmap/index.tsx --bundle --outfile=media/roadmap/main.js --platform=browser --format=iife --target=es2020 --watch",
+    "build:webview": "esbuild src/webview/superrepo/index.tsx --bundle --outfile=media/superrepo/main.js --platform=browser --format=iife --target=es2020 --minify",
+    "dev:webview": "esbuild src/webview/superrepo/index.tsx --bundle --outfile=media/superrepo/main.js --platform=browser --format=iife --target=es2020 --watch",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
@@ -318,14 +85,9 @@
     "@testing-library/jest-dom": "^6.1.5",
     "@testing-library/react": "^14.1.2",
     "@testing-library/user-event": "^14.5.1",
-    "@tiptap/extension-image": "^3.10.4",
-    "@tiptap/extension-link": "^3.10.4",
-    "@tiptap/react": "^3.10.4",
-    "@tiptap/starter-kit": "^3.10.4",
     "@types/node": "^22.14.0",
     "@types/react": "^18.2.73",
     "@types/react-dom": "^18.2.18",
-    "@types/turndown": "^5.0.6",
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
@@ -337,10 +99,8 @@
     "esbuild": "0.19.12",
     "eslint": "^8.0.0",
     "happy-dom": "^20.0.11",
-    "marked": "^17.0.0",
     "semantic-release": "^25.0.2",
     "ts-loader": "^9.5.4",
-    "turndown": "^7.2.2",
     "typescript": "^5.0.0",
     "vitest": "^4.0.15",
     "webpack": "^5.102.0",
@@ -352,17 +112,7 @@
     }
   },
   "dependencies": {
-    "@cursor/sdk": "^1.0.18",
-    "@dagrejs/dagre": "^3.0.0",
-    "@octokit/rest": "^22.0.1",
-    "@temporalio/client": "^1.17.2",
-    "@temporalio/worker": "^1.17.2",
-    "@xyflow/react": "^12.11.0",
-    "ajv": "^8.20.0",
-    "gray-matter": "^4.0.3",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "yaml": "^2.6.0",
-    "zustand": "^5.0.8"
+    "react-dom": "^18.3.1"
   }
 }
