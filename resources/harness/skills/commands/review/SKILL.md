@@ -10,6 +10,15 @@ Invoke **Quality Assurance** (**`.cursor/agents/quality-assurance.md`**) for for
 
 **QA submits a formal Review only.** QA **does not merge**.
 
+## Session ownership (this command)
+
+- Mint **`session_slug`** (recommended: `review-cr-<N>`). When using a local checkout, create **`.cursor/.tmp/<session_slug>/`**.
+- **Do not** read prior `/build-from-github` or `/build-from-review` tmp folders on this or another workstation.
+- Default: create a session-scoped **review** worktree from the CR head via provider adapter; remove it after formal Review (or abort).
+- Remote-only review (no worktree) only when the operator **explicitly** skips local checkout. Still no prior-tmp dependency.
+- Handoff after REQUEST_CHANGES is the **CR URL** (recommend `/build-from-review`), not a local path from another session.
+- Reference: **`.cursor/skills/reference/worktree-workspace.md`**.
+
 ---
 
 ## Input
@@ -24,16 +33,15 @@ Invoke **Quality Assurance** (**`.cursor/agents/quality-assurance.md`**) for for
 
 **`detect-provider`** → **`resolve_change_request`**, linked Issues, CI status.
 
-### 2. Review worktree (when local inspection needed)
+### 2. Review worktree (default when local inspection needed)
 
-1. Read **`.cursor/.tmp/build-issue-*/worktrees.md`** when linked to build session.
-2. If no manifest, create **`.cursor/.tmp/review-cr-<N>/worktrees.md`**.
-3. Adapter **`fetch_change_request_head_ref`**
-4. **`worktree-workspace.sh create --role review --branch <adapter-ref>`**
-5. Read-only inspection from **`<wt-path>`** unless workflow explicitly converts to build.
-6. Remove review worktree after formal Review submitted (or on abort).
+1. Create **`.cursor/.tmp/<session_slug>/`** with **`session.md`**, **`worktrees.md`**.
+2. Adapter **`fetch_change_request_head_ref`**
+3. **`worktree-workspace.sh create --role review --branch <adapter-ref> --session <session_slug>`**
+4. Read-only inspection from **`<wt-path>`**.
+5. After formal Review (or abort): **`worktree-workspace.sh remove --role review --session <session_slug>`**.
 
-Skip worktree creation for pure remote diff review.
+Skip steps 1–5 only when the operator explicitly requests remote-only review.
 
 ### 3. QA assessment
 
@@ -53,15 +61,19 @@ Skip worktree creation for pure remote diff review.
 
 Must appear on CR **Reviews** tab / approval UI, not merely a conversation comment.
 
-On **REQUEST_CHANGES**, include build worktree path from manifest when known; else recommend **`/build-from-review`**.
+On **REQUEST_CHANGES**, recommend **`/build-from-review`** with the CR URL. Do not require another session’s worktree path.
 
 ### 5. Board self-heal (optional)
 
-When board configured and all sub-issues closed, set parent **`In Review`** if **`/build`** missed it (idempotent).
+When board configured and all sub-issues closed, set parent **`In Review`** if **`/build-from-github`** missed it (idempotent).
 
 ### 6. Retrospective
 
 **`retrospective`** utility in **`cr`** mode on the Change Request.
+
+### 7. Teardown
+
+If a review worktree was created this session, remove it before ending (even if step 2 already did).
 
 ---
 
@@ -73,4 +85,4 @@ When board configured and all sub-issues closed, set parent **`In Review`** if *
 
 ## Goal
 
-Submitted Review with actionable feedback; human merges after approval.
+Submitted Review with actionable feedback; session review worktree removed; human merges after approval.

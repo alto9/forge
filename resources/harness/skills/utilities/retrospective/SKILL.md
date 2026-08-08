@@ -6,13 +6,13 @@ disable-model-invocation: true
 
 # Retrospective Utility
 
-Post a short **workflow retrospective** comment on the tracker after **`/build`**, **`/build-from-review`**, or **`/review`** completes. Captures what worked or failed in skills, board updates, worktree flow, and provider calls.
+Post a short **workflow retrospective** comment on the tracker after **`/build-from-github`**, **`/build-from-review`**, or **`/review`** completes. Captures what worked or failed in skills, board updates, worktree flow, and provider calls.
 
 ## Modes
 
 | Mode | Target | When |
 |------|--------|------|
-| `issue` | Issue conversation | After **`/build`** opens or updates a Change Request |
+| `issue` | Issue conversation | After **`/build-from-github`** opens or updates a Change Request |
 | `cr` | Change Request conversation | After **`/review`** submits formal Review |
 
 ## Input

@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Forge worktree helper — central .worktrees layout under the superrepo.
+# Paths are session-scoped so different humans/workstations do not collide.
 # Usage:
 #   worktree-workspace.sh list [--superrepo PATH]
 #   worktree-workspace.sh create --superrepo PATH --repo-root PATH --repo-ref REF \
-#       --role contracts|build|review --branch BRANCH [--base REF] [--session SLUG]
+#       --role contracts|build|review --branch BRANCH --session SLUG [--base REF]
 #   worktree-workspace.sh remove --superrepo PATH --repo-root PATH --repo-ref REF \
-#       --role contracts|build|review [--force]
+#       --role contracts|build|review --session SLUG [--force]
 set -euo pipefail
 
 usage() {
@@ -15,11 +16,11 @@ Usage:
 
   worktree-workspace.sh create \
     --superrepo PATH --repo-root PATH --repo-ref REF \
-    --role contracts|build|review --branch BRANCH [--base REF] [--session SLUG]
+    --role contracts|build|review --branch BRANCH --session SLUG [--base REF]
 
   worktree-workspace.sh remove \
     --superrepo PATH --repo-root PATH --repo-ref REF \
-    --role contracts|build|review [--force]
+    --role contracts|build|review --session SLUG [--force]
 
 Environment:
   FORGE_SUPERREPO  Default superrepo root when --superrepo is omitted.
@@ -30,14 +31,26 @@ Roles:
   review     Detached Change Request head for read-only inspection
 
 Worktree path pattern:
-  {worktreesRoot}/{repoRef}/{role}/
+  {worktreesRoot}/{repoRef}/{role}-{session}/
 
 worktreesRoot resolves from .cursor/forge/manifest.json key worktreesPath,
 else {superrepo}/.worktrees
+
+--session is required for create and remove (top-level command session slug).
 EOF
 }
 
 die() { echo "worktree-workspace.sh: $*" >&2; exit 1; }
+
+sanitize_session() {
+  local s="$1"
+  [[ -n "$s" ]] || die "session slug must be non-empty"
+  # Keep path-safe: alnum, dash, underscore, dot
+  if [[ ! "$s" =~ ^[A-Za-z0-9._-]+$ ]]; then
+    die "invalid session slug (use letters, numbers, . _ - only): $s"
+  fi
+  echo "$s"
+}
 
 resolve_superrepo() {
   local sr="${FORGE_SUPERREPO:-}"
@@ -99,8 +112,8 @@ role_slug() {
 }
 
 wt_path_for() {
-  local worktrees_root="$1" repo_ref="$2" role="$3"
-  echo "${worktrees_root}/${repo_ref}/$(role_slug "$role")"
+  local worktrees_root="$1" repo_ref="$2" role="$3" session="$4"
+  echo "${worktrees_root}/${repo_ref}/$(role_slug "$role")-${session}"
 }
 
 cmd_list() {
@@ -150,14 +163,16 @@ cmd_create() {
   [[ -n "$repo_ref" ]] || die "create requires --repo-ref"
   [[ -n "$role" ]] || die "create requires --role"
   [[ -n "$branch" ]] || die "create requires --branch"
+  [[ -n "$session" ]] || die "create requires --session"
 
+  session="$(sanitize_session "$session")"
   repo_root="$(cd "$repo_root" && pwd)"
   superrepo="$(cd "$superrepo" && pwd)"
   role="$(role_slug "$role")"
 
   local worktrees_root wt_path
   worktrees_root="$(resolve_worktrees_root "$superrepo")"
-  wt_path="$(wt_path_for "$worktrees_root" "$repo_ref" "$role")"
+  wt_path="$(wt_path_for "$worktrees_root" "$repo_ref" "$role" "$session")"
 
   mkdir -p "$(dirname "$wt_path")"
   if [[ -e "$wt_path" ]]; then
@@ -181,19 +196,18 @@ cmd_create() {
   echo "repo-root: ${repo_root}"
   echo "repo-ref: ${repo_ref}"
   echo "role: ${role}"
-  if [[ -n "$session" ]]; then
-    echo "session: ${session}"
-  fi
+  echo "session: ${session}"
 }
 
 cmd_remove() {
-  local superrepo="" repo_root="" repo_ref="" role="" force=0
+  local superrepo="" repo_root="" repo_ref="" role="" session="" force=0
   while [[ $# -gt 0 ]]; do
     case "$1" in
       --superrepo) superrepo="$2"; shift 2 ;;
       --repo-root) repo_root="$2"; shift 2 ;;
       --repo-ref) repo_ref="$2"; shift 2 ;;
       --role) role="$2"; shift 2 ;;
+      --session) session="$2"; shift 2 ;;
       --force) force=1; shift ;;
       *) die "unknown remove arg: $1" ;;
     esac
@@ -202,14 +216,16 @@ cmd_remove() {
   [[ -n "$repo_root" ]] || die "remove requires --repo-root"
   [[ -n "$repo_ref" ]] || die "remove requires --repo-ref"
   [[ -n "$role" ]] || die "remove requires --role"
+  [[ -n "$session" ]] || die "remove requires --session"
 
+  session="$(sanitize_session "$session")"
   repo_root="$(cd "$repo_root" && pwd)"
   superrepo="$(cd "$superrepo" && pwd)"
   role="$(role_slug "$role")"
 
   local worktrees_root wt_path
   worktrees_root="$(resolve_worktrees_root "$superrepo")"
-  wt_path="$(wt_path_for "$worktrees_root" "$repo_ref" "$role")"
+  wt_path="$(wt_path_for "$worktrees_root" "$repo_ref" "$role" "$session")"
 
   if [[ ! -d "$wt_path" ]]; then
     echo "worktree path not found (already removed?): $wt_path"

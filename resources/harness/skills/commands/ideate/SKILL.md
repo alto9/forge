@@ -16,9 +16,16 @@ Orchestration skill: turn one **large idea** into **timeless `.ai` contracts**, 
 
 **Non-goals:** application code changes. **Product Owner Phase A.5** is required before Architect SME fan-out.
 
-**Superrepo context:** harness lives at **`.cursor/`** (superrepo root). Product contracts live in each submodule **`.ai/`**. Active submodule checkouts stay on **`main`**. Ideation edits run in **contracts** worktrees under **`{worktreesRoot}/{repoRef}/contracts/`**.
+**Superrepo context:** harness lives at **`.cursor/`** (superrepo root). Product contracts live in each submodule **`.ai/`**. Active submodule checkouts stay on **`main`**. Ideation edits run in **contracts** worktrees under **`{worktreesRoot}/{repoRef}/contracts-{session}/`**.
 
-**Tmp artifacts:** **`.cursor/.tmp/<session_slug>/`** is gitignored. **`ideation.md`**, **`po_evaluation.md`**, **`user_questions.md`**, **`assumptions.md`**, **`refinement.md`**, **`stories.md`**, SME reports stay **local-only** and **must not be committed**.
+## Session ownership (this command)
+
+- Mint **`session_slug`** at start. Create **`.cursor/.tmp/<session_slug>/`**. Nested agents and utilities **share this session** for the whole run.
+- Do **not** read another top-level command’s `.tmp`.
+- Before ending (success or abort): **`worktree-workspace.sh remove`** every contracts worktree created this session (`--session` required). Remote handoff for later humans is Change Request / tracker URLs only.
+- Full contract: **`.cursor/skills/reference/worktree-workspace.md`**.
+
+**Tmp artifacts** (`ideation.md`, `po_evaluation.md`, SME reports, etc.) are local-only for this run and **must not be committed**.
 
 ---
 
@@ -43,6 +50,7 @@ Phase B.5 Architect triage             user_questions.md + assumptions.md
 Phase C   User verification            refinement.md
 Phase D   Contract drafting            .ai + .ai/specs in worktrees (.ai-only CR per repo) + stories.md
 Phase E   Planner                      plan-roadmap utility
+Phase F   Teardown                     remove all session contracts worktrees
 ```
 
 **Do not skip Phase A.5, B, or B.5.** Do not skip Phase C when **`user_questions.md`** has unresolved blockers.
@@ -51,10 +59,10 @@ Phase E   Planner                      plan-roadmap utility
 
 ## Phase A — Workspace prep
 
-1. Create **`.cursor/.tmp/<session_slug>/`** with **`session.md`**, **`worktrees.md`**, **`ideation.md`** (initiative prompt, affected repos, domain hints, known decisions).
+1. Mint **`session_slug`**. Create **`.cursor/.tmp/<session_slug>/`** with **`session.md`**, **`worktrees.md`**, **`ideation.md`** (initiative prompt, affected repos, domain hints, known decisions).
 2. Per affected submodule:
    - **`detect-provider`**
-   - **`worktree-workspace.sh create`** with **`--role contracts`**, **`--branch ai/<session_slug>`**
+   - **`worktree-workspace.sh create`** with **`--role contracts`**, **`--branch ai/<session_slug>`**, **`--session <session_slug>`**
    - Record row in **`worktrees.md`**
 3. Cap **pre-fan-out** AskQuestion at **three** (repo scope, initiative boundary, contradictory intent).
 
@@ -62,7 +70,7 @@ Phase E   Planner                      plan-roadmap utility
 
 ## Phase A.5 — Product Owner gate
 
-**`.cursor/agents/product-owner.md`** writes **`po_evaluation.md`**.
+**`.cursor/agents/product-owner.md`** writes **`po_evaluation.md`** in this session tmp.
 
 Verdict: **`Proceed`**, **`ProceedWithConditions`**, **`Pivot`**, **`Defer`**, or **`Reject`**.
 
@@ -72,15 +80,13 @@ Only **`Proceed`** or user-accepted **`ProceedWithConditions`** allows Phase B.
 
 ## Phase B / B.5 — SME questions and triage
 
-Architect fans out **real SME Task agents** (not `generalPurpose`):
+Architect fans out **real SME Task agents** (not `generalPurpose`), passing **this session’s** `tmp_dir` and `worktree_path`:
 
 ```text
 Task(subagent_type="business-logic-sme" | "data-sme" | "integration-sme" |
                  "interface-sme" | "operations-sme" | "runtime-sme" |
                  "schemas-sme")
 ```
-
-Include `worktree_path`, `repoRef`, briefing, `tmp_dir`, and phase **B (questions only)** in each prompt. Parallelize independent domains.
 
 SMEs write **`tmp/<repoRef>/<domain>.md`** with tiered sections. Phase B is question-only (minimal `.ai` edits).
 
@@ -96,12 +102,12 @@ AskQuestion batches against **`user_questions.md`** only. Answers in **`refineme
 
 ## Phase D — Contract drafting
 
-1. Re-delegate SME Task agents (`*-sme`) with **`refinement.md`**, **`assumptions.md`**, worktree paths, phase **D (contracts)**.
+1. Re-delegate SME Task agents with **`refinement.md`**, **`assumptions.md`**, this session’s worktree paths, phase **D (contracts)**.
 2. Draft **`.ai/<domain>/`** in contracts worktrees; tier-TW backlog in **`## Open implementation decisions`**.
 3. Architect updates **`.ai/specs/`** and **`knowledge_map.json`** when structure requires it.
-4. **Marketing Manager** contributes positioning notes to **`ideation.md`** or tmp when GTM scope applies (no false market facts).
+4. **Marketing Manager** contributes positioning notes to session tmp when GTM scope applies (no false market facts).
 5. **Commit, push, open `.ai`-only Change Request** per affected repo via provider adapter (**`.ai` paths only**).
-6. Record CR URLs in **`worktrees.md`** and **`ideation.md`** metadata.
+6. Record CR URLs in **`worktrees.md`** and chat summary (not as a dependency on tmp for the next person).
 7. Write **`stories.md`** for **`plan-roadmap`** (no tmp paths in tracker).
 
 ### Open implementation decisions (section contract)
@@ -119,14 +125,25 @@ Implementation-level items not yet fully specified. `/refine` resolves these int
 
 ## Phase E — Planner
 
-Run **`plan-roadmap`** utility with path to **`stories.md`**.
+Run **`plan-roadmap`** utility with path to **`stories.md`** in this session tmp.
 
 ---
 
-## Cleanup
+## Phase F — Teardown (mandatory)
 
-After CRs are opened (or on abort): **`worktree-workspace.sh remove --role contracts`** per repo unless user keeps worktrees for follow-up. Update **`worktrees.md`** status to **`cr-opened`** or **`removed`**.
+For each contracts worktree in **`worktrees.md`**:
+
+```bash
+worktree-workspace.sh remove \
+  --superrepo "$SUPERREPO" \
+  --repo-root "$REPO_ROOT" \
+  --repo-ref "$REPO_REF" \
+  --role contracts \
+  --session "$SESSION_SLUG"
+```
+
+Update statuses to **`removed`** (or **`aborted`**). Do this on success and on abort. Later humans continue from open Change Requests and tracker items, not this tmp folder.
 
 ## Goal
 
-Timeless multi-repo contracts, local **`stories.md`**, and **`.ai`-only Change Requests** ready for merge before downstream **`/refine`** and **`/build`**.
+Timeless multi-repo contracts and **`.ai`-only Change Requests**, Planner-ready stories, session worktrees removed. Downstream **`/refine`** and **`/build-from-github`** start from remote state only.

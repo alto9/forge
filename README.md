@@ -30,7 +30,7 @@ After init you have:
   .cursor/
     forge/manifest.json       # Forge version + managed paths
     agents/                   # Architect, PO, Planner, …
-    skills/commands/          # /ideate, /intake, /refine, /build, …
+    skills/commands/          # /ideate, /intake, /refine, /build-from-github, …
     skills/provider/          # GitHub + GitLab adapters
     skills/utilities/         # setup-submodule, worktrees, …
     rules/                    # constitution, persona, CLI rules
@@ -48,7 +48,7 @@ Invoke with `/<skill-name>` in Agent chat after the harness is installed:
 | `/ideate` | Large initiative: PO + Architect (+ SMEs) + Marketing Manager; session under `.cursor/.tmp/` |
 | `/intake` | Small feature/defect → single issue; inline Q&A; no tmp folder |
 | `/refine` | Technical Writer refines an issue; contracts worktree; no feature branches |
-| `/build` | Implement from ticket in a build worktree; Engineer |
+| `/build-from-github` | Implement from ticket in a build worktree; Engineer |
 | `/build-from-review` | Second pass from Change Request review comments |
 | `/review` | Quality Assurance formal review (no merge) |
 
