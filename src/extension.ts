@@ -1,18 +1,24 @@
 import * as vscode from 'vscode';
-import { InitializeSuperrepoCommand } from './commands/InitializeSuperrepoCommand';
-import { OpenSuperrepoConfigCommand } from './commands/OpenSuperrepoConfigCommand';
-import { UpdateHarnessCommand } from './commands/UpdateHarnessCommand';
+import { OpenCourseCommand } from './commands/OpenCourseCommand';
+import {
+    scheduleStartupSync,
+    SyncCursorPluginCommand
+} from './commands/SyncCursorPluginCommand';
+import { CourseServer } from './course/serveCourse';
 
 let outputChannel: vscode.OutputChannel;
 
 export function activate(context: vscode.ExtensionContext): void {
     outputChannel = vscode.window.createOutputChannel('Forge');
-    context.subscriptions.push(outputChannel);
-    outputChannel.appendLine('Forge v4 activated (superrepo harness).');
+    const courseServer = new CourseServer();
+    context.subscriptions.push(outputChannel, courseServer);
+    outputChannel.appendLine('Forge activated (Cursor plugin installer).');
 
-    context.subscriptions.push(InitializeSuperrepoCommand.register(context, outputChannel));
-    context.subscriptions.push(UpdateHarnessCommand.register(context, outputChannel));
-    context.subscriptions.push(OpenSuperrepoConfigCommand.register(context, outputChannel));
+    context.subscriptions.push(
+        SyncCursorPluginCommand.register(context, outputChannel),
+        OpenCourseCommand.register(context, outputChannel, courseServer)
+    );
+    scheduleStartupSync(outputChannel);
 }
 
 export function deactivate(): void {

@@ -26,7 +26,7 @@ export const workspace = {
 
 export const Uri = {
     file: (path: string) => ({ fsPath: path, path, scheme: 'file' }),
-    parse: vi.fn()
+    parse: (value: string) => ({ fsPath: value, path: value, toString: () => value })
 };
 
 export const StatusBarAlignment = {
@@ -110,6 +110,7 @@ export const commands = {
 export const env = {
     sessionId: 'test-session-id',
     appName: 'Cursor',
+    openExternal: vi.fn()
 };
 
 export const ViewColumn = {

@@ -27,10 +27,9 @@ Fixes #(issue)
 <!-- Include relevant details like test configuration, test cases, etc. -->
 
 - [ ] Unit tests added/updated (`npm test`)
-- [ ] Tested VSCode extension locally (F5 to launch)
-- [ ] Tested MCP server locally
-- [ ] Tested in real project with Forge workflow
-- [ ] Verified Forge Studio works correctly
+- [ ] Tested the extension locally (F5 to launch)
+- [ ] Verified **Forge: Sync Cursor Plugin** clones or updates `~/.cursor/plugins/local/forge-cursor`
+- [ ] Verified **Forge: Open Forge Course** serves `course/` and opens a browser tab
 
 ## Screenshots (if appropriate)
 

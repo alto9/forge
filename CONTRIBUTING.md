@@ -1,6 +1,8 @@
 # Contributing to Forge
 
-Forge Studio is the VS Code / Cursor extension that ships the superrepo harness under `resources/harness/`.
+Forge Studio is the VS Code / Cursor extension that installs [alto9/forge-cursor-plugin](https://github.com/alto9/forge-cursor-plugin) into `~/.cursor/plugins/local/forge-cursor`.
+
+Harness, agents, commands, and skills live in that plugin repo. Change them there.
 
 ## Getting started
 
@@ -13,8 +15,8 @@ Forge Studio is the VS Code / Cursor extension that ships the superrepo harness 
 ## Useful commands
 
 ```bash
-npm run build          # extension + superrepo webview
-npm test               # vitest
+npm run build
+npm test
 npm run lint
 bash scripts/verify-packaging.sh
 ```
@@ -24,19 +26,12 @@ bash scripts/verify-packaging.sh
 ```text
 src/
   extension.ts
-  commands/                 # Initialize Superrepo, Update Harness, Open Config
-  git/                      # .gitmodules parse/apply, provider detect
-  harness/                  # install + manifest
-  worktrees/                # ensure .worktrees + gitignore
-  superrepo/                # apply pipeline
-  webview/superrepo/        # init UI
-resources/harness/          # agents, skills, rules copied into consumer .cursor/
+  commands/SyncCursorPluginCommand.ts
+  commands/OpenCourseCommand.ts
+  course/                   # loopback static server for the plugin workshop
+  plugin/                   # clone or pull into ~/.cursor/plugins/local
 ```
-
-## Harness changes
-
-Edit files under `resources/harness/`. Consumers pick them up via **Forge: Initialize Superrepo** or **Forge: Update Harness**. Do not hand-edit installed copies in a superrepo as the source of truth.
 
 ## Release
 
-See [RELEASE.md](RELEASE.md). Merging to `main` runs CI only. Ship with **Actions → Cut Release**. Use `feat!:` for the Forge v4 major.
+See [RELEASE.md](RELEASE.md). Merging to `main` runs CI only. Ship with **Actions → Cut Release**.

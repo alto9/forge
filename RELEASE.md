@@ -2,7 +2,7 @@
 
 Forge uses [Conventional Commits](https://www.conventionalcommits.org/) and [semantic-release](https://semantic-release.gitbook.io/) to compute versions, update the changelog, create git tags and GitHub releases, and publish the VSIX. **Publishing is manual:** merging to `main` runs CI only; a maintainer runs **Cut Release** when ready to ship.
 
-**Forge v4:** drop Temporal and ship the superrepo init + project-local harness. Use a breaking commit (`feat!:` or `BREAKING CHANGE:`) so semantic-release cuts **4.0.0**.
+This installer-only cut is a breaking change. Use a breaking conventional commit (`feat!:` or `BREAKING CHANGE:`) so semantic-release cuts a major version.
 
 ## Pre-Publish Checklist
 

@@ -1,7 +1,7 @@
 {
   "name": "forge-studio",
-  "displayName": "Forge Studio",
-  "description": "VS Code and Cursor extension that initializes a git superrepo for AI development: submodules, worktrees, and a project-local agent harness.",
+  "displayName": "Forge Studio by Alto9",
+  "description": "Forge Agentic SDLC Harness and toolkit for Cursor.",
   "version": "3.32.0",
   "license": "MIT",
   "author": "Alto9",
@@ -9,15 +9,12 @@
   "icon": "resources/icons/forge-logo.png",
   "keywords": [
     "forge",
-    "superrepo",
-    "submodules",
-    "worktrees",
     "cursor",
+    "plugin",
     "ai",
     "agentic-development",
     "vscode",
-    "github",
-    "gitlab"
+    "github"
   ],
   "repository": {
     "type": "git",
@@ -46,31 +43,40 @@
   "contributes": {
     "commands": [
       {
-        "command": "forge.initializeSuperrepo",
-        "title": "Forge: Initialize Superrepo"
+        "command": "forge.syncCursorPlugin",
+        "title": "Forge: Sync Cursor Plugin"
       },
       {
-        "command": "forge.updateHarness",
-        "title": "Forge: Update Harness"
-      },
-      {
-        "command": "forge.openSuperrepoConfig",
-        "title": "Forge: Open Superrepo Config"
+        "command": "forge.openCourse",
+        "title": "Forge: Open Forge Course"
       }
-    ]
+    ],
+    "configuration": {
+      "title": "Forge",
+      "properties": {
+        "forge.cursorPlugin.repoUrl": {
+          "type": "string",
+          "default": "https://github.com/alto9/forge-cursor-plugin.git",
+          "description": "Git remote cloned into ~/.cursor/plugins/local/forge-cursor."
+        },
+        "forge.cursorPlugin.autoUpdate": {
+          "type": "boolean",
+          "default": true,
+          "description": "On startup, clone or fast-forward the Forge Cursor plugin in ~/.cursor/plugins/local."
+        }
+      }
+    }
   },
   "scripts": {
-    "vscode:prepublish": "webpack --mode production --devtool hidden-source-map && npm run build:webview",
-    "compile": "webpack && npm run build:webview",
-    "build": "webpack && npm run build:webview",
-    "watch": "concurrently \"webpack --watch\" \"npm run dev:webview\"",
+    "vscode:prepublish": "webpack --mode production --devtool hidden-source-map",
+    "compile": "webpack",
+    "build": "webpack",
+    "watch": "webpack --watch",
     "package": "npx @vscode/vsce package --no-dependencies",
-    "build:webview": "esbuild src/webview/superrepo/index.tsx --bundle --outfile=media/superrepo/main.js --platform=browser --format=iife --target=es2020 --minify",
-    "dev:webview": "esbuild src/webview/superrepo/index.tsx --bundle --outfile=media/superrepo/main.js --platform=browser --format=iife --target=es2020 --watch",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
-    "lint": "eslint src --ext ts,tsx",
+    "lint": "eslint src --ext ts",
     "test": "vitest run",
     "clean": "rm -rf dist out *.vsix node_modules",
     "release:dry-run": "semantic-release --dry-run",
@@ -82,23 +88,14 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.2",
     "@semantic-release/npm": "^13.1.2",
-    "@testing-library/jest-dom": "^6.1.5",
-    "@testing-library/react": "^14.1.2",
-    "@testing-library/user-event": "^14.5.1",
     "@types/node": "^22.14.0",
-    "@types/react": "^18.2.73",
-    "@types/react-dom": "^18.2.18",
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
-    "@vitejs/plugin-react": "^5.1.0",
     "@vitest/ui": "^4.0.15",
     "@vscode/vsce": "^3.2.1",
-    "concurrently": "^8.2.2",
     "conventional-changelog-conventionalcommits": "^7.0.2",
-    "esbuild": "0.19.12",
     "eslint": "^8.0.0",
-    "happy-dom": "^20.0.11",
     "semantic-release": "^25.0.2",
     "ts-loader": "^9.5.4",
     "typescript": "^5.0.0",
@@ -110,9 +107,5 @@
     "@actions/http-client": {
       "undici": "^6.24.0"
     }
-  },
-  "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
   }
 }
