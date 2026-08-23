@@ -1,3 +1,8 @@
+## 3.34.0 (2026-08-23)
+
+* feat: add Forge sidebar and Product Owner dashboard webviews ([7d53e5d](https://github.com/alto9/forge/commit/7d53e5d))
+* fix: installer error when multiple windows open ([8f00db8](https://github.com/alto9/forge/commit/8f00db8))
+
 ## 3.33.0 (2026-08-20)
 
 * Add question panel webview with draft persistence and submit flow. ([8ea9806](https://github.com/alto9/forge/commit/8ea9806)), closes [#62](https://github.com/alto9/forge/issues/62) [#27](https://github.com/alto9/forge/issues/27)
