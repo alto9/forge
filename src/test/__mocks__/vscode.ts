@@ -110,7 +110,11 @@ export const commands = {
 export const env = {
     sessionId: 'test-session-id',
     appName: 'Cursor',
-    openExternal: vi.fn()
+    openExternal: vi.fn(),
+    clipboard: {
+        writeText: vi.fn(),
+        readText: vi.fn()
+    }
 };
 
 export const ViewColumn = {

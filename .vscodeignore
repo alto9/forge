@@ -16,6 +16,5 @@ node_modules/**
 .ai/**
 .github/**
 scripts/**
-media/**
 ../../**
 !../../LICENSE

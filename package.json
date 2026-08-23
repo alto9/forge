@@ -38,9 +38,28 @@
   },
   "main": "./dist/extension.js",
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onView:forge.sidebar"
   ],
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "forge",
+          "title": "Forge",
+          "icon": "resources/icons/forge-logo.png"
+        }
+      ]
+    },
+    "views": {
+      "forge": [
+        {
+          "type": "webview",
+          "id": "forge.sidebar",
+          "name": "Forge"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "forge.syncCursorPlugin",
@@ -49,6 +68,14 @@
       {
         "command": "forge.openCourse",
         "title": "Forge: Open Forge Course"
+      },
+      {
+        "command": "forge.openDashboard",
+        "title": "Forge: Open Dashboard"
+      },
+      {
+        "command": "forge.sidebar.refresh",
+        "title": "Forge: Refresh Sidebar"
       }
     ],
     "configuration": {
@@ -88,6 +115,7 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.2",
     "@semantic-release/npm": "^13.1.2",
+    "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.14.0",
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
@@ -107,5 +135,8 @@
     "@actions/http-client": {
       "undici": "^6.24.0"
     }
+  },
+  "dependencies": {
+    "js-yaml": "^5.3.0"
   }
 }

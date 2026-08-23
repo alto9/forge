@@ -1,0 +1,153 @@
+:root {
+  --forge-bg: var(--vscode-sideBar-background, #252526);
+  --forge-header-bg: var(--vscode-sideBarSectionHeader-background, #2d2d2d);
+  --forge-fg: var(--vscode-foreground, #cccccc);
+  --forge-muted: var(--vscode-descriptionForeground, #858585);
+  --forge-border: var(--vscode-panel-border, #3c3c3c);
+  --forge-input-bg: var(--vscode-input-background, #303030);
+  --forge-btn: var(--vscode-button-background, #0e639c);
+  --forge-btn-fg: var(--vscode-button-foreground, #ffffff);
+  --forge-btn-hover: var(--vscode-button-hoverBackground, #1177bb);
+  --forge-success: #73c991;
+  --forge-warn-bg: #332c13;
+  --forge-warn-border: rgba(204, 167, 0, 0.35);
+  --forge-warn-icon: #cca700;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: var(--vscode-font-family);
+  font-size: 13px;
+  color: var(--forge-fg);
+  background: var(--forge-bg);
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.header {
+  background: var(--forge-header-bg);
+  height: 35px;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-weight: 600;
+  font-size: 11px;
+  letter-spacing: 0.8px;
+  color: var(--forge-muted);
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  overflow: auto;
+}
+
+.label {
+  font-weight: 600;
+  font-size: 11px;
+  color: var(--forge-muted);
+  margin-bottom: 6px;
+}
+
+.select {
+  width: 100%;
+  background: var(--forge-input-bg);
+  border: 1px solid var(--forge-border);
+  color: var(--forge-fg);
+  border-radius: 2px;
+  padding: 8px 10px;
+  font-size: 13px;
+  outline: none;
+}
+
+.btn-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn {
+  width: 100%;
+  border-radius: 2px;
+  padding: 8px 14px;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+  border: none;
+}
+
+.btn-primary {
+  background: var(--forge-btn);
+  color: var(--forge-btn-fg);
+}
+
+.btn-primary:hover {
+  background: var(--forge-btn-hover);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--forge-fg);
+  border: 1px solid var(--forge-border);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.footer {
+  font-size: 11px;
+  color: var(--forge-success);
+}
+
+.warning {
+  display: flex;
+  gap: 10px;
+  background: var(--forge-warn-bg);
+  border: 1px solid var(--forge-warn-border);
+  border-radius: 4px;
+  padding: 12px;
+}
+
+.warning-icon {
+  color: var(--forge-warn-icon);
+  font-size: 16px;
+  line-height: 1;
+}
+
+.warning-title {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.warning-body {
+  font-size: 12px;
+  color: var(--forge-muted);
+  line-height: 18px;
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--forge-muted);
+  line-height: 18px;
+}
