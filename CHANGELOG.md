@@ -1,3 +1,8 @@
+## <small>3.34.1 (2026-08-25)</small>
+
+* fix: activity bar logo ([dd17bae](https://github.com/alto9/forge/commit/dd17bae))
+* fix: updated command statements ([b6f2815](https://github.com/alto9/forge/commit/b6f2815))
+
 ## 3.34.0 (2026-08-23)
 
 * feat: add Forge sidebar and Product Owner dashboard webviews ([7d53e5d](https://github.com/alto9/forge/commit/7d53e5d))
