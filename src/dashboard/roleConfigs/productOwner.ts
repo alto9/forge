@@ -104,6 +104,45 @@ export const PRODUCT_OWNER_TABS: DocTab[] = [
         ],
     },
     {
+        id: 'github',
+        label: 'GitHub',
+        docKey: null,
+        alert:
+            'Live board data from GitHub — milestones, column counts, and recent activity. This tab reads the host API (issues, milestones, labels); it does not mirror memory .md files. When memory and GitHub disagree, the board wins.',
+        fields: [
+            {
+                key: 'repository',
+                label: 'Repository',
+                display: 'text',
+                action: { id: 'github.openRepo', label: 'Open in GitHub' },
+            },
+            {
+                key: 'open_milestones',
+                label: 'Open Milestones',
+                display: 'cards',
+                action: { id: 'github.refreshMilestones', label: 'Refresh Milestones' },
+            },
+            {
+                key: 'closed_milestones',
+                label: 'Closed Milestones',
+                display: 'cards',
+                action: { id: 'github.showClosedMilestones', label: 'Show Closed' },
+            },
+            {
+                key: 'issues_by_column',
+                label: 'Issues by Column',
+                display: 'list',
+                action: { id: 'github.refreshBoard', label: 'Refresh Board' },
+            },
+            {
+                key: 'recent_activity',
+                label: 'Recent Activity',
+                display: 'list',
+                action: { id: 'github.viewOnGitHub', label: 'View on GitHub' },
+            },
+        ],
+    },
+    {
         id: 'features',
         label: 'Features',
         docKey: null,

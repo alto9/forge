@@ -11,6 +11,7 @@ const FALLBACK_ROLES: ForgeRole[] = [
     { id: 'product-owner', label: 'Product Owner' },
     { id: 'project-manager', label: 'Project Manager' },
     { id: 'architect', label: 'Architect' },
+    { id: 'designer', label: 'Designer' },
     { id: 'engineer', label: 'Engineer' },
     { id: 'quality-assurance', label: 'Quality Assurance' },
     { id: 'security', label: 'Security' },

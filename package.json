@@ -47,7 +47,7 @@
         {
           "id": "forge",
           "title": "Forge",
-          "icon": "resources/icons/forge-logo.png"
+          "icon": "resources/icons/forge-activitybar.svg"
         }
       ]
     },
@@ -114,26 +114,26 @@
     "@semantic-release/exec": "^7.1.0",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/github": "^12.0.2",
-    "@semantic-release/npm": "^13.1.2",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.14.0",
     "@types/vscode": "^1.80.0",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
-    "@vitest/ui": "^4.0.15",
+    "@vitest/ui": "^4.1.11",
     "@vscode/vsce": "^3.2.1",
     "conventional-changelog-conventionalcommits": "^7.0.2",
     "eslint": "^8.0.0",
-    "semantic-release": "^25.0.2",
+    "semantic-release": "^25.0.9",
     "ts-loader": "^9.5.4",
     "typescript": "^5.0.0",
-    "vitest": "^4.0.15",
+    "vitest": "^4.1.11",
     "webpack": "^5.102.0",
     "webpack-cli": "^6.0.1"
   },
   "overrides": {
+    "@semantic-release/npm": "file:./dev/stubs/semantic-release-npm",
     "@actions/http-client": {
-      "undici": "^6.24.0"
+      "undici": "^6.28.0"
     }
   },
   "dependencies": {

@@ -26,9 +26,10 @@
       }
     ],
     [
-      "@semantic-release/npm",
+      "@semantic-release/exec",
       {
-        "npmPublish": false
+        "prepareCmd": "npm version ${nextRelease.version} --no-git-tag-version --allow-same-version",
+        "successCmd": "echo released > .semantic-release-success"
       }
     ],
     [
@@ -51,12 +52,6 @@
             "label": "Forge VSCode Extension"
           }
         ]
-      }
-    ],
-    [
-      "@semantic-release/exec",
-      {
-        "successCmd": "echo released > .semantic-release-success"
       }
     ]
   ]
