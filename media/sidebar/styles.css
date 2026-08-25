@@ -57,6 +57,10 @@ body {
   overflow: auto;
 }
 
+.selector-block {
+  width: 100%;
+}
+
 .label {
   font-weight: 600;
   font-size: 11px;

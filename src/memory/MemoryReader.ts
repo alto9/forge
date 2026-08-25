@@ -84,6 +84,16 @@ export const PO_DOC_PATHS = {
 
 export type PoDocKey = keyof typeof PO_DOC_PATHS;
 
+/** Official product name from product/brief.md `product_name`, or empty when unset. */
+export function readProductName(memoryRoot: string): string {
+    const doc = readMemoryDoc(memoryRoot, PO_DOC_PATHS.brief);
+    const productName = doc.frontmatter.product_name;
+    if (typeof productName === 'string' && productName.trim()) {
+        return productName.trim();
+    }
+    return '';
+}
+
 export function readProductOwnerDocs(memoryRoot: string): Record<PoDocKey, ParsedMemoryDoc> {
     const out = {} as Record<PoDocKey, ParsedMemoryDoc>;
     for (const [key, rel] of Object.entries(PO_DOC_PATHS) as [PoDocKey, string][]) {

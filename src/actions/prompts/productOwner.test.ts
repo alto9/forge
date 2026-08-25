@@ -6,7 +6,8 @@ import {
 } from './productOwner';
 
 const REQUIRED_IDS = [
-    'brief.defineProduct',
+    'brief.defineProductName',
+    'brief.defineProductDescription',
     'brief.analyzeProblem',
     'brief.refreshAudience',
     'brief.updateGoals',
@@ -55,6 +56,7 @@ describe('productOwner prompts', () => {
         expect(prompt).not.toContain('{submodulePath}');
         expect(prompt).not.toContain('{memoryRoot}');
         expect(prompt).toContain('/forge.competitive-scan');
+        expect(prompt).toContain('commit and push memory document changes');
     });
 
     it('returns undefined for unknown ids', () => {

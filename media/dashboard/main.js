@@ -131,21 +131,9 @@
 
     const toolbar = el('div', 'toolbar');
     const left = el('div', 'toolbar-left');
-    left.appendChild(el('span', 'role-label', data.roleLabel || 'Product Owner'));
-
-    const select = el('select', 'project-select');
-    select.setAttribute('aria-label', 'Project');
-    (data.submodules || []).forEach((sm) => {
-      const opt = document.createElement('option');
-      opt.value = sm;
-      opt.textContent = sm;
-      if (sm === data.submodulePath) opt.selected = true;
-      select.appendChild(opt);
-    });
-    select.addEventListener('change', () => {
-      vscode.postMessage({ type: 'setSubmodule', submodulePath: select.value });
-    });
-    left.appendChild(select);
+    left.appendChild(
+      el('span', 'dashboard-title', data.dashboardTitle || data.roleLabel || 'Product Owner')
+    );
     toolbar.appendChild(left);
 
     const right = el('div', 'toolbar-right');

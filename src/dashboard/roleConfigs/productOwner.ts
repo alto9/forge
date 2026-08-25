@@ -30,7 +30,8 @@ export const PRODUCT_OWNER_TABS: DocTab[] = [
         alert:
             "Your product brief is the anchor for every PO ritual — grooming, refinement, and roadmap review all trace back to what you're building, who it's for, and what success looks like. Use the section actions to draft or refresh each field with the agent when intent shifts or memory drifts from the board.",
         fields: [
-            { key: 'product', label: 'Product Name', display: 'text', action: { id: 'brief.defineProduct', label: 'Define Product' } },
+            { key: 'product_name', label: 'Product Name', display: 'text', action: { id: 'brief.defineProductName', label: 'Define Product Name' } },
+            { key: 'product_description', label: 'Product Description', display: 'text', action: { id: 'brief.defineProductDescription', label: 'Define Description' } },
             { key: 'problem', label: 'Problem', display: 'text', action: { id: 'brief.analyzeProblem', label: 'Analyze Problem' } },
             { key: 'audience', label: 'Audience', display: 'tags', action: { id: 'brief.refreshAudience', label: 'Refresh Audience' } },
             { key: 'goals', label: 'Goals', display: 'tags', action: { id: 'brief.updateGoals', label: 'Update Goals' } },
@@ -101,45 +102,6 @@ export const PRODUCT_OWNER_TABS: DocTab[] = [
             { key: 'supporting', label: 'Supporting', display: 'list', action: { id: 'metrics.addSupporting', label: 'Add Supporting' } },
             { key: 'targets', label: 'Targets', display: 'metricPairs', action: { id: 'metrics.setTargets', label: 'Set Targets' } },
             { key: 'current_read', label: 'Current Read', display: 'text', action: { id: 'metrics.refreshRead', label: 'Refresh Read' } },
-        ],
-    },
-    {
-        id: 'github',
-        label: 'GitHub',
-        docKey: null,
-        alert:
-            'Live board data from GitHub — milestones, column counts, and recent activity. This tab reads the host API (issues, milestones, labels); it does not mirror memory .md files. When memory and GitHub disagree, the board wins.',
-        fields: [
-            {
-                key: 'repository',
-                label: 'Repository',
-                display: 'text',
-                action: { id: 'github.openRepo', label: 'Open in GitHub' },
-            },
-            {
-                key: 'open_milestones',
-                label: 'Open Milestones',
-                display: 'cards',
-                action: { id: 'github.refreshMilestones', label: 'Refresh Milestones' },
-            },
-            {
-                key: 'closed_milestones',
-                label: 'Closed Milestones',
-                display: 'cards',
-                action: { id: 'github.showClosedMilestones', label: 'Show Closed' },
-            },
-            {
-                key: 'issues_by_column',
-                label: 'Issues by Column',
-                display: 'list',
-                action: { id: 'github.refreshBoard', label: 'Refresh Board' },
-            },
-            {
-                key: 'recent_activity',
-                label: 'Recent Activity',
-                display: 'list',
-                action: { id: 'github.viewOnGitHub', label: 'View on GitHub' },
-            },
         ],
     },
     {

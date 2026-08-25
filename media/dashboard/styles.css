@@ -54,19 +54,9 @@ body {
   gap: 12px;
 }
 
-.role-label {
+.dashboard-title {
   font-weight: 600;
-  font-size: 14px;
-}
-
-.project-select {
-  background: var(--dash-input-bg);
-  border: 1px solid var(--dash-border);
-  color: var(--dash-fg);
-  border-radius: 2px;
-  padding: 2px 8px;
-  font-size: 12px;
-  min-width: 130px;
+  font-size: 16px;
 }
 
 .toolbar-right {

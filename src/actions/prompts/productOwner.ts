@@ -16,16 +16,29 @@ function expand(template: string, ctx: PromptContext): string {
         .replaceAll('{memoryRoot}', ctx.memoryRoot);
 }
 
+const PROPOSE_HITL =
+    'Propose-only — wait for HITL approve all before writing. After approval, commit and push memory document changes to the memory-repo main branch.';
+
 const PROMPTS: ActionPrompt[] = [
     // Brief
     {
-        id: 'brief.defineProduct',
-        title: 'Define Product',
+        id: 'brief.defineProductName',
+        title: 'Define Product Name',
         template: [
-            'As Product Owner, update the `product` field in `product/brief.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
+            'As Product Owner, update the `product_name` field in `product/brief.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: problem-framing.',
-            'Read the current brief.md. Propose a frontmatter-only edit for `product`. Leave other fields alone.',
-            'Propose-only — wait for HITL approve all before writing.',
+            'Read the current brief.md. Propose a frontmatter-only edit for `product_name` — a short official product name suitable for the sidebar and dashboard header (e.g. "RiffSync"). Leave other fields alone.',
+            PROPOSE_HITL,
+        ].join(' '),
+    },
+    {
+        id: 'brief.defineProductDescription',
+        title: 'Define Description',
+        template: [
+            'As Product Owner, update the `product_description` field in `product/brief.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
+            'Skills: problem-framing.',
+            'Read the current brief.md. Propose a frontmatter-only edit for `product_description` — a short product description (what it is, for whom). Leave other fields alone.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -35,7 +48,7 @@ const PROMPTS: ActionPrompt[] = [
             'As Product Owner, update `problem` in `product/brief.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: problem-framing, decision-hygiene.',
             'Read brief.md and board context. Propose a frontmatter-only edit for `problem`.',
-            'Propose-only — wait for HITL approve all before writing.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -45,7 +58,7 @@ const PROMPTS: ActionPrompt[] = [
             'As Product Owner, refresh `audience[]` in `product/brief.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: discovery, stakeholder-alignment.',
             'Keep segments short — detail belongs in personas.md. Propose frontmatter-only edits.',
-            'Propose-only — wait for HITL approve all before writing.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -55,7 +68,7 @@ const PROMPTS: ActionPrompt[] = [
             'As Product Owner, update `goals[]` in `product/brief.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: scope-control, roadmapping.',
             'Align with roadmap.md horizons. Propose frontmatter-only edits.',
-            'Propose-only — wait for HITL approve all before writing.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -64,7 +77,8 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             'As Product Owner, update `non_goals[]` in `product/brief.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: scope-control.',
-            'Propose frontmatter-only edits. Propose-only — wait for HITL approve all before writing.',
+            'Propose frontmatter-only edits.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -74,7 +88,7 @@ const PROMPTS: ActionPrompt[] = [
             'As Product Owner, update `success_metrics[]` in `product/brief.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: outcome-definition.',
             'Targets live in brief; current read lives in metrics.md — do not duplicate. Propose frontmatter-only edits.',
-            'Propose-only — wait for HITL approve all before writing.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -83,7 +97,8 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             'As Product Owner, update `current_focus` in `product/brief.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: roadmapping, prioritization.',
-            'Propose a frontmatter-only edit. Propose-only — wait for HITL approve all before writing.',
+            'Propose a frontmatter-only edit.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     // Competitive
@@ -93,7 +108,7 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             '/forge.competitive-scan — prioritize updating `alternatives[]` in `product/competitive.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Agent: Product Owner. Skills: discovery, feedback-synthesis.',
-            'Propose-only — wait for HITL approve all before writing.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -102,7 +117,8 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             'As Product Owner, update `where_we_win[]` in `product/competitive.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Read competitive.md and brief.md. Skills: discovery, feedback-synthesis.',
-            'Propose frontmatter-only edits. Propose-only — wait for HITL approve all before writing.',
+            'Propose frontmatter-only edits.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -111,7 +127,8 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             'As Product Owner, update `where_we_lose[]` in `product/competitive.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: discovery, feedback-synthesis.',
-            'Propose frontmatter-only edits. Propose-only — wait for HITL approve all before writing.',
+            'Propose frontmatter-only edits.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -120,7 +137,8 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             'As Product Owner, update `watch_list[]` in `product/competitive.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Remove entries that no longer matter. Skills: discovery.',
-            'Propose frontmatter-only edits. Propose-only — wait for HITL approve all before writing.',
+            'Propose frontmatter-only edits.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -129,7 +147,7 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             '/forge.competitive-scan — focus on rewriting `implications[]` in `product/competitive.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Propose brief.md / roadmap.md edits only if a real bet moves.',
-            'Propose-only — wait for HITL approve all before writing.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     // Personas
@@ -138,7 +156,8 @@ const PROMPTS: ActionPrompt[] = [
         title: 'Refresh Personas',
         template: [
             '/forge.discovery — focus on `primary[]` in `product/personas.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
-            'Delete personas you are not designing for. Propose-only — wait for HITL approve all before writing.',
+            'Delete personas you are not designing for.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -147,7 +166,8 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             'As Product Owner, update `jobs_to_be_done[]` in `product/personas.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: discovery, problem-framing.',
-            'Propose frontmatter-only edits. Propose-only — wait for HITL approve all before writing.',
+            'Propose frontmatter-only edits.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -156,7 +176,8 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             'As Product Owner, update `not_for[]` in `product/personas.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: scope-control.',
-            'Propose frontmatter-only edits. Propose-only — wait for HITL approve all before writing.',
+            'Propose frontmatter-only edits.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     // Experiments
@@ -166,7 +187,7 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             '/forge.metrics-review — review `active[]` bets in `product/experiments.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Stop dead bets; move to concluded when appropriate.',
-            'Propose-only — wait for HITL approve all before writing.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -175,7 +196,8 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             'As Product Owner, add a new entry to `proposed[]` in `product/experiments.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: discovery, outcome-definition.',
-            'Include hypothesis and success criteria. Propose-only — wait for HITL approve all before writing.',
+            'Include hypothesis and success criteria.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -184,7 +206,8 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             'As Product Owner, move a bet from `active[]` to `concluded[]` in `product/experiments.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: decision-hygiene, outcome-definition.',
-            'Propose frontmatter-only edits. Propose-only — wait for HITL approve all before writing.',
+            'Propose frontmatter-only edits.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     // Insights
@@ -194,7 +217,7 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             '/forge.feedback-triage — prioritize rewriting `themes[]` in `product/insights.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: feedback-synthesis.',
-            'Propose-only — wait for HITL approve all before writing.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -202,7 +225,8 @@ const PROMPTS: ActionPrompt[] = [
         title: 'Capture Questions',
         template: [
             '/forge.feedback-triage — update `open_questions[]` in `product/insights.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
-            'Remove answered questions. Propose-only — wait for HITL approve all before writing.',
+            'Remove answered questions.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -210,7 +234,8 @@ const PROMPTS: ActionPrompt[] = [
         title: 'Add Evidence',
         template: [
             '/forge.feedback-triage — update `evidence[]` in `product/insights.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
-            'No raw thread dumps. Propose-only — wait for HITL approve all before writing.',
+            'No raw thread dumps.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -219,7 +244,7 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             '/forge.feedback-triage — rewrite `implications[]` in `product/insights.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Drop implications that no longer drive action.',
-            'Propose-only — wait for HITL approve all before writing.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     // Metrics
@@ -229,7 +254,8 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             'As Product Owner, update `primary[]` in `product/metrics.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: outcome-definition.',
-            'Propose frontmatter-only edits. Propose-only — wait for HITL approve all before writing.',
+            'Propose frontmatter-only edits.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -238,7 +264,8 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             'As Product Owner, update `supporting[]` in `product/metrics.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: outcome-definition.',
-            'Propose frontmatter-only edits. Propose-only — wait for HITL approve all before writing.',
+            'Propose frontmatter-only edits.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -247,7 +274,8 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             'As Product Owner, update `targets[]` in `product/metrics.md` for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Skills: outcome-definition.',
-            'Propose frontmatter-only edits. Propose-only — wait for HITL approve all before writing.',
+            'Propose frontmatter-only edits.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     {
@@ -256,7 +284,7 @@ const PROMPTS: ActionPrompt[] = [
         template: [
             '/forge.metrics-review for submodule `{submodulePath}` (memory root: `{memoryRoot}`).',
             'Update `current_read` in product/metrics.md; update targets only if the target itself changed.',
-            'Propose-only — wait for HITL approve all before writing.',
+            PROPOSE_HITL,
         ].join(' '),
     },
     // Blocked sidebar
@@ -267,7 +295,7 @@ const PROMPTS: ActionPrompt[] = [
             '/forge.init-project for this workspace.',
             'Set up `.ai/memory`, forge.json, and seed product memory docs',
             'for submodule `{submodulePath}` (when known; otherwise resolve from the open workspace).',
-            'Propose-only — wait for HITL approve all before writing.',
+            PROPOSE_HITL,
         ].join(' '),
     },
 ];

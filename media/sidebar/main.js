@@ -50,7 +50,24 @@
   function renderActive(state) {
     content.innerHTML = '';
 
-    const roleBlock = el('div', '');
+    const productBlock = el('div', 'selector-block');
+    productBlock.appendChild(el('div', 'label', 'PRODUCT'));
+    const productSelect = el('select', 'select');
+    productSelect.setAttribute('aria-label', 'Product');
+    (state.products || []).forEach((product) => {
+      const opt = document.createElement('option');
+      opt.value = product.submodulePath;
+      opt.textContent = product.label;
+      if (product.submodulePath === state.selectedSubmodule) opt.selected = true;
+      productSelect.appendChild(opt);
+    });
+    productSelect.addEventListener('change', () => {
+      vscode.postMessage({ type: 'setSubmodule', submodulePath: productSelect.value });
+    });
+    productBlock.appendChild(productSelect);
+    content.appendChild(productBlock);
+
+    const roleBlock = el('div', 'selector-block');
     roleBlock.appendChild(el('div', 'label', 'ROLE'));
     const select = el('select', 'select');
     select.setAttribute('aria-label', 'Role');

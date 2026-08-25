@@ -5,10 +5,13 @@ import {
     buildActionPrompt,
     getActionTitle,
 } from '../actions/prompts/productOwner';
-import { readForgeJson, readProductOwnerDocs } from '../memory/MemoryReader';
+import {
+    readForgeJson,
+    readProductName,
+    readProductOwnerDocs,
+} from '../memory/MemoryReader';
 import {
     isMemoryRepoConfigured,
-    listCodeSubmodules,
     resolvePaths,
     type ResolvePathsOk,
 } from '../paths/resolvePaths';
@@ -104,21 +107,10 @@ export class DashboardPanel {
     private async handleMessage(msg: {
         type?: string;
         actionId?: string;
-        submodulePath?: string;
     }): Promise<void> {
         switch (msg.type) {
             case 'ready':
                 await this.pushData();
-                break;
-            case 'setSubmodule':
-                if (msg.submodulePath) {
-                    await this.context.workspaceState.update(
-                        SELECTED_SUBMODULE_KEY,
-                        msg.submodulePath
-                    );
-                    this.setupWatchers();
-                    await this.pushData();
-                }
                 break;
             case 'action':
                 if (msg.actionId) {
@@ -195,7 +187,8 @@ export class DashboardPanel {
     private async postProductOwnerData(result: ResolvePathsOk): Promise<void> {
         const docs = readProductOwnerDocs(result.memoryRoot);
         const forgeJson = readForgeJson(result.memoryRoot);
-        const submodules = listCodeSubmodules(result.superRepoRoot);
+        const productName = readProductName(result.memoryRoot) || result.submodulePath;
+        const dashboardTitle = `${productName} ${PRODUCT_OWNER_LABEL}`;
         const host = forgeJson?.host;
         const hostConnected = host === 'github' || host === 'gitlab';
         const hostLabel =
@@ -219,14 +212,15 @@ export class DashboardPanel {
             };
         }
 
-        this.panel.title = `Forge — ${PRODUCT_OWNER_LABEL}`;
+        this.panel.title = `Forge — ${dashboardTitle}`;
         await this.panel.webview.postMessage({
             type: 'dashboardData',
             kind: 'productOwner',
             roleId: PRODUCT_OWNER_ROLE_ID,
             roleLabel: PRODUCT_OWNER_LABEL,
+            productName,
+            dashboardTitle,
             submodulePath: result.submodulePath,
-            submodules: submodules.length ? submodules : [result.submodulePath],
             memoryRoot: result.memoryRoot,
             memoryPathDisplay,
             hostConnected,

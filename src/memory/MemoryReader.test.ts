@@ -6,6 +6,7 @@ import {
     parseFrontmatter,
     readForgeJson,
     readMemoryDoc,
+    readProductName,
     readProductOwnerDocs,
 } from './MemoryReader';
 
@@ -67,6 +68,33 @@ describe('readMemoryDoc', () => {
 
         const missing = readMemoryDoc(root, 'product/missing.md');
         expect(missing.exists).toBe(false);
+    });
+});
+
+describe('readProductName', () => {
+    it('returns brief product_name when set', () => {
+        const root = mkTemp();
+        fs.mkdirSync(path.join(root, 'product'), { recursive: true });
+        fs.writeFileSync(
+            path.join(root, 'product/brief.md'),
+            `---\ndoc: product.brief\nproduct_name: RiffSync\n---\n\n`
+        );
+        expect(readProductName(root)).toBe('RiffSync');
+    });
+
+    it('returns empty string when brief product_name is missing', () => {
+        const root = mkTemp();
+        expect(readProductName(root)).toBe('');
+    });
+
+    it('ignores legacy product field', () => {
+        const root = mkTemp();
+        fs.mkdirSync(path.join(root, 'product'), { recursive: true });
+        fs.writeFileSync(
+            path.join(root, 'product/brief.md'),
+            `---\ndoc: product.brief\nproduct: Legacy long description\n---\n\n`
+        );
+        expect(readProductName(root)).toBe('');
     });
 });
 

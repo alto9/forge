@@ -1,10 +1,14 @@
+import * as path from 'path';
 import * as vscode from 'vscode';
 import { copyPromptDialog } from '../actions/copyPromptDialog';
 import { buildActionPrompt, getActionTitle } from '../actions/prompts/productOwner';
 import { DashboardPanel } from '../dashboard/DashboardPanel';
+import { readProductName } from '../memory/MemoryReader';
 import {
     isMemoryRepoConfigured,
+    listCodeSubmodules,
     resolvePaths,
+    type ResolvePathsOk,
     type ResolvePathsResult,
 } from '../paths/resolvePaths';
 import { loadForgeRoles } from '../roles/loadForgeRoles';
@@ -81,6 +85,31 @@ export class ForgeSidebarProvider implements vscode.WebviewViewProvider {
         });
     }
 
+    private listProducts(result: ResolvePathsOk): { submodulePath: string; label: string }[] {
+        const submodules = listCodeSubmodules(result.superRepoRoot);
+        const paths = submodules.length ? submodules : [result.submodulePath];
+        return paths.map((submodulePath) => {
+            const memoryRoot = path.join(result.memoryRepoRoot, submodulePath);
+            const label = readProductName(memoryRoot) || submodulePath;
+            return { submodulePath, label };
+        });
+    }
+
+    private resolveSelectedSubmodule(
+        result: ResolvePathsOk,
+        products: { submodulePath: string }[]
+    ): string {
+        const stored = this.context.workspaceState.get<string>(SELECTED_SUBMODULE_KEY);
+        const paths = products.map((p) => p.submodulePath);
+        if (stored && paths.includes(stored)) {
+            return stored;
+        }
+        if (paths.includes(result.submodulePath)) {
+            return result.submodulePath;
+        }
+        return paths[0] ?? result.submodulePath;
+    }
+
     private postState(): void {
         if (!this.view) {
             return;
@@ -95,17 +124,29 @@ export class ForgeSidebarProvider implements vscode.WebviewViewProvider {
             selectedRole = roles[0]?.id ?? 'product-owner';
         }
 
+        const products = result.ok ? this.listProducts(result) : [];
+        const selectedSubmodule =
+            result.ok && products.length
+                ? this.resolveSelectedSubmodule(result, products)
+                : undefined;
+
         void this.view.webview.postMessage({
             type: 'state',
             mode: active ? 'active' : 'blocked',
             roles,
             selectedRole,
+            products,
+            selectedSubmodule,
             memorySynced: active,
             error: result.ok ? undefined : result.error,
         });
     }
 
-    private async handleMessage(msg: { type?: string; roleId?: string }): Promise<void> {
+    private async handleMessage(msg: {
+        type?: string;
+        roleId?: string;
+        submodulePath?: string;
+    }): Promise<void> {
         switch (msg.type) {
             case 'ready':
                 this.postState();
@@ -114,6 +155,16 @@ export class ForgeSidebarProvider implements vscode.WebviewViewProvider {
                 if (msg.roleId) {
                     await this.context.workspaceState.update(SELECTED_ROLE_KEY, msg.roleId);
                     this.postState();
+                }
+                break;
+            case 'setSubmodule':
+                if (msg.submodulePath) {
+                    await this.context.workspaceState.update(
+                        SELECTED_SUBMODULE_KEY,
+                        msg.submodulePath
+                    );
+                    this.refresh();
+                    DashboardPanel.refreshIfOpen();
                 }
                 break;
             case 'openCourse':
